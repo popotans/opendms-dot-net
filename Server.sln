@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenDMS.NET", "OpenDMS.NET\OpenDMS.NET.csproj", "{67633BAF-C29E-4C46-A83C-41F93AAA936D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSite", "TestSite\TestSite.csproj", "{0A488477-D6B7-4678-9856-09BE1BE65EA5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67633BAF-C29E-4C46-A83C-41F93AAA936D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67633BAF-C29E-4C46-A83C-41F93AAA936D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67633BAF-C29E-4C46-A83C-41F93AAA936D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67633BAF-C29E-4C46-A83C-41F93AAA936D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A488477-D6B7-4678-9856-09BE1BE65EA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A488477-D6B7-4678-9856-09BE1BE65EA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A488477-D6B7-4678-9856-09BE1BE65EA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A488477-D6B7-4678-9856-09BE1BE65EA5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

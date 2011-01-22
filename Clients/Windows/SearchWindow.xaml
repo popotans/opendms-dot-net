@@ -1,0 +1,61 @@
+﻿<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        mc:Ignorable="d" x:Class="WindowsClient.SearchWindow"
+        Title="SearchWindow" Height="500" Width="700" Loaded="Window_Loaded">
+	<Window.Resources>
+		<Storyboard x:Key="BeginLoadingSearchOptions" Name="BeginLoadingSearchOptions">
+			<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="GridLoading">
+				<DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+			</ObjectAnimationUsingKeyFrames>
+			<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="grid">
+				<EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+				<EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0.3"/>
+				<EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="1"/>
+			</DoubleAnimationUsingKeyFrames>
+		</Storyboard>
+		<Storyboard x:Key="EndLoadingSearchOptions" Name="EndLoadingSearchOptions">
+			<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="GridLoading">
+				<DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+				<DiscreteObjectKeyFrame KeyTime="0:0:0.5" Value="{x:Static Visibility.Visible}"/>
+				<DiscreteObjectKeyFrame KeyTime="0:0:0.6" Value="{x:Static Visibility.Hidden}"/>
+			</ObjectAnimationUsingKeyFrames>
+			<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="GridLoading">
+				<EasingDoubleKeyFrame KeyTime="0" Value="1"/>
+				<EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0.7"/>
+				<EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="0"/>
+			</DoubleAnimationUsingKeyFrames>
+		</Storyboard>
+	</Window.Resources>
+    <Grid x:Name="grid" Margin="0,0,0,0" Background="#FFE9E9E9">
+    	<Grid.ColumnDefinitions>
+    		<ColumnDefinition Width="Auto"/>
+    		<ColumnDefinition/>
+    	</Grid.ColumnDefinitions>
+       	<StackPanel x:Name="ControlPanel" Grid.Column="0" HorizontalAlignment="Left" Margin="0,0,0,0" Background="#FFE0E0E0"/>
+        <DataGrid Grid.Column="1" Margin="0,0,0,0" IsReadOnly="True" SelectionMode="Single" AutoGenerateColumns="True" 
+			Name="dgResults" Height="Auto">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Guid" Binding="{Binding Path=Guid}" Visibility="Hidden" />
+                <DataGridTextColumn Header="Title" Binding="{Binding Path=Title}" Width="*" />
+                <DataGridTextColumn Header="Ext" Binding="{Binding Path=Extension}" Width="Auto" />
+                <DataGridTextColumn Header="Locked By" Binding="{Binding Path=LockedBy}" Width="Auto" />
+                <DataGridTemplateColumn MinWidth="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Click="Button_Click">
+                                <TextBlock FontSize="9" Text="Select" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Grid x:Name="GridLoading" Margin="0,0,0,0" Visibility="Hidden" d:LayoutOverrides="GridBox" Grid.ColumnSpan="2">
+        	<Rectangle Fill="#FF979797" Margin="0,0,0,0" Stroke="Black"/>
+        	<Label Content="Loading Search Options..." Height="32" Margin="0,-32,0,0" VerticalAlignment="Center" FontSize="16" HorizontalAlignment="Center" />
+        	<ProgressBar Height="21" Margin="25,20,25,0" VerticalAlignment="Center" IsIndeterminate="True" HorizontalAlignment="Center" Width="200"/>			
+        </Grid>
+    </Grid>
+</Window>

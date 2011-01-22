@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Common</RootNamespace>
+    <AssemblyName>Common</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Data\AssetBase.cs" />
+    <Compile Include="Data\AssetState.cs" />
+    <Compile Include="Data\AssetType.cs" />
+    <Compile Include="Data\DataAsset.cs" />
+    <Compile Include="Data\ETag.cs" />
+    <Compile Include="Data\FullAsset.cs" />
+    <Compile Include="Data\InvalidAssetStateException.cs" />
+    <Compile Include="Data\MetaAsset.cs" />
+    <Compile Include="ErrorMessage.cs" />
+    <Compile Include="ErrorManager.cs" />
+    <Compile Include="FileSystem\DataResource.cs" />
+    <Compile Include="FileSystem\FileState.cs" />
+    <Compile Include="FileSystem\ResourceBase.cs" />
+    <Compile Include="FileSystem\IO.cs" />
+    <Compile Include="FileSystem\IOStream.cs" />
+    <Compile Include="FileSystem\MetaResource.cs" />
+    <Compile Include="FileSystem\ResourceType.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="NetworkPackage\Base.cs" />
+    <Compile Include="NetworkPackage\DictionaryBase.cs" />
+    <Compile Include="NetworkPackage\DictionaryEntry.cs" />
+    <Compile Include="NetworkPackage\FormProperty.cs" />
+    <Compile Include="NetworkPackage\IBase.cs" />
+    <Compile Include="NetworkPackage\List.cs" />
+    <Compile Include="NetworkPackage\ListBase.cs" />
+    <Compile Include="NetworkPackage\ETag.cs" />
+    <Compile Include="NetworkPackage\ResourceLock.cs" />
+    <Compile Include="NetworkPackage\SearchForm.cs" />
+    <Compile Include="NetworkPackage\SearchResult.cs" />
+    <Compile Include="NetworkPackage\Server.cs" />
+    <Compile Include="NetworkPackage\ServerResponse.cs" />
+    <Compile Include="NetworkPackage\User.cs" />
+    <Compile Include="NetworkPackage\XmlSerializer.cs" />
+    <Compile Include="Network\Message.cs" />
+    <Compile Include="Network\MultipartFormMessage.cs" />
+    <Compile Include="Network\State.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SerializableDictionary.cs" />
+    <Compile Include="NetworkPackage\MetaAsset.cs" />
+    <Compile Include="SerializableStringList.cs" />
+    <Compile Include="ServerSettings.cs" />
+    <Compile Include="Web.cs" />
+    <Compile Include="Network\NetworkException.cs" />
+    <Compile Include="Work\DownloadAssetJob.cs" />
+    <Compile Include="Work\GetETagJob.cs" />
+    <Compile Include="Work\IWorkRequestor.cs" />
+    <Compile Include="Work\JobBase.cs" />
+    <Compile Include="Work\AssetJobBase.cs" />
+    <Compile Include="Work\JobException.cs" />
+    <Compile Include="Work\LoadResourceJob.cs" />
+    <Compile Include="Work\Master.cs" />
+    <Compile Include="Work\SaveResourceJob.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties InternalTargetFrameworkVersion="3.5" />
+    </MonoDevelop>
+  </ProjectExtensions>
+</Project>
