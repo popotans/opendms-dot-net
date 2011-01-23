@@ -90,6 +90,13 @@ namespace WindowsClient
             ResourceTree.Items.Clear();
             //CreateTestSearchForm();
             //CreateTestResources();
+
+            if (!Settings.SettingsFileExists)
+            {
+                SettingsWindow win = new SettingsWindow();
+                win.ShowDialog();
+            }
+
             LoadLocalResources();
         }
         
@@ -1151,6 +1158,7 @@ namespace WindowsClient
         {
             Common.FileSystem.IOStream iostream;
             byte[] buffer;
+            string dataRelativePath;
             Common.Data.MetaAsset ma;
             Common.Data.DataAsset da;
             List<string> tags = new List<string>();
@@ -1169,18 +1177,20 @@ namespace WindowsClient
                 dict1, FileSystem, GeneralLogger);
 
             // Open the stream to create the new data asset
-            iostream = FileSystem.Open(Common.Data.AssetType.Data.VirtualPath + ma.GuidString + ".txt", 
-                FileMode.Create, FileAccess.Write, FileShare.None, FileOptions.None, "WindowsClient.MainWindow.Test1()");
+            dataRelativePath = Common.Data.AssetType.Data.VirtualPath + 
+                System.IO.Path.DirectorySeparatorChar.ToString() + ma.GuidString + ".txt";
+
+            iostream = FileSystem.Open(dataRelativePath, FileMode.Create, FileAccess.Write, FileShare.None,
+                FileOptions.None, "WindowsClient.MainWindow.GenerateFullAsset()");
 
             // Write the new data asset
             buffer = System.Text.Encoding.UTF8.GetBytes("Test Document");
             iostream.Write(buffer, buffer.Length);
-            iostream.Close();
+            FileSystem.Close(iostream);
 
             // Update the meta asset with md5 and length
             ma.UpdateByServer(ma.ETag, ma.MetaVersion, ma.DataVersion, ma.LockedBy, ma.LockedAt, ma.Creator, (ulong)buffer.Length,
-                FileSystem.ComputeMd5(Common.Data.AssetType.Data.VirtualPath + ma.GuidString + ".txt"), ma.Created, ma.Modified, 
-                ma.LastAccess);
+                FileSystem.ComputeMd5(dataRelativePath), ma.Created, ma.Modified, ma.LastAccess);
 
             // Write the ma out to disk
             ma.Save();
@@ -1211,6 +1221,21 @@ namespace WindowsClient
             ma.Save();
 
             _workMaster.AddJob(this, Master.JobType.GetETag, tviState.FullAsset, actUpdateUI, (uint)Common.ServerSettings.Instance.NetworkTimeout);
+        }
+
+        private void BtnSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsWindow win = new SettingsWindow();
+            win.ShowDialog();
+        }
+
+        private void Btn2_Click(object sender, RoutedEventArgs e)
+        {
+            FullAsset fullAsset;
+            LoadResourceJob.UpdateUIDelegate actUpdateUI = CheckETagStatus;
+
+            fullAsset = GenerateFullAsset();
+            _workMaster.AddJob(this, Master.JobType.GetETag, fullAsset, actUpdateUI, 100000);
         }
 
     }
