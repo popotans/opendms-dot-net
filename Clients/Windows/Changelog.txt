@@ -1,0 +1,12 @@
+﻿Legend
+x Bug Fix
+- Informational or improvement
++ New Feature
+
+r3
+- Added a button to load the settings window
+- Settings window will load automatically at startup if a Settings.xml document does not exist
++ Added the '2' button on the GUI, this button generate a new resource on the client system (for testing purposes).
+x The MetaPropWindow now properly saves the modified meta data to disk and then appropriately sends that modified data to the server.
+
+r2 - Initial commit

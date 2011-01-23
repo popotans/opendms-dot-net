@@ -52,6 +52,7 @@ namespace WindowsClient
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             _metaasset.UpdateByUser(TxtTitle.Text.Trim(), ParseTags());
+            _metaasset.Save();
             DialogResult = true;
             this.Close();
         }

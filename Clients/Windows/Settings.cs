@@ -7,6 +7,15 @@ namespace WindowsClient
     [XmlRoot("Settings")]
     public class Settings
     {
+        [XmlIgnore]
+        public bool SettingsFileExists 
+        { 
+            get 
+            {
+                return File.Exists(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\Settings.xml");
+            }
+        }
+
         public string StorageLocation;
 
         public Settings()
@@ -53,7 +62,7 @@ namespace WindowsClient
             else
             {
                 settings = new Settings();
-                settings.Save();
+                //settings.Save();
             }
 
             return settings;

@@ -54,6 +54,7 @@ namespace WindowsClient
             Common.ServerSettings.Instance.ServerIp = textBox2.Text.Trim();
             Common.ServerSettings.Instance.ServerPort = int.Parse(textBox3.Text.Trim());
             MainWindow.Settings.Save();
+            Common.ServerSettings.Instance.Save();
             this.Close();
         }
     }
