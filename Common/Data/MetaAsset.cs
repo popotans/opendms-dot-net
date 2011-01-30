@@ -1,3 +1,18 @@
+/* Copyright 2011 the OpenDMS.NET Project (http://sites.google.com/site/opendmsnet/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -64,7 +79,7 @@ namespace Common.Data
         public List<string> Tags { get { return _tags; } }
 
         /// <summary>
-        /// User defined propertes
+        /// User defined propertes Key is the name or title of the property, object is the value of the property
         /// </summary>
         public Dictionary<string, object> UserProperties;
 
@@ -175,6 +190,83 @@ namespace Common.Data
         {
             _title = title;
             _tags = tags;
+        }
+
+        public void UpdateByUser(Dictionary<string, object> propertiesToUpdate)
+        {
+            Dictionary<string, object>.Enumerator en;
+            string title = null;
+            List<string> tags = null;
+
+            // Check properties for those that are not allowed to be changed by the user
+            if (propertiesToUpdate.ContainsKey("$guid"))
+                throw new ArgumentException("A user cannot modify the resource's guid property.");
+            if (propertiesToUpdate.ContainsKey("$etag"))
+                throw new ArgumentException("A user cannot modify the resource's etag property.");
+            if (propertiesToUpdate.ContainsKey("$metaversion"))
+                throw new ArgumentException("A user cannot modify the resource's metaversion property.");
+            if (propertiesToUpdate.ContainsKey("$dataversion"))
+                throw new ArgumentException("A user cannot modify the resource's dataversion property.");
+            if (propertiesToUpdate.ContainsKey("$lockedby"))
+                throw new ArgumentException("A user cannot modify the resource's lockedby property.");
+            if (propertiesToUpdate.ContainsKey("$lockedat"))
+                throw new ArgumentException("A user cannot modify the resource's lockedat property.");
+            if (propertiesToUpdate.ContainsKey("$creator"))
+                throw new ArgumentException("A user cannot modify the resource's creator property.");
+            if (propertiesToUpdate.ContainsKey("$length"))
+                throw new ArgumentException("A user cannot modify the resource's length property.");
+            if (propertiesToUpdate.ContainsKey("$md5"))
+                throw new ArgumentException("A user cannot modify the resource's md5 property.");
+            if (propertiesToUpdate.ContainsKey("$extension"))
+                throw new ArgumentException("A user cannot modify the resource's extension property.");
+            if (propertiesToUpdate.ContainsKey("$created"))
+                throw new ArgumentException("A user cannot modify the resource's created property.");
+            if (propertiesToUpdate.ContainsKey("$modified"))
+                throw new ArgumentException("A user cannot modify the resource's modified property.");
+            if (propertiesToUpdate.ContainsKey("$lastaccess"))
+                throw new ArgumentException("A user cannot modify the resource's lastaccess property.");
+
+            if (propertiesToUpdate.ContainsKey("$title"))
+            {
+                if (propertiesToUpdate["$title"].GetType() != typeof(string))
+                    throw new ArgumentException("The property $title must be of type string.");
+                if (((string)propertiesToUpdate["$title"]).Trim().Length <= 0)
+                    throw new ArgumentException("The property $title cannot be empty.");
+                title = (string)propertiesToUpdate["$title"];
+                propertiesToUpdate.Remove("$title");
+            }
+
+            if (propertiesToUpdate.ContainsKey("$tags"))
+            {
+                if (propertiesToUpdate["$tags"].GetType() != typeof(List<string>))
+                    throw new ArgumentException("The property $tags must be of type List<string>.");
+                if (((List<string>)propertiesToUpdate["$tags"]).Count <= 0)
+                    throw new ArgumentException("The property $tags must have at least one entry.");
+                tags = (List<string>)propertiesToUpdate["$tags"];
+                propertiesToUpdate.Remove("$tags");
+            }
+
+            en = propertiesToUpdate.GetEnumerator();
+
+            while (en.MoveNext())
+            {
+                if (en.Current.Key.StartsWith("$"))
+                    throw new ArgumentException("User properties cannot start with the $ character as it is reserved.");
+            }
+
+            // If we get here, checking has been successful, thus we update
+            if (title != null) _title = title;
+            if (tags != null) _tags = tags;
+
+            en = propertiesToUpdate.GetEnumerator();
+
+            while (en.MoveNext())
+            {
+                if (UserProperties.ContainsKey(en.Current.Key))
+                    UserProperties[en.Current.Key] = en.Current.Value;
+                else
+                    UserProperties.Add(en.Current.Key, en.Current.Value);
+            }           
         }
 
         #region Remote Communications Code
@@ -523,11 +615,18 @@ namespace Common.Data
             networkMetaAsset = new NetworkPackage.MetaAsset();
 
             // Read the file from the local store
-            if (!networkMetaAsset.Read(Resource, _logger))
+            try
             {
-                if (generalLogger != null)
-                    generalLogger.Write(Logger.LevelEnum.Normal, "Failed to load the meta asset.");
+                if (!networkMetaAsset.Read(Resource, _logger))
+                {
+                    if (generalLogger != null)
+                        generalLogger.Write(Logger.LevelEnum.Normal, "Failed to load the meta asset.");
 
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
                 return false;
             }
 

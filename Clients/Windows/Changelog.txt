@@ -3,6 +3,11 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r4
+- Revamped the entire MetaPropWindow to support system admin definable properties
++ Program will now download the default MetaForm (metaformproperties.xml) at when the metapropwindow is displayed.
+x Issue 2 - Resolved
+
 r3
 - Added a button to load the settings window
 - Settings window will load automatically at startup if a Settings.xml document does not exist
