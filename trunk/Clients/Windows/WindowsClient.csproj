@@ -82,6 +82,7 @@
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MetaPropEntity.cs" />
     <Compile Include="MetaPropWindow.xaml.cs">
       <DependentUpon>MetaPropWindow.xaml</DependentUpon>
     </Compile>

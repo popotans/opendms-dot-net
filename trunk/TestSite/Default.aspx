@@ -5,13 +5,11 @@
 </asp:Content>
 <asp:Content ID="BodyContent" runat="server" ContentPlaceHolderID="MainContent">
     <h2>
-        Welcome to ASP.NET!
+        Welcome to OpenDMS.NET!
     </h2>
     <p>
-        To learn more about ASP.NET visit <a href="http://www.asp.net" title="ASP.NET Website">www.asp.net</a>.
-    </p>
-    <p>
-        You can also find <a href="http://go.microsoft.com/fwlink/?LinkID=152368&amp;clcid=0x409"
-            title="MSDN ASP.NET Docs">documentation on ASP.NET at MSDN</a>.
+        This is just a generated ASP.NET website.  Its only purpose is to host the OpenDMS.NET HttpModule.<br /><br />
+
+        To learn more about OpenDMS.NET visit <a href="http://sites.google.com/site/opendmsnet/" title="OpenDMS.NET Website">http://sites.google.com/site/opendmsnet/</a>.
     </p>
 </asp:Content>

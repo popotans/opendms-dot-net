@@ -1,4 +1,19 @@
-﻿using System;
+﻿/* Copyright 2011 the OpenDMS.NET Project (http://sites.google.com/site/opendmsnet/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -9,42 +24,6 @@ namespace Common.Network
     public class MultipartFormMessage
     {
         private readonly Encoding _encoding = Encoding.UTF8;
-
-        //public HttpWebResponse Send(string postUrl, Dictionary<string, object> postParameters)
-        //{
-        //    string formDataBoundary = "-----------------------------" + DateTime.Now.Ticks.ToString();
-        //    string contentType = "multipart/form-data; boundary=" + formDataBoundary;
-
-        //    byte[] formData = GetMultipartFormData(postParameters, formDataBoundary);
-
-        //    return PostForm(postUrl, contentType, formData);
-        //}
-
-        //private HttpWebResponse PostForm(string postUrl, string contentType, byte[] formData)
-        //{
-        //    HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(postUrl);
-
-        //    if (request == null)
-        //    {
-        //        throw new NullReferenceException("request is not a http request");
-        //    }
-
-        //    // Set up the request properties
-        //    request.Method = "POST";
-        //    request.ContentType = contentType;
-        //    //request.UserAgent = userAgent;
-        //    request.CookieContainer = new CookieContainer();
-        //    request.ContentLength = formData.Length;  // We need to count how many bytes we're sending. 
-
-        //    using (Stream requestStream = request.GetRequestStream())
-        //    {
-        //        // Push it out there
-        //        requestStream.Write(formData, 0, formData.Length);
-        //        requestStream.Close();
-        //    }
-
-        //    return request.GetResponse() as HttpWebResponse;
-        //}
 
         private static string NewDataBoundary()
         {

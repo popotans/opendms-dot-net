@@ -1,4 +1,19 @@
-﻿using System;
+﻿/* Copyright 2011 the OpenDMS.NET Project (http://sites.google.com/site/opendmsnet/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 
 namespace Common
 {
@@ -27,6 +42,18 @@ namespace Common
         public const string SEARCH_OPTIONSDESERIALIZATION_FAILED_CAPTION = "Reading Search Options Failed";
         public const string SEARCH_OPTIONSDESERIALIZATION_FAILED_USER = "The system cannot understand the search options provided by the server.  The system will stop attempting this transfer, you might need to close the search window and retry.";
         public const string SEARCH_OPTIONSDESERIALIZATION_FAILED_LOG = "Search options failed deserialization.";
+
+        // Meta Form Download Failed 5
+        public const int METAFORM_DOWNLOAD_FAILED_CODE = 0x00101;
+        public const string METAFORM_DOWNLOAD_FAILED_CAPTION = "Meta Properties Form Download Failed";
+        public const string METAFORM_DOWNLOAD_FAILED_USER = "The system failed to download the meta properties form.  The system will stop attempting this transfer, you might need to cancel and retry.";
+        public const string METAFORM_DOWNLOAD_FAILED_LOG = "Meta properties form failed to download.";
+
+        // Meta Form Deserialize Failed 6
+        public const int METAFORM_DESERIALIZATION_FAILED_CODE = 0x00110;
+        public const string METAFORM_DESERIALIZATION_FAILED_CAPTION = "Reading Meta Form Properties Failed";
+        public const string METAFORM_DESERIALIZATION_FAILED_USER = "The system cannot understand the meta form properties provided by the server.  The system will stop attempting this transfer, you might need to cancel and retry.";
+        public const string METAFORM_DESERIALIZATION_FAILED_LOG = "Meta form failed deserialization.";
 
         // JOBS
 
@@ -237,6 +264,18 @@ namespace Common
         {
             return new ErrorMessage(SEARCH_OPTIONSDESERIALIZATION_FAILED_CODE, SEARCH_OPTIONSDESERIALIZATION_FAILED_CAPTION, 
                                     SEARCH_OPTIONSDESERIALIZATION_FAILED_USER, SEARCH_OPTIONSDESERIALIZATION_FAILED_LOG, true, true, e);
+        }
+
+        public static ErrorMessage MetaFormDownloadFailed(Exception e)
+        {
+            return new ErrorMessage(METAFORM_DOWNLOAD_FAILED_CODE, METAFORM_DOWNLOAD_FAILED_CAPTION, METAFORM_DOWNLOAD_FAILED_USER,
+                                    METAFORM_DOWNLOAD_FAILED_LOG, true, true, e);
+        }
+
+        public static ErrorMessage MetaFormDeserializationFailed(Exception e)
+        {
+            return new ErrorMessage(METAFORM_DESERIALIZATION_FAILED_CODE, METAFORM_DESERIALIZATION_FAILED_CAPTION,
+                                    METAFORM_DESERIALIZATION_FAILED_USER, METAFORM_DESERIALIZATION_FAILED_LOG, true, true, e);
         }
     }
 }

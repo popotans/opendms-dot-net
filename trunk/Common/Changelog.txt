@@ -1,0 +1,10 @@
+﻿Legend
+x Bug Fix
+- Informational or improvement
++ New Feature
+
+r4
++ Added the NetworkPackage.MetaForm and MetaFormProperty as well as code in other methods to allow their function.  Property is just a 'field' of a MetaForm.  MetaForm is provides a description of the Data.MetaAsset so that it can be managed in clients.  This will be what allows system admins to define their own properties.
+x Issue 3 - Resolved
+x Issue 2 - Resolved
+- Removed Common.Web.cs as it had been moved into Common.Network

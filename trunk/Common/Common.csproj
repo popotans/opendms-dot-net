@@ -67,6 +67,8 @@
     <Compile Include="NetworkPackage\List.cs" />
     <Compile Include="NetworkPackage\ListBase.cs" />
     <Compile Include="NetworkPackage\ETag.cs" />
+    <Compile Include="NetworkPackage\MetaForm.cs" />
+    <Compile Include="NetworkPackage\MetaFormProperty.cs" />
     <Compile Include="NetworkPackage\ResourceLock.cs" />
     <Compile Include="NetworkPackage\SearchForm.cs" />
     <Compile Include="NetworkPackage\SearchResult.cs" />
@@ -82,7 +84,6 @@
     <Compile Include="NetworkPackage\MetaAsset.cs" />
     <Compile Include="SerializableStringList.cs" />
     <Compile Include="ServerSettings.cs" />
-    <Compile Include="Web.cs" />
     <Compile Include="Network\NetworkException.cs" />
     <Compile Include="Work\DownloadAssetJob.cs" />
     <Compile Include="Work\GetETagJob.cs" />
@@ -94,7 +95,9 @@
     <Compile Include="Work\Master.cs" />
     <Compile Include="Work\SaveResourceJob.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Changelog.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

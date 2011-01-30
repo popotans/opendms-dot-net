@@ -1,4 +1,19 @@
-﻿using System;
+﻿/* Copyright 2011 the OpenDMS.NET Project (http://sites.google.com/site/opendmsnet/)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.IO;
 using System.Web;
 using System.Collections.Specialized;
@@ -107,6 +122,34 @@ namespace OpenDMS
 
             if (_networkLogger != null)
                 _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Search form was sent to user '" + userInfo["username"] + "'.");
+        }
+
+        [ServicePoint("/_settings/metaform", ServicePointAttribute.VerbType.GET)]
+        public void GetMetaForm(HttpApplication app)
+        {
+            MetaForm metaForm;
+            string errorMessage;
+            Dictionary<string, string> userInfo = ParseUserInfo(app);
+            Dictionary<string, string> queryString = ParseQueryString(app);
+
+            if (_networkLogger != null)
+                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Request for meta property form was received from user '" + userInfo["username"] + "'.");
+
+            if (_storage.GetMetaForm(userInfo["username"], out metaForm, out errorMessage) != Storage.ResultType.Success)
+            {
+                if (_generalLogger != null)
+                    _generalLogger.Write(Common.Logger.LevelEnum.Normal,
+                        "The MetaPropertiesForm.xml could not be found, the default form has been saved locally to be used in the future, furthermore it was sent as a response to the request from user '" + userInfo["username"] + "'.");
+
+                metaForm = MetaForm.GetDefault();
+                metaForm.SaveToFile("settings\\metapropertiesform.xml", _fileSystem, _generalLogger, false);
+            }
+
+            metaForm.Serialize().WriteTo(app.Response.OutputStream);
+            app.CompleteRequest();
+
+            if (_networkLogger != null)
+                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Meta properties form was sent to user '" + userInfo["username"] + "'.");
         }
 
         [ServicePoint("/search", ServicePointAttribute.VerbType.GET)]

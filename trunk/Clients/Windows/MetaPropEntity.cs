@@ -14,21 +14,24 @@
  */
 
 using System;
-using System.Collections.Generic;
 
-namespace OpenDMS.Security
+namespace WindowsClient
 {
-    public class User
+    public class MetaPropEntity
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string DisplayName { get; set; }
+        public string Key { get; set; }
+        public string Title { get; set; }
+        public object Value { get; set; }
+        public bool IsReadOnly { get; set; }
+        public bool IsUpdated { get; set; }
 
-        public User(string username, string password, string displayname)
+        public MetaPropEntity(string key, string title, object value, bool isReadOnly)
         {
-            Username = username;
-            Password = password;
-            DisplayName = displayname;
+            Key = key;
+            Title = title;
+            Value = value;
+            IsReadOnly = isReadOnly;
+            IsUpdated = false;
         }
     }
 }

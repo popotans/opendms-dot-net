@@ -1,0 +1,8 @@
+﻿Legend
+x Bug Fix
+- Informational or improvement
++ New Feature
+
+r4
++ Implemented the ServicePoint for /_settings/metaform to transfer the stored metaformproperties.xml file or create a new default one, with minimal requirements, if none exists.
+x Issue 2 - Resolved
