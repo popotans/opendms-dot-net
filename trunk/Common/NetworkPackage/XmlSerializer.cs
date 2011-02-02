@@ -19,26 +19,22 @@ using System.Reflection;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// A customized XML based serializer.
+    /// </summary>
     public class XmlSerializer
     {
-        public static string SerializeToString(object obj)
-        {
-            MemoryStream ms = SerializeToStream(obj);
-            StreamReader sr = new StreamReader(ms);
-            string s = sr.ReadToEnd();
-            sr.Close();
-            sr.Dispose();
-            ms.Close();
-            return s;
-        }
-
+        /// <summary>
+        /// Serializes the specified object using the specified XML writer.
+        /// </summary>
+        /// <param name="xmlWriter">The XML writer.</param>
+        /// <param name="obj">The object to serialize.</param>
+        /// <returns>The XML writer argument.</returns>
         public static System.Xml.XmlWriter Serialize(System.Xml.XmlWriter xmlWriter, object obj)
         {
             if (obj == null)
                 throw new ArgumentNullException("obj");
-
-            string str;
-
+            
             if (xmlWriter.Settings.Encoding != System.Text.Encoding.UTF8)
                 throw new FormatException("Encoding must be UTF8");
 
@@ -73,17 +69,13 @@ namespace Common.NetworkPackage
             return xmlWriter;
         }
 
-        public static MemoryStream SerializeToStream(object obj)
-        {
-            MemoryStream ms = new MemoryStream();
-            System.Xml.XmlWriter writer = System.Xml.XmlWriter.Create(ms, 
-                new System.Xml.XmlWriterSettings() { Encoding = System.Text.Encoding.UTF8 });
-            Serialize(writer, obj);
-            ms.Position = 0;
-            writer.Close();
-            return ms;
-        }
-
+        /// <summary>
+        /// Deserializes the specified target from the content of the argument str.
+        /// </summary>
+        /// <typeparam name="T">The <see cref="Type"/> to target for deserialization.</typeparam>
+        /// <param name="target">The target object to populate.</param>
+        /// <param name="str">The string containing content to deserialize.</param>
+        /// <returns>A deserialized and instantited T</returns>
         public static T Deserialize<T>(object target, string str)
         {
             System.Xml.XmlReader xmlReader = System.Xml.XmlReader.Create(
@@ -94,6 +86,13 @@ namespace Common.NetworkPackage
             return (T)target;
         }
 
+        /// <summary>
+        /// Deserializes the specified target from the content of the argument xmlReader.
+        /// </summary>
+        /// <typeparam name="T">The <see cref="Type"/> to target for deserialization.</typeparam>
+        /// <param name="target">The target object to populate.</param>
+        /// <param name="xmlReader">The XML reader.</param>
+        /// <returns>A deserialized and instantited T</returns>
         public static T Deserialize<T>(object target, System.Xml.XmlReader xmlReader)
         {
             if (target.GetType() == typeof(DictionaryEntry<string, object>))
@@ -121,6 +120,11 @@ namespace Common.NetworkPackage
             return (T)target;
         }
 
+        /// <summary>
+        /// Detects and automatically deserializes multiple data types within the xmlReader.
+        /// </summary>
+        /// <param name="xmlReader">The XML reader.</param>
+        /// <returns>A deserialized and instantited object.</returns>
         public static object SimpleDeserialize(System.Xml.XmlReader xmlReader)
         {
             System.Xml.Serialization.XmlSerializer valueSerializer = null;

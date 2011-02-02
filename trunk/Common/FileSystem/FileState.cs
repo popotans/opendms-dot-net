@@ -18,6 +18,9 @@ using System.IO;
 
 namespace Common.FileSystem
 {
+    /// <summary>
+    /// Represents the current state of a file resource on a file system.
+    /// </summary>
     public class FileState
     {
         /// <summary>
@@ -88,6 +91,10 @@ namespace Common.FileSystem
             BufferSize = bufferSize;
         }
 
+        /// <summary>
+        /// Gets a string to be used for making a logging entry.
+        /// </summary>
+        /// <returns>A string to be used in a log.</returns>
         public string GetLogString()
         {
             return "FullPath=" + FullPath + "\r\n" +
@@ -101,6 +108,11 @@ namespace Common.FileSystem
                     "BufferSize=" + BufferSize.ToString();
         }
 
+        /// <summary>
+        /// Determines if the argument <see cref="FileState"/> conflicts with this instance.
+        /// </summary>
+        /// <param name="state">The <see cref="FileState"/> to check.</param>
+        /// <returns><c>True</c> if conflicting; otherwise, <c>false</c>.</returns>
         public bool DoesResourceConflict(FileState state)
         {
             if (state.RelativePath == RelativePath)
@@ -113,13 +125,5 @@ namespace Common.FileSystem
 
             return false;
         }
-
-        //public override bool Equals(object obj)
-        //{
-        //    if (obj.GetType() == typeof(FileState))
-        //        return !DoesResourceConflict((FileState)obj);
-
-        //    return false;
-        //}
     }
 }

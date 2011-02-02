@@ -20,13 +20,24 @@ using System.Text;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// Provides a method of packaging and unpackaging a <see cref="Data.MetaAsset"/> object
+    /// using XML for storage and transfer.
+    /// </summary>
     public class MetaAsset : DictionaryBase<string, object>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetaAsset"/> class.
+        /// </summary>
         public MetaAsset() 
             : base("MetaAsset")
         {
         }
 
+        /// <summary>
+        /// Validates this instance.
+        /// </summary>
+        /// <returns></returns>
         public bool Validate()
         {
             if (!ContainsKey("$guid")) return false;

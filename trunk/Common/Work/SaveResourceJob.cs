@@ -17,9 +17,25 @@ using System;
 
 namespace Common.Work
 {
+    /// <summary>
+    /// An implementation of <see cref="AssetJobBase"/> that uploads the asset to the host and then 
+    /// downloads the updated <see cref="Data.MetaAsset"/> saving it to disk.
+    /// </summary>
     public class SaveResourceJob 
         : AssetJobBase
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SaveResourceJob"/> class.
+        /// </summary>
+        /// <param name="requestor">The object that requested performance of this job.</param>
+        /// <param name="id">The id of this job.</param>
+        /// <param name="fullAsset">A reference to a <see cref="Data.FullAsset"/> for this job.</param>
+        /// <param name="actUpdateUI">The method to call to update the UI.</param>
+        /// <param name="timeout">The timeout duration.</param>
+        /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public SaveResourceJob(IWorkRequestor requestor, ulong id, Data.FullAsset fullAsset,
             UpdateUIDelegate actUpdateUI, uint timeout, ErrorManager errorManager,
             FileSystem.IO fileSystem, Logger generalLogger, Logger networkLogger)
@@ -28,6 +44,12 @@ namespace Common.Work
         {
         }
 
+        /// <summary>
+        /// Runs this job.
+        /// </summary>
+        /// <returns>
+        /// A reference to this instance.
+        /// </returns>
         public override JobBase Run()
         {
             _currentState = State.Active | State.Executing;
@@ -84,33 +106,17 @@ namespace Common.Work
                 return this;
             }
 
-            // Below was commented out because the DownloadFromServer() above has a save built-in.
-
-            //// Save it locally
-            //try
-            //{
-            //    _fullAsset.MetaAsset.Save();
-            //}
-            //catch (Exception e)
-            //{
-            //    if (_generalLogger != null)
-            //        _generalLogger.Write(Logger.LevelEnum.Normal, "An exception occurred while " +
-            //            "attempting to save the meta asset to the file system.\r\n" + 
-            //            Logger.ExceptionToString(e));
-            //    throw e;
-            //}
-
-            // Below is removed because the metaasset is loaded into memory when it is downloaded
-            // from the server, thus, this is an unnecessary process
-            // Reload the local resource
-            //_resource.MetaAsset.LoadFromLocal(_fileSystem, _generalLogger);
-            
-
             _currentState = State.Active | State.Finished;
             _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
             return this;
         }
 
+        /// <summary>
+        /// Called when the <see cref="Data.DataAsset"/> portion of the <see cref="Data.FullAsset"/> 
+        /// makes progress uploading.
+        /// </summary>
+        /// <param name="sender">A reference to the <see cref="Data.DataAsset"/> that made progress.</param>
+        /// <param name="percentComplete">The percent complete.</param>
         void Run_DataAsset_OnProgress(Data.DataAsset sender, int percentComplete)
         {
             UpdateProgress((ulong)sender.BytesComplete, (ulong)sender.BytesTotal);

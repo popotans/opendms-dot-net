@@ -18,29 +18,68 @@ using System.IO;
 
 namespace Common.FileSystem
 {
+    /// <summary>
+    /// A class representing the base requirements of an inheriting Resource.
+    /// </summary>
     public class ResourceBase
     {
+        /// <summary>
+        /// A reference to a <see cref="IO"/> object.
+        /// </summary>
         private IO _fileSystem;
+        /// <summary>
+        /// A reference to the <see cref="Logger"/> that this instance should use to document events.
+        /// </summary>
         private Logger _logger;
+        /// <summary>
+        /// A <see cref="Guid"/> that provides a unique reference to a Resource.
+        /// </summary>
         private Guid _guid;
+        /// <summary>
+        /// The <see cref="ResourceType"/> of this instance (Meta or Data).
+        /// </summary>
         private ResourceType _type;
+        /// <summary>
+        /// The extension of the file on the file system.
+        /// </summary>
         private string _extension;
 
+        /// <summary>
+        /// <c>True</c> when the resource is in an open state; otherwise, <c>false</c>.
+        /// </summary>
         private bool _isOpen;
+        /// <summary>
+        /// The <see cref="IOStream"/> allowing access to the Resource.
+        /// </summary>
         private IOStream _stream;
 
+        /// <summary>
+        /// Gets or sets the <see cref="Guid"/> that provides a unique reference to a Resource.
+        /// </summary>
+        /// <value>
+        /// The <see cref="Guid"/>.
+        /// </value>
         public Guid Guid
         {
             get { return _guid; }
             set { _guid = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the extension of the file on the file system.
+        /// </summary>
+        /// <value>
+        /// The extension.
+        /// </value>
         public string Extension
         {
             get { return _extension; }
             set { _extension = value; }
         }
 
+        /// <summary>
+        /// Gets the directory relative to the root directory where this Resource belongs.
+        /// </summary>
         public string RelativeDirectory
         {
             get
@@ -57,6 +96,9 @@ namespace Common.FileSystem
             }
         }
 
+        /// <summary>
+        /// Gets the filepath relative to the root directory where this Resource belongs.
+        /// </summary>
         public string RelativeFilepath
         {
             get 
@@ -65,6 +107,12 @@ namespace Common.FileSystem
             }
         }
 
+        /// <summary>
+        /// Gets the length of the file in bytes.
+        /// </summary>
+        /// <value>
+        /// The length of the file in bytes.
+        /// </value>
         public ulong FileLength
         {
             get
@@ -73,6 +121,14 @@ namespace Common.FileSystem
             }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ResourceBase"/> class.
+        /// </summary>
+        /// <param name="guid">A <see cref="Guid"/> that provides a unique reference to a Resource.</param>
+        /// <param name="type">The <see cref="ResourceType"/> of this instance (Meta or Data).</param>
+        /// <param name="extension">The extension of the file on the file system.</param>
+        /// <param name="fileSystem">A reference to a <see cref="IO"/> object.</param>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
         public ResourceBase(Guid guid, ResourceType type, string extension, IO fileSystem, Logger logger)
         {
             if(type == ResourceType.Unknown)
@@ -91,6 +147,11 @@ namespace Common.FileSystem
                 _extension = extension;
         }
 
+        /// <summary>
+        /// Gets an exclusive read stream on a Resource.
+        /// </summary>
+        /// <param name="openedLocation">The location where the Resource was opened in the code.</param>
+        /// <returns>An <see cref="IOStream"/> for Resource access.</returns>
         public IOStream GetExclusiveReadStream(string openedLocation)
         {
             return GetStreamInternal(FileMode.Open, FileAccess.Read, FileShare.None,
@@ -98,6 +159,11 @@ namespace Common.FileSystem
                  openedLocation);
         }
 
+        /// <summary>
+        /// Gets the exclusive write stream on a Resource.
+        /// </summary>
+        /// <param name="openedLocation">The location where the Resource was opened in the code.</param>
+        /// <returns>An <see cref="IOStream"/> for Resource access.</returns>
         public IOStream GetExclusiveWriteStream(string openedLocation)
         {
             return GetStreamInternal(FileMode.Create, FileAccess.Write, FileShare.None,
@@ -105,6 +171,12 @@ namespace Common.FileSystem
                 openedLocation);
         }
 
+        /// <summary>
+        /// Gets the exclusive write stream on a Resource using version scheme naming.
+        /// </summary>
+        /// <param name="version">The version number.</param>
+        /// <param name="openedLocation">The location where the Resource was opened in the code.</param>
+        /// <returns>An <see cref="IOStream"/> for Resource access.</returns>
         public IOStream GetExclusiveWriteStreamUsingVersionScheme(UInt64 version,
             string openedLocation)
         {
@@ -114,12 +186,27 @@ namespace Common.FileSystem
                 openedLocation);
         }
 
+        /// <summary>
+        /// Copies the current version to the specified version using version scheme naming.
+        /// </summary>
+        /// <param name="version">The version number.</param>
+        /// <param name="openedLocation">The location where the Resource was opened in the code.</param>
+        /// <returns>An <see cref="IOStream"/> for Resource access.</returns>
         public bool CopyCurrentToVersionScheme(UInt64 version, string openedLocation)
         {
             return _fileSystem.Copy(RelativeFilepath,
                 RelativeDirectory + Guid.ToString("N") + "_" + version.ToString() + _extension);
         }
 
+        /// <summary>
+        /// Gets an <see cref="IOStream"/> using the specified parameters.
+        /// </summary>
+        /// <param name="mode">The <see cref="FileMode"/>.</param>
+        /// <param name="access">The <see cref="FileAccess"/>.</param>
+        /// <param name="share">The <see cref="FileShare"/>.</param>
+        /// <param name="options">The <see cref="FileOptions"/>.</param>
+        /// <param name="openedLocation">The location where the Resource was opened in the code.</param>
+        /// <returns>An <see cref="IOStream"/> for Resource access.</returns>
         public IOStream GetStream(FileMode mode, FileAccess access, FileShare share,
             FileOptions options, string openedLocation)
         {
@@ -127,6 +214,16 @@ namespace Common.FileSystem
                 "Common.FileSystem.FSObject.GetStream() from " + openedLocation);
         }
 
+        /// <summary>
+        /// Gets an <see cref="IOStream"/> using the specified parameters using version scheme naming.
+        /// </summary>
+        /// <param name="version">The version number.</param>
+        /// <param name="mode">The <see cref="FileMode"/>.</param>
+        /// <param name="access">The <see cref="FileAccess"/>.</param>
+        /// <param name="share">The <see cref="FileShare"/>.</param>
+        /// <param name="options">The <see cref="FileOptions"/>.</param>
+        /// <param name="openedLocation">The location where the Resource was opened in the code.</param>
+        /// <returns>An <see cref="IOStream"/> for Resource access.</returns>
         private IOStream GetStreamInternalUsingVersionScheme(UInt64 version, FileMode mode, 
             FileAccess access, FileShare share, FileOptions options, string openedLocation)
         {
@@ -161,6 +258,15 @@ namespace Common.FileSystem
             return _stream;
         }
 
+        /// <summary>
+        /// Gets an <see cref="IOStream"/> using the specified parameters and can only be used from within this class.
+        /// </summary>
+        /// <param name="mode">The <see cref="FileMode"/>.</param>
+        /// <param name="access">The <see cref="FileAccess"/>.</param>
+        /// <param name="share">The <see cref="FileShare"/>.</param>
+        /// <param name="options">The <see cref="FileOptions"/>.</param>
+        /// <param name="openedLocation">The location where the Resource was opened in the code.</param>
+        /// <returns>An <see cref="IOStream"/> for Resource access.</returns>
         private IOStream GetStreamInternal(FileMode mode, FileAccess access, FileShare share,
             FileOptions options, string openedLocation)
         {
@@ -194,6 +300,9 @@ namespace Common.FileSystem
             return _stream;
         }
 
+        /// <summary>
+        /// Closes the <see cref="IOStream"/> for this Resource.
+        /// </summary>
         public void CloseStream()
         {
             if (_isOpen)
@@ -204,26 +313,45 @@ namespace Common.FileSystem
             }
         }
 
+        /// <summary>
+        /// Creates the directory path containing the <see cref="RelativeFilepath"/>
+        /// </summary>
         public void CreateContainingDirectory()
         {
             _fileSystem.CreateDirectoryPath(RelativeDirectory);
         }
 
+        /// <summary>
+        /// Checks if a Resource exists at the <see cref="RelativeFilepath"/>.
+        /// </summary>
+        /// <returns><c>True</c> if it exists; otherwise, <c>false</c>.</returns>
         public bool ExistsOnFilesystem()
         {
             return _fileSystem.ResourceExists(RelativeFilepath);
         }
 
+        /// <summary>
+        /// Deletes this Resource from the file system.
+        /// </summary>
         public void DeleteFromFilesystem()
         {
             _fileSystem.Delete(RelativeFilepath);
         }
 
+        /// <summary>
+        /// Computes the MD5 checksum of this Resource.
+        /// </summary>
+        /// <returns>A string representation of the MD5 checksum value.</returns>
         public string ComputeMd5()
         {
             return _fileSystem.ComputeMd5(RelativeFilepath);
         }
 
+        /// <summary>
+        /// Verifies the MD5.
+        /// </summary>
+        /// <param name="md5ToCompare">The MD5 to compare.</param>
+        /// <returns></returns>
         public bool VerifyMd5(string md5ToCompare)
         {
             return _fileSystem.VerifyMd5(RelativeFilepath, md5ToCompare);

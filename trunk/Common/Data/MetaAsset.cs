@@ -19,42 +19,112 @@ using System.Collections.Generic;
 
 namespace Common.Data
 {
+    /// <summary>
+    /// A <see cref="MetaAsset"/> represents a collection of meta information in a way 
+    /// that it is usable by the OpenDMS.NET Project.
+    /// </summary>
     public sealed class MetaAsset 
         : AssetBase
     {
         #region Meta Data - The following are mandatory properties for metadata
 
+        /// <summary>
+        /// Represents the <see cref="ETag"/> of this <see cref="MetaAsset"/>.
+        /// </summary>
         private ETag _etag;
+        /// <summary>
+        /// A numeric value indicating the version number of this <see cref="MetaAsset"/>.
+        /// </summary>
         private uint _metaversion;
+        /// <summary>
+        /// A numeric value indicating the version number of the <see cref="DataAsset"/> paired with this <see cref="MetaAsset"/>.
+        /// </summary>
         private uint _dataversion;
+        /// <summary>
+        /// The username of the user holding the outstanding lock.
+        /// </summary>
         private string _lockedby;
+        /// <summary>
+        /// A timestamp of when the asset was locked, if null then not locked.
+        /// </summary>
         private DateTime? _lockedat;
+        /// <summary>
+        /// The creator of this asset.
+        /// </summary>
+        /// <remarks>Creator applies only to this version of the asset.  Different versions will potentially have different creators.</remarks>
 		private string _creator;
+        /// <summary>
+        /// The quantity of bytes of the <see cref="DataAsset"/>.
+        /// </summary>
         private ulong _length;
+        /// <summary>
+        /// A checksum value of the <see cref="DataAsset"/>.
+        /// </summary>
         private string _md5;
+        /// <summary>
+        /// The extension used by the <see cref="DataAsset"/> including the leading period (e.g., .exe, .txt, .docx, etc).
+        /// </summary>
         private string _extension;
+        /// <summary>
+        /// A timestamp marking the creation of this asset on the server.
+        /// </summary>
+        /// <remarks>The timestamp marks the date of creation of this verison.</remarks>
         private DateTime _created;
+        /// <summary>
+        /// A timestamp marking the modification of this asset on the server.
+        /// </summary>
+        /// <remarks>The timestamp marks the modification of this version (rare as any change by a client should result in a new version, 
+        /// but system administrators should have the ability to modify without creating a new version.</remarks>
         private DateTime _modified;
+        /// <summary>
+        /// A timestamp marking when this asset was last accessed on the server.
+        /// </summary>
+        /// <remarks>The timestamp applies to this version.</remarks>
         private DateTime _lastaccess;
+        /// <summary>
+        /// A descriptive title of this asset.
+        /// </summary>
         private string _title;
+        /// <summary>
+        /// A collection of strings that are descriptive of the document.  These are primarily used for searching.
+        /// </summary>
         private List<string> _tags;
 
+        /// <summary>
+        /// Gets a numeric value indicating the version number of this <see cref="MetaAsset"/>.
+        /// </summary>
         public uint MetaVersion { get { return _metaversion; } }
+        /// <summary>
+        /// Gets a numeric value indicating the version number of the <see cref="DataAsset"/> paired with this <see cref="MetaAsset"/>.
+        /// </summary>
         public uint DataVersion { get { return _dataversion; } }
+        /// <summary>
+        /// Gets the username of the user holding the outstanding lock.
+        /// </summary>
         public string LockedBy { get { return _lockedby; } }
+        /// <summary>
+        /// Gets a timestamp of when the asset was locked, if null then not locked.
+        /// </summary>
 		public DateTime? LockedAt { get { return _lockedat; } }
+        /// <summary>
+        /// Gets the creator of this asset.
+        /// </summary>
+        /// <remarks>Creator applies only to this version of the asset.  Different versions will potentially have different creators.</remarks>
 		public string Creator { get { return _creator; } }
+        /// <summary>
+        /// Gets the <see cref="ETag"/> of this <see cref="MetaAsset"/>.
+        /// </summary>
         public ETag ETag { get { return _etag; } }
         /// <summary>
-        /// The length of the data asset in bytes
+        /// Gets the quantity of bytes of the <see cref="DataAsset"/>.
         /// </summary>
         public ulong Length { get { return _length; } }
         /// <summary>
-        /// A MD5 Checksum of the data
+        /// Gets a checksum value of the <see cref="DataAsset"/>.
         /// </summary>
         public string Md5 { get { return _md5; } }
         /// <summary>
-        /// The extension of the file including the leading period (e.g., .exe, .txt, .docx, etc)
+        /// Gets the extension used by the <see cref="DataAsset"/> including the leading period (e.g., .exe, .txt, .docx, etc).
         /// </summary>
         public string Extension { get { return _extension; } }
         /// <summary>
@@ -66,39 +136,58 @@ namespace Common.Data
         /// </summary>
         public DateTime Modified { get { return _modified; } }
         /// <summary>
-        /// Gets the date.time that the asset was last accessed on the server
+        /// Gets the date/time that the asset was last accessed on the server
         /// </summary>
         public DateTime LastAccess { get { return _lastaccess; } }
         /// <summary>
-        /// A descriptive title of the asset
+        /// A descriptive title of this asset
         /// </summary>
         public string Title { get { return _title; } }
         /// <summary>
-        /// A collection of tags identifying the asset
+        /// A collection of strings that are descriptive of the document.  These are primarily used for searching.
         /// </summary>
         public List<string> Tags { get { return _tags; } }
 
         /// <summary>
-        /// User defined propertes Key is the name or title of the property, object is the value of the property
+        /// User defined propertes Key is the name or title of the property, object is the value of the property.
         /// </summary>
-        public Dictionary<string, object> UserProperties;
+        public Dictionary<string, object> UserProperties { get; set; }
 
         #endregion
 
 
+        /// <summary>
+        /// Gets a reference to the <see cref="FileSystem.MetaResource"/> giving this <see cref="MetaAsset"/> access to the file system.
+        /// </summary>
         public FileSystem.MetaResource Resource
         {
             get { return (FileSystem.MetaResource)_resource; }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether this instance is locked.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance is locked; otherwise, <c>false</c>.
+        /// </value>
         public bool IsLocked { get { return _lockedat != null && !string.IsNullOrEmpty(_lockedby); } }
-        
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetaAsset"/> class.
+        /// </summary>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
         public MetaAsset(Logger logger)
             : base(logger)
         {
             _etag = new ETag("0");
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetaAsset"/> class.
+        /// </summary>
+        /// <param name="guid">A <see cref="Guid"/> providing a unique reference to the Asset.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
         public MetaAsset(Guid guid, FileSystem.IO fileSystem, Logger logger)
             : base(guid, AssetType.Meta, logger)
         {
@@ -110,6 +199,28 @@ namespace Common.Data
             _state = new AssetState() { State = AssetState.Flags.CanTransfer };
         }
 
+        /// <summary>
+        /// Creates an instance of a <see cref="MetaAsset"/> object.
+        /// </summary>
+        /// <param name="guid">A Guid that provides a unique reference to an Asset.</param>
+        /// <param name="etag">Represents the <see cref="ETag"/> of this <see cref="MetaAsset"/>.</param>
+        /// <param name="metaversion">A numeric value indicating the version number of this <see cref="MetaAsset"/>.</param>
+        /// <param name="dataversion">A numeric value indicating the version number of the <see cref="DataAsset"/> paired with this <see cref="MetaAsset"/>.</param>
+        /// <param name="lockedby">The username of the user holding the outstanding lock.</param>
+        /// <param name="lockedat">A timestamp of when the asset was locked, if null then not locked.</param>
+        /// <param name="creator">The creator of this asset.</param>
+        /// <param name="length">The quantity of bytes of the <see cref="DataAsset"/>.</param>
+        /// <param name="md5">A checksum value of the <see cref="DataAsset"/>.</param>
+        /// <param name="extension">The extension used by the <see cref="DataAsset"/> including the leading period (e.g., .exe, .txt, .docx, etc).</param>
+        /// <param name="created">A timestamp marking the creation of this asset on the server.</param>
+        /// <param name="modified">A timestamp marking the modification of this asset on the server.</param>
+        /// <param name="lastaccess">A timestamp marking when this asset was last accessed on the server.</param>
+        /// <param name="title">A descriptive title of this asset.</param>
+        /// <param name="tags">A collection of strings that are descriptive of the document.  These are primarily used for searching.</param>
+        /// <param name="userproperties">User defined propertes Key is the name or title of the property, object is the value of the property.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
+        /// <returns>The instantiated <see cref="MetaAsset"/> reference.</returns>
         public static MetaAsset Create(Guid guid, ETag etag, uint metaversion,
             uint dataversion, string lockedby, DateTime? lockedat, string creator, ulong length, string md5, 
             string extension, DateTime created, DateTime modified, DateTime lastaccess, string title, 
@@ -141,6 +252,13 @@ namespace Common.Data
             return ma;
         }
 
+        /// <summary>
+        /// Creates an instance of a <see cref="MetaAsset"/> object.
+        /// </summary>
+        /// <param name="netMa">The <see cref="NetworkPackage.MetaAsset"/> object to use as the basis for the new <see cref="MetaAsset"/> instance.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
+        /// <returns>The instantiated <see cref="MetaAsset"/> reference.</returns>
         public static MetaAsset Create(NetworkPackage.MetaAsset netMa, FileSystem.IO fileSystem, Logger logger)
         {
             MetaAsset ma = new MetaAsset(logger);
@@ -154,12 +272,35 @@ namespace Common.Data
         /// <summary>
         /// Assigns a FileSystem.MetaResource to this object - should be used when State is None
         /// </summary>
-        /// <param name="fileSystem"></param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
+        /// <example>
+        /// This sample shows how to use the <see cref="AssignResource"/> method.
+        /// <code>
+        /// // This assumes the fileSystem argument is properly instantiated.
+        /// void A(FileSystem.IO fileSystem)
+        /// {
+        ///     // We discover that this MetaAsset has a "None" flag set for state.
+        ///     // This means that the MetaAsset cannot do anything which just will not work!
+        ///     // The remedy is to tell this library to assign the resource
+        ///     // The library will determine how to handle this, just tell it to make the assignment
+        ///     if (this.AssetState.State == Data.AssetState.Flags.None)
+        ///         AssignResource(fileSystem);
+        /// }
+        /// </code>
+        /// </example>
         public void AssignResource(FileSystem.IO fileSystem)
         {
             _resource = new FileSystem.MetaResource(_guid, fileSystem, _logger);
         }
 
+        /// <summary>
+        /// Instantiates a <see cref="MetaAsset"/> object based on the corresponding <see cref="FileSystem.MetaResource"/>.
+        /// </summary>
+        /// <param name="guid">A Guid that provides a unique reference to an Asset.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
+        /// <returns>The instantiated <see cref="MetaAsset"/> reference.</returns>
         public static MetaAsset Load(Guid guid, FileSystem.IO fileSystem, Logger generalLogger, Logger networkLogger)
         {
             MetaAsset ma = new MetaAsset(guid, fileSystem, generalLogger);
@@ -170,6 +311,20 @@ namespace Common.Data
             return ma;
         }
 
+        /// <summary>
+        /// Updates this <see cref="MetaAsset"/>.  This should be used only when the update is being requested by the server.
+        /// </summary>
+        /// <param name="etag">Represents the <see cref="ETag"/> of this <see cref="MetaAsset"/>.</param>
+        /// <param name="metaversion">A numeric value indicating the version number of this <see cref="MetaAsset"/>.</param>
+        /// <param name="dataversion">A numeric value indicating the version number of the <see cref="DataAsset"/> paired with this <see cref="MetaAsset"/>.</param>
+        /// <param name="lockedby">The username of the user holding the outstanding lock.</param>
+        /// <param name="lockedat">A timestamp of when the asset was locked, if null then not locked.</param>
+        /// <param name="creator">The creator of this asset.</param>
+        /// <param name="length">The quantity of bytes of the <see cref="DataAsset"/>.</param>
+        /// <param name="md5">A checksum value of the <see cref="DataAsset"/>.</param>
+        /// <param name="created">A timestamp marking the creation of this asset on the server.</param>
+        /// <param name="modified">A timestamp marking the modification of this asset on the server.</param>
+        /// <param name="lastaccess">A timestamp marking when this asset was last accessed on the server.</param>
         public void UpdateByServer(ETag etag, uint metaversion, uint dataversion, string lockedby, DateTime? lockedat, 
             string creator, ulong length, string md5, DateTime? created, DateTime modified, DateTime lastaccess)
         {
@@ -186,12 +341,21 @@ namespace Common.Data
             _lastaccess = lastaccess;
         }
 
+        /// <summary>
+        /// Updates this <see cref="MetaAsset"/>.  This should be used only when the update is being requested by the user.
+        /// </summary>
+        /// <param name="title">A descriptive title of this asset.</param>
+        /// <param name="tags">A collection of strings that are descriptive of the document.  These are primarily used for searching.</param>
         public void UpdateByUser(string title, List<string> tags)
         {
             _title = title;
             _tags = tags;
         }
 
+        /// <summary>
+        /// Updates this <see cref="MetaAsset"/>.  This should be used only when the update is being requested by the user.
+        /// </summary>
+        /// <param name="propertiesToUpdate">A collection of properties to update.  The key is the property name and the value is the value of the property.</param>
         public void UpdateByUser(Dictionary<string, object> propertiesToUpdate)
         {
             Dictionary<string, object>.Enumerator en;
@@ -271,6 +435,12 @@ namespace Common.Data
 
         #region Remote Communications Code
 
+        /// <summary>
+        /// Gets the current <see cref="ETag"/> from the server.
+        /// </summary>
+        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
+        /// <returns><see cref="ETag"/> if successful, otherwise <c>null</c>.</returns>
         public ETag GetETagFromServer(Work.AssetJobBase job, Logger networkLogger)
         {
             if (Data.AssetType.IsNullOrUnknown(_assetType))
@@ -327,13 +497,29 @@ namespace Common.Data
 
             return etag;
         }
-        
+
+        /// <summary>
+        /// Downloads the <see cref="MetaAsset"/> corresponding to the specified <see cref="Guid"/> from the server saving it to the local file system.
+        /// </summary>
+        /// <param name="guid">A Guid that provides a unique reference to an Asset.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
+        /// <returns>The instantiated <see cref="MetaAsset"/> reference.</returns>
         public static MetaAsset DownloadFromServer(string guid, FileSystem.IO fileSystem,
             Logger generalLogger, Logger networkLogger)
         {
             return DownloadFromServer(new Guid(guid), fileSystem, generalLogger, networkLogger);
         }
 
+        /// <summary>
+        /// Downloads the <see cref="MetaAsset"/> corresponding to the specified <see cref="Guid"/> from the server saving it to the local file system.
+        /// </summary>
+        /// <param name="guid">A Guid that provides a unique reference to an Asset.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
+        /// <returns>The instantiated <see cref="MetaAsset"/> reference.</returns>
         public static MetaAsset DownloadFromServer(Guid guid, FileSystem.IO fileSystem,
             Logger generalLogger, Logger networkLogger)
         {
@@ -345,6 +531,11 @@ namespace Common.Data
             return null;
         }
 
+        /// <summary>
+        /// Downloads the <see cref="MetaAsset"/> corresponding to this local <see cref="MetaAsset"/> from the server overwriting it on the local file system.
+        /// </summary>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
+        /// <returns><c>True</c> if successful; otherwise <c>false</c>.</returns>
         public bool DownloadFromServer(Logger networkLogger)
         {
             if (!_state.HasFlag(AssetState.Flags.CanTransfer))
@@ -420,6 +611,12 @@ namespace Common.Data
             return true;
         }
 
+        /// <summary>
+        /// Downloads the <see cref="MetaAsset"/> corresponding to this local <see cref="MetaAsset"/> from the server overwriting it on the local file system.
+        /// </summary>
+        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
+        /// <returns><c>True</c> if successful; otherwise <c>false</c>.</returns>
         public bool DownloadFromServer(Work.AssetJobBase job, Logger networkLogger)
         {
             if (!_state.HasFlag(AssetState.Flags.CanTransfer))
@@ -501,6 +698,12 @@ namespace Common.Data
             return true;
         }
 
+        /// <summary>
+        /// Saves this <see cref="MetaAsset"/> to a the server returning a <see cref="NetworkPackage.ServerResponse"/> representing the result.
+        /// </summary>
+        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
+        /// <returns>A <see cref="NetworkPackage.ServerResponse"/> returned by the server.</returns>
         public NetworkPackage.ServerResponse SaveToServer(Work.AssetJobBase job, Logger networkLogger)
         {
             NetworkPackage.ServerResponse sr;
@@ -580,6 +783,11 @@ namespace Common.Data
 
         #region Local IO Code
 
+        /// <summary>
+        /// Loads this <see cref="MetaAsset"/> using its <see cref="FileSystem.MetaResource"/>.
+        /// </summary>
+        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool Load(Work.AssetJobBase job)
         {
             NetworkPackage.MetaAsset networkMetaAsset;
@@ -608,6 +816,11 @@ namespace Common.Data
             return true;
         }
 
+        /// <summary>
+        /// Loads this <see cref="MetaAsset"/> using its <see cref="FileSystem.MetaResource"/>.
+        /// </summary>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool Load(Logger generalLogger)
         {
             NetworkPackage.MetaAsset networkMetaAsset;
@@ -641,6 +854,9 @@ namespace Common.Data
             return true;
         }
 
+        /// <summary>
+        /// Saves this <see cref="MetaAsset"/> to the file system.
+        /// </summary>
         public void Save()
         {
             NetworkPackage.MetaAsset nma = new NetworkPackage.MetaAsset();
@@ -676,6 +892,9 @@ namespace Common.Data
                 AssetState.Flags.OnDisk;
         }
 
+        /// <summary>
+        /// Saves this <see cref="MetaAsset"/> to the file system using version scheme naming.
+        /// </summary>
         public void SaveUsingVersionScheme()
         {
             NetworkPackage.MetaAsset nma = new NetworkPackage.MetaAsset();
@@ -701,6 +920,10 @@ namespace Common.Data
                 AssetState.Flags.InMemory;
         }
 
+        /// <summary>
+        /// Creates a copy of this <see cref="MetaAsset"/> on the file system using the version scheme naming.
+        /// </summary>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool CopyCurrentToVersionScheme()
         {
             return _resource.CopyCurrentToVersionScheme(_metaversion, 
@@ -710,9 +933,9 @@ namespace Common.Data
         #endregion
 
         /// <summary>
-        /// Exports this instance to an instance of Common.Network.MetaAsset to be transported to the server
+        /// Exports this instance to an instance of <see cref="NetworkPackage.MetaAsset"/>.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A <see cref="NetworkPackage.MetaAsset"/> representing this <see cref="MetaAsset"/>.</returns>
         public NetworkPackage.MetaAsset ExportToNetworkRepresentation()
         {
             // Do error checking
@@ -763,9 +986,9 @@ namespace Common.Data
         }
 
         /// <summary>
-        /// Imports an instance of Common.Network.MetaAsset to this instance
+        /// Imports an instance of a <see cref="NetworkPackage.MetaAsset"/> to this instance.
         /// </summary>
-        /// <param name="ma">Instance to import</param>
+        /// <param name="ma">The <see cref="NetworkPackage.MetaAsset"/> to import.</param>
         public void ImportFromNetworkRepresentation(NetworkPackage.MetaAsset ma)
         {
             if (!ma.ContainsKey("$guid")) throw new Exception("The required property '$guid' does not exist.");
@@ -872,22 +1095,38 @@ namespace Common.Data
                 AssetState.Flags.CanTransfer;
         }
 
+        /// <summary>
+        /// Sets the <see cref="MetaVersion"/> property.
+        /// </summary>
+        /// <param name="value">The value.</param>
         public void SetMetaVersion(uint value)
         {
             _metaversion = value;
         }
 
+        /// <summary>
+        /// Sets the <see cref="DataVersion"/> property.
+        /// </summary>
+        /// <param name="value">The value.</param>
         public void SetDataVersion(uint value)
         {
             _dataversion = value;
         }
 
+        /// <summary>
+        /// Applies a lock to this <see cref="MetaAsset"/>.
+        /// </summary>
+        /// <param name="at">A timestamp when the lock was applied.</param>
+        /// <param name="by">The username of the user that has the lock.</param>
         public void ApplyLock(DateTime at, string by)
         {
             _lockedat = at;
             _lockedby = by;
         }
 
+        /// <summary>
+        /// Releases the lock.
+        /// </summary>
         public void ReleaseLock()
         {
             _lockedat = null;

@@ -19,27 +19,83 @@ using System.Collections.Generic;
 
 namespace Common.Work
 {
+    /// <summary>
+    /// Represents an object that manages jobs.
+    /// </summary>
     public class Master
     {
+        /// <summary>
+        /// An enumeration of types of jobs
+        /// </summary>
         public enum JobType
         {
+            /// <summary>
+            /// No job type set.
+            /// </summary>
             None = 0,
+            /// <summary>
+            /// Downloads the ETag from the remote host.
+            /// </summary>
             GetETag,
+            /// <summary>
+            /// Downloads the full asset from the remote host.
+            /// </summary>
             DownloadAsset,
+            /// <summary>
+            /// If the remote ETag is newer then downloads the full asset from the 
+            /// remote host, saving it to disk and updating the local meta asset.
+            /// </summary>
             LoadResource,
+            /// <summary>
+            /// Uploads the full asset to the remote host.
+            /// </summary>
             SaveResource
         }
 
+        /// <summary>
+        /// A collection of jobs waiting for execution
+        /// </summary>
         private List<AssetJobBase> _jobQueue;
+        /// <summary>
+        /// A collection of jobs currently executing
+        /// </summary>
         private List<AssetJobBase> _executingJobs;
+        /// <summary>
+        /// A collection of <see cref="Guid"/> object representing the IDs of locked resources.
+        /// </summary>
         private List<Guid> _lockedResourceIDs;
+        /// <summary>
+        /// The <see cref="Thread"/> responsible for dispatching jobs.
+        /// </summary>
         private Thread _workDispatcher;
+        /// <summary>
+        /// The id of the next job.
+        /// </summary>
         private ulong _id;
+        /// <summary>
+        /// A reference to the <see cref="ErrorManager"/>.
+        /// </summary>
         private ErrorManager _errorManager;
+        /// <summary>
+        /// A reference to the <see cref="FileSystem.IO"/>.
+        /// </summary>
         private FileSystem.IO _fileSystem;
+        /// <summary>
+        /// A reference to the <see cref="Logger"/> that this instance should use to document general events.
+        /// </summary>
         private Logger _generalLogger;
+        /// <summary>
+        /// A reference to the <see cref="Logger"/> that this instance should use to document network events.
+        /// </summary>
         private Logger _networkLogger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Master"/> class.
+        /// </summary>
+        /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public Master(ErrorManager errorManager, FileSystem.IO fileSystem, 
             Logger generalLogger, Logger networkLogger)
         {
@@ -54,6 +110,15 @@ namespace Common.Work
             _networkLogger = networkLogger;
         }
 
+        /// <summary>
+        /// Adds a work request to a list of pending requests.  The <see cref="Master"/> will assign
+        /// the request to a job and issue it to a worker thread as soon as it determines it is possible.
+        /// </summary>
+        /// <param name="requestor">The object that requested performance of this job.</param>
+        /// <param name="jobType">The <see cref="JobType"/> of the job.</param>
+        /// <param name="fullAsset">The full asset.</param>
+        /// <param name="actUpdateUI">The method called to update the UI.</param>
+        /// <param name="timeout">The timeout duration.</param>
         public void AddJob(IWorkRequestor requestor, JobType jobType, Data.FullAsset fullAsset, 
             AssetJobBase.UpdateUIDelegate actUpdateUI, uint timeout)
         {
@@ -130,7 +195,7 @@ namespace Common.Work
                     while (pos < _jobQueue.Count)
                     {
                         // Run through the queue looking for jobs that can be performed
-                        if (!ResourceIsLocked(_jobQueue[pos].FullAsset))
+                        if (!AssetIsLocked(_jobQueue[pos].FullAsset))
                         {
                             lock (_jobQueue)
                             {
@@ -158,7 +223,12 @@ namespace Common.Work
             lock (_workDispatcher) { _workDispatcher = null; }
         }
 
-        private bool ResourceIsLocked(Data.FullAsset fullAsset)
+        /// <summary>
+        /// Checks if the specified asset is locked
+        /// </summary>
+        /// <param name="fullAsset">The full asset.</param>
+        /// <returns><c>True</c> if locked; otherwise, <c>false</c>.</returns>
+        private bool AssetIsLocked(Data.FullAsset fullAsset)
         {
             lock (_lockedResourceIDs)
             {
@@ -172,6 +242,11 @@ namespace Common.Work
             return false;
         }
 
+        /// <summary>
+        /// Starts a worker thread to execute a job.
+        /// </summary>
+        /// <param name="job">The job.</param>
+        /// <returns>The thread running the job.</returns>
         public Thread StartJob(AssetJobBase job)
         {
             Thread t = new Thread(RunJob);
@@ -207,10 +282,14 @@ namespace Common.Work
             return t;
         }
 
+        /// <summary>
+        /// Runs the job.
+        /// </summary>
+        /// <param name="obj">The job.</param>
         private void RunJob(object obj)
         {
             if (obj.GetType().BaseType != typeof(AssetJobBase))
-                throw new ArgumentException("Argument must be of type Work.Job");
+                throw new ArgumentException("Argument must be of type Work.AssetJobBase");
 
             AssetJobBase job = (AssetJobBase)obj;
             lock (job)
@@ -248,6 +327,10 @@ namespace Common.Work
             }
         }
 
+        /// <summary>
+        /// Cancels the currently executing job for a resource.
+        /// </summary>
+        /// <param name="fullAsset">The full asset.</param>
         public void CancelJobForResource(Data.FullAsset fullAsset)
         {
             lock (_executingJobs)
@@ -262,6 +345,11 @@ namespace Common.Work
             }
         }
 
+        /// <summary>
+        /// Finds the executing job for resource.
+        /// </summary>
+        /// <param name="fullAsset">The full asset.</param>
+        /// <returns>The <see cref="AssetJobBase"/> if found; otherwise, <c>null</c>.</returns>
         public AssetJobBase FindExecutingJobForResource(Data.FullAsset fullAsset)
         {
             lock (_executingJobs)

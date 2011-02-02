@@ -20,14 +20,35 @@ using System.Collections.Generic;
 
 namespace Common
 {
+    /// <summary>
+    /// Represents an object that manages errors.
+    /// </summary>
     public class ErrorManager
     {
+        /// <summary>
+        /// Represents the method that handles an update UI event.
+        /// </summary>
+        /// <param name="errors">A collection of errors.</param>
         public delegate void UpdateUI(List<ErrorMessage> errors);
 
+        /// <summary>
+        /// A collection of errors.
+        /// </summary>
         private List<ErrorMessage> _errors;
+        /// <summary>
+        /// A reference to the method handling update UI events.
+        /// </summary>
         private UpdateUI _actUpdateUI;
+        /// <summary>
+        /// A reference to the <see cref="Logger"/> that this instance should use to document events.
+        /// </summary>
         private Logger _generalLogger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ErrorManager"/> class.
+        /// </summary>
+        /// <param name="actUpdateUI">A reference to the method handling update UI events.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
         public ErrorManager(UpdateUI actUpdateUI, Logger generalLogger)
         {
             _errors = new List<ErrorMessage>();
@@ -35,6 +56,10 @@ namespace Common
             _generalLogger = generalLogger;
         }
 
+        /// <summary>
+        /// Adds the error.
+        /// </summary>
+        /// <param name="error">The error.</param>
         public void AddError(ErrorMessage error)
         {
             lock (_errors)
@@ -44,6 +69,9 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Starts this instance.
+        /// </summary>
         public void Start()
         {
             Thread t = new Thread(new ThreadStart(Run));
@@ -51,6 +79,9 @@ namespace Common
             t.Start();
         }
 
+        /// <summary>
+        /// Runs this instance.
+        /// </summary>
         private void Run()
         {
             if (_errors == null || _errors.Count <= 0)
@@ -63,11 +94,19 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Callback to end invocation.
+        /// </summary>
+        /// <param name="result">The result.</param>
         private void AsyncCallback(IAsyncResult result)
         {
             ((UpdateUI)result.AsyncState).EndInvoke(result);
         }
 
+        /// <summary>
+        /// Logs the errors.
+        /// </summary>
+        /// <param name="errors">The errors.</param>
         private void LogErrors(List<ErrorMessage> errors)
         {
             for (int i = 0; i < errors.Count; i++)

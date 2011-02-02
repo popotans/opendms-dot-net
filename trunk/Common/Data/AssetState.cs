@@ -17,32 +17,97 @@ using System;
 
 namespace Common.Data
 {
+    /// <summary>
+    /// Represents the state of an Asset.  The state should be checked before any action on or by the Asset.
+    /// </summary>
     public class AssetState
     {
+        /// <summary>
+        /// A collection of markers identifying the current state
+        /// </summary>
         public enum Flags
         {
+            /// <summary>
+            /// No flag set.
+            /// </summary>
             None = 0,
+            /// <summary>
+            /// The Asset was loaded from the local file system.
+            /// </summary>
             LoadedFromLocal = 1,
+            /// <summary>
+            /// The Asset was loaded from the remote host.
+            /// </summary>
             LoadedFromRemote = 2,
+            /// <summary>
+            /// The Asset is currently present in memory.
+            /// </summary>
             InMemory = 4,
+            /// <summary>
+            /// The Asset in memory is outdated.
+            /// </summary>
             MemoryDirty = 8,
+            /// <summary>
+            /// The Asset exists on the local file system.
+            /// </summary>
             OnDisk = 16,
+            /// <summary>
+            /// The Asset on the local file system is outdated.
+            /// </summary>
             DiskDirty = 32,
+            /// <summary>
+            /// The Asset can be transfered to a remote host.
+            /// </summary>
             CanTransfer
         }
 
+        /// <summary>
+        /// Gets or sets a collection of markers identifying the current state.
+        /// </summary>
+        /// <value>
+        /// The state.
+        /// </value>
         public Flags State { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssetState"/> class.
+        /// </summary>
         public AssetState()
         {
             this.State = AssetState.Flags.None;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssetState"/> class.
+        /// </summary>
+        /// <param name="flags">A collection of markers identifying the current state.</param>
         public AssetState(Flags flags)
         {
             this.State = flags;
         }
 
+        /// <summary>
+        /// Determines whether this <see cref="AssetState"/> has the specified flag(s).
+        /// </summary>
+        /// <param name="flags">The <see cref="Flags"/> to check for existance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified flags has flag; otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>This method provides a shortcut to a bitwise and comparison and therefore, 
+        /// multiple flags can be passed as an argument but all argument flags must match else 
+        /// <c>false</c> is returned.</remarks>
+        /// <example>
+        /// This sample shows how to call the <see cref="HasFlag"/> method.
+        /// <code>
+        /// // This code assumes the programmer wants to save an asset '_asset' which has 
+        /// // already been instantiated, to disk if it does not already exist on disk.
+        /// void A()
+        /// {
+        ///     if (!_asset.State.HasFlag(AssetState.Flags.OnDisk))
+        ///         _asset.Save();
+        /// }
+        /// </code>
+        /// </example>
         public bool HasFlag(Flags flags)
         {
             return (State & flags) == flags;

@@ -18,19 +18,41 @@ using System.IO;
 
 namespace Common
 {
+    /// <summary>
+    /// Represents a facility for saving messages to a running list of messages.
+    /// </summary>
     public class Logger
     {
+        /// <summary>
+        /// An enumeration of logging levels.
+        /// </summary>
         public enum LevelEnum
         {
+            /// <summary>
+            /// Normal logging.
+            /// </summary>
             Normal = 0,
+            /// <summary>
+            /// Log everything.
+            /// </summary>
             Debug
         }
 
+        /// <summary>
+        /// A reference to the <see cref="StreamWriter"/> object used to write entries.
+        /// </summary>
         private StreamWriter _writer;
+        /// <summary>
+        /// <c>True</c> if the stream is open.
+        /// </summary>
         private bool _isOpen;
 
         //public static Logger Instance = new Logger();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Logger"/> class.
+        /// </summary>
+        /// <param name="logName">Name of the log.</param>
         public Logger(string logName)
         {
             try
@@ -46,6 +68,11 @@ namespace Common
             Write(LevelEnum.Debug, "Logging started.");
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Logger"/> class.
+        /// </summary>
+        /// <param name="logPath">The log path.</param>
+        /// <param name="logName">Name of the log.</param>
         public Logger(string logPath, string logName)
         {
             try
@@ -60,6 +87,10 @@ namespace Common
             Write(LevelEnum.Debug, "Logging started.");
         }
 
+        /// <summary>
+        /// Releases unmanaged resources and performs other cleanup operations before the
+        /// <see cref="Logger"/> is reclaimed by garbage collection.
+        /// </summary>
         ~Logger()
         {
             if (_writer != null && _writer.BaseStream != null 
@@ -67,8 +98,14 @@ namespace Common
                 Close();
         }
 
+        /// <summary>
+        /// Writes the specified text to the log if the logging level is met.
+        /// </summary>
+        /// <param name="level">The logging level of the text.</param>
+        /// <param name="text">The text to log.</param>
         public void Write(LevelEnum level, string text)
         {
+            // TODO : Make this check level.
             if (_writer == null) return;
 
             lock (_writer)
@@ -81,6 +118,9 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Closes this instance.
+        /// </summary>
         public void Close()
         {
             if (_writer != null && _isOpen)
@@ -92,6 +132,11 @@ namespace Common
             _isOpen = false;
         }
 
+        /// <summary>
+        /// Converts an exception to a string representation for logging.
+        /// </summary>
+        /// <param name="ex">The exception.</param>
+        /// <returns>The string representation.</returns>
         public static string ExceptionToString(Exception ex)
         {
             System.Diagnostics.StackTrace stackTrace;

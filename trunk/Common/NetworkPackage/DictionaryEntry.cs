@@ -17,21 +17,53 @@ using System;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// Represents an individual element of a Dictionary type collection.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
     public class DictionaryEntry<TKey, TValue> : Base
     {
+        /// <summary>
+        /// Gets or sets the key.
+        /// </summary>
+        /// <value>
+        /// The key.
+        /// </value>
         public TKey Key { get; set; }
+        /// <summary>
+        /// Gets or sets the value.
+        /// </summary>
+        /// <value>
+        /// The value.
+        /// </value>
         public TValue Value { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DictionaryEntry&lt;TKey, TValue&gt;"/> class.
+        /// </summary>
         public DictionaryEntry()
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DictionaryEntry&lt;TKey, TValue&gt;"/> class.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
         public DictionaryEntry(TKey key, TValue value)
         {
             Key = key;
             Value = value;
         }
 
+        /// <summary>
+        /// Serializes this instance using the specified XML writer.
+        /// </summary>
+        /// <param name="xmlWriter">The XML writer.</param>
+        /// <returns>
+        /// The XML writer passed in argument.
+        /// </returns>
         public override System.Xml.XmlWriter Serialize(System.Xml.XmlWriter xmlWriter)
         {
             xmlWriter.WriteStartElement("Key");
@@ -46,6 +78,13 @@ namespace Common.NetworkPackage
             return xmlWriter;
         }
 
+        /// <summary>
+        /// Deserializes the content of the specified XML reader populating the properties of this instance.
+        /// </summary>
+        /// <param name="xmlReader">The XML reader.</param>
+        /// <returns>
+        /// The XML reader passed in argument.
+        /// </returns>
         public override System.Xml.XmlReader Deserialize(System.Xml.XmlReader xmlReader)
         {
             bool readStart = false;

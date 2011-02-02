@@ -17,6 +17,9 @@ using System;
 
 namespace Common
 {
+    /// <summary>
+    /// Represents an message explaining an error.
+    /// </summary>
     public class ErrorMessage
     {
         // Timeout Failed 1
@@ -107,28 +110,103 @@ namespace Common
 
 
 
+        /// <summary>
+        /// The code of the error.
+        /// </summary>
         private int _id;
+        /// <summary>
+        /// The caption of the error message.
+        /// </summary>
         private string _caption;
+        /// <summary>
+        /// The message displayed to the user.
+        /// </summary>
         private string _userMessage;
+        /// <summary>
+        /// The message saved to the log.
+        /// </summary>
         private string _logMessage;
+        /// <summary>
+        /// <c>True</c> to save the message to the log.
+        /// </summary>
         private bool _saveToLog;
+        /// <summary>
+        /// <c>True</c> to display the message to the user.
+        /// </summary>
         private bool _displayToUser;
+        /// <summary>
+        /// The timestamp of the error.
+        /// </summary>
         private DateTime _timestamp;
+        /// <summary>
+        /// An exception that accompanied or caused the error.
+        /// </summary>
         private Exception _exception;
 
+        /// <summary>
+        /// Gets or sets the code of the error.
+        /// </summary>
+        /// <value>
+        /// The id.
+        /// </value>
         public int Id { get { return _id; } set { _id = value; } }
+        /// <summary>
+        /// Gets or sets the caption of the error message.
+        /// </summary>
+        /// <value>
+        /// The caption.
+        /// </value>
         public string Caption { get { return _caption; } set { _caption = value; } }
+        /// <summary>
+        /// Gets or sets the message displayed to the user.
+        /// </summary>
+        /// <value>
+        /// The user message.
+        /// </value>
         public string UserMessage { get { return _userMessage; } set { _userMessage = value; } }
+        /// <summary>
+        /// Gets or sets the message saved to the log.
+        /// </summary>
+        /// <value>
+        /// The log message.
+        /// </value>
         public string LogMessage { get { return _logMessage; } set { _logMessage = value; } }
+        /// <summary>
+        /// Gets or sets a value indicating whether to save the message to the log.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if to save the message to the log; otherwise, <c>false</c>.
+        /// </value>
         public bool SaveToLog { get { return _saveToLog; } set { _saveToLog = value; } }
+        /// <summary>
+        /// Gets or sets a value indicating whether to display the message to the user.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if to display the message to the user; otherwise, <c>false</c>.
+        /// </value>
         public bool DisplayToUser { get { return _displayToUser; } set { _displayToUser = value; } }
+        /// <summary>
+        /// Gets the timestamp of the error.
+        /// </summary>
         public DateTime Timestamp { get { return _timestamp; } }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ErrorMessage"/> class.
+        /// </summary>
         public ErrorMessage()
         {
             _timestamp = DateTime.Now;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ErrorMessage"/> class.
+        /// </summary>
+        /// <param name="id">The code of the error.</param>
+        /// <param name="caption">The caption of the error message.</param>
+        /// <param name="userMessage">The message displayed to the user.</param>
+        /// <param name="logMessage">The log message.</param>
+        /// <param name="saveToLog">if set to <c>true</c> to save to log.</param>
+        /// <param name="displayToUser">if set to <c>true</c> to display to user.</param>
         public ErrorMessage(int id, string caption, string userMessage, string logMessage, bool saveToLog, bool displayToUser) 
             : this()
         {
@@ -140,12 +218,26 @@ namespace Common
             _displayToUser = displayToUser;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ErrorMessage"/> class.
+        /// </summary>
+        /// <param name="id">The code of the error.</param>
+        /// <param name="caption">The caption of the error message.</param>
+        /// <param name="userMessage">The message displayed to the user.</param>
+        /// <param name="logMessage">The log message.</param>
+        /// <param name="saveToLog">if set to <c>true</c> to save to log.</param>
+        /// <param name="displayToUser">if set to <c>true</c> to display to user.</param>
+        /// <param name="exception">The exception that accompanied or caused the error.</param>
         public ErrorMessage(int id, string caption, string userMessage, string logMessage, bool saveToLog, bool displayToUser, Exception exception)
             : this(id, caption, userMessage, logMessage, saveToLog, displayToUser)
         {
             _exception = exception;
         }
 
+        /// <summary>
+        /// Creates a string representation of this message to be saved to a log.
+        /// </summary>
+        /// <returns></returns>
         public string LogFormat()
         {
             string str =
@@ -166,6 +258,13 @@ namespace Common
 
 
 
+        /// <summary>
+        /// Creates a timeout failed to start error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <param name="job">The job.</param>
+        /// <param name="jobType">Type of the job.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage TimeoutFailedToStart(Exception e, Work.JobBase job, string jobType)
         {
             return new ErrorMessage(TIMEOUT_FAILED_TO_START_CODE, TIMEOUT_FAILED_TO_START_CAPTION, TIMEOUT_FAILED_TO_START_USER,
@@ -173,6 +272,12 @@ namespace Common
                                     true, true, e);
         }
 
+        /// <summary>
+        /// Creates a get etag faled error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <param name="job">The job.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage GetETagFailed(Exception e, Work.AssetJobBase job)
         {
             return new ErrorMessage(JOB_GETETAG_FAILED_CODE, JOB_GETETAG_FAILED_CAPTION, JOB_GETETAG_FAILED_USER,
@@ -180,6 +285,11 @@ namespace Common
                                     true, true, e);
         }
 
+        /// <summary>
+        /// Creates a get etag failed due to invalid state error message.
+        /// </summary>
+        /// <param name="job">The job.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage GetETagFailedDueToInvalidState(Work.AssetJobBase job)
         {
             if(job.FullAsset != null && job.FullAsset.MetaAsset != null)
@@ -194,6 +304,12 @@ namespace Common
                                     true, true);
         }
 
+        /// <summary>
+        /// Creates a load resource failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <param name="job">The job.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage LoadResourceFailed(Exception e, Work.AssetJobBase job)
         {
             return new ErrorMessage(JOB_LOADRESOURCE_FAILED_CODE, JOB_LOADRESOURCE_FAILED_CAPTION, JOB_LOADRESOURCE_FAILED_USER,
@@ -201,6 +317,14 @@ namespace Common
                                     true, true, e);
         }
 
+        /// <summary>
+        /// Creates a save resource failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <param name="job">The job.</param>
+        /// <param name="additionalMessageUser">The additional message to display to user.</param>
+        /// <param name="additionalMessageLog">The additional message to save to the log.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage SaveResourceFailed(Exception e, Work.AssetJobBase job, string additionalMessageUser,
             string additionalMessageLog)
         {
@@ -218,6 +342,13 @@ namespace Common
                                     true, true);
         }
 
+        /// <summary>
+        /// Creates a job create failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <param name="fullAsset">The full asset.</param>
+        /// <param name="id">The code id.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage JobCreateFailed(Exception e, Data.FullAsset fullAsset, ulong id)
         {
             return new ErrorMessage(JOB_CREATE_FAILED_CODE, JOB_CREATE_FAILED_CAPTION, JOB_CREATE_FAILED_USER,
@@ -225,6 +356,12 @@ namespace Common
                                     true, true, e);
         }
 
+        /// <summary>
+        /// Creates a job start failed error message
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <param name="job">The job.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage JobStartFailed(Exception e, Work.AssetJobBase job)
         {
             return new ErrorMessage(JOB_START_FAILED_CODE, JOB_START_FAILED_CAPTION, JOB_START_FAILED_USER,
@@ -232,6 +369,12 @@ namespace Common
                                     true, true, e);
         }
 
+        /// <summary>
+        /// Creates a job run failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <param name="job">The job.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage JobRunFailed(Exception e, Work.AssetJobBase job)
         {
             return new ErrorMessage(JOB_RUN_FAILED_CODE, JOB_RUN_FAILED_CAPTION, JOB_RUN_FAILED_USER,
@@ -239,6 +382,11 @@ namespace Common
                                     true, true, e);
         }
 
+        /// <summary>
+        /// Creates a job invalid resource type error message.
+        /// </summary>
+        /// <param name="job">The job.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage JobInvalidResourceType(Work.AssetJobBase job)
         {
             return new ErrorMessage(JOB_INVALID_RESOURCE_TYPE_CODE, JOB_INVALID_RESOURCE_TYPE_CAPTION,
@@ -247,6 +395,12 @@ namespace Common
                                     true, true);
         }
 
+        /// <summary>
+        /// Creates a web net failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <param name="state">The <see cref="Network.State"/>.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage WebNetFailed(Exception e, Network.State state)
         {
             return new ErrorMessage(WEB_NET_FAILED_CODE, WEB_NET_FAILED_CAPTION, WEB_NET_FAILED_USER,
@@ -254,24 +408,44 @@ namespace Common
                                     true, true, e);
         }
 
+        /// <summary>
+        /// Creates a search option download failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage SearchOptionDownloadFailed(Exception e)
         {
             return new ErrorMessage(SEARCH_OPTIONSDOWNLOAD_FAILED_CODE, SEARCH_OPTIONSDOWNLOAD_FAILED_CAPTION, SEARCH_OPTIONSDOWNLOAD_FAILED_USER,
                                     SEARCH_OPTIONSDOWNLOAD_FAILED_LOG, true, true, e);
         }
 
+        /// <summary>
+        /// Creates a search option deserialization failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage SearchOptionDeserializationFailed(Exception e)
         {
             return new ErrorMessage(SEARCH_OPTIONSDESERIALIZATION_FAILED_CODE, SEARCH_OPTIONSDESERIALIZATION_FAILED_CAPTION, 
                                     SEARCH_OPTIONSDESERIALIZATION_FAILED_USER, SEARCH_OPTIONSDESERIALIZATION_FAILED_LOG, true, true, e);
         }
 
+        /// <summary>
+        /// Creates a meta form download failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage MetaFormDownloadFailed(Exception e)
         {
             return new ErrorMessage(METAFORM_DOWNLOAD_FAILED_CODE, METAFORM_DOWNLOAD_FAILED_CAPTION, METAFORM_DOWNLOAD_FAILED_USER,
                                     METAFORM_DOWNLOAD_FAILED_LOG, true, true, e);
         }
 
+        /// <summary>
+        /// Creates a meta form deserialization failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
         public static ErrorMessage MetaFormDeserializationFailed(Exception e)
         {
             return new ErrorMessage(METAFORM_DESERIALIZATION_FAILED_CODE, METAFORM_DESERIALIZATION_FAILED_CAPTION,

@@ -20,23 +20,56 @@ using System.Text;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// An abstract class representing a serializable List's base requirements for inheriting classes.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
     public abstract class ListBase<T> : Base
     {
+        /// <summary>
+        /// An array of type T.
+        /// </summary>
         private T[] _t;
+        /// <summary>
+        /// The quantity of elements in the List.
+        /// </summary>
         private int _count;
+        /// <summary>
+        /// The List's root element name.
+        /// </summary>
         private string _rootElementName;
 
 
+        /// <summary>
+        /// Gets the name of the root element.
+        /// </summary>
+        /// <value>
+        /// The name of the root element.
+        /// </value>
         public string RootElementName { get { return _rootElementName; } }
+        /// <summary>
+        /// Gets the quantity of elements in the List.
+        /// </summary>
         public int Count { get { return _count; } }
 
-        
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ListBase&lt;T&gt;"/> class.
+        /// </summary>
+        /// <param name="rootElementName">Name of the root element.</param>
         public ListBase(string rootElementName)
         {
             _t = new T[10];
             _rootElementName = rootElementName;
         }
 
+        /// <summary>
+        /// Serializes this instance using the specified XML writer.
+        /// </summary>
+        /// <param name="xmlWriter">The XML writer.</param>
+        /// <returns>
+        /// The XML writer passed in argument.
+        /// </returns>
         public override XmlWriter Serialize(XmlWriter xmlWriter)
         {
             if (xmlWriter.Settings.Encoding != Encoding.UTF8)
@@ -50,6 +83,13 @@ namespace Common.NetworkPackage
             return xmlWriter;
         }
 
+        /// <summary>
+        /// Deserializes the content of the specified XML reader populating the properties of this instance.
+        /// </summary>
+        /// <param name="xmlReader">The XML reader.</param>
+        /// <returns>
+        /// The XML reader passed in argument.
+        /// </returns>
         public override XmlReader Deserialize(XmlReader xmlReader)
         {
             bool loop = true;
@@ -122,6 +162,10 @@ namespace Common.NetworkPackage
             return xmlReader;
         }
 
+        /// <summary>
+        /// Adds the specified element to the collection.
+        /// </summary>
+        /// <param name="element">The element.</param>
         public void Add(T element)
         {
             if (_count + 1 >= _t.Length)
@@ -130,6 +174,11 @@ namespace Common.NetworkPackage
             _t[_count++] = element;
         }
 
+        /// <summary>
+        /// Find the index of the specified element.
+        /// </summary>
+        /// <param name="element">The element.</param>
+        /// <returns>A zero based index of the position in the collection.</returns>
         public int IndexOf(T element)
         {
             for (int i = 0; i < _count; i++)
@@ -141,6 +190,10 @@ namespace Common.NetworkPackage
             return -1;
         }
 
+        /// <summary>
+        /// Removes the specified element from the collection.
+        /// </summary>
+        /// <param name="element">The element.</param>
         public void Remove(T element)
         {
             int index = IndexOf(element);
@@ -149,6 +202,10 @@ namespace Common.NetworkPackage
                 Remove(index);
         }
 
+        /// <summary>
+        /// Removes the element from the collection at the specified index.
+        /// </summary>
+        /// <param name="index">The index.</param>
         public void Remove(int index)
         {
             if (index + 1 > _count)
@@ -166,6 +223,9 @@ namespace Common.NetworkPackage
                 Constrict(_t.Length - (_count + 10));
         }
 
+        /// <summary>
+        /// Gets or sets the <typeparamref name="T"/> at the specified index.
+        /// </summary>
         public T this[int index]
         {
             get
@@ -184,6 +244,10 @@ namespace Common.NetworkPackage
             }
         }
 
+        /// <summary>
+        /// Expands the collection's maximum size by the specified additional space.
+        /// </summary>
+        /// <param name="additionalSpace">The additional space.</param>
         private void Expand(int additionalSpace)
         {
             T[] t = new T[_t.Length + additionalSpace];
@@ -191,6 +255,10 @@ namespace Common.NetworkPackage
             _t = t;
         }
 
+        /// <summary>
+        /// Constricts the collection's maximum size by the specified removed space.
+        /// </summary>
+        /// <param name="removedSpace">The removed space.</param>
         private void Constrict(int removedSpace)
         {
             T[] t = new T[_t.Length - removedSpace];

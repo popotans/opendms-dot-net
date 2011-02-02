@@ -19,15 +19,36 @@ using System.Xml.Serialization;
 
 namespace Common
 {
+    /// <summary>
+    /// Represents settings for a server.
+    /// </summary>
     [XmlRoot("ServerSettings")]
     public class ServerSettings
     {
+        /// <summary>
+        /// A reference to the static instance.
+        /// </summary>
         private static ServerSettings _instance;
+        /// <summary>
+        /// The IP address of the server.
+        /// </summary>
         private string _serverIp;
+        /// <summary>
+        /// The port number of the service.
+        /// </summary>
         private int _serverPort;
+        /// <summary>
+        /// The size of the network buffer.
+        /// </summary>
         private int _networkBufferSize;
+        /// <summary>
+        /// The timeout duration.
+        /// </summary>
         private int _networkTimeout;
 
+        /// <summary>
+        /// Gets the static instance.
+        /// </summary>
         [XmlIgnore]
         public static ServerSettings Instance
         {
@@ -50,9 +71,21 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is loaded.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance is loaded; otherwise, <c>false</c>.
+        /// </value>
         [XmlIgnore]
         public bool IsLoaded { get; set; }
 
+        /// <summary>
+        /// Gets or sets the server ip.
+        /// </summary>
+        /// <value>
+        /// The server ip.
+        /// </value>
         public string ServerIp
         {
             get
@@ -65,6 +98,12 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Gets or sets the server port.
+        /// </summary>
+        /// <value>
+        /// The server port.
+        /// </value>
         public int ServerPort
         {
             get
@@ -77,6 +116,12 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Gets or sets the size of the network buffer.
+        /// </summary>
+        /// <value>
+        /// The size of the network buffer.
+        /// </value>
         public int NetworkBufferSize
         {
             get
@@ -89,6 +134,12 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Gets or sets the network timeout duration.
+        /// </summary>
+        /// <value>
+        /// The network timeout duration.
+        /// </value>
         public int NetworkTimeout
         {
             get
@@ -101,6 +152,9 @@ namespace Common
             }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServerSettings"/> class.
+        /// </summary>
         public ServerSettings()
         {
             _serverIp = "127.0.0.1";

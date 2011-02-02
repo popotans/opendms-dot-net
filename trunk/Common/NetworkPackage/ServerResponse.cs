@@ -19,30 +19,79 @@ using System.Text;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// Represents a server's response to a client's request.
+    /// </summary>
     public class ServerResponse : DictionaryBase<string, object>
     {
+        /// <summary>
+        /// An enumeration of error codes.
+        /// </summary>
         public enum ErrorCode
         {
+            /// <summary>
+            /// No error code set.
+            /// </summary>
             None = 0,
+            /// <summary>
+            /// A lease already exists.
+            /// </summary>
             ExistingLease,
+            /// <summary>
+            /// A resource already exists.
+            /// </summary>
             ExistingResource,
+            /// <summary>
+            /// The resource is locked.
+            /// </summary>
             ReasourceIsLocked,
+            /// <summary>
+            /// The Guid is invalid.
+            /// </summary>
             InvalidGuid,
-            InvalidRelativeVersion,
+            /// <summary>
+            /// The read only value is invalid.
+            /// </summary>
             InvalidReadOnlyValue,
+            /// <summary>
+            /// The formatting is invalid.
+            /// </summary>
             InvalidFormatting,
+            /// <summary>
+            /// The permissions are invalid.
+            /// </summary>
             InvalidPermissions,
+            /// <summary>
+            /// The search parameters are invalid.
+            /// </summary>
             InvalidSearchParameters,
+            /// <summary>
+            /// The indexing failed.
+            /// </summary>
             FailedIndexing,
+            /// <summary>
+            /// The resource does not exist.
+            /// </summary>
             ResourceDoesNotExist,
+            /// <summary>
+            /// An unhandled exception occurred.
+            /// </summary>
             Exception
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServerResponse"/> class.
+        /// </summary>
         public ServerResponse()
             : base("ServerResponse")
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServerResponse"/> class.
+        /// </summary>
+        /// <param name="pass">If set to <c>true</c> the response is considered successful; otherwise, <c>false</c>.</param>
+        /// <param name="code">The <see cref="ErrorCode"/>.</param>
         public ServerResponse(bool pass, ErrorCode code)
             : base("ServerResponse")
         {
@@ -51,6 +100,12 @@ namespace Common.NetworkPackage
             Add("Timestamp", DateTime.Now);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServerResponse"/> class.
+        /// </summary>
+        /// <param name="pass">If set to <c>true</c> the response is considered successful; otherwise, <c>false</c>.</param>
+        /// <param name="code">The <see cref="ErrorCode"/>.</param>
+        /// <param name="message">A message describing the error.</param>
         public ServerResponse(bool pass, ErrorCode code, string message)
             : base("ServerResponse")
         {

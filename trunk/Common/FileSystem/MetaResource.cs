@@ -17,9 +17,18 @@ using System;
 
 namespace Common.FileSystem
 {
+    /// <summary>
+    /// Represents a <see cref="Data.MetaAsset"/> on the local file system.
+    /// </summary>
     public class MetaResource 
         : ResourceBase
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetaResource"/> class.
+        /// </summary>
+        /// <param name="guid">A <see cref="Guid"/> providing a unique reference to the Asset.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
         public MetaResource(Guid guid, IO fileSystem, Logger logger)
             : base(guid, ResourceType.Meta, ".xml", fileSystem, logger)
         {

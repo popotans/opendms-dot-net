@@ -17,14 +17,25 @@ using System;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// Provides a method of packaging and unpackaging a <see cref="Data.ETag"/> object 
+    /// using XML for storage and transfer.
+    /// </summary>
     public class ETag 
         : DictionaryBase<string, object>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ETag"/> class.
+        /// </summary>
         public ETag()
             : base("ETag")
         {
         }
 
+        /// <summary>
+        /// Validates this instance.
+        /// </summary>
+        /// <returns></returns>
         public bool Validate()
         {
             if (!ContainsKey("Value")) return false;

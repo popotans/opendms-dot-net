@@ -17,9 +17,16 @@ using System;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// Represents a serializable List&lt;T&gt;.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
     public class List<T> 
         : ListBase<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="List&lt;T&gt;"/> class.
+        /// </summary>
         public List()
             : base("List")
         {
