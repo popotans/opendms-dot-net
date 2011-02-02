@@ -18,8 +18,15 @@ using System.Collections.Generic;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// Represents a collection of <see cref="FormProperty"/> elements to be used to display a search
+    /// form to a user.
+    /// </summary>
     public class SearchForm : ListBase<FormProperty>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SearchForm"/> class.
+        /// </summary>
         public SearchForm() 
             : base("SearchForm")
         {

@@ -18,62 +18,239 @@ using System.Threading;
 
 namespace Common.Work
 {
+    /// <summary>
+    /// An abstract class that represents the base requirements for any inheriting class
+    /// </summary>
     public abstract class JobBase
     {
+        /// <summary>
+        /// Represents the method that handles updating the UI.
+        /// </summary>
+        /// <param name="job">A reference to the calling <see cref="JobBase"/>.</param>
+        /// <param name="fullAsset">A reference to the <see cref="Data.FullAsset"/> within the job.</param>
         public delegate void UpdateUIDelegate(JobBase job, Data.FullAsset fullAsset);
+        /// <summary>
+        /// Represents the method that handles the completion of a cancellation request.
+        /// </summary>
+        /// <param name="actUpdateUI">The method that handles updating the UI.</param>
         public delegate void CancelCompleteDelegate(UpdateUIDelegate actUpdateUI);
 
+        /// <summary>
+        /// An enumeration of possible states for a job.
+        /// </summary>
         public enum State
         {
+            /// <summary>
+            /// No state set.
+            /// </summary>
             None = 0,
+            /// <summary>
+            /// The job is active.
+            /// </summary>
             Active = 1,
+            /// <summary>
+            /// The job is executing.
+            /// </summary>
             Executing = 2,
+            /// <summary>
+            /// The job is cancelled.
+            /// </summary>
             Cancelled = 4,
+            /// <summary>
+            /// The job has encountered an error.
+            /// </summary>
             Error = 8,
+            /// <summary>
+            /// The job has timed out.
+            /// </summary>
             Timeout = 16,
+            /// <summary>
+            /// The job has finished.
+            /// </summary>
             Finished = 32
         }
 
+        /// <summary>
+        /// An enumeration of methods of tracking progress.
+        /// </summary>
         public enum ProgressMethodType
         {
+            /// <summary>
+            /// No progress method has been set.
+            /// </summary>
             None = 0,
+            /// <summary>
+            /// The progress type is indeterminate.
+            /// </summary>
             Indeterminate,
+            /// <summary>
+            /// The progress type is determinate.
+            /// </summary>
             Determinate
         }
 
+        /// <summary>
+        /// The id of the job.
+        /// </summary>
         private ulong _id;
+        /// <summary>
+        /// A timestamp indicating when this job will timeout.
+        /// </summary>
         private DateTime _timeoutAt;
+        /// <summary>
+        /// A timestamp indicating when the last action on this job happened.
+        /// </summary>
         private DateTime _lastActionAt;
+        /// <summary>
+        /// The quantity of bytes completed.
+        /// </summary>
         private ulong _bytesComplete;
+        /// <summary>
+        /// The total quantity of bytes to transmit.
+        /// </summary>
         private ulong _bytesTotal;
+        /// <summary>
+        /// The percentage of the job that is complete.
+        /// </summary>
         private int _percentComplete;
+        /// <summary>
+        /// The current <see cref="State"/> of the job.
+        /// </summary>
         protected State _currentState;
+        /// <summary>
+        /// The <see cref="ProgressMethodType"/> of the job.
+        /// </summary>
         protected ProgressMethodType _progressMethod;
+        /// <summary>
+        /// The method called to update the UI.
+        /// </summary>
         protected UpdateUIDelegate _actUpdateUI;
+        /// <summary>
+        /// The method that requested job execution.
+        /// </summary>
         protected IWorkRequestor _requestor;
+        /// <summary>
+        /// The timeout duration.
+        /// </summary>
         protected uint _timeout;
+        /// <summary>
+        /// A reference to the <see cref="ErrorManager"/>.
+        /// </summary>
         protected ErrorManager _errorManager;
+        /// <summary>
+        /// A reference to the <see cref="FileSystem.IO"/>.
+        /// </summary>
         protected FileSystem.IO _fileSystem;
+        /// <summary>
+        /// A reference to the <see cref="Logger"/> that this instance should use to document general events.
+        /// </summary>
         protected Logger _generalLogger;
+        /// <summary>
+        /// A reference to the <see cref="Logger"/> that this instance should use to document network events.
+        /// </summary>
         protected Logger _networkLogger;
 
+        /// <summary>
+        /// Gets the id of the job.
+        /// </summary>
         public ulong Id { get { return _id; } }
+        /// <summary>
+        /// Gets the current <see cref="State"/> of the job.
+        /// </summary>
+        /// <value>
+        /// The state of the job.
+        /// </value>
         public State CurrentState { get { return _currentState; } }
+        /// <summary>
+        /// Gets the <see cref="ProgressMethodType"/> of the job.
+        /// </summary>
         public ProgressMethodType ProgressMethod { get { return _progressMethod; } }
+        /// <summary>
+        /// Gets the quantity of bytes completed.
+        /// </summary>
         public ulong BytesComplete { get { return _bytesComplete; } }
+        /// <summary>
+        /// Gets the total quantity of bytes to transmit.
+        /// </summary>
         public ulong BytesTotal { get { return _bytesTotal; } }
+        /// <summary>
+        /// Gets the percentage of the job that is complete.
+        /// </summary>
         public int PercentComplete { get { return _percentComplete; } }
+        /// <summary>
+        /// Gets the timestamp indicating when the last action on this job happened.
+        /// </summary>
         public DateTime LastAction { get { return _lastActionAt; } }
 
+        /// <summary>
+        /// Gets a value indicating whether this instance is active.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance is active; otherwise, <c>false</c>.
+        /// </value>
         public bool IsActive { get { return (_currentState & State.Active) == State.Active; } }
+        /// <summary>
+        /// Gets a value indicating whether this instance is executing.
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this instance is executing; otherwise, <c>false</c>.
+        /// </value>
         public bool IsExecuting { get { return (_currentState & State.Executing) == State.Executing; } }
+        /// <summary>
+        /// Gets a value indicating whether this instance is cancelled.
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this instance is cancelled; otherwise, <c>false</c>.
+        /// </value>
         public bool IsCancelled { get { return (_currentState & State.Cancelled) == State.Cancelled; } }
+        /// <summary>
+        /// Gets a value indicating whether this instance is error.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance is error; otherwise, <c>false</c>.
+        /// </value>
         public bool IsError { get { return (_currentState & State.Error) == State.Error; } }
+        /// <summary>
+        /// Gets a value indicating whether this instance is timeout.
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this instance is timeout; otherwise, <c>false</c>.
+        /// </value>
         public bool IsTimeout { get { return (_currentState & State.Timeout) == State.Timeout; } }
+        /// <summary>
+        /// Gets a value indicating whether this instance is finished.
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this instance is finished; otherwise, <c>false</c>.
+        /// </value>
         public bool IsFinished { get { return (_currentState & State.Finished) == State.Finished; } }
+        /// <summary>
+        /// Gets a value indicating whether the timeout thread can run.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if the timeout thread can run; otherwise, <c>false</c>.
+        /// </value>
         public bool TimeoutCanRun { get { return !IsCancelled && !IsTimeout && !IsFinished; } }
+        /// <summary>
+        /// Gets a value indicating whether this job should abort.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this job should abort; otherwise, <c>false</c>.
+        /// </value>
         public bool AbortAction { get { return IsCancelled || IsTimeout; } }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JobBase"/> class.
+        /// </summary>
+        /// <param name="requestor">The object that requested performance of this job.</param>
+        /// <param name="id">The id of this job.</param>
+        /// <param name="actUpdateUI">The method to call to update the UI.</param>
+        /// <param name="timeout">The timeout duration.</param>
+        /// <param name="progressMethod">The <see cref="ProgressMethodType"/>.</param>
+        /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public JobBase(IWorkRequestor requestor, ulong id, UpdateUIDelegate actUpdateUI, uint timeout,
             ProgressMethodType progressMethod, ErrorManager errorManager, FileSystem.IO fileSystem,
             Logger generalLogger, Logger networkLogger)
@@ -90,14 +267,24 @@ namespace Common.Work
             _networkLogger = networkLogger;
         }
 
+        /// <summary>
+        /// Runs this job.
+        /// </summary>
+        /// <returns>A reference to this instance.</returns>
         public abstract JobBase Run();
 
+        /// <summary>
+        /// Starts the timeout thread.
+        /// </summary>
         protected void StartTimeout()
         {
             Thread thread = new Thread(new ThreadStart(RunTimeout));
             thread.Start();
         }
 
+        /// <summary>
+        /// The timeout thread.
+        /// </summary>
         private void RunTimeout()
         {
             _timeoutAt = DateTime.Now.AddMilliseconds(_timeout);
@@ -113,22 +300,37 @@ namespace Common.Work
             }
         }
 
+        /// <summary>
+        /// Cancels this job.
+        /// </summary>
         public void Cancel()
         {
             _currentState |= State.Cancelled;
         }
 
+        /// <summary>
+        /// Sets the error flag.
+        /// </summary>
         public void SetErrorFlag()
         {
             _currentState |= State.Error;
         }
 
+        /// <summary>
+        /// Updates the last action and resets the timeout.
+        /// </summary>
         public void UpdateLastAction()
         {
             _lastActionAt = DateTime.Now;
             _timeoutAt = DateTime.Now.AddMilliseconds(_timeout);
         }
 
+        /// <summary>
+        /// Updates the progress of the job.
+        /// </summary>
+        /// <param name="bytesComplete">The quantity of bytes completed.</param>
+        /// <param name="bytesTotal">The total quantity of bytes to transmit.</param>
+        /// <returns>An int representing the percentage of completion.</returns>
         public int UpdateProgress(ulong bytesComplete, ulong bytesTotal)
         {
             _bytesComplete = bytesComplete;
@@ -137,6 +339,10 @@ namespace Common.Work
             return _percentComplete;
         }
 
+        /// <summary>
+        /// Checks if the thread needs aborted and updates the current state if so.
+        /// </summary>
+        /// <returns><c>True</c> if the thread is to abort; otherwise, <c>false</c>.</returns>
         public bool CheckForAbortAndUpdate()
         {
             if (AbortAction)

@@ -19,23 +19,53 @@ using System.Collections.Generic;
 
 namespace Common.FileSystem
 {
+    /// <summary>
+    /// Represents an object handling input/output to the local file system.
+    /// </summary>
     public class IO
     {
+        /// <summary>
+        /// The path to the root directory to be used with this system.
+        /// </summary>
         private string _rootPath;
+        /// <summary>
+        /// A positive Int32 value greater than 0 indicating the buffer size. For bufferSize values between one and eight, the actual buffer size is set to eight bytes.
+        /// </summary>
         private int _bufferSize;
+        /// <summary>
+        /// A reference to the <see cref="Logger"/> that this instance should use to document events.
+        /// </summary>
         private Logger _logger;
+        /// <summary>
+        /// A collection of open <see cref="FileState"/> objects.
+        /// </summary>
         private List<FileState> _openStates;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IO"/> class.
+        /// </summary>
+        /// <param name="rootPath">The path to the root directory to be used with this system.</param>
         public IO(string rootPath)
             : this(rootPath, 40960, null)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IO"/> class.
+        /// </summary>
+        /// <param name="rootPath">The path to the root directory to be used with this system.</param>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
         public IO(string rootPath, Logger logger)
             : this(rootPath, 40960, logger)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IO"/> class.
+        /// </summary>
+        /// <param name="rootPath">The path to the root directory to be used with this system.</param>
+        /// <param name="bufferSize">A positive Int32 value greater than 0 indicating the buffer size. For bufferSize values between one and eight, the actual buffer size is set to eight bytes.</param>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
         public IO(string rootPath, int bufferSize, Logger logger)
         {
             if(!rootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
@@ -51,11 +81,26 @@ namespace Common.FileSystem
             _openStates = new List<FileState>();
         }
 
+        /// <summary>
+        /// Gets the full file path given a relative path.
+        /// </summary>
+        /// <param name="relativePath">The relative path.</param>
+        /// <returns>The full file path.</returns>
         public string GetFullFilePath(string relativePath)
         {
             return _rootPath + relativePath;
         }
 
+        /// <summary>
+        /// Opens the file at the specified relative path.
+        /// </summary>
+        /// <param name="relativePath">The relative path of the file.</param>
+        /// <param name="mode">The <see cref="FileMode"/>.</param>
+        /// <param name="access">The <see cref="FileAccess"/>.</param>
+        /// <param name="share">The <see cref="FileShare"/>.</param>
+        /// <param name="options">The <see cref="FileOptions"/>.</param>
+        /// <param name="openedLocation">A string describing the location within the codebase where this method was called.</param>
+        /// <returns>An <see cref="IOStream"/> allowing access to the specified resource.</returns>
         public IOStream Open(string relativePath, FileMode mode, FileAccess access, FileShare share,
             FileOptions options, string openedLocation)
         {
@@ -63,16 +108,16 @@ namespace Common.FileSystem
         }
 
         /// <summary>
-        /// Opens a resource
+        /// Opens the file at the specified relative path.
         /// </summary>
-        /// <param name="relativePath"></param>
-        /// <param name="mode"></param>
-        /// <param name="access"></param>
-        /// <param name="share"></param>
-        /// <param name="options"></param>
-        /// <param name="bufferSize"></param>
-        /// <param name="openedLocation"></param>
-        /// <returns></returns>
+        /// <param name="relativePath">The relative path of the file.</param>
+        /// <param name="mode">The <see cref="FileMode"/>.</param>
+        /// <param name="access">The <see cref="FileAccess"/>.</param>
+        /// <param name="share">The <see cref="FileShare"/>.</param>
+        /// <param name="options">The <see cref="FileOptions"/>.</param>
+        /// <param name="bufferSize">A positive Int32 value greater than 0 indicating the buffer size. For bufferSize values between one and eight, the actual buffer size is set to eight bytes.</param>
+        /// <param name="openedLocation">A string describing the location within the codebase where this method was called.</param>
+        /// <returns>An <see cref="IOStream"/> allowing access to the specified resource.</returns>
         public IOStream Open(string relativePath, FileMode mode, FileAccess access, FileShare share,
             FileOptions options, int bufferSize, string openedLocation)
         {
@@ -132,9 +177,9 @@ namespace Common.FileSystem
         }
 
         /// <summary>
-        /// Closes a IOStream, throwing an exception if the IOStream does not exist in this instance.
+        /// Closes an <see cref="IOStream"/>, throwing an exception if the IOStream does not exist in this instance.
         /// </summary>
-        /// <param name="stream"></param>
+        /// <param name="stream">The <see cref="IOStream"/> to close.</param>
         public void Close(IOStream stream)
         {
             FileState state;
@@ -169,6 +214,11 @@ namespace Common.FileSystem
             throw new IOException("The path is not open.");
         }
 
+        /// <summary>
+        /// Gets all files within a relative directory.
+        /// </summary>
+        /// <param name="relativePath">The relative directory.</param>
+        /// <returns>An array of strings containing the full filepath for each file found within the relative directory.</returns>
         public string[] GetFiles(string relativePath)
         {
             if (relativePath.EndsWith(Path.DirectorySeparatorChar.ToString()))
@@ -180,22 +230,22 @@ namespace Common.FileSystem
         }
 
         /// <summary>
-        /// Determines if the resource exists on the underlying filesystem.
+        /// Determines if the resource exists on the underlying file system.
         /// </summary>
-        /// <param name="relativePath"></param>
-        /// <returns></returns>
+        /// <param name="relativePath">The relative path of the file.</param>
+        /// <returns><c>True</c> when the file at the relative path exists; otherwise, <c>false</c>.</returns>
         public bool ResourceExists(string relativePath)
         {
             return File.Exists(_rootPath + relativePath);
         }
 
         /// <summary>
-        /// Determines if the resource is open by another process in this instance and supplies the
-        /// FileState if found through the out state argument.
+        /// Determines if the file is open by another process in this instance and supplies the
+        /// <see cref="FileState"/> if found through the out <see cref="FileState"/> argument.
         /// </summary>
-        /// <param name="relativePath"></param>
-        /// <param name="state"></param>
-        /// <returns></returns>
+        /// <param name="relativePath">The relative path of the file.</param>
+        /// <param name="state">The <see cref="FileState"/> of the file if open by another process.</param>
+        /// <returns><c>True</c> if the file is open; otherwise, <c>false</c>.</returns>
         public bool HandleExists(string relativePath, out FileState state)
         {
             List<FileState>.Enumerator en;
@@ -218,6 +268,12 @@ namespace Common.FileSystem
             return false;
         }
 
+        /// <summary>
+        /// Copies the specified source stream.
+        /// </summary>
+        /// <param name="sourceStream">The source stream.</param>
+        /// <param name="destinationStream">The destination stream.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool Copy(IOStream sourceStream, IOStream destinationStream)
         {
             int bytesRead = 0;
@@ -275,9 +331,9 @@ namespace Common.FileSystem
         /// <summary>
         /// Copies the source resource to the destination creating a new resource.
         /// </summary>
-        /// <param name="relativeSourcePath"></param>
-        /// <param name="relativeDestinationPath"></param>
-        /// <returns></returns>
+        /// <param name="relativeSourcePath">The source file.</param>
+        /// <param name="relativeDestinationPath">The destination file.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool Copy(string relativeSourcePath, string relativeDestinationPath)
         {
             IOStream source, dest;
@@ -344,11 +400,12 @@ namespace Common.FileSystem
         }
 
         /// <summary>
-        /// Deletes a resource from the underlying filesystem if there is no conflicting usage by this
-        /// instance.
+        /// Deletes a file from the local file system if there is no conflicting usage by this
+        /// <see cref="IO"/> object.
         /// </summary>
-        /// <param name="relativePath"></param>
-        /// <returns></returns>
+        /// <param name="relativePath">The relative path of the file.</param>
+        /// <returns><c>True</c> if the file was successfully removed or if it does not exist; otherwise,
+        /// <c>false</c>.</returns>
         public bool Delete(string relativePath)
         {
             FileState state;
@@ -388,12 +445,12 @@ namespace Common.FileSystem
 
         /// <summary>
         /// Deletes a list of files by their relative path, if there is an exception thrown by the 
-        /// underlying filesystem during the actual deletion of the resource, an exception entry will
+        /// underlying file system during the actual deletion of the resource, an exception entry will
         /// be added to the list of exceptions argument.
         /// </summary>
-        /// <param name="relativePaths"></param>
-        /// <param name="exceptions"></param>
-        /// <returns></returns>
+        /// <param name="relativePaths">The relative paths for all files to remove.</param>
+        /// <param name="exceptions">A collection of exceptions thrown during removal of files.</param>
+        /// <returns><c>True</c> if all successful; otherwise, <c>false</c>.</returns>
         public bool DeleteMultipleFiles(List<string> relativePaths, out List<Exception> exceptions)
         {
             // This attempts to be all or nothing - meaning it checks our system, but we cannot
@@ -459,13 +516,18 @@ namespace Common.FileSystem
         /// <summary>
         /// Creates all directories needed to establish relativePath
         /// </summary>
-        /// <param name="relativePath"></param>
+        /// <param name="relativePath">The relative path of the file.</param>
         public void CreateDirectoryPath(string relativePath)
         {
             if (!Directory.Exists(Path.GetDirectoryName(_rootPath + relativePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(_rootPath + relativePath));
         }
 
+        /// <summary>
+        /// Gets the length of the file in bytes.
+        /// </summary>
+        /// <param name="relativePath">The relative path of the file.</param>
+        /// <returns></returns>
         public ulong GetFileLength(string relativePath)
         {
             return (ulong)new FileInfo(_rootPath + relativePath).Length;
@@ -474,8 +536,8 @@ namespace Common.FileSystem
         /// <summary>
         /// Computes the MD5 checksum value of the specified resource
         /// </summary>
-        /// <param name="relativePath"></param>
-        /// <returns></returns>
+        /// <param name="relativePath">The relative path of the file.</param>
+        /// <returns>A string representing the MD5 value.</returns>
         public string ComputeMd5(string relativePath)
         {
             IOStream stream;
@@ -513,9 +575,9 @@ namespace Common.FileSystem
         /// <summary>
         /// Checks to ensure matching MD5 checksum values for the argument path and the argument md5 value
         /// </summary>
-        /// <param name="relativePath"></param>
-        /// <param name="md5ToCompare"></param>
-        /// <returns></returns>
+        /// <param name="relativePath">The relative path of the file.</param>
+        /// <param name="md5ToCompare">The MD5 value to compare with the MD5 value of this instance.</param>
+        /// <returns><c>True</c> if the values match; otherwise, <c>false</c>.</returns>
         public bool VerifyMd5(string relativePath, string md5ToCompare)
         {
             StringComparer comparer = StringComparer.OrdinalIgnoreCase;

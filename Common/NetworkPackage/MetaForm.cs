@@ -18,13 +18,24 @@ using System.Collections.Generic;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// Provides a method of packaging and unpackaging a collection of <see cref="MetaFormProperty"/> 
+    /// objects.
+    /// </summary>
     public class MetaForm : ListBase<MetaFormProperty>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetaForm"/> class.
+        /// </summary>
         public MetaForm()
             : base("MetaForm")
         {
         }
 
+        /// <summary>
+        /// Gets the a default instantiation of this class.
+        /// </summary>
+        /// <returns>The instantiated object.</returns>
         public static MetaForm GetDefault()
         {
             MetaForm mf = new MetaForm();

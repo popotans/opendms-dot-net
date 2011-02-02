@@ -21,10 +21,20 @@ using System.Collections.Generic;
 
 namespace Common.Network
 {
+    /// <summary>
+    /// Represents a HTTP Multipart Message
+    /// </summary>
     public class MultipartFormMessage
     {
+        /// <summary>
+        /// The type of <see cref="Encoding"/> for the message.
+        /// </summary>
         private readonly Encoding _encoding = Encoding.UTF8;
 
+        /// <summary>
+        /// Creates a new data boundary for the message.
+        /// </summary>
+        /// <returns>A string representation of the boundary.</returns>
         private static string NewDataBoundary()
         {
             Random rnd = new Random();
@@ -38,6 +48,14 @@ namespace Common.Network
             return formDataBoundary;
         }
 
+        /// <summary>
+        /// Sends a message to the host handling the postUrl.
+        /// </summary>
+        /// <param name="postUrl">The URL to which the message should be posted.</param>
+        /// <param name="postParameters">A collection of Keys and Values holding the parameters to post to the host.</param>
+        /// <param name="fileSystem">A reference to a <see cref="FileSystem.IO"/> instance.</param>
+        /// <param name="response">The <see cref="Common.NetworkPackage.ServerResponse"/> returned by the host.</param>
+        /// <returns></returns>
         public static HttpWebResponse Send(string postUrl, 
             List<KeyValuePair<string, string>> postParameters, FileSystem.IO fileSystem,
             out Common.NetworkPackage.ServerResponse response)
@@ -133,71 +151,5 @@ namespace Common.Network
 
             return resp;
         }
-
-
-        //private byte[] GetMultipartFormData(Dictionary<string, object> postParameters, string boundary)
-        //{
-        //    Dictionary<string, object>.Enumerator en = postParameters.GetEnumerator();
-        //    Stream formDataStream = new System.IO.MemoryStream();
-
-        //    while(en.MoveNext())
-        //    {
-        //        if (en.Current.Value.GetType() == typeof(FileParameter))
-        //        {
-        //            FileParameter fileToUpload = (FileParameter)en.Current.Value;
-
-        //            // Add just the first part of this param, since we will write the file data directly to the Stream
-        //            string header = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"; filename=\"{2}\";\r\nContent-Type: {3}\r\n\r\n",
-        //                boundary,
-        //                en.Current.Key,
-        //                fileToUpload.FileName ?? en.Current.Key,
-        //                fileToUpload.ContentType ?? "application/octet-stream");
-
-        //            formDataStream.Write(_encoding.GetBytes(header), 0, header.Length);
-
-        //            // Write the file data directly to the Stream, rather than serializing it to a string.
-        //            formDataStream.Write(fileToUpload.File, 0, fileToUpload.File.Length);
-        //        }
-        //        else
-        //        {
-        //            string postData = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}\r\n",
-        //                boundary,
-        //                en.Current.Key,
-        //                en.Current.Value);
-        //            formDataStream.Write(_encoding.GetBytes(postData), 0, postData.Length);
-        //        }
-        //    }
-
-        //    // Add the end of the request
-        //    string footer = "\r\n--" + boundary + "--\r\n";
-        //    formDataStream.Write(_encoding.GetBytes(footer), 0, footer.Length);
-
-        //    // Dump the Stream into a byte[]
-        //    formDataStream.Position = 0;
-        //    byte[] formData = new byte[formDataStream.Length];
-        //    formDataStream.Read(formData, 0, formData.Length);
-        //    formDataStream.Close();
-
-        //    return formData;
-        //}
-
-        //public class FileParameter
-        //{
-        //    public string FilePath { get; set; }
-        //    public string FileName { get; set; }
-        //    public string ContentType { get; set; }
-            
-        //    public FileParameter(string filepath) : this(filepath, null) { }
-
-        //    public FileParameter(string filepath, string filename) : this(filepath, filename, null) { }
-
-        //    public FileParameter(string filepath, string filename, string contenttype)
-        //    {
-        //        FilePath = filepath;
-        //        FileName = filename;
-        //        ContentType = contenttype;
-        //    }
-        //}
-
     }
 }

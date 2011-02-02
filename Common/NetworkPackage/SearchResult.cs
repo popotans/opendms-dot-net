@@ -18,9 +18,15 @@ using System.Text;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// Represents a result returned from a search against a Solr installation.
+    /// </summary>
     public class SearchResult 
         : ListBase<MetaAsset>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SearchResult"/> class.
+        /// </summary>
         public SearchResult()
             : base("SearchResult")
         {

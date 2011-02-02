@@ -21,10 +21,20 @@ using System.Collections.Generic;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// Provides a method of packaging and unpackaging a description of a property and allowing for 
+    /// storing of values of those properties.
+    /// </summary>
     public class MetaFormProperty : Base
     {
+        /// <summary>
+        /// A collection of <see cref="Type"/> which is supported.
+        /// </summary>
         private List<Type> _supportedDataTypes;
 
+        /// <summary>
+        /// The default value of the property.
+        /// </summary>
         private object _defaultValue;
 
         /// <summary>
@@ -33,7 +43,7 @@ namespace Common.NetworkPackage
         public Type DataType { get; set; }
 
         /// <summary>
-        /// The name of the field in the Data.MetaAsset class
+        /// The name of the field in the <see cref="Data.MetaAsset"/> class.
         /// </summary>
         public string PropertyName { get; set; }
 
@@ -65,8 +75,17 @@ namespace Common.NetworkPackage
             }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is read only.
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this instance is read only; otherwise, <c>false</c>.
+        /// </value>
         public bool IsReadOnly { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetaFormProperty"/> class.
+        /// </summary>
         public MetaFormProperty()
         {
             _supportedDataTypes = new List<Type>();
@@ -88,6 +107,14 @@ namespace Common.NetworkPackage
             IsReadOnly = true;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetaFormProperty"/> class.
+        /// </summary>
+        /// <param name="type">The Type of this property.</param>
+        /// <param name="propertyName">The name of the field in the <see cref="Data.MetaAsset"/> class.</param>
+        /// <param name="label">The text value to display on the UI.</param>
+        /// <param name="defaultValue">The default value of the property.</param>
+        /// <param name="isReadOnly">if set to <c>true</c> this instance is read-only; otherwise, <c>false</c>.</param>
         public MetaFormProperty(Type type, string propertyName, string label, object defaultValue, bool isReadOnly) :
             this()
         {
@@ -114,6 +141,13 @@ namespace Common.NetworkPackage
             return false;
         }
 
+        /// <summary>
+        /// Serializes this instance using the specified XML writer.
+        /// </summary>
+        /// <param name="xmlWriter">The XML writer.</param>
+        /// <returns>
+        /// The XML writer passed in argument.
+        /// </returns>
         public override XmlWriter Serialize(XmlWriter xmlWriter)
         {
             if (xmlWriter.Settings.Encoding != Encoding.UTF8)
@@ -135,6 +169,13 @@ namespace Common.NetworkPackage
             return xmlWriter;
         }
 
+        /// <summary>
+        /// Deserializes the content of the specified XML reader populating the properties of this instance.
+        /// </summary>
+        /// <param name="xmlReader">The XML reader.</param>
+        /// <returns>
+        /// The XML reader passed in argument.
+        /// </returns>
         public override XmlReader Deserialize(XmlReader xmlReader)
         {
             // Move to content

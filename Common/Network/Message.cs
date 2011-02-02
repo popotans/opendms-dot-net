@@ -20,26 +20,95 @@ using System.Threading;
 
 namespace Common.Network
 {
+    /// <summary>
+    /// Represents a package and provides a method to transport that package over a network.
+    /// </summary>
     public class Message
     {
+        /// <summary>
+        /// Represents the method that handles an event.
+        /// </summary>
+        /// <param name="state">The state.</param>
         public delegate void MessageHandler(State state);
+        /// <summary>
+        /// Represents the method that handles a progress event.
+        /// </summary>
+        /// <param name="state">The state.</param>
+        /// <param name="percent">The percent complete.</param>
+        /// <param name="bytesSent">The bytes sent.</param>
+        /// <param name="bytesTotal">The bytes total.</param>
         public delegate void MessageProgressHandler(State state, decimal percent, Int64 bytesSent, Int64 bytesTotal);
 
+        /// <summary>
+        /// Occurs when the message transfer is complete.
+        /// </summary>
         public event MessageHandler OnComplete;
+        /// <summary>
+        /// Occurs when the message transfer has timed out.
+        /// </summary>
         public event MessageHandler OnTimeout;
 
+        /// <summary>
+        /// Occurs when an upload makes progress.
+        /// </summary>
         public event MessageProgressHandler OnUploadProgress;
 
+        /// <summary>
+        /// Notifies waiting threads that an event has occurred.
+        /// </summary>
         public ManualResetEvent AllDone = new ManualResetEvent(false);
-        
+
+        /// <summary>
+        /// The <see cref="State"/> of this <see cref="Message"/>.
+        /// </summary>
         private State _state;
+        /// <summary>
+        /// The <see cref="Guid"/> indentifying the unique asset on which this <see cref="Message"/> operates.
+        /// </summary>
         private Guid _guid;
+        /// <summary>
+        /// A reference to the <see cref="Logger"/> that this instance should use to document events.
+        /// </summary>
         private Logger _generalLogger;
+        /// <summary>
+        /// A reference to the <see cref="Logger"/> that this instance should use to document network events.
+        /// </summary>
         private Logger _networkLogger;
 
+        /// <summary>
+        /// Gets the <see cref="State"/> of this <see cref="Message"/>.
+        /// </summary>
         public State State { get { return _state; } }
+        /// <summary>
+        /// Gets or sets the an object used to store data for calling methods.
+        /// </summary>
+        /// <value>
+        /// The object.
+        /// </value>
         public object Tag { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Message"/> class.
+        /// </summary>
+        /// <param name="host">The IP address of the destination host.</param>
+        /// <param name="port">The port on the destination host.</param>
+        /// <param name="virtualPath">The virtual path of the asset.</param>
+        /// <param name="guid">The <see cref="Guid"/> of the asset.</param>
+        /// <param name="assetType">Type of the asset.</param>
+        /// <param name="operation">The <see cref="OperationType"/>.</param>
+        /// <param name="dataStreamMethod">The <see cref="DataStreamMethod"/>.</param>
+        /// <param name="requestStream">The stream to send if the <see cref="OperationType"/> is PUT or POST.</param>
+        /// <param name="contentType">The value to send in the Http Header "Content-Type".</param>
+        /// <param name="contentLength">Length of the content in bytes.</param>
+        /// <param name="encodedCredentials">The encoded credentials.</param>
+        /// <param name="keepAlive">if set to <c>true</c> the connection should be kept alive.</param>
+        /// <param name="use100Continue">if set to <c>true</c> the connection should use the 100-continue.</param>
+        /// <param name="useDeflate">if set to <c>true</c> the host will be requested to respond using deflate.</param>
+        /// <param name="useGzip">if set to <c>true</c> the host will be request to respond using gzip.</param>
+        /// <param name="bufferSize">Size of the buffer in bytes.</param>
+        /// <param name="timeoutDuration">Duration of time that must pass before a timeout occurrs.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public Message(string host, int port, string virtualPath, Guid guid,
                        Common.Data.AssetType assetType, OperationType operation,
                        DataStreamMethod dataStreamMethod, Stream requestStream,
@@ -72,6 +141,27 @@ namespace Common.Network
             //}
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Message"/> class.
+        /// </summary>
+        /// <param name="host">The IP address of the destination host.</param>
+        /// <param name="port">The port on the destination host.</param>
+        /// <param name="virtualPath">The virtual path of the asset.</param>
+        /// <param name="filename">The filename of the remote target.</param>
+        /// <param name="operation">The <see cref="OperationType"/>.</param>
+        /// <param name="dataStreamMethod">The <see cref="DataStreamMethod"/>.</param>
+        /// <param name="requestStream">The stream to send if the <see cref="OperationType"/> is PUT or POST.</param>
+        /// <param name="contentType">The value to send in the Http Header "Content-Type".</param>
+        /// <param name="contentLength">Length of the content in bytes.</param>
+        /// <param name="encodedCredentials">The encoded credentials.</param>
+        /// <param name="keepAlive">if set to <c>true</c> the connection should be kept alive.</param>
+        /// <param name="use100Continue">if set to <c>true</c> the connection should use the 100-continue.</param>
+        /// <param name="useDeflate">if set to <c>true</c> the host will be requested to respond using deflate.</param>
+        /// <param name="useGzip">if set to <c>true</c> the host will be request to respond using gzip.</param>
+        /// <param name="bufferSize">Size of the buffer in bytes.</param>
+        /// <param name="timeoutDuration">Duration of time that must pass before a timeout occurrs.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public Message(string host, int port, string virtualPath, string filename,
                        OperationType operation, DataStreamMethod dataStreamMethod, 
                        Stream requestStream, string contentType, long? contentLength, 
@@ -87,6 +177,25 @@ namespace Common.Network
                  useDeflate, useGzip, bufferSize, timeoutDuration);
         }
 
+        /// <summary>
+        /// Initializes this <see cref="Message"/>.
+        /// </summary>
+        /// <param name="host">The IP address of the destination host.</param>
+        /// <param name="port">The port on the destination host.</param>
+        /// <param name="virtualPath">The virtual path of the asset.</param>
+        /// <param name="filename">The filename of the remote target.</param>
+        /// <param name="operation">The <see cref="OperationType"/>.</param>
+        /// <param name="dataStreamMethod">The <see cref="DataStreamMethod"/>.</param>
+        /// <param name="requestStream">The stream to send if the <see cref="OperationType"/> is PUT or POST.</param>
+        /// <param name="contentType">The value to send in the Http Header "Content-Type".</param>
+        /// <param name="contentLength">Length of the content in bytes.</param>
+        /// <param name="encodedCredentials">The encoded credentials.</param>
+        /// <param name="keepAlive">if set to <c>true</c> the connection should be kept alive.</param>
+        /// <param name="use100Continue">if set to <c>true</c> the connection should use the 100-continue.</param>
+        /// <param name="useDeflate">if set to <c>true</c> the host will be requested to respond using deflate.</param>
+        /// <param name="useGzip">if set to <c>true</c> the host will be request to respond using gzip.</param>
+        /// <param name="bufferSize">Size of the buffer in bytes.</param>
+        /// <param name="timeoutDuration">Duration of time that must pass before a timeout occurrs.</param>
         public void Init(string host, int port, string virtualPath, string filename,
                          OperationType operation, DataStreamMethod dataStreamMethod, 
                          Stream requestStream, string contentType, long? contentLength, 
@@ -177,6 +286,10 @@ namespace Common.Network
             }
         }
 
+        /// <summary>
+        /// Gets a <see cref="Stream"/> allowing writing to the network after the HTTP Request headers are sent.
+        /// </summary>
+        /// <returns>A <see cref="Stream"/> allowing writing to the network.</returns>
         public Stream GetNetworkStreamOut()
         {
             Stream outStream = null;
@@ -210,6 +323,10 @@ namespace Common.Network
             return outStream;
         }
 
+        /// <summary>
+        /// Gets a <see cref="Stream"/> allowing reading from the network after the HTTP Response headers are received.
+        /// </summary>
+        /// <returns>A <see cref="Stream"/> allowing reading from the network.</returns>
         private Stream GetNetworkStreamIn()
         {
             try
@@ -265,6 +382,9 @@ namespace Common.Network
             return _state.Stream;
         }
 
+        /// <summary>
+        /// Sends this <see cref="Message"/> object.
+        /// </summary>
         public void Send()
         {
             Stream outStream = null;
@@ -359,6 +479,10 @@ namespace Common.Network
             GetNetworkStreamIn();
         }
 
+        /// <summary>
+        /// Sends this <see cref="Message"/> object asynchronously.
+        /// </summary>
+        /// <returns>A <see cref="State"/> object for this <see cref="Message"/>.</returns>
         public State SendAsync()
         {
             throw new NotSupportedException("Logging has not been implemented on Asynchronous Message Transfer, thus it should not be used.");
@@ -382,6 +506,11 @@ namespace Common.Network
             return _state;
         }
 
+        /// <summary>
+        /// Called during asynchronous transmission when the <see cref="OperationType"/> is POST or PUT
+        /// to send the any data in the 'requestStream'.
+        /// </summary>
+        /// <param name="result">An <see cref="IAsyncResult"/>.</param>
         private void MessageRequestCallback(IAsyncResult result)
         {
             State state;
@@ -485,6 +614,10 @@ namespace Common.Network
                 new WaitOrTimerCallback(MessageTimeoutCallback), state, state.TimeoutDuration, true);
         }
 
+        /// <summary>
+        /// Called during asynchronous transmission to receive the response from the host.
+        /// </summary>
+        /// <param name="result">An <see cref="IAsyncResult"/>.</param>
         private void MessageResponseCallback(IAsyncResult result)
         {
             State state = null;
@@ -525,6 +658,11 @@ namespace Common.Network
             AllDone.Set();
         }
 
+        /// <summary>
+        /// Messages the timeout callback.
+        /// </summary>
+        /// <param name="asyncState">State of the async.</param>
+        /// <param name="timedOut">if set to <c>true</c> [timed out].</param>
         private void MessageTimeoutCallback(object asyncState, bool timedOut)
         {
             if (timedOut)

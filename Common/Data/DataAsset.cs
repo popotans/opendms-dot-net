@@ -14,38 +14,82 @@
  */
 
 using System;
-using System.ComponentModel;
 using Common.FileSystem;
 
 namespace Common.Data
 {
-    public class DataAsset 
+    /// <summary>
+    /// A <see cref="DataAsset"/> represents a data file in a way that it is usable by the OpenDMS.NET Project.
+    /// </summary>
+    public sealed class DataAsset 
         : AssetBase
     {
+        /// <summary>
+        /// Represents the method that handles an event.
+        /// </summary>
+        /// <param name="sender">The <see cref="DataAsset"/> that triggered the event.</param>
         public delegate void EventHandler(DataAsset sender);
+        /// <summary>
+        /// Represents the method that handles a progress event.
+        /// </summary>
+        /// <param name="sender">The <see cref="DataAsset"/> that triggered the event.</param>
+        /// <param name="percentComplete">An integer value representing the percentage of progress.</param>
         public delegate void ProgressHandler(DataAsset sender, int percentComplete);
+        /// <summary>
+        /// Occurs when progress is made in a long running action.
+        /// </summary>
         public event ProgressHandler OnProgress;
+        /// <summary>
+        /// Occurs when a long running action is completed.
+        /// </summary>
         public event EventHandler OnComplete;
 
+        /// <summary>
+        /// The quantity of bytes completed.
+        /// </summary>
         public ulong BytesComplete;
+        /// <summary>
+        /// The total quantity of bytes.
+        /// </summary>
         public ulong BytesTotal;
 
+        /// <summary>
+        /// Gets the reference to the <see cref="FileSystem.DataResource"/> giving this 
+        /// <see cref="DataAsset"/> access to the file system.
+        /// </summary>
         public FileSystem.DataResource Resource
         {
             get { return (FileSystem.DataResource)_resource; }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataAsset"/> class.
+        /// </summary>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
         public DataAsset(Logger logger)
             : base(logger)
         {
             BytesComplete = BytesTotal = 0;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataAsset"/> class.
+        /// </summary>
+        /// <param name="ma">The <see cref="MetaAsset"/> that is paired with this <see cref="DataAsset"/>.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
         public DataAsset(MetaAsset ma, FileSystem.IO fileSystem, Logger logger)
             : this(ma.Guid, ma.Extension, fileSystem, logger)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataAsset"/> class.
+        /// </summary>
+        /// <param name="guid">A <see cref="Guid"/> providing a unique reference to the Asset.</param>
+        /// <param name="extension">The extension of the resource (e.g., .doc, .xsl, .odt)</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
         public DataAsset(Guid guid, string extension, FileSystem.IO fileSystem, Logger logger)
             : base(guid, AssetType.Data, logger)
         {
@@ -54,12 +98,54 @@ namespace Common.Data
             _state = new AssetState() { State = AssetState.Flags.CanTransfer };
         }
 
+        /// <summary>
+        /// Copies the current version of this <see cref="DataAsset"/> to a file using the version scheme for numbering.
+        /// </summary>
+        /// <param name="version">The version number to use when titling the file</param>
+        /// <returns><c>True</c> if successful, <c>false</c> otherwise.</returns>
+        /// <example>
+        /// This sample shows how to call the <see cref="CopyCurrentToVersionScheme"/> method.
+        /// <code>
+        /// // This code assumes _dataAsset is instantiated as a <see cref="DataAsset"/> and _metaAsset is instantiated 
+        /// // as a <see cref="MetaAsset"/>.
+        /// void A()
+        /// {
+        ///     if (!_dataAsset.CopyCurrentToVersionScheme(_metaAsset.DataVersion))
+        ///     {
+        ///         MessageBox.Show("Failed to copy");
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public bool CopyCurrentToVersionScheme(UInt64 version)
         {
             return _resource.CopyCurrentToVersionScheme(version,
                 "Common.Data.MetaAsset.CopyCurrentToVersionScheme()");
         }
 
+        /// <summary>
+        /// Downloads the current version of this <see cref="DataAsset"/> from the server and writes it 
+        /// directly to the file system.
+        /// </summary>
+        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> which has called this method.</param>
+        /// <param name="ma">A reference to the <see cref="MetaAsset"/> that corresponds to this <see cref="DataAsset"/>.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that is used to document network events.</param>
+        /// <returns><c>True</c> if successful, <c>false</c> otherwise.</returns>
+        /// <example>
+        /// This sample shows how to call the <see cref="DownloadFromServer"/> method.
+        /// <code>
+        /// // This code assumes _dataAsset is instantiated as a <see cref="DataAsset"/> and _metaAsset
+        /// // is instantiated as a <see cref="MetaAsset"/>.
+        /// void A()
+        /// {
+        ///     if (!_dataAsset.DownloadFromServer(job, _metaAsset, networkLogger))
+        ///     {
+        ///         job.SetErrorFlag();
+        ///         return;
+        ///     }
+        /// }       
+        /// </code>
+        /// </example>
         public bool DownloadFromServer(Work.AssetJobBase job, MetaAsset ma, Logger networkLogger)
         {
             if (!_state.HasFlag(AssetState.Flags.CanTransfer))
@@ -164,6 +250,30 @@ namespace Common.Data
             return true;
         }
 
+        /// <summary>
+        /// Saves the current version of this <see cref="DataAsset"/> to the server.
+        /// </summary>
+        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> which has called this method.</param>
+        /// <param name="ma">A reference to the <see cref="MetaAsset"/> that corresponds to this <see cref="DataAsset"/>.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that is used to document network events.</param>
+        /// <returns>A <see cref="NetworkPackage.ServerResponse"/> representing the result of the save.</returns>
+        /// <example>
+        /// This sample shows how to call the <see cref="SaveToServer"/> method.
+        /// <code>
+        /// // This code assumes _dataAsset is instantiated as a <see cref="DataAsset"/>, the job and networkLogger
+        /// // are passed as arguments in this example.
+        /// void A(Work.AssetJobBase job, Logger networkLogger)
+        /// {
+        ///     NetworkPackage.ServerResponse sr = _dataAsset.SaveToServer(job, networkLogger);
+        ///     
+        ///     if (!(bool)sr["Pass"])
+        ///     {
+        ///         job.SetErrorFlag();
+        ///         return;
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public NetworkPackage.ServerResponse SaveToServer(Work.AssetJobBase job, MetaAsset ma,
             Logger networkLogger)
         {
@@ -246,6 +356,26 @@ namespace Common.Data
             return sr;
         }
 
+        /// <summary>
+        /// Gets a <see cref="IOStream"/> for use in reading the data from the file system.
+        /// </summary>
+        /// <returns>A <see cref="IOStream"/> for reading.</returns>
+        /// <remarks>Make sure to call FileSystem.IO.Close() once access is done.</remarks>
+        /// <example>
+        /// This sample shows how to call the <see cref="GetReadStream"/> method.
+        /// <code>
+        /// // This code assumes _dataAsset is instantiated as a <see cref="DataAsset"/> and _fileSystem is 
+        /// // instantiated as <see cref="FileSystem.IO"/>.
+        /// void A()
+        /// {
+        ///     // Open for read
+        ///     IOStream iostream = _dataAsset.GetReadStream();
+        ///     
+        ///     // Close
+        ///     _fileSystem.Close(iostream);
+        /// }
+        /// </code>
+        /// </example>
         public IOStream GetReadStream()
         {
             IOStream iostream;
@@ -265,6 +395,26 @@ namespace Common.Data
             return iostream;
         }
 
+        /// <summary>
+        /// Gets a <see cref="IOStream"/> for use in writing data to the file system.
+        /// </summary>
+        /// <returns>A <see cref="IOStream"/> for writing.</returns>
+        /// <remarks>Make sure to call FileSystem.IO.Close() once access is done.</remarks>
+        /// <example>
+        /// This sample shows how to call the <see cref="GetReadStream"/> method.
+        /// <code>
+        /// // This code assumes _dataAsset is instantiated as a <see cref="DataAsset"/> and _fileSystem is 
+        /// // instantiated as <see cref="FileSystem.IO"/>.
+        /// void A()
+        /// {
+        ///     // Open for write
+        ///     IOStream iostream = _dataAsset.GetWriteStream();
+        ///     
+        ///     // Close
+        ///     _fileSystem.Close(iostream);
+        /// }
+        /// </code>
+        /// </example>
         public IOStream GetWriteStream()
         {
             IOStream iostream;

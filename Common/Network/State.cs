@@ -20,43 +20,122 @@ using System.Threading;
 
 namespace Common.Network
 {
+    /// <summary>
+    /// An enumeration of support HTTP operations.
+    /// </summary>
     public enum OperationType
     {
+        /// <summary>
+        /// Not set
+        /// </summary>
         NULL,
+        /// <summary>
+        /// HTTP GET
+        /// </summary>
         GET,
+        /// <summary>
+        /// HTTP PUT
+        /// </summary>
         PUT,
+        /// <summary>
+        /// HTTP POST
+        /// </summary>
         POST,
+        /// <summary>
+        /// HTTP DELETE
+        /// </summary>
         DELETE,
+        /// <summary>
+        /// HTTP COPY
+        /// </summary>
         COPY,
+        /// <summary>
+        /// HTTP HEAD
+        /// </summary>
         HEAD
     }
 
+    /// <summary>
+    /// An enumeration of methods of accessing data.
+    /// </summary>
     public enum DataStreamMethod
     {
+        /// <summary>
+        /// All data is saved into memory
+        /// </summary>
         Memory,
+        /// <summary>
+        /// All data is written to a stream, this stream is managed by the framework, 
+        /// but this is significantly less memory intensive than the Memory option.
+        /// </summary>
         Stream
     }
 
+    /// <summary>
+    /// Represents the state of a network message.
+    /// </summary>
     public class State : IDisposable
     {
+        /// <summary>
+        /// A <see cref="HttpWebRequest"/> for the message.
+        /// </summary>
         public HttpWebRequest Request;
+        /// <summary>
+        /// A <see cref="HttpWebResponse"/> received from the host.
+        /// </summary>
         public HttpWebResponse Response;
+        /// <summary>
+        /// A <see cref="DataStreamMethod"/> for this message.
+        /// </summary>
         public DataStreamMethod DataStreamMethod;
+        /// <summary>
+        /// An <see cref="OperationType"/> for this message.
+        /// </summary>
         public OperationType OperationType;
+        /// <summary>
+        /// A <see cref="Guid"/> that is a unique identifier for an asset.
+        /// </summary>
         public Guid Guid;
+        /// <summary>
+        /// A <see cref="Common.Data.AssetType"/> for this message.
+        /// </summary>
         public Common.Data.AssetType AssetType;
+        /// <summary>
+        /// The size of the network buffer.
+        /// </summary>
         public int BufferSize;
+        /// <summary>
+        /// The amount of time to elapse before a timeout happens.
+        /// </summary>
         public int TimeoutDuration;
         /// <summary>
+        /// The <see cref="Stream"/> for a <see cref="Message"/> to use.
+        /// </summary>
+        /// <remarks>
         /// If OperationType is GET/HEAD this is the Stream associated with the Response (OUT)
         /// If OperationType is PUT/POST this is the Stream associated with the Request (IN)
-        /// </summary>
+        /// </remarks>
         public Stream Stream;
+        /// <summary>
+        /// <c>True</c> if the stream is binary; otherwise, <c>false</c>.
+        /// </summary>
         public bool StreamIsBinary;
+        /// <summary>
+        /// A accessor for the <see cref="WaitHandle"/>.
+        /// </summary>
         public WaitHandle TimeoutWaitHandle;
+        /// <summary>
+        /// An accessor for the <see cref="RegisteredWaitHandle"/>.
+        /// </summary>
         public RegisteredWaitHandle TimeoutRegisteredWaitHandle;
+        /// <summary>
+        /// A flag to indicate if a timeout has occurred.
+        /// </summary>
         public bool IsTimeout;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="State"/> class.
+        /// </summary>
         public State()
         {
             Request = null;
@@ -74,6 +153,9 @@ namespace Common.Network
             IsTimeout = false;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
             Request = null;
@@ -87,7 +169,11 @@ namespace Common.Network
             if (TimeoutWaitHandle != null) TimeoutWaitHandle.Close();
             TimeoutRegisteredWaitHandle = null;
         }
-        
+
+        /// <summary>
+        /// Gets a string for using by a <see cref="Logger"/> to document an event.
+        /// </summary>
+        /// <returns></returns>
         public string GetLogString()
         {
             string output = "";

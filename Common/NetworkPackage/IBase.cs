@@ -19,14 +19,56 @@ using System.Xml;
 
 namespace Common.NetworkPackage
 {
+    /// <summary>
+    /// Provides serialization and I/O routes for implementing classes.
+    /// </summary>
     public interface IBase
     {
+        /// <summary>
+        /// Serializes this instance and returns a <see cref="MemoryStream"/> containing the XML 
+        /// formatted content.
+        /// </summary>
+        /// <returns>A <see cref="MemoryStream"/> containing the XML 
+        /// formatted content.</returns>
         MemoryStream Serialize();
+        /// <summary>
+        /// Serializes this instance returning the XML writer argument.
+        /// </summary>
+        /// <param name="xmlWriter">The XML writer.</param>
+        /// <returns>The XML writer argument.</returns>
         XmlWriter Serialize(XmlWriter xmlWriter);
+        /// <summary>
+        /// Deserializes the content XML from the specified <see cref="MemoryStream"/> and populating 
+        /// this instance based on the content.
+        /// </summary>
+        /// <param name="ms">The <see cref="MemoryStream"/> to deserialize the content from.</param>
         void Deserialize(MemoryStream ms);
+        /// <summary>
+        /// Deserializes the content XML from the specified <see cref="Stream"/> and populating 
+        /// this instance based on the content.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
         void Deserialize(Stream stream);
+        /// <summary>
+        /// Deserializes the content XML from the specified XML reader and populating this instance
+        /// based on the content.
+        /// </summary>
+        /// <param name="xmlReader">The XML reader.</param>
+        /// <returns>The XML reader argument.</returns>
         XmlReader Deserialize(XmlReader xmlReader);
+        /// <summary>
+        /// Saves this object to the file system.
+        /// </summary>
+        /// <param name="resource">The <see cref="FileSystem.MetaResource"/> providing file system access.</param>
+        /// <param name="logger">A reference to a <see cref="Logger"/> providing access to a logging facility for events.</param>
+        /// <param name="overwrite">if set to <c>true</c> overwrite any existing file; otherwise, <c>false</c>.</param>
         void Save(FileSystem.MetaResource resource, Logger logger, bool overwrite);
+        /// <summary>
+        /// Loads this object from the file system.
+        /// </summary>
+        /// <param name="resource">The <see cref="FileSystem.MetaResource"/> providing file system access.</param>
+        /// <param name="logger">A reference to a <see cref="Logger"/> providing access to a logging facility for events.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         bool Read(FileSystem.MetaResource resource, Logger logger);
     }
 }

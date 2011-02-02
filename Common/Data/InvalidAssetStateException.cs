@@ -17,23 +17,44 @@ using System;
 
 namespace Common.Data
 {
+    /// <summary>
+    /// Represents errors that occur when an Asset's state is not proper for the requested action.
+    /// </summary>
     public class InvalidAssetStateException 
         : Exception
     {
+        /// <summary>
+        /// Represents the current <see cref="AssetState"/> of the object that threw this exception.
+        /// </summary>
         public AssetState State;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InvalidAssetStateException"/> class.
+        /// </summary>
+        /// <param name="state">The current <see cref="AssetState"/> of the object that threw this exception.</param>
         public InvalidAssetStateException(AssetState state)
             : base()
         {
             State = state;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InvalidAssetStateException"/> class.
+        /// </summary>
+        /// <param name="state">The current <see cref="AssetState"/> of the object that threw this exception.</param>
+        /// <param name="message">The message that describes the error.</param>
         public InvalidAssetStateException(AssetState state, string message)
             : base(message)
         {
             State = state;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InvalidAssetStateException"/> class.
+        /// </summary>
+        /// <param name="state">The current <see cref="AssetState"/> of the object that threw this exception.</param>
+        /// <param name="message">The message that describes the error.</param>
+        /// <param name="innerException">The exception that is the cause of this exception or null.</param>
         public InvalidAssetStateException(AssetState state, string message, Exception innerException)
             : base(message, innerException)
         {

@@ -17,24 +17,51 @@ using System;
 
 namespace Common.Network
 {
+    /// <summary>
+    /// Represents errors that occur when transmitting network messages.
+    /// </summary>
     public class NetworkException 
         : Exception
     {
+        /// <summary>
+        /// Represents the current <see cref="State"/> of the object that threw this exception.
+        /// </summary>
         private State _state;
+        /// <summary>
+        /// Gets or sets the state of the object throwing this exception.
+        /// </summary>
+        /// <value>
+        /// The state of the object.
+        /// </value>
         public State WebState { get { return _state; } set { _state = value; } }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NetworkException"/> class.
+        /// </summary>
+        /// <param name="state">The state of the throwing object.</param>
         public NetworkException(State state)
             : base()
         {
             _state = state;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NetworkException"/> class.
+        /// </summary>
+        /// <param name="state">The state of the throwing object.</param>
+        /// <param name="message">The message that describes the error.</param>
         public NetworkException(State state, string message)
             : base(message)
         {
             _state = state;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NetworkException"/> class.
+        /// </summary>
+        /// <param name="state">The state of the throwing object.</param>
+        /// <param name="message">The message that describes the error.</param>
+        /// <param name="innerException">The exception that is the cause of this exception or null.</param>
         public NetworkException(State state, string message, Exception innerException)
             : base(message, innerException)
         {

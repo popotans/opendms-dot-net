@@ -19,19 +19,34 @@ using System.Text;
 
 namespace Common.Work
 {
+    /// <summary>
+    /// Represents errors that occur when executing a job.
+    /// </summary>
     public class JobException
         : Exception
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JobException"/> class.
+        /// </summary>
         public JobException()
             : base()
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JobException"/> class.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
         public JobException(string message)
             : base(message)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JobException"/> class.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        /// <param name="innerException">The exception that is the cause of this exception or null.</param>
         public JobException(string message, Exception innerException)
             : base(message, innerException)
         {

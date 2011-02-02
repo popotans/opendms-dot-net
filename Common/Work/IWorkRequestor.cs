@@ -17,6 +17,9 @@ using System;
 
 namespace Common.Work
 {
+    /// <summary>
+    /// Represents an interface used to indicate the inheriting class can request jobs of the <see cref="Master"/>.
+    /// </summary>
     public interface IWorkRequestor
     {
         /// <summary>

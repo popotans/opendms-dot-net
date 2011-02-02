@@ -17,10 +17,22 @@ using System;
 
 namespace Common.FileSystem
 {
+    /// <summary>
+    /// An enumeration of types of a Resource.
+    /// </summary>
     public enum ResourceType
     {
+        /// <summary>
+        /// An unknown resource type
+        /// </summary>
         Unknown = 0,
+        /// <summary>
+        /// <see cref="MetaResource"/>
+        /// </summary>
         Meta = 1,
+        /// <summary>
+        /// <see cref="DataResource"/>
+        /// </summary>
         Data = 2
     }
 }

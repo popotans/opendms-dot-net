@@ -17,10 +17,28 @@ using System;
 
 namespace Common.Data
 {
+    /// <summary>
+    /// Represents a pair of <see cref="MetaAsset"/> and <see cref="DataAsset"/>
+    /// </summary>
     public class FullAsset
     {
+        /// <summary>
+        /// Gets or sets the <see cref="MetaAsset"/>.
+        /// </summary>
+        /// <value>
+        /// The <see cref="MetaAsset"/>.
+        /// </value>
         public MetaAsset MetaAsset { get; set; }
+        /// <summary>
+        /// Gets or sets the <see cref="DataAsset"/>.
+        /// </summary>
+        /// <value>
+        /// The <see cref="DataAsset"/>.
+        /// </value>
         public DataAsset DataAsset { get; set; }
+        /// <summary>
+        /// Gets the unique identifier which is common to both the <see cref="MetaAsset"/> and the <see cref="DataAsset"/>.
+        /// </summary>
         public Guid Guid
         {
             get
@@ -31,12 +49,23 @@ namespace Common.Data
             }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FullAsset"/> class.
+        /// </summary>
+        /// <param name="ma">The <see cref="MetaAsset"/>.</param>
+        /// <param name="da">The <see cref="DataAsset"/>.</param>
         public FullAsset(MetaAsset ma, DataAsset da)
         {
             MetaAsset = ma;
             DataAsset = da;
         }
 
+        /// <summary>
+        /// Gets the <see cref="ETag"/> for this asset from the server by calling <see cref="M:MetaAsset.GetETagFromServer"/>.
+        /// </summary>
+        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> logger where network events are documented.</param>
+        /// <returns>The <see cref="ETag"/> from the server.</returns>
         public ETag GetETagFromServer(Work.AssetJobBase job, Logger networkLogger)
         {
             if (MetaAsset == null)
@@ -48,6 +77,12 @@ namespace Common.Data
             return MetaAsset.GetETagFromServer(job, networkLogger);
         }
 
+        /// <summary>
+        /// Downloads both the <see cref="MetaAsset"/> and the <see cref="DataAsset"/> from the server.
+        /// </summary>
+        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> logger where network events are documented.</param>
+        /// <returns><c>True</c> if successful; otherwise <c>false</c>.</returns>
         public bool DownloadFromServer(Work.AssetJobBase job, Logger networkLogger)
         {
             if (MetaAsset == null)
@@ -78,6 +113,12 @@ namespace Common.Data
             return true;
         }
 
+        /// <summary>
+        /// Saves both the <see cref="MetaAsset"/> and the <see cref="DataAsset"/> to the server.
+        /// </summary>
+        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> logger where network events are documented.</param>
+        /// <returns><c>True</c> if successful; otherwise <c>false</c>.</returns>
         public bool SaveToServer(Work.AssetJobBase job, Logger networkLogger)
         {
             if (MetaAsset == null)
@@ -112,6 +153,11 @@ namespace Common.Data
             return true;
         }
 
+        /// <summary>
+        /// Loads the specified job.
+        /// </summary>
+        /// <param name="job">The job.</param>
+        /// <returns></returns>
         public bool Load(Work.AssetJobBase job)
         {
             if (MetaAsset == null)

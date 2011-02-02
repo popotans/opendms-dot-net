@@ -26,6 +26,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\Common.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -69,20 +70,15 @@
     <Compile Include="NetworkPackage\ETag.cs" />
     <Compile Include="NetworkPackage\MetaForm.cs" />
     <Compile Include="NetworkPackage\MetaFormProperty.cs" />
-    <Compile Include="NetworkPackage\ResourceLock.cs" />
     <Compile Include="NetworkPackage\SearchForm.cs" />
     <Compile Include="NetworkPackage\SearchResult.cs" />
-    <Compile Include="NetworkPackage\Server.cs" />
     <Compile Include="NetworkPackage\ServerResponse.cs" />
-    <Compile Include="NetworkPackage\User.cs" />
     <Compile Include="NetworkPackage\XmlSerializer.cs" />
     <Compile Include="Network\Message.cs" />
     <Compile Include="Network\MultipartFormMessage.cs" />
     <Compile Include="Network\State.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SerializableDictionary.cs" />
     <Compile Include="NetworkPackage\MetaAsset.cs" />
-    <Compile Include="SerializableStringList.cs" />
     <Compile Include="ServerSettings.cs" />
     <Compile Include="Network\NetworkException.cs" />
     <Compile Include="Work\DownloadAssetJob.cs" />
@@ -111,4 +107,8 @@
       <Properties InternalTargetFrameworkVersion="3.5" />
     </MonoDevelop>
   </ProjectExtensions>
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
 </Project>
