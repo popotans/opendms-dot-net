@@ -1,0 +1,13 @@
+﻿Legend
+x Bug Fix
+- Informational or improvement
++ New Feature
+
+r6
+- Code comments were added.
+- Code documentation was generated.
+- Renamed the OpenDMS.NET class library to HttpModule so it would not be so confusing.
+
+r4
++ Implemented the ServicePoint for /_settings/metaform to transfer the stored metaformproperties.xml file or create a new default one, with minimal requirements, if none exists.
+x Issue 2 - Resolved
