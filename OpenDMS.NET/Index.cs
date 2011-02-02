@@ -17,10 +17,19 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 
-namespace OpenDMS
+namespace HttpModule
 {
+    /// <summary>
+    /// Provides the indexing facility for OpenDMS.NET by using Solr.
+    /// </summary>
     public class Index
     {
+        /// <summary>
+        /// Indexes a <see cref="Common.Data.MetaAsset"/>.
+        /// </summary>
+        /// <param name="ma">The <see cref="Common.Data.MetaAsset"/> to index.</param>
+        /// <param name="fileSystem">A reference to a <see cref="Common.FileSystem.IO"/> for file system access.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool IndexMeta(Common.Data.MetaAsset ma, Common.FileSystem.IO fileSystem)
         {
             HttpWebResponse response;
@@ -57,6 +66,13 @@ namespace OpenDMS
             return false;
         }
 
+        /// <summary>
+        /// Indexes a <see cref="Common.Data.DataAsset"/>.
+        /// </summary>
+        /// <param name="guid">The <see cref="Guid"/> of the asset.</param>
+        /// <param name="relativeFilepath">The relative filepath of the file to index.</param>
+        /// <param name="fileSystem">A reference to a <see cref="Common.FileSystem.IO"/> for file system access.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool IndexData(Guid guid, string relativeFilepath, Common.FileSystem.IO fileSystem)
         {
             HttpWebResponse response;

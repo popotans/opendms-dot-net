@@ -17,12 +17,26 @@ using System;
 using System.Xml;
 using System.Collections.Generic;
 
-namespace OpenDMS
+namespace HttpModule
 {
+    /// <summary>
+    /// Represents a result of a search performed against a Solr instance.
+    /// </summary>
     public class SolrResult
     {
+        /// <summary>
+        /// Gets or sets the id.
+        /// </summary>
+        /// <value>
+        /// The id.
+        /// </value>
         public Guid Id { get; set; }
 
+        /// <summary>
+        /// Deserializes the content of the XML reader.
+        /// </summary>
+        /// <param name="reader">The reader.</param>
+        /// <returns>A <see cref="SolrResult"/>.</returns>
         public static SolrResult Deserialize(XmlReader reader)
         {
             bool loop = true;

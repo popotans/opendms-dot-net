@@ -16,14 +16,32 @@
 using System;
 using System.Collections.Generic;
 
-namespace OpenDMS
+namespace HttpModule
 {
+    /// <summary>
+    /// Provides an interface for searching using Solr
+    /// </summary>
     public class Search
     {
+        /// <summary>
+        /// The query represented as a string.
+        /// </summary>
         private string _queryString;
+        /// <summary>
+        /// The <see cref="Storage.Master"/> providing a storage facility.
+        /// </summary>
         private Storage.Master _storage;
+        /// <summary>
+        /// The user requesting the search.
+        /// </summary>
         private string _requestingUser;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Search"/> class.
+        /// </summary>
+        /// <param name="queryString">The query string.</param>
+        /// <param name="requestingUser">The requesting user.</param>
+        /// <param name="storage">The <see cref="Storage.Master"/> providing a storage facility.</param>
         public Search(string queryString, string requestingUser, Storage.Master storage)
         {
             _queryString = queryString;
@@ -31,6 +49,13 @@ namespace OpenDMS
             _storage = storage;
         }
 
+        /// <summary>
+        /// Executes the search.
+        /// </summary>
+        /// <param name="generalLogger">A reference to the <see cref="Common.Logger"/> that this instance should use to document general events.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Common.Logger"/> that this instance should use to document network events.</param>
+        /// <param name="response">The response from the Solr server.</param>
+        /// <returns>The results of the search.</returns>
         public Common.NetworkPackage.SearchResult Execute(Common.Logger generalLogger, Common.Logger networkLogger, 
             out Common.NetworkPackage.ServerResponse response)
         {

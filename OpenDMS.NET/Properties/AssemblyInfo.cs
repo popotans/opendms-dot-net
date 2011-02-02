@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("OpenDMS")]
+[assembly: AssemblyTitle("HttpModule")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("OpenDMS")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2010")]
+[assembly: AssemblyCompany("OpenDMS.NET Project")]
+[assembly: AssemblyProduct("HttpModule")]
+[assembly: AssemblyCopyright("Copyright © 2011 OpenDMS.NET Project")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

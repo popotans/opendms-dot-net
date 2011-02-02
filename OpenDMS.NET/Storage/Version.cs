@@ -16,50 +16,93 @@
 using System;
 using Common.Data;
 
-namespace OpenDMS
+namespace HttpModule
 {
+    /// <summary>
+    /// Represents a version of an Asset.
+    /// </summary>
     public class Version
     {
+        /// <summary>
+        /// A reference to the <see cref="Common.Logger"/> that this instance should use to document events.
+        /// </summary>
         private Common.Logger _logger;
+        /// <summary>
+        /// Represents a pair of <see cref="MetaAsset"/> and <see cref="DataAsset"/>
+        /// </summary>
         private FullAsset _fullAsset;
-        
+
+        /// <summary>
+        /// Gets or sets the <see cref="MetaAsset"/>.
+        /// </summary>
+        /// <value>
+        /// The <see cref="MetaAsset"/>.
+        /// </value>
         private MetaAsset _metaAsset
         {
             get { return _fullAsset.MetaAsset; }
             set { _fullAsset.MetaAsset = value; }
         }
-        
+
+        /// <summary>
+        /// Gets or sets the <see cref="DataAsset"/>.
+        /// </summary>
+        /// <value>
+        /// The <see cref="DataAsset"/>.
+        /// </value>
         private DataAsset _dataAsset
         {
             get { return _fullAsset.DataAsset; }
             set { _fullAsset.DataAsset = value; }
         }
-                
+
+        /// <summary>
+        /// Gets the <see cref="FullAsset"/>.
+        /// </summary>
         public FullAsset FullAsset 
         {
             get { return _fullAsset; }
         }
 
+        /// <summary>
+        /// Gets the <see cref="MetaAsset"/>.
+        /// </summary>
         public MetaAsset MetaAsset
         {
             get { return _metaAsset; }
         }
 
+        /// <summary>
+        /// Gets the <see cref="DataAsset"/>.
+        /// </summary>
         public DataAsset DataAsset
         {
             get { return _dataAsset; }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Version"/> class.
+        /// </summary>
+        /// <param name="logger">A reference to the <see cref="Common.Logger"/> that this instance should use to document events.</param>
         private Version(Common.Logger logger)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Version"/> class.
+        /// </summary>
+        /// <param name="fullAsset">Represents a pair of <see cref="MetaAsset"/> and <see cref="DataAsset"/></param>
+        /// <param name="logger">A reference to the <see cref="Common.Logger"/> that this instance should use to document events.</param>
         public Version(FullAsset fullAsset, Common.Logger logger)
         {
             _logger = logger;
             _fullAsset = fullAsset;
         }
 
+        /// <summary>
+        /// Copies the <see cref="MetaAsset"/> using version scheme naming.
+        /// </summary>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool CopyMetaUsingVersionScheme()
         {
             // Copy the current version to a file
@@ -75,6 +118,10 @@ namespace OpenDMS
             return true;
         }
 
+        /// <summary>
+        /// Copies the <see cref="DataAsset"/> using version scheme naming.
+        /// </summary>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool CopyDataUsingVersionScheme()
         {
             // Copy the current version to a file
@@ -90,6 +137,9 @@ namespace OpenDMS
             return true;
         }
 
+        /// <summary>
+        /// Increments the meta version.
+        /// </summary>
         public void IncrementMetaVersion()
         {
             uint mv;
@@ -103,6 +153,9 @@ namespace OpenDMS
                 _metaAsset.Modified, _metaAsset.LastAccess);
         }
 
+        /// <summary>
+        /// Increments the data version.
+        /// </summary>
         public void IncrementDataVersion()
         {
             uint dv;

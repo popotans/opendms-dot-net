@@ -8,8 +8,8 @@
     <ProjectGuid>{67633BAF-C29E-4C46-A83C-41F93AAA936D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OpenDMS</RootNamespace>
-    <AssemblyName>OpenDMS</AssemblyName>
+    <RootNamespace>HttpModule</RootNamespace>
+    <AssemblyName>HttpModule</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\HttpModule.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -45,10 +46,6 @@
     <Compile Include="Index.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Search.cs" />
-    <Compile Include="Security\AccessType.cs" />
-    <Compile Include="Security\Manager.cs" />
-    <Compile Include="Security\User.cs" />
-    <Compile Include="Security\UserRightCollection.cs" />
     <Compile Include="ServiceHandler.cs" />
     <Compile Include="ServicePointAttribute.cs" />
     <Compile Include="ServicePointMap.cs" />

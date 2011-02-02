@@ -16,20 +16,38 @@
 using System;
 using System.Collections.Generic;
 
-namespace OpenDMS
+namespace HttpModule
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class Utilities
     {
+        /// <summary>
+        /// Gets a numeric representation of the amount of milliseconds since 1/1/1970 to the argument <see cref="DateTime"/>.
+        /// </summary>
+        /// <param name="dt">The <see cref="DateTime"/>.</param>
+        /// <returns>The amount of milliseconds since 1/1/1970.</returns>
         public static long Timestamp(DateTime dt)
         {
             return Convert.ToInt64(dt.Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds);
         }
 
+        /// <summary>
+        /// Converts a timestamp to a <see cref="DateTime"/> representation.
+        /// </summary>
+        /// <param name="timestamp">The milliseconds since 1/1/1970.</param>
+        /// <returns>A <see cref="DateTime"/> representation.</returns>
         public static DateTime DateTimeFromTimestamp(long timestamp)
         {
             return new DateTime(1970, 1, 1).AddMilliseconds(Convert.ToDouble(timestamp));
         }
 
+        /// <summary>
+        /// Converts a <see cref="System.IO.Stream"/> to a UTF-8 formatted string.
+        /// </summary>
+        /// <param name="stream">The <see cref="System.IO.Stream"/>.</param>
+        /// <returns>A UTF-8 formatted string.</returns>
         public static string StreamToUtf8String(System.IO.Stream stream)
         {
             int bytesRead = 0;
