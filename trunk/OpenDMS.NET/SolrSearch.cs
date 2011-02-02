@@ -17,19 +17,41 @@ using System;
 using System.Xml;
 using System.Collections.Generic;
 
-namespace OpenDMS
+namespace HttpModule
 {
+    /// <summary>
+    /// Provides an interface for relaying a search request to a Solr instance.
+    /// </summary>
     public class SolrSearch
     {
+        /// <summary>
+        /// The IP address of the Solr host.
+        /// </summary>
         private string _host;
+        /// <summary>
+        /// The port number of the Solr host.
+        /// </summary>
         private int _port;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SolrSearch"/> class.
+        /// </summary>
+        /// <param name="host">The IP address of the Solr host.</param>
+        /// <param name="port">The port number of the Solr host.</param>
         public SolrSearch(string host, int port)
         {
             _host = host;
             _port = port;
         }
 
+        /// <summary>
+        /// Executes the specified search on the Solr instance.
+        /// </summary>
+        /// <param name="queryString">The query string.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Common.Logger"/> that this instance should use to document general events.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Common.Logger"/> that this instance should use to document network events.</param>
+        /// <param name="response">The Solr instance response.</param>
+        /// <returns>A collection of results.</returns>
         public List<SolrResult> Execute(string queryString, Common.Logger generalLogger, Common.Logger networkLogger,
             out Common.NetworkPackage.ServerResponse response)
         {
@@ -90,6 +112,11 @@ namespace OpenDMS
             return results;
         }
 
+        /// <summary>
+        /// Deserializes the content of the XML reader.
+        /// </summary>
+        /// <param name="reader">The reader.</param>
+        /// <returns>A collection of results.</returns>
         public List<SolrResult> Deserialize(XmlReader reader)
         {
             List<SolrResult> results = new List<SolrResult>();

@@ -17,30 +17,48 @@ using System;
 using System.Collections.Generic;
 using Common.Data;
 
-namespace OpenDMS.Storage
+namespace HttpModule.Storage
 {
+    /// <summary>
+    /// Represents the controlling object for file system access.
+    /// </summary>
     public class Master
     {   
         // Howto : make it pluggable http://weblogs.asp.net/justin_rogers/articles/61042.aspx
 
+        /// <summary>
+        /// A reference to <see cref="Common.FileSystem.IO"/> allowing file system access.
+        /// </summary>
         private Common.FileSystem.IO _fileSystem;
+        /// <summary>
+        /// A reference to the <see cref="Common.Logger"/> that this instance should use to document events.
+        /// </summary>
         private Common.Logger _generalLogger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Master"/> class.
+        /// </summary>
+        /// <param name="fileSystem">A reference to <see cref="Common.FileSystem.IO"/> allowing file system access.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Common.Logger"/> that this instance should use to document events.</param>
         public Master(Common.FileSystem.IO fileSystem, Common.Logger generalLogger)
         {
             _fileSystem = fileSystem;
             _generalLogger = generalLogger;
         }
-        
+
         /// <summary>
-        /// Deserializes the MetaAsset from disk into a Common.Data.MetaAsset object without checking
-        /// locks and without applying any locks (use very carefully).  Returns: Success, IOError, 
-        /// SerializationError or InstantiationError.
+        /// Loads a <see cref="Common.Data.MetaAsset"/> from the file system without checking locks or applying locks.
         /// </summary>
-        /// <param name="guid"></param>
-        /// <param name="ma"></param>
-        /// <param name="errorMessage"></param>
-        /// <returns></returns>
+        /// <param name="guid">The identifier for the resource to load</param>
+        /// <param name="ma">The instantiated <see cref="Common.Data.MetaAsset"/> that was loaded from disk.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>
+        /// Success, IOError, SerializationError or InstantiationError.
+        /// </returns>
+        /// <remarks>
+        /// Use care when calling this method as it loads the <see cref="Common.Data.MetaAsset"/> without
+        /// concern for locks, without applying locks and without checking any security constraints.
+        /// </remarks>
         public ResultType LoadMetaLite(Guid guid, out MetaAsset ma, out string errorMessage)
         {
             errorMessage = null;
@@ -61,14 +79,20 @@ namespace OpenDMS.Storage
         }
 
         /// <summary>
-        /// Deserializes the MetaAsset from disk into a Common.Data.MetaAsset object in memory applying a resource 
-        /// lock if instructed.  Returns: Success, IOError, SerializationError, InstantiationError or ResourceIsLocked.
+        /// Loads a <see cref="Common.Data.MetaAsset"/> from the file system checking locks and applying locks if instructed.
+        /// Deserializes the MetaAsset from disk into a Common.Data.MetaAsset object in memory applying a resource
+        /// lock if instructed.  Returns:
         /// </summary>
-        /// <param name="guid"></param>
-        /// <param name="applyLock"></param>
-        /// <param name="ma"></param>
-        /// <param name="errorMessage"></param>
-        /// <returns></returns>
+        /// <param name="guid">The identifier for the resource to load.</param>
+        /// <param name="applyLock"><c>True</c> if a lock is to be applied to a resource.</param>
+        /// <param name="checkLock">if set to <c>true</c> the lock should be checked.</param>
+        /// <param name="requestingUser">The requesting user.</param>
+        /// <param name="readOnly">if set to <c>true</c> the user is requesting read-only access.</param>
+        /// <param name="ma">The instantiated <see cref="Common.Data.MetaAsset"/> that was loaded from disk.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>
+        /// Success, IOError, SerializationError, InstantiationError or ResourceIsLocked.
+        /// </returns>
         public ResultType LoadMeta(Guid guid, bool applyLock, bool checkLock, string requestingUser, bool readOnly, out MetaAsset ma, out string errorMessage)
         {
             ResultType result;
@@ -92,13 +116,15 @@ namespace OpenDMS.Storage
         }
 
         /// <summary>
-        /// Determines if the specified requesting user can access the resource
+        /// Determines if the specified requesting user can access the resource.
         /// </summary>
-        /// <param name="ma"></param>
-        /// <param name="requestingUser"></param>
-        /// <param name="readOnly"></param>
-        /// <param name="errorMessage"></param>
-        /// <returns></returns>
+        /// <param name="ma">The <see cref="Common.Data.MetaAsset"/> to check accessability.</param>
+        /// <param name="requestingUser">The user requesting access to the resource.</param>
+        /// <param name="readOnly"><c>True</c> if the user only wants read-only access.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>
+        ///   <c>True</c> if the user can access the resource; otherwise, <c>false</c>.
+        /// </returns>
         public bool CanUserAccessResource(MetaAsset ma, string requestingUser, bool readOnly, out string errorMessage)
         {
             errorMessage = null;
@@ -119,12 +145,14 @@ namespace OpenDMS.Storage
         }
 
         /// <summary>
-        /// Applys a lock to the specified MetaAsset
+        /// Applys a lock to the specified <see cref="Common.Data.MetaAsset"/>.
         /// </summary>
-        /// <param name="ma"></param>
-        /// <param name="requestingUser"></param>
-        /// <param name="errorMessage"></param>
-        /// <returns></returns>
+        /// <param name="ma">The <see cref="Common.Data.MetaAsset"/> on which to apply the lock.</param>
+        /// <param name="requestingUser">The user requesting access to the resource.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>
+        /// Success
+        /// </returns>
         public ResultType ApplyLock(MetaAsset ma, string requestingUser, out string errorMessage)
         {
             errorMessage = null;
@@ -140,13 +168,14 @@ namespace OpenDMS.Storage
         }
 
         /// <summary>
-        /// Applies a lock to the resource with the specified GUID.  Returns: Success, IOError, 
-        /// SerializationError, InstantiationError or ResourceIsLocked
+        /// Applys a lock to the <see cref="Common.Data.MetaAsset"/> corresponding to the argument <see cref="Guid"/>.
         /// </summary>
-        /// <param name="guid"></param>
-        /// <param name="requestingUser"></param>
-        /// <param name="errorMessage"></param>
-        /// <returns></returns>
+        /// <param name="guid">A <see cref="Guid"/> representing the unique identifier of the resource.</param>
+        /// <param name="requestingUser">The user requesting access to the resource.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>
+        /// Success, IOError, SerializationError, InstantiationError or ResourceIsLocked.
+        /// </returns>
         public ResultType ApplyLock(Guid guid, string requestingUser, out string errorMessage)
         {
             MetaAsset ma;
@@ -155,12 +184,14 @@ namespace OpenDMS.Storage
         }
 
         /// <summary>
-        /// Releases a lock on the specified MetaAsset.  Returns: Success, PermissionsError, IOError or SerializationError
+        /// Releases a lock to the specified <see cref="Common.Data.MetaAsset"/>.
         /// </summary>
-        /// <param name="ma"></param>
-        /// <param name="requestingUser"></param>
-        /// <param name="errorMessage"></param>
-        /// <returns>Success, PermissionsError, IOError or SerializationError</returns>
+        /// <param name="ma">The <see cref="Common.Data.MetaAsset"/> on which to release the lock.</param>
+        /// <param name="requestingUser">The user requesting access to the resource.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>
+        /// Success, PermissionsError, IOError or SerializationError.
+        /// </returns>
         public ResultType ReleaseLock(MetaAsset ma, string requestingUser, out string errorMessage)
         {
             errorMessage = null;
@@ -174,12 +205,14 @@ namespace OpenDMS.Storage
         }
 
         /// <summary>
-        /// Releases a lock on the resource with the specified GUID
+        /// Releases a lock to the <see cref="Common.Data.MetaAsset"/> corresponding to the argument <see cref="Guid"/>.
         /// </summary>
-        /// <param name="guid"></param>
-        /// <param name="requestingUser"></param>
-        /// <param name="errorMessage"></param>
-        /// <returns></returns>
+        /// <param name="guid">A <see cref="Guid"/> representing the unique identifier of the resource.</param>
+        /// <param name="requestingUser">The user requesting access to the resource.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>
+        /// Success, PermissionsError, IOError or SerializationError.
+        /// </returns>
         public ResultType ReleaseLock(Guid guid, string requestingUser, out string errorMessage)
         {
             ResultType result;
@@ -192,30 +225,32 @@ namespace OpenDMS.Storage
         }
 
         /// <summary>
-        /// Gets a meta asset from the persistant data store.  Returns: Success, IOError, SerializationError, 
-        /// InstantiationError or ResourceIsLocked.
+        /// Gets a meta asset from the file system.
         /// </summary>
-        /// <param name="guid"></param>
-        /// <param name="requestingUser"></param>
-        /// <param name="readOnly"></param>
-        /// <param name="ma"></param>
-        /// <param name="errorMessage"></param>
-        /// <returns></returns>
+        /// <param name="guid">A <see cref="Guid"/> representing the unique identifier of the resource.</param>
+        /// <param name="requestingUser">The user requesting access to the resource.</param>
+        /// <param name="readOnly"><c>True</c> if the user only wants read-only access.</param>
+        /// <param name="ma">The instantiated <see cref="Common.Data.MetaAsset"/> that was loaded from disk.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>
+        /// Success, IOError, SerializationError, InstantiationError or ResourceIsLocked.
+        /// </returns>
         public ResultType GetMeta(Guid guid, string requestingUser, bool readOnly, out MetaAsset ma, out string errorMessage)
         {
             return LoadMeta(guid, !readOnly, true, requestingUser, readOnly, out ma, out errorMessage);
-        }        
+        }
 
         /// <summary>
-        /// Gets a stream allowing access to the data asset.  Returns: Success, IOError, SerializationError, 
-        /// InstantiationError or ResourceIsLocked.
+        /// Gets a stream allowing access to the data resource.
         /// </summary>
-        /// <param name="guid"></param>
-        /// <param name="requestingUser"></param>
-        /// <param name="readOnly"></param>
-        /// <param name="errorMessage"></param>
-        /// <param name="stream"></param>
-        /// <returns></returns>
+        /// <param name="guid">A <see cref="Guid"/> representing the unique identifier of the resource.</param>
+        /// <param name="requestingUser">The user requesting access to the resource.</param>
+        /// <param name="readOnly"><c>True</c> if the user only wants read-only access.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <param name="iostream">The iostream.</param>
+        /// <returns>
+        /// Success, IOError, SerializationError, InstantiationError or ResourceIsLocked.
+        /// </returns>
         public ResultType GetData(Guid guid, string requestingUser, bool readOnly, out string errorMessage, out Common.FileSystem.IOStream iostream)
         {
             ResultType result;
@@ -240,14 +275,15 @@ namespace OpenDMS.Storage
         }
 
         /// <summary>
-        /// Saves a metaasset to the persistant storage.  This method ignores any version (meta or data) set within the argument 'ma'.  
-        /// Returns: Success, Failure, PermissionsError, InstantiationError, ResourceIsLocked, IOError or SerializationError
+        /// Saves a <see cref="Common.Data.MetaAsset"/> to the file system.  This method ignores any version (meta or data) set within the argument 'ma'.
         /// </summary>
-        /// <param name="ma"></param>
-        /// <param name="requestingUser"></param>
-        /// <param name="releaseLock"></param>
-        /// <param name="errorMessage"></param>
-        /// <returns>Success, Failure, PermissionsError, IOError or SerializationError</returns>
+        /// <param name="ma">The <see cref="Common.Data.MetaAsset"/> to save.</param>
+        /// <param name="requestingUser">The user requesting access to the resource.</param>
+        /// <param name="releaseLock"><c>True</c> to release the lock on the asset after saving.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>
+        /// Success, Failure, PermissionsError, InstantiationError, ResourceIsLocked, IOError or SerializationError.
+        /// </returns>
         public ResultType SaveMeta(MetaAsset ma, string requestingUser, bool releaseLock, out string errorMessage)
         {
             // The version comes in as the current version and is incremented and saved back with the
@@ -321,16 +357,16 @@ namespace OpenDMS.Storage
         }
 
         /// <summary>
-        /// Saves the stream received from the network into a file,  must receive a ResultType.Success or the client must redo 
-        /// the transfer.  If not complied with, data could be inconsistent.  Returns: Success, IOError, SerializationError,
-        /// InstantiationError or ResourceIsLocked
+        /// Saves the stream received from the network to a resource on the file system,  must receive a ResultType.Success or the client must redo
+        /// the transfer.  If not complied with, data could be inconsistent.
         /// </summary>
-        /// <param name="guid"></param>
-        /// <param name="netStream"></param>
-        /// <param name="requestingUser"></param>
-        /// <param name="releaseLock"></param>
-        /// <param name="errorMessage"></param>
-        /// <returns></returns>
+        /// <param name="guid">A <see cref="Guid"/> representing the unique identifier of the resource.</param>
+        /// <param name="netStream">A stream providing access to the data being received over the network.</param>
+        /// <param name="requestingUser">The requesting user.</param>
+        /// <param name="releaseLock"><c>True</c> to release the lock on the asset after saving.</param>
+        /// <param name="currentMa">A reference to an updated <see cref="Common.Data.MetaAsset"/>.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>Success, IOError, SerializationError, InstantiationError or ResourceIsLocked.</returns>
         public ResultType SaveData(Guid guid, System.IO.Stream netStream, string requestingUser, bool releaseLock,
             out MetaAsset currentMa, out string errorMessage)
         {
@@ -465,6 +501,13 @@ namespace OpenDMS.Storage
         //    return ResultType.Success;
         //}
 
+        /// <summary>
+        /// Gets the search form from the file system.
+        /// </summary>
+        /// <param name="requestingUser">The requesting user.</param>
+        /// <param name="searchForm">The instantiated instance of the <see cref="Common.NetworkPackage.SearchForm"/>.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>Success or Failure.</returns>
         public ResultType GetSearchForm(string requestingUser, out Common.NetworkPackage.SearchForm searchForm, out string errorMessage)
         {
             string relativeFilepath = "settings\\searchform.xml";
@@ -483,6 +526,13 @@ namespace OpenDMS.Storage
             return ResultType.Success;
         }
 
+        /// <summary>
+        /// Gets the meta form from the file system.
+        /// </summary>
+        /// <param name="requestingUser">The requesting user.</param>
+        /// <param name="metaForm">The instantiated instance of the <see cref="Common.NetworkPackage.MetaForm"/>.</param>
+        /// <param name="errorMessage">A string representing the cause of the error.</param>
+        /// <returns>Success or Failure.</returns>
         public ResultType GetMetaForm(string requestingUser, out Common.NetworkPackage.MetaForm metaForm, out string errorMessage)
         {
             string relativeFilepath = "settings\\metapropertiesform.xml";
@@ -500,7 +550,7 @@ namespace OpenDMS.Storage
                     return ResultType.Failure;
                 }
             }
-            catch (System.IO.FileNotFoundException ex)
+            catch (System.IO.FileNotFoundException)
             {
                 errorMessage = "Unable to read from the saved search form.";
                 return ResultType.Failure;

@@ -15,20 +15,52 @@
 
 using System;
 
-namespace OpenDMS.Storage
+namespace HttpModule.Storage
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public enum ResultType
     {
+        /// <summary>
+        /// The process failed.
+        /// </summary>
         Failure = 0,
+        /// <summary>
+        /// The process was successful.
+        /// </summary>
         Success,
+        /// <summary>
+        /// The resource was not found.
+        /// </summary>
         NotFound,
+        /// <summary>
+        /// An I/O error occurred while processing.
+        /// </summary>
         IOError,
+        /// <summary>
+        /// An error occurred while serializing.
+        /// </summary>
         SerializationError,
+        /// <summary>
+        /// An error occurred while instantiating an object.
+        /// </summary>
         InstantiationError,
+        /// <summary>
+        /// The resource is locked.
+        /// </summary>
         ResourceIsLocked,
+        /// <summary>
+        /// The user does not have permission to access the resource.
+        /// </summary>
         PermissionsError,
+        /// <summary>
+        /// The length of the data does not match the length specified in the <see cref="Common.Data.MetaAsset"/>.
+        /// </summary>
         LengthMismatch,
-        Md5Mismatch,
-        VersionMismatch
+        /// <summary>
+        /// The MD5 of the data does not match the MD5 in the <see cref="Common.Data.MetaAsset"/>.
+        /// </summary>
+        Md5Mismatch
     }
 }

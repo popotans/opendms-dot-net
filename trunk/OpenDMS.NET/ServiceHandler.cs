@@ -20,15 +20,33 @@ using System.Collections.Specialized;
 using System.Collections.Generic;
 using Common.NetworkPackage;
 
-namespace OpenDMS
+namespace HttpModule
 {
+    /// <summary>
+    /// Provides a handler for HTTP requests.
+    /// </summary>
     public class ServiceHandler : IDisposable
     {
+        /// <summary>
+        /// The <see cref="Storage.Master"/> providing a storage facility.
+        /// </summary>
         private Storage.Master _storage;
+        /// <summary>
+        /// A reference to the <see cref="Common.FileSystem.IO"/> providing file system access.
+        /// </summary>
         private Common.FileSystem.IO _fileSystem;
+        /// <summary>
+        /// A reference to the <see cref="Common.Logger"/> that this instance should use to document general events.
+        /// </summary>
         private Common.Logger _generalLogger;
+        /// <summary>
+        /// A reference to the <see cref="Common.Logger"/> that this instance should use to document network events.
+        /// </summary>
         private Common.Logger _networkLogger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServiceHandler"/> class.
+        /// </summary>
         public ServiceHandler()
         {
             if(!System.IO.Directory.Exists(@"C:\DataStore\logs"))
@@ -39,6 +57,11 @@ namespace OpenDMS
             _storage = new Storage.Master(_fileSystem, _generalLogger);
         }
 
+
+        /// <summary>
+        /// Responds to a ping request.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
         [ServicePoint("/_ping", ServicePointAttribute.VerbType.GET)]
         public void Ping(HttpApplication app)
         {
@@ -46,12 +69,20 @@ namespace OpenDMS
             app.CompleteRequest();
         }
 
+        /// <summary>
+        /// Responds to a stats request.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
         [ServicePoint("/_stats", ServicePointAttribute.VerbType.GET)]
         public void Stats(HttpApplication app)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Responds to a lock or releaselock request.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
         [ServicePoint("/_lock", ServicePointAttribute.VerbType.PUT)]
         public void Lock(HttpApplication app)
         {
@@ -89,6 +120,11 @@ namespace OpenDMS
             return;       
         }
 
+        /// <summary>
+        /// Responds to a request for the search form.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <remarks>This is accessable at http://[host]:[port]/_settings/searchform using the HTTP GET verb.</remarks>
         [ServicePoint("/_settings/searchform", ServicePointAttribute.VerbType.GET)]
         public void GetSearchForm(HttpApplication app)
         {
@@ -124,6 +160,12 @@ namespace OpenDMS
                 _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Search form was sent to user '" + userInfo["username"] + "'.");
         }
 
+        /// <summary>
+        /// Responds to a request for the meta properties form.  The default form is created if it does not exist.  
+        /// If it exists the system administrator can make modifications to create additional properties.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <remarks>This is accessable at http://[host]:[port]/_settings/metaform using the HTTP GET verb.</remarks>
         [ServicePoint("/_settings/metaform", ServicePointAttribute.VerbType.GET)]
         public void GetMetaForm(HttpApplication app)
         {
@@ -152,10 +194,15 @@ namespace OpenDMS
                 _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Meta properties form was sent to user '" + userInfo["username"] + "'.");
         }
 
+        /// <summary>
+        /// Responds to a search request.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <remarks>This is accessable at http://[host]:[port]/search using the HTTP GET verb.</remarks>
         [ServicePoint("/search", ServicePointAttribute.VerbType.GET)]
         public void Search(HttpApplication app)
         {
-            OpenDMS.Search search;
+            HttpModule.Search search;
             Common.NetworkPackage.SearchResult result;
             ServerResponse response;
             Dictionary<string, string> userInfo = ParseUserInfo(app);
@@ -163,7 +210,7 @@ namespace OpenDMS
             if (_networkLogger != null)
                 _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Search request received from user '" + userInfo["username"] + "'.");
 
-            search = new OpenDMS.Search(app.Request.Url.Query, userInfo["username"], _storage);
+            search = new HttpModule.Search(app.Request.Url.Query, userInfo["username"], _storage);
 
             result = search.Execute(_generalLogger, _networkLogger, out response);
 
@@ -188,6 +235,12 @@ namespace OpenDMS
                     "Response for search request has been sent to user '" + userInfo["username"] + "'.");
         }
 
+        /// <summary>
+        /// Responds to a HEAD request for a <see cref="Common.Data.MetaAsset"/> by sending the 
+        /// <see cref="Common.Data.ETag"/> version.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <remarks>This is accessable at http://[host]:[port]/meta using the HTTP HEAD verb.</remarks>
         [ServicePoint("/meta", ServicePointAttribute.VerbType.HEAD)]
         public void Head(HttpApplication app)
         {
@@ -253,6 +306,12 @@ namespace OpenDMS
             return;
         }
 
+        /// <summary>
+        /// Responds to a GET request for a <see cref="Common.Data.MetaAsset"/> by sending the 
+        /// <see cref="Common.NetworkPackage.MetaAsset"/>.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <remarks>This is accessable at http://[host]:[port]/meta using the HTTP GET verb.</remarks>
         [ServicePoint("/meta", ServicePointAttribute.VerbType.GET)]
         public void GetMeta(HttpApplication app)
         {
@@ -325,6 +384,11 @@ namespace OpenDMS
             return;
         }
 
+        /// <summary>
+        /// Responds to a PUT request for a <see cref="Common.Data.MetaAsset"/> by receiving the stream, deserializing then saving.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <remarks>This is accessable at http://[host]:[port]/meta using the HTTP PUT verb.</remarks>
         [ServicePoint("/meta", ServicePointAttribute.VerbType.PUT)]
         public void SaveMeta(HttpApplication app)
         {
@@ -460,7 +524,12 @@ namespace OpenDMS
             if (_networkLogger != null)
                 _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
         }
-        
+
+        /// <summary>
+        /// Responds to a GET request for a <see cref="Common.Data.DataAsset"/> by sending the binary data of the data resource.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <remarks>This is accessable at http://[host]:[port]/data using the HTTP GET verb.</remarks>
         [ServicePoint("/data", ServicePointAttribute.VerbType.GET)]
         public void GetData(HttpApplication app)
         {
@@ -540,6 +609,12 @@ namespace OpenDMS
             return;
         }
 
+        /// <summary>
+        /// Responds to a PUT request for a <see cref="Common.Data.DataAsset"/> by copying the stream to the file system and 
+        /// sends to the Solr installation for indexing.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <remarks>This is accessable at http://[host]:[port]/data using the HTTP PUT verb.</remarks>
         [ServicePoint("/data", ServicePointAttribute.VerbType.PUT)]
         public void SaveData(HttpApplication app)
         {
@@ -620,7 +695,7 @@ namespace OpenDMS
         /// <summary>
         /// Test1 creates a new resource (or a new version thereof) every time it is called
         /// </summary>
-        /// <param name="app"></param>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
         [ServicePoint("/_test1", ServicePointAttribute.VerbType.ALL)]
         public void Test1(HttpApplication app)
         {
@@ -680,6 +755,12 @@ namespace OpenDMS
             app.CompleteRequest();
         }
 
+        /// <summary>
+        /// Parses the user information from the HTTP request headers.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <returns>A collection of user information properties.</returns>
+        /// <remarks>Properties contained are: username, password</remarks>
         private Dictionary<string, string> ParseUserInfo(HttpApplication app)
         {
             Dictionary<string, string> dict = new Dictionary<string, string>();
@@ -693,6 +774,11 @@ namespace OpenDMS
             return dict;
         }
 
+        /// <summary>
+        /// Parses a <see cref="Guid"/> from a path
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns>The <see cref="Guid"/>.</returns>
         private Guid ParseGuid(string path)
         { 
             // http://stackoverflow.com/questions/104850/c-test-if-string-is-a-guid-without-throwing-exceptions
@@ -707,6 +793,11 @@ namespace OpenDMS
             }
         }
 
+        /// <summary>
+        /// Parses keys and values representing a property from the query string.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <returns>A collection of properties where the key is a string that is the name of the property and the value is the value.</returns>
         private Dictionary<string, string> ParseQueryString(HttpApplication app)
         {
             Dictionary<string, string> dict = new Dictionary<string, string>();
@@ -728,6 +819,9 @@ namespace OpenDMS
             return dict;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
             _storage = null;

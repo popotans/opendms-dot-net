@@ -17,17 +17,30 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 
-namespace OpenDMS
+namespace HttpModule
 {
+    /// <summary>
+    /// Provides a device to map all <see cref="ServicePointAttribute"/> to methods.
+    /// </summary>
     public class ServicePointMap
     {
+        /// <summary>
+        /// A collection of <see cref="ServicePointMapElement"/>.
+        /// </summary>
         private List<ServicePointMapElement> _map;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServicePointMap"/> class.
+        /// </summary>
         public ServicePointMap()
         {
             _map = new List<ServicePointMapElement>();
         }
 
+        /// <summary>
+        /// Maps the service points.
+        /// </summary>
+        /// <param name="type">The <see cref="Type"/> of the class to map.</param>
         public void MapServicePoints(Type type)
         {
             MethodInfo[] infos = type.GetMethods();
@@ -48,6 +61,12 @@ namespace OpenDMS
             }
         }
 
+        /// <summary>
+        /// Gets the best match for the path and verb.
+        /// </summary>
+        /// <param name="virtualPath">The virtual path.</param>
+        /// <param name="verb">The HTTP verb.</param>
+        /// <returns>A ServicePointMapElement for the arguments.</returns>
         public ServicePointMapElement GetBestMatch(string virtualPath, string verb)
         {
             ServicePointMapElement ele = null;

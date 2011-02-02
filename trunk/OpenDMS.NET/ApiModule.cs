@@ -16,13 +16,26 @@
 using System;
 using System.Web;
 
-namespace OpenDMS
+namespace HttpModule
 {
+    /// <summary>
+    /// Provides HttpModule initialization and disposal.
+    /// </summary>
     public class ApiModule : IHttpModule
     {
+        /// <summary>
+        /// A mapping of all service points.
+        /// </summary>
         private ServicePointMap _map;
+        /// <summary>
+        /// The class handling the HTTP interface.
+        /// </summary>
         private ServiceHandler _handler;
 
+        /// <summary>
+        /// Initializes this HttpModule
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/>.</param>
         public void Init(HttpApplication app)
         {
             if (_map == null)
@@ -37,12 +50,20 @@ namespace OpenDMS
             app.BeginRequest += new EventHandler(OnBeginRequest);
         }
 
+        /// <summary>
+        /// Disposes of the resources (other than memory) used by the module that implements <see cref="T:System.Web.IHttpModule"/>.
+        /// </summary>
         public void Dispose()
         {
             if(_handler != null)
                 _handler.Dispose();
         }
 
+        /// <summary>
+        /// Called when a HTTP request begins.
+        /// </summary>
+        /// <param name="s">The sender (<see cref="HttpApplication"/>).</param>
+        /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
         public void OnBeginRequest(Object s, EventArgs e)
         {
             HttpApplication app = (HttpApplication)s;

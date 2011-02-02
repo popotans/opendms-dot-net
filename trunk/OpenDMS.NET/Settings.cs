@@ -16,19 +16,58 @@
 using System;
 using System.Net;
 
-namespace OpenDMS
+namespace HttpModule
 {
+    /// <summary>
+    /// Represents the settings for this HttpModule.
+    /// </summary>
     public class Settings
     {
+        /// <summary>
+        /// A global instance of this class.
+        /// </summary>
         public static Settings Instance = new Settings();
 
+        /// <summary>
+        /// Gets or sets the host.
+        /// </summary>
+        /// <value>
+        /// The host.
+        /// </value>
         public IPEndPoint Host { get; set; }
+        /// <summary>
+        /// Gets or sets the storage location.
+        /// </summary>
+        /// <value>
+        /// The storage location.
+        /// </value>
         public string StorageLocation { get; set; }
+        /// <summary>
+        /// Gets or sets the lease expiration.
+        /// </summary>
+        /// <value>
+        /// The lease expiration.
+        /// </value>
         public long LeaseExpiration { get; set; }
+        /// <summary>
+        /// Gets or sets the size of the file buffer.
+        /// </summary>
+        /// <value>
+        /// The size of the file buffer.
+        /// </value>
         public int FileBufferSize { get; set; }
 
+        /// <summary>
+        /// Gets or sets the search host.
+        /// </summary>
+        /// <value>
+        /// The search host.
+        /// </value>
         public IPEndPoint SearchHost { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Settings"/> class.
+        /// </summary>
         public Settings()
         {
             Host = new IPEndPoint(IPAddress.Parse("192.168.1.103"), 9160);
