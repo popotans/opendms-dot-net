@@ -3,6 +3,10 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r9
+- Code comments added
+- Code Documentation added
+
 r4
 - Revamped the entire MetaPropWindow to support system admin definable properties
 + Program will now download the default MetaForm (metaformproperties.xml) at when the metapropwindow is displayed.

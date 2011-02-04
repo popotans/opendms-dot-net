@@ -35,14 +35,36 @@ namespace WindowsClient
     /// </summary>
     public partial class SearchWindow : Window
     {
+        /// <summary>
+        /// Reference to the method that handles the update ui events.
+        /// </summary>
         private delegate void UpdateUI();
+        /// <summary>
+        /// A reference to the method that handles search result selection events.
+        /// </summary>
+        /// <param name="guid">The <see cref="Guid"/> of the selected Asset.</param>
         public delegate void SearchResultHandler(Guid guid);
+        /// <summary>
+        /// Occurs when a result is selected.
+        /// </summary>
         public event SearchResultHandler OnResultSelected;
 
+        /// <summary>
+        /// A collection of form properties to display to the user to allow searching.
+        /// </summary>
         private Common.NetworkPackage.SearchForm _searchForm;
+        /// <summary>
+        /// A collection of properties bound on this GUI.
+        /// </summary>
         private Dictionary<string, UIElement> _boundProperties;
+        /// <summary>
+        /// Width of the search column minus the margin.
+        /// </summary>
         private const int SEARCH_COLUMN_WIDTH_MINUS_MARGIN = 280;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SearchWindow"/> class.
+        /// </summary>
         public SearchWindow()
         {
             InitializeComponent();
@@ -50,16 +72,11 @@ namespace WindowsClient
             _boundProperties = new Dictionary<string, UIElement>();
         }
 
-        //private void expander_Collapsed(object sender, System.Windows.RoutedEventArgs e)
-        //{
-        //    this.Width -= 250;
-        //}
-
-        //private void expander_Expanded(object sender, System.Windows.RoutedEventArgs e)
-        //{
-        //    this.Width += 250;
-        //}
-
+        /// <summary>
+        /// Handles the Loaded event of the Window control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Thread download;
@@ -70,6 +87,10 @@ namespace WindowsClient
             download.Start();
         }
 
+        /// <summary>
+        /// Downloads the <see cref="Common.NetworkPackage.SearchForm"/> which contains the collection 
+        /// of properties for be displayed on the UI.
+        /// </summary>
         private void DownloadSearchOptions()
         {
             Common.Network.Message msg = null;
@@ -103,6 +124,9 @@ namespace WindowsClient
             Dispatcher.BeginInvoke(actUpdateUI, System.Windows.Threading.DispatcherPriority.Normal);
         }
 
+        /// <summary>
+        /// Called when the <see cref="Common.NetworkPackage.SearchForm"/> download is complete.
+        /// </summary>
         private void UpdateUI_DownloadComplete()
         {
             Storyboard sbBegin = (Storyboard)TryFindResource("BeginLoadingSearchOptions");
@@ -115,6 +139,9 @@ namespace WindowsClient
             LoadForm();
         }
 
+        /// <summary>
+        /// Constructs the UI.
+        /// </summary>
         private void LoadForm()
         {
             Label label = new Label();
@@ -155,6 +182,11 @@ namespace WindowsClient
             ControlPanel.Children.Add(btnSearch);
         }
 
+        /// <summary>
+        /// Handles the Click event of the btnSearch control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         void btnSearch_Click(object sender, RoutedEventArgs e)
         {
             Common.Network.Message msg;
@@ -196,6 +228,11 @@ namespace WindowsClient
             DisplayResults(dgResults, sr);
         }
 
+        /// <summary>
+        /// Displays the results on the grid.
+        /// </summary>
+        /// <param name="grid">The grid.</param>
+        /// <param name="result">The result.</param>
         private void DisplayResults(DataGrid grid, Common.NetworkPackage.SearchResult result)
         {
             Common.Data.MetaAsset ma;
@@ -216,6 +253,10 @@ namespace WindowsClient
             }
         }
 
+        /// <summary>
+        /// Creates controls supporting textual input and adds it to the control panel container.
+        /// </summary>
+        /// <param name="fi">The <see cref="Common.NetworkPackage.FormProperty"/>.</param>
         private void LoadText(Common.NetworkPackage.FormProperty fi)
         {
             Label label = new Label();
@@ -235,6 +276,10 @@ namespace WindowsClient
             ControlPanel.Children.Add(text);
         }
 
+        /// <summary>
+        /// Creates controls supporting input of multiple textual items and adds it to the control panel container.
+        /// </summary>
+        /// <param name="fi">The fi.</param>
         private void LoadTextCollection(Common.NetworkPackage.FormProperty fi)
         {
             Label label = new Label();
@@ -254,6 +299,10 @@ namespace WindowsClient
             ControlPanel.Children.Add(text);
         }
 
+        /// <summary>
+        /// Creates controls supporting temporial input and adds it to the control panel container.
+        /// </summary>
+        /// <param name="fi">The fi.</param>
         private void LoadDateRange(Common.NetworkPackage.FormProperty fi)
         {
             Label label = new Label();
@@ -296,6 +345,11 @@ namespace WindowsClient
             ControlPanel.Children.Add(sp);
         }
 
+        /// <summary>
+        /// Handles the Click event of the Button control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             SearchWindowDataItem item = (SearchWindowDataItem)((FrameworkElement)sender).DataContext;

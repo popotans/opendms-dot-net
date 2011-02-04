@@ -19,9 +19,18 @@ using System.Xml.Serialization;
 
 namespace WindowsClient
 {
+    /// <summary>
+    /// Represents settings for a client.
+    /// </summary>
     [XmlRoot("Settings")]
     public class Settings
     {
+        /// <summary>
+        /// Gets a value indicating whether the settings file exists locally on disk.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if the settings file exists; otherwise, <c>false</c>.
+        /// </value>
         [XmlIgnore]
         public bool SettingsFileExists 
         { 
@@ -31,8 +40,14 @@ namespace WindowsClient
             }
         }
 
+        /// <summary>
+        /// The physical location of the root directory for the client
+        /// </summary>
         public string StorageLocation;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Settings"/> class.
+        /// </summary>
         public Settings()
         {
             StorageLocation = @"C:\ClientDataStore\";
@@ -56,7 +71,7 @@ namespace WindowsClient
         /// <summary>
         /// Load settings from the file backing store
         /// </summary>
-        /// <returns></returns>
+        /// <returns>An instantiated instance.</returns>
         public static Settings Load()
         {
             Settings settings = new Settings();

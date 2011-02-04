@@ -17,14 +17,54 @@ using System;
 
 namespace WindowsClient
 {
+    /// <summary>
+    /// Represents an entry containing all requisite information for a <see cref="System.Windows.Controls.TreeViewItem"/> in the <see cref="MetaPropWindow"/>.
+    /// </summary>
     public class MetaPropEntity
     {
+        /// <summary>
+        /// Gets or sets the key.
+        /// </summary>
+        /// <value>
+        /// The key.
+        /// </value>
         public string Key { get; set; }
+        /// <summary>
+        /// Gets or sets the title.
+        /// </summary>
+        /// <value>
+        /// The title.
+        /// </value>
         public string Title { get; set; }
+        /// <summary>
+        /// Gets or sets the value.
+        /// </summary>
+        /// <value>
+        /// The value.
+        /// </value>
         public object Value { get; set; }
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is read only.
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this instance is read only; otherwise, <c>false</c>.
+        /// </value>
         public bool IsReadOnly { get; set; }
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is updated.
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this instance is updated; otherwise, <c>false</c>.
+        /// </value>
         public bool IsUpdated { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetaPropEntity"/> class.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="title">The title.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="isReadOnly">if set to <c>true</c> [is read only].</param>
         public MetaPropEntity(string key, string title, object value, bool isReadOnly)
         {
             Key = key;

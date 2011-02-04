@@ -33,11 +33,19 @@ namespace WindowsClient
     /// </summary>
     public partial class SettingsWindow : Window
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SettingsWindow"/> class.
+        /// </summary>
         public SettingsWindow()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Handles the PreviewMouseUp event of the textBox1 control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.Input.MouseButtonEventArgs"/> instance containing the event data.</param>
         void textBox1_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
             System.Windows.Forms.FolderBrowserDialog win = new System.Windows.Forms.FolderBrowserDialog();
@@ -56,6 +64,11 @@ namespace WindowsClient
             }
         }
 
+        /// <summary>
+        /// Handles the Loaded event of the Window control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         void Window_Loaded(object sender, RoutedEventArgs e)
         {
             textBox1.Text = MainWindow.Settings.StorageLocation;
@@ -63,6 +76,11 @@ namespace WindowsClient
             textBox3.Text = Common.ServerSettings.Instance.ServerPort.ToString();
         }
 
+        /// <summary>
+        /// Handles the Click event of the BtnSave control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             MainWindow.Settings.StorageLocation = textBox1.Text.Trim();
