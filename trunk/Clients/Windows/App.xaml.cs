@@ -20,7 +20,7 @@ using System.Data;
 using System.Linq;
 using System.Windows;
 
-namespace Client.Data
+namespace WindowsClient
 {
     /// <summary>
     /// Interaction logic for App.xaml

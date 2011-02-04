@@ -18,8 +18,17 @@ using Microsoft.Win32;
 
 namespace WindowsClient
 {
+    /// <summary>
+    /// Provides the ability to interact with external applications.
+    /// </summary>
     public class ExternalApplication
     {
+        /// <summary>
+        /// Opens the file with default application.
+        /// </summary>
+        /// <param name="dataAsset">The data asset.</param>
+        /// <param name="errorMessage">The error message.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public static bool OpenFileWithDefaultApplication(Common.Data.DataAsset dataAsset, out string errorMessage)
         {
             RegistryKey root, key;

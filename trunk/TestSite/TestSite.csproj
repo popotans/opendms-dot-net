@@ -129,12 +129,6 @@
     <Content Include="Account\Web.config" />
     <Content Include="Site.Master" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OpenDMS.NET\OpenDMS.NET.csproj">
-      <Project>{67633BAF-C29E-4C46-A83C-41F93AAA936D}</Project>
-      <Name>OpenDMS.NET</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />
   <ProjectExtensions>

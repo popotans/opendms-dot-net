@@ -15,27 +15,33 @@
     <Name>Documentation</Name>
     <!-- SHFB properties -->
     <OutputPath>.\</OutputPath>
-    <HtmlHelpName>Common</HtmlHelpName>
+    <HtmlHelpName>Code Documentation</HtmlHelpName>
     <Language>en-US</Language>
-    <FrameworkVersion>2.0.50727</FrameworkVersion>
+    <FrameworkVersion>3.5</FrameworkVersion>
     <HelpFileFormat>HtmlHelp1</HelpFileFormat>
     <KeepLogFile>False</KeepLogFile>
     <CopyrightText>Copyright 2011 OpenDMS.NET Project</CopyrightText>
     <CopyrightHref>http://sites.google.com/site/opendmsnet/</CopyrightHref>
-    <HelpTitle>The OpenDMS.NET Project%27s Common Class Libarary</HelpTitle>
+    <HelpTitle>The OpenDMS.NET Project%27s Code Documentation</HelpTitle>
     <Preliminary>True</Preliminary>
     <PresentationStyle>vs2005</PresentationStyle>
     <DocumentationSources>
-      <DocumentationSource sourceFile="..\..\Common\bin\Debug\Common.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\..\Common\bin\Debug\Common.XML" xmlns="" />
-    </DocumentationSources>
+      <DocumentationSource sourceFile="..\Common\bin\Debug\Common.dll" />
+<DocumentationSource sourceFile="..\Common\bin\Debug\Common.XML" />
+<DocumentationSource sourceFile="..\HttpModule\bin\Debug\HttpModule.dll" />
+<DocumentationSource sourceFile="..\HttpModule\bin\Debug\HttpModule.xml" />
+<DocumentationSource sourceFile="..\Clients\Windows\bin\Debug\WindowsClient.exe" />
+<DocumentationSource sourceFile="..\Clients\Windows\bin\Debug\WindowsClient.XML" /></DocumentationSources>
     <NamespaceSummaries>
-      <NamespaceSummaryItem name="Common" isDocumented="True" xmlns="">The Common namespace contains objects common to both the server and the client.</NamespaceSummaryItem>
-<NamespaceSummaryItem name="Common.Data" isDocumented="True" xmlns="">The Common.Data namespace contains all classes for data structures and manipulation thereof.</NamespaceSummaryItem>
-<NamespaceSummaryItem name="Common.FileSystem" isDocumented="True" xmlns="">The Common.FileSystem contains all classes for file system access.</NamespaceSummaryItem>
-<NamespaceSummaryItem name="Common.Network" isDocumented="True" xmlns="">The Common.Network contains classes for network transfer of information.</NamespaceSummaryItem>
-<NamespaceSummaryItem name="Common.NetworkPackage" isDocumented="True" xmlns="">The Common.NetworkPackage contains classes for packaging objects for network transfer or file system storage.</NamespaceSummaryItem>
-<NamespaceSummaryItem name="Common.Work" isDocumented="True" xmlns="">The Common.Work namespace contains classes to handle the management of jobs.</NamespaceSummaryItem></NamespaceSummaries>
+      <NamespaceSummaryItem name="Common" isDocumented="True">The Common namespace contains objects common to both the server and the client.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Common.Data" isDocumented="True">The Common.Data namespace contains all classes for data structures and manipulation thereof.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Common.FileSystem" isDocumented="True">The Common.FileSystem contains all classes for file system access.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Common.Network" isDocumented="True">The Common.Network contains classes for network transfer of information.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Common.NetworkPackage" isDocumented="True">The Common.NetworkPackage contains classes for packaging objects for network transfer or file system storage.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Common.Work" isDocumented="True">The Common.Work namespace contains classes to handle the management of jobs.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="HttpModule" isDocumented="True">The HttpModule namespace handles HTTP requests.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="HttpModule.Storage" isDocumented="True">The HttpModule.Storage namespace stores and retrieves objects to and from the file system.</NamespaceSummaryItem></NamespaceSummaries>
+    <IndentHtml>False</IndentHtml>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in
        order for Visual Studio to perform the build.  The others are optional

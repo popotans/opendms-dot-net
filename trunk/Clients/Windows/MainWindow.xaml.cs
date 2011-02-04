@@ -38,36 +38,92 @@ namespace WindowsClient
     /// </summary>
     public partial class MainWindow : Window, Common.Work.IWorkRequestor
     {
-        delegate void LoaderDelegate(TreeViewItem tvi, FullAsset fullAsset,
-            ResourceFunctionDelegate actResourceFunction,
-            AddSubItemDelegate actAddSubItem);
-        delegate void ResourceFunctionDelegate(FullAsset fullAsset);
-        delegate void AddSubItemDelegate(TreeViewItem tviParent, FullAsset fullAsset);
-        delegate void UpdateProgressOnUIDelegate(DataAsset sender, int percentComplete, bool isDone);
-        delegate void OpenResourceDelegate(TreeViewItem tvi, FullAsset fullAsset);
-        delegate void CloseResourceDelegate(TreeViewItem tvi, FullAsset fullAsset);
-        delegate void FileSystemEventDelegate(string filepath, string oldfilepath);
+        // The following events were commented out because they are not used
 
+        //delegate void LoaderDelegate(TreeViewItem tvi, FullAsset fullAsset,
+        //    ResourceFunctionDelegate actResourceFunction,
+        //    AddSubItemDelegate actAddSubItem);
+        //delegate void ResourceFunctionDelegate(FullAsset fullAsset);
+        //delegate void AddSubItemDelegate(TreeViewItem tviParent, FullAsset fullAsset);
+        //delegate void UpdateProgressOnUIDelegate(DataAsset sender, int percentComplete, bool isDone);
+        //delegate void FileSystemEventDelegate(string filepath, string oldfilepath);
+
+        /// <summary>
+        /// Represents the method that handles a resource event.
+        /// </summary>
+        /// <param name="tvi">The <see cref="TreeViewItem"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        delegate void ResourceDelegate(TreeViewItem tvi, FullAsset fullAsset);
+
+        /// <summary>
+        /// The brush for outdated assets.
+        /// </summary>
         Brush _outdatedBrush = new SolidColorBrush(Color.FromArgb(100, 255, 255, 0)); // Yellow
+        /// <summary>
+        /// The brush for assets in a state of error.
+        /// </summary>
         Brush _errorBrush = new SolidColorBrush(Color.FromArgb(75, 255, 0, 0)); // Red
+        /// <summary>
+        /// The brush for assets that need saved to the server.
+        /// </summary>
         Brush _needUpdatedBrush = new SolidColorBrush(Color.FromArgb(75, 0, 255, 0)); // Green
+        /// <summary>
+        /// The brush for assets normally.
+        /// </summary>
         Brush _normalBrush = Brushes.Transparent;
-        
+
+        /// <summary>
+        /// The <see cref="Guid"/> of the item whos properties are currently being displayed in the status bar.
+        /// </summary>
         Guid _statusBarItemGuid;
+        /// <summary>
+        /// A reference to the <see cref="Master"/>.
+        /// </summary>
         Master _workMaster;
+        /// <summary>
+        /// A reference to the <see cref="FileSystemWatcher"/> monitoring the file system.
+        /// </summary>
         FileSystemWatcher _fsWatcher;
-        List<string> _fsWatcherCreateIgnore, _fsWatcherChangeIgnore;
+        /// <summary>
+        /// A collection of filepaths to ignore when detected for creation.
+        /// </summary>
+        List<string> _fsWatcherCreateIgnore;
+        /// <summary>
+        /// A collection of filepaths to ignore when detected for change.
+        /// </summary>
+        List<string> _fsWatcherChangeIgnore;
+        /// <summary>
+        /// An array of directories where creation, change and deletion are allowed by the user without using the GUI.
+        /// </summary>
         private static string[] _allowedDirectories = { @"C:\ClientDataStore\data\", @"C:\ClientDataStore\metadata\", @"C:\ClientDataStore\settings\" };
-        
+
+        /// <summary>
+        /// A reference to a global <see cref="Settings"/>.
+        /// </summary>
         public static Settings Settings;
+        /// <summary>
+        /// A reference to a global <see cref="ErrorManager"/>.
+        /// </summary>
         public static Common.ErrorManager ErrorManager;
+        /// <summary>
+        /// A reference to a global <see cref="Common.FileSystem.IO"/>.
+        /// </summary>
         public static Common.FileSystem.IO FileSystem;
+        /// <summary>
+        /// A reference to a global <see cref="Common.Logger"/> to document general events.
+        /// </summary>
         public static Common.Logger GeneralLogger;
+        /// <summary>
+        /// A reference to a global <see cref="Common.Logger"/> to document network events.
+        /// </summary>
         public static Common.Logger NetworkLogger;
-       
 
-        
 
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainWindow"/> class.
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
@@ -95,11 +151,20 @@ namespace WindowsClient
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
         }
 
+        /// <summary>
+        /// Called when errors occur in other threads.
+        /// </summary>
+        /// <param name="errors">The errors.</param>
         void ErrorUpdateUI(List<Common.ErrorMessage> errors)
         {
             //throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Handles the Loaded event of the MainWindow control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="args">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         void MainWindow_Loaded(object sender, RoutedEventArgs args)
         {
             ResourceTree.Items.Clear();
@@ -376,7 +441,9 @@ namespace WindowsClient
         //    ma.SaveToLocal();
         //}
 
-        // UI
+        /// <summary>
+        /// Creates the test search form and saves it to the local file system.
+        /// </summary>
         void CreateTestSearchForm()
         {
             Common.NetworkPackage.SearchForm sf = new Common.NetworkPackage.SearchForm();
@@ -393,7 +460,10 @@ namespace WindowsClient
             sf.SaveToFile("settings\\searchform.xml", FileSystem, GeneralLogger, true);
         }
 
-        // UI
+        /// <summary>
+        /// Loads all resources on the local file system.
+        /// </summary>
+        /// <remarks>Runs on the UI thread.</remarks>
         void LoadLocalResources()
         {
             MetaAsset ma;
@@ -430,122 +500,147 @@ namespace WindowsClient
             }
         }
 
-        // UI
-        void LoadMetaCallback(JobBase job, FullAsset fullAsset)
-        {
-            LoadMetaCallback((AssetJobBase)job, fullAsset);
-        }
+        // Region commented as it is no longer used but I am not yet comfortable removing the code completely, thus it was made into a region :)
+        #region Obsolete Commented Code
 
-        // UI
-        void LoadMetaCallback(AssetJobBase job, FullAsset fullAsset)
-        {
-            TreeViewItem tvi;
-            TVIState tviState;
-            FullAsset localFullAsset;
+        ///// <summary>
+        ///// Calls <see cref="M:LoadMetaCallback(AssetJobBase job, FullAsset fullAsset)"/>.
+        ///// </summary>
+        ///// <param name="job">The <see cref="JobBase"/>.</param>
+        ///// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        ///// <remarks>Runs on the UI thread.</remarks>
+        //void LoadMetaCallback(JobBase job, FullAsset fullAsset)
+        //{
+        //    LoadMetaCallback((AssetJobBase)job, fullAsset);
+        //}
 
-            tvi = FindTreeViewItem(fullAsset);
+        ///// <summary>
+        ///// Called when a job has terminated on a <see cref="MetaAsset"/>.
+        ///// </summary>
+        ///// <param name="job">The <see cref="AssetJobBase"/>.</param>
+        ///// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        ///// <remarks>Runs on the UI thread.</remarks>
+        //void LoadMetaCallback(AssetJobBase job, FullAsset fullAsset)
+        //{
+        //    TreeViewItem tvi;
+        //    TVIState tviState;
+        //    FullAsset localFullAsset;
 
-            if (tvi != null)
-            {
-                tviState = (TVIState)tvi.Tag;
-                localFullAsset = tviState.FullAsset;
-                TreeViewItemProps.SetIsLoading(tvi, false);
+        //    tvi = FindTreeViewItem(fullAsset);
 
-                if (job.IsCancelled)
-                {
-                    tviState.UpdateEvent(false, false, true, false, false);
-                    TreeViewItemProps.SetIsCanceled(tvi, true);
-                    UpdateStatus(tvi, "Action cancelled by user");
-                }
-                else if (job.IsFinished)
-                {
-                    tvi.Background = _normalBrush;
-                    tviState.UpdateEvent(false, true, false, false, false);
-                    TreeViewItemProps.SetPercentComplete(tvi, 100);
+        //    if (tvi != null)
+        //    {
+        //        tviState = (TVIState)tvi.Tag;
+        //        localFullAsset = tviState.FullAsset;
+        //        TreeViewItemProps.SetIsLoading(tvi, false);
 
-                    if (localFullAsset.MetaAsset.ETag.IsOlder(job.FullAsset.MetaAsset.ETag))
-                    {
-                        tvi.Background = _outdatedBrush;
-                        tviState.UpdateResourceStatus(false, true, false, true, true);
-                        UpdateStatus(tvi, "A newer version of this resource exists");
-                    }
-                    else
-                    { // Impossible for remote to be newer, cus we just downloaded it
-                        tviState.UpdateResourceStatus(false, false, true, true, true);
-                        UpdateStatus(tvi, "Loaded");
-                    }
-                }
-                else if (job.IsTimeout)
-                {
-                    tvi.Background = _errorBrush;
-                    tviState.UpdateEvent(false, false, false, true, false);
-                    UpdateStatus(tvi, "Error: Timeout");
-                }
-                else if (job.IsError)
-                {
-                    tviState.UpdateEvent(false, false, false, false, true);
-                    UpdateStatus(tvi, "Error");
-                }
-                else
-                {
-                    throw new Exception("Unhandled event");
-                }
-            }
-            else
-            {
-                if (job.IsCancelled)
-                {
-                    MessageBox.Show("Actions on resource " + job.FullAsset.Guid.ToString("N") + " were cancelled by the user.");
-                }
-                else if (job.IsFinished)
-                {
-                    tvi = AddTreeResource(fullAsset, false, true);
-                    tviState = (TVIState)tvi.Tag;
-                    tvi.Background = _normalBrush;
-                    TreeViewItemProps.SetPercentComplete(tvi, 100);
-                    TreeViewItemProps.SetIsLoading(tvi, false);
+        //        if (job.IsCancelled)
+        //        {
+        //            tviState.UpdateEvent(false, false, true, false, false);
+        //            TreeViewItemProps.SetIsCanceled(tvi, true);
+        //            UpdateStatus(tvi, "Action cancelled by user");
+        //        }
+        //        else if (job.IsFinished)
+        //        {
+        //            tvi.Background = _normalBrush;
+        //            tviState.UpdateEvent(false, true, false, false, false);
+        //            TreeViewItemProps.SetPercentComplete(tvi, 100);
 
-                    if (job.FullAsset.MetaAsset.ETag == null)
-                    {
-                        // Remote resource does not exist on the server if the ETag is null
-                        tvi.Background = _needUpdatedBrush;
-                        tviState.UpdateResourceStatus(true, false, false, false, true);
-                        UpdateStatus(tvi, "File needs saved to server");
-                    }
-                    else if (fullAsset.MetaAsset.ETag.IsOlder(job.FullAsset.MetaAsset.ETag))
-                    {
-                        tvi.Background = _outdatedBrush;
-                        tviState.UpdateResourceStatus(false, true, false, true, true);
-                        UpdateStatus(tvi, "A newer version of this resource exists");
-                    }
-                    else
-                    {
-                        tviState.UpdateResourceStatus(false, false, true, true, true);
-                        UpdateStatus(tvi, "Loaded");
-                    }
-                }
-                else if (job.IsTimeout)
-                {
-                    MessageBox.Show("Actions on resource " + job.FullAsset.Guid.ToString("N") + " timed out.");
-                }
-                else if (job.IsError)
-                {
+        //            if (localFullAsset.MetaAsset.ETag.IsOlder(job.FullAsset.MetaAsset.ETag))
+        //            {
+        //                tvi.Background = _outdatedBrush;
+        //                tviState.UpdateResourceStatus(false, true, false, true, true);
+        //                UpdateStatus(tvi, "A newer version of this resource exists");
+        //            }
+        //            else
+        //            { // Impossible for remote to be newer, cus we just downloaded it
+        //                tviState.UpdateResourceStatus(false, false, true, true, true);
+        //                UpdateStatus(tvi, "Loaded");
+        //            }
+        //        }
+        //        else if (job.IsTimeout)
+        //        {
+        //            tvi.Background = _errorBrush;
+        //            tviState.UpdateEvent(false, false, false, true, false);
+        //            UpdateStatus(tvi, "Error: Timeout");
+        //        }
+        //        else if (job.IsError)
+        //        {
+        //            tviState.UpdateEvent(false, false, false, false, true);
+        //            UpdateStatus(tvi, "Error");
+        //        }
+        //        else
+        //        {
+        //            throw new Exception("Unhandled event");
+        //        }
+        //    }
+        //    else
+        //    {
+        //        if (job.IsCancelled)
+        //        {
+        //            MessageBox.Show("Actions on resource " + job.FullAsset.Guid.ToString("N") + " were cancelled by the user.");
+        //        }
+        //        else if (job.IsFinished)
+        //        {
+        //            tvi = AddTreeResource(fullAsset, false, true);
+        //            tviState = (TVIState)tvi.Tag;
+        //            tvi.Background = _normalBrush;
+        //            TreeViewItemProps.SetPercentComplete(tvi, 100);
+        //            TreeViewItemProps.SetIsLoading(tvi, false);
 
-                }
-                else
-                {
-                    throw new Exception("Unhandled event");
-                }
-            }
-        }
+        //            if (job.FullAsset.MetaAsset.ETag == null)
+        //            {
+        //                // Remote resource does not exist on the server if the ETag is null
+        //                tvi.Background = _needUpdatedBrush;
+        //                tviState.UpdateResourceStatus(true, false, false, false, true);
+        //                UpdateStatus(tvi, "File needs saved to server");
+        //            }
+        //            else if (fullAsset.MetaAsset.ETag.IsOlder(job.FullAsset.MetaAsset.ETag))
+        //            {
+        //                tvi.Background = _outdatedBrush;
+        //                tviState.UpdateResourceStatus(false, true, false, true, true);
+        //                UpdateStatus(tvi, "A newer version of this resource exists");
+        //            }
+        //            else
+        //            {
+        //                tviState.UpdateResourceStatus(false, false, true, true, true);
+        //                UpdateStatus(tvi, "Loaded");
+        //            }
+        //        }
+        //        else if (job.IsTimeout)
+        //        {
+        //            MessageBox.Show("Actions on resource " + job.FullAsset.Guid.ToString("N") + " timed out.");
+        //        }
+        //        else if (job.IsError)
+        //        {
 
-        // UI
+        //        }
+        //        else
+        //        {
+        //            throw new Exception("Unhandled event");
+        //        }
+        //    }
+        //}
+
+        #endregion
+
+        /// <summary>
+        /// Calls <see cref="M:CheckETagStatus(GetETagJob job, FullAsset fullAsset)"/>.
+        /// </summary>
+        /// <param name="job">The <see cref="JobBase"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         void CheckETagStatus(JobBase job, FullAsset fullAsset)
         {
             CheckETagStatus((GetETagJob)job, (FullAsset)fullAsset);
         }
 
-        // UI
+        /// <summary>
+        /// Called when a <see cref="GetETagJob"/> has terminated.
+        /// </summary>
+        /// <param name="job">The <see cref="GetETagJob"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         void CheckETagStatus(GetETagJob job, FullAsset fullAsset)
         {
             TVIState tviState;
@@ -662,13 +757,16 @@ namespace WindowsClient
             }
         }
         
-        // UI
         /// <summary>
-        /// Adds a Resource to the TreeView
+        /// Adds a Resource to the TreeView.
         /// </summary>
-        /// <param name="fullAsset">The FullAsset to add to the TreeView</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/> to add to the TreeView.</param>
+        /// <param name="isLoading">If set to <c>true</c> the resource is loading from the remote host.</param>
         /// <param name="isLoaded">True if the Resource is considered loaded (up-to-date)</param>
-        /// <returns>A TreeViewItem representing the same as added to the TreeView</returns>
+        /// <returns>
+        /// A TreeViewItem representing the same as added to the TreeView
+        /// </returns>
+        /// <remarks>Runs on the UI thread.</remarks>
         TreeViewItem AddTreeResource(FullAsset fullAsset, bool isLoading, bool isLoaded)
         {
             TreeViewItem tvi;
@@ -697,7 +795,12 @@ namespace WindowsClient
             return tvi;
         }
 
-        // UI
+        /// <summary>
+        /// Handles the Selected event of the TreeViewItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         void TreeViewItem_Selected(object sender, RoutedEventArgs e)
         {
             TreeViewItem tvi = (TreeViewItem)sender;
@@ -737,7 +840,12 @@ namespace WindowsClient
 
         }
 
-        // UI
+        /// <summary>
+        /// Handles the Click event of the btnCancelLoad control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         private void btnCancelLoad_Click(object sender, RoutedEventArgs e)
         {
             Button btnSender = (Button)e.OriginalSource;
@@ -757,7 +865,12 @@ namespace WindowsClient
             }
         }
 
-        // UI
+        /// <summary>
+        /// Handles the Click event of the btnReload control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         private void btnReload_Click(object sender, RoutedEventArgs e)
         {
             Button btnSender = (Button)e.OriginalSource;
@@ -783,13 +896,23 @@ namespace WindowsClient
             }
         }
 
-        // UI
+        /// <summary>
+        /// Calls <see cref="M:LoadResourceCallback(LoadResourceJob, FullAsset)"/>.
+        /// </summary>
+        /// <param name="job">The <see cref="JobBase"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         void LoadResourceCallback(JobBase job, FullAsset fullAsset)
         {
             LoadResourceCallback((LoadResourceJob)job, fullAsset);
         }
 
-        // UI
+        /// <summary>
+        /// Called when a job has terminated on a Resource.
+        /// </summary>
+        /// <param name="job">The <see cref="LoadResourceJob"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         void LoadResourceCallback(LoadResourceJob job, FullAsset fullAsset)
         {
             TVIState tviState;
@@ -840,7 +963,12 @@ namespace WindowsClient
             }
         }
 
-        // UI
+        /// <summary>
+        /// Handles the Click event of the BtnGetSelected control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         private void BtnGetSelected_Click(object sender, RoutedEventArgs e)
         {
             TVIState tviState;
@@ -869,13 +997,23 @@ namespace WindowsClient
             }
         }
 
-        // UI
+        /// <summary>
+        /// Calls <see cref="M:SaveResourceCallback(SaveResourceJob, FullAsset)"/>.
+        /// </summary>
+        /// <param name="job">The <see cref="JobBase"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         void SaveResourceCallback(JobBase job, FullAsset fullAsset)
         {
             SaveResourceCallback((SaveResourceJob)job, fullAsset);
         }
 
-        // UI
+        /// <summary>
+        /// Called when the <see cref="SaveResourceJob"/> has terminated.
+        /// </summary>
+        /// <param name="job">The <see cref="SaveResourceJob"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         void SaveResourceCallback(SaveResourceJob job, FullAsset fullAsset)
         {
             TVIState tviState;
@@ -929,7 +1067,12 @@ namespace WindowsClient
             }
         }
 
-        // UI
+        /// <summary>
+        /// Handles the Click event of the BtnSaveSelected control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         private void BtnSaveSelected_Click(object sender, RoutedEventArgs e)
         {
             FullAsset fullAsset;
@@ -970,7 +1113,12 @@ namespace WindowsClient
             _workMaster.AddJob(this, Master.JobType.SaveResource, fullAsset, SaveResourceCallback, 100000);
         }
 
-        // UI
+        /// <summary>
+        /// Finds the specified <see cref="FullAsset"/> in the tree.
+        /// </summary>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <returns>A <see cref="TreeViewItem"/> if located; otherwise, <c>null</c>.</returns>
+        /// <remarks>Runs on the UI thread.</remarks>
         TreeViewItem FindTreeViewItem(FullAsset fullAsset)
         {
             TreeViewItem tvi;
@@ -988,7 +1136,12 @@ namespace WindowsClient
             return null;
         }
 
-        // UI
+        /// <summary>
+        /// Finds the specified <see cref="Guid"/> in the tree.
+        /// </summary>
+        /// <param name="guid">The <see cref="Guid"/>.</param>
+        /// <returns>A <see cref="TreeViewItem"/> if located; otherwise, <c>null</c>.</returns>
+        /// <remarks>Runs on the UI thread.</remarks>
         TreeViewItem FindTreeViewItem(Guid guid)
         {
             TreeViewItem tvi;
@@ -1009,7 +1162,12 @@ namespace WindowsClient
             return null;
         }
 
-        // UI
+        /// <summary>
+        /// Finds the specified <see cref="string"/> in the tree.
+        /// </summary>
+        /// <param name="header">A string representing the Guid in the header.</param>
+        /// <returns>A <see cref="TreeViewItem"/> if located; otherwise, <c>null</c>.</returns>
+        /// <remarks>Runs on the UI thread.</remarks>
         TreeViewItem FindTreeViewItem(string header)
         {
             TreeViewItem tvi;
@@ -1030,11 +1188,16 @@ namespace WindowsClient
             return null;
         }
 
-        // UI
+        /// <summary>
+        /// Handles the Click event of the BtnOpenSelected control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         private void BtnOpenSelected_Click(object sender, RoutedEventArgs e)
         {
             TreeViewItem tvi;
-            OpenResourceDelegate actOpenResource = OpenResource;
+            ResourceDelegate actOpenResource = OpenResource;
 
             if (ResourceTree.SelectedItem == null)
             {
@@ -1052,7 +1215,12 @@ namespace WindowsClient
             }
         }
 
-        // UI
+        /// <summary>
+        /// Updates the status of a <see cref="TreeViewItem"/>.
+        /// </summary>
+        /// <param name="tvi">The <see cref="TreeViewItem"/> to update.</param>
+        /// <param name="status">The new status.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         private void UpdateStatus(TreeViewItem tvi, string status)
         {
             TreeViewItemProps.SetStatus(tvi, status);
@@ -1063,11 +1231,16 @@ namespace WindowsClient
 
         #region OpenResource
 
-        // Runs on background thread
+        /// <summary>
+        /// Opens the resource.
+        /// </summary>
+        /// <param name="tvi">The <see cref="TreeViewItem"/> containing the resource.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on a background thread.</remarks>
         private void OpenResource(TreeViewItem tvi, FullAsset fullAsset)
         {
             string errorMessage;
-            CloseResourceDelegate actCloseResource = CloseResource;
+            ResourceDelegate actCloseResource = CloseResource;
 
             if (!ExternalApplication.OpenFileWithDefaultApplication(fullAsset.DataAsset, out errorMessage))
                 MessageBox.Show(errorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -1075,12 +1248,24 @@ namespace WindowsClient
             Dispatcher.BeginInvoke(actCloseResource, System.Windows.Threading.DispatcherPriority.Background, tvi, fullAsset);
         }
 
-        // Runs on UI thread
+        /// <summary>
+        /// Called when a resource is released.
+        /// </summary>
+        /// <param name="tvi">The <see cref="TreeViewItem"/> containing the resource.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>
+        /// Runs on the UI thread.
+        /// Can be called at any point after opening, depending on how the application handles file access.
+        /// </remarks>
         private void CloseResource(TreeViewItem tvi, FullAsset fullAsset)
         {
             tvi.Background = Brushes.Transparent;
         }
 
+        /// <summary>
+        /// Called to end invoke on UI thread to process any exceptions, etc.
+        /// </summary>
+        /// <param name="iAR">The <see cref="IAsyncResult"/>.</param>
         private void OpenResource_AsyncCallback(IAsyncResult iAR)
         {
             // Call end invoke on UI thread to process any exceptions, etc.
@@ -1088,11 +1273,15 @@ namespace WindowsClient
                 (Action)(() => OpenResource_EndInvoke(iAR)));
         }
 
+        /// <summary>
+        /// Called to notify the UI of end invoke.
+        /// </summary>
+        /// <param name="iAR">The <see cref="IAsyncResult"/>.</param>
         private void OpenResource_EndInvoke(IAsyncResult iAR)
         {
             try
             {
-                var actInvoked = (OpenResourceDelegate)iAR.AsyncState;
+                var actInvoked = (ResourceDelegate)iAR.AsyncState;
                 actInvoked.EndInvoke(iAR);
             }
             catch (Exception ex)
@@ -1105,7 +1294,12 @@ namespace WindowsClient
 
         #endregion
 
-        // UI
+        /// <summary>
+        /// Handles the Click event of the BtnExit control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         private void BtnExit_Click(object sender, RoutedEventArgs e)
         {
             for (int i = 0; i < Application.Current.Windows.Count; i++)
@@ -1113,7 +1307,12 @@ namespace WindowsClient
             Application.Current.Shutdown();
         }
 
-        // UI
+        /// <summary>
+        /// Handles the Click event of the BtnRefreshETagStatus control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         private void BtnRefreshETagStatus_Click(object sender, RoutedEventArgs e)
         {
             GetETagJob.UpdateUIDelegate actUpdateUI = CheckETagStatus;
@@ -1125,7 +1324,12 @@ namespace WindowsClient
             }
         }
 
-        // UI
+        /// <summary>
+        /// Handles the Click event of the BtnSearch control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         private void BtnSearch_Click(object sender, RoutedEventArgs e)
         {
             SearchWindow search = new SearchWindow();
@@ -1133,7 +1337,11 @@ namespace WindowsClient
             search.Show();
         }
 
-        // UI
+        /// <summary>
+        /// Called when a search result is selected.
+        /// </summary>
+        /// <param name="guid">The <see cref="Guid"/> of the selected resource.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
         void search_OnResultSelected(Guid guid)
         {
             if (FindTreeViewItem(guid) != null)
@@ -1153,11 +1361,22 @@ namespace WindowsClient
             _workMaster.AddJob(this, Master.JobType.LoadResource, fullAsset, actUpdateUI, 150000);
         }
 
+        /// <summary>
+        /// WorkReport accepts a UpdateUIDelegate and its associated arguments and should handle pumping this message to the UI
+        /// </summary>
+        /// <param name="actUpdateUI">The method to update the UI.</param>
+        /// <param name="job">The job for the method updating the UI.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/> for the method updating the UI.</param>
+        /// <remarks>Runs on the job's thread.</remarks>
         public void WorkReport(JobBase.UpdateUIDelegate actUpdateUI, JobBase job, FullAsset fullAsset)
         {
             Dispatcher.BeginInvoke(actUpdateUI, job, fullAsset);
         }
 
+        /// <summary>
+        /// Selects the <see cref="TreeViewItem"/> at the specified index in the tree.
+        /// </summary>
+        /// <param name="index">The index.</param>
         public void SetResourceTreeSelectedIndex(int index)
         {
             DependencyObject dObject = ResourceTree.ItemContainerGenerator.ContainerFromIndex(index);
@@ -1223,6 +1442,11 @@ namespace WindowsClient
             return new FullAsset(ma, da);
         }
 
+        /// <summary>
+        /// Handles the Click event of the Btn1 control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void Btn1_Click(object sender, RoutedEventArgs e)
         {
             if (ResourceTree.SelectedItem == null)
@@ -1244,12 +1468,22 @@ namespace WindowsClient
             _workMaster.AddJob(this, Master.JobType.GetETag, tviState.FullAsset, actUpdateUI, (uint)Common.ServerSettings.Instance.NetworkTimeout);
         }
 
+        /// <summary>
+        /// Handles the Click event of the BtnSettings control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow win = new SettingsWindow();
             win.ShowDialog();
         }
 
+        /// <summary>
+        /// Handles the Click event of the Btn2 control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void Btn2_Click(object sender, RoutedEventArgs e)
         {
             FullAsset fullAsset;

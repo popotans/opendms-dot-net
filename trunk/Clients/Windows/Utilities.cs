@@ -17,8 +17,16 @@ using System;
 
 namespace WindowsClient
 {
+    /// <summary>
+    /// Provides simple and commonly useful utility methods
+    /// </summary>
     public class Utilities
     {
+        /// <summary>
+        /// Makes the file size human readable.
+        /// </summary>
+        /// <param name="bytes">The quantity of bytes.</param>
+        /// <returns>A string representing the file size.</returns>
         public static string MakeBytesHumanReadable(long bytes)
         {
             string size;
@@ -35,6 +43,11 @@ namespace WindowsClient
             return size;
         }
 
+        /// <summary>
+        /// Makes the file size human readable.
+        /// </summary>
+        /// <param name="bytes">The quantity of bytes.</param>
+        /// <returns>A string representing the file size.</returns>
         public static string MakeBytesHumanReadable(ulong bytes)
         {
             string size;
@@ -51,6 +64,10 @@ namespace WindowsClient
             return size;
         }
 
+        /// <summary>
+        /// Gets the application's path.
+        /// </summary>
+        /// <returns></returns>
         public static string GetAppPath()
         {
             string str = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);

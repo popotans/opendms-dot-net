@@ -35,13 +35,31 @@ namespace WindowsClient
     /// </summary>
     public partial class MetaPropWindow : Window
     {
+        /// <summary>
+        /// The <see cref="Guid"/> of the Asset being displayed.
+        /// </summary>
         private Guid _guid;
+        /// <summary>
+        /// Reference to the method that handles the update ui events.
+        /// </summary>
         private delegate void UpdateUI();
+        /// <summary>
+        /// The <see cref="Common.Data.MetaAsset"/> being displayed.
+        /// </summary>
         private Common.Data.MetaAsset _metaasset;
+        /// <summary>
+        /// The <see cref="Common.NetworkPackage.MetaForm"/> being displayed.
+        /// </summary>
         private Common.NetworkPackage.MetaForm _metaForm;
+        /// <summary>
+        /// The currently selected <see cref="TreeViewItem"/>
+        /// </summary>
         private TreeViewItem _selectedTvi;
-        //private System.Collections.Generic.Dictionary<string, object> _propertyUpdates;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetaPropWindow"/> class.
+        /// </summary>
+        /// <param name="guid">The <see cref="Guid"/> of the Asset.</param>
         public MetaPropWindow(Guid guid)
         {
             InitializeComponent();
@@ -51,6 +69,11 @@ namespace WindowsClient
             _selectedTvi = null;
         }
 
+        /// <summary>
+        /// Handles the Loaded event of the Window control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Thread download;
@@ -67,6 +90,10 @@ namespace WindowsClient
             download.Start();
         }
 
+        /// <summary>
+        /// Downloads the <see cref="Common.NetworkPackage.MetaForm"/> which contains the collection of properties 
+        /// for be displayed on the UI
+        /// </summary>
         private void DownloadFormProperties()
         {
             Common.Network.Message msg = null;
@@ -100,6 +127,9 @@ namespace WindowsClient
             Dispatcher.BeginInvoke(actUpdateUI, System.Windows.Threading.DispatcherPriority.Normal);
         }
 
+        /// <summary>
+        /// Called when the <see cref="Common.NetworkPackage.MetaForm"/> download is complete.
+        /// </summary>
         private void UpdateUI_DownloadComplete()
         {
             //Storyboard sbBegin = (Storyboard)TryFindResource("BeginLoadingSearchOptions");
@@ -112,6 +142,9 @@ namespace WindowsClient
             LoadTree();
         }
 
+        /// <summary>
+        /// Loads the meta properties into the UI tree.
+        /// </summary>
         private void LoadTree()
         {
             object tempObj;
@@ -148,7 +181,15 @@ namespace WindowsClient
                 AddTreeViewItem(en.Current.Key, en.Current.Key, en.Current.Value, false);
             }
         }
-        
+
+        /// <summary>
+        /// Creates a <see cref="MetaPropEntity"/> and adds it to the UI tree.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="title">The title.</param>
+        /// <param name="obj">The obj.</param>
+        /// <param name="isReadOnly">If set to <c>true</c> the property is read-only and the user cannot change it; 
+        /// otherwise, <c>false</c> allows user modification.</param>
         private void AddTreeViewItem(string key, string title, object obj, bool isReadOnly)
         {
             TreeViewItem tvi = new TreeViewItem();
@@ -166,11 +207,21 @@ namespace WindowsClient
             treeView1.Items.Add(tvi);
         }
 
+        /// <summary>
+        /// Handles the Click event of the BtnCancel control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
         }
 
+        /// <summary>
+        /// Handles the Click event of the BtnSave control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             // Saves
@@ -182,6 +233,9 @@ namespace WindowsClient
             this.Close();
         }
 
+        /// <summary>
+        /// Updates the <see cref="Common.Data.MetaAsset"/> from UI tree.
+        /// </summary>
         private void UpdateMetaAssetFromTree()
         {
             Common.NetworkPackage.MetaAsset netMa;
@@ -210,9 +264,14 @@ namespace WindowsClient
             _metaasset.Save();
         }
 
+        /// <summary>
+        /// Handles the Selected event of the TreeViewItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void TreeViewItem_Selected(object sender, RoutedEventArgs e)
         {
-            // Saves
+            // Saves if needed
             if (_selectedTvi != null && !((MetaPropEntity)_selectedTvi.Tag).IsReadOnly)
                 SaveChangeBackToTvi(_selectedTvi);
 
@@ -222,6 +281,12 @@ namespace WindowsClient
             BuildGui((MetaPropEntity)_selectedTvi.Tag);
         }
 
+        /// <summary>
+        /// Saves any change to the Tag property of the destinationTvi.
+        /// </summary>
+        /// <param name="destinationTvi">The destination tvi.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.  In the event of a false return 
+        /// the changes have not been saved and the user will be notified.</returns>
         private bool SaveChangeBackToTvi(TreeViewItem destinationTvi)
         {
             MetaPropEntity mpe = (MetaPropEntity)destinationTvi.Tag;
@@ -354,6 +419,10 @@ namespace WindowsClient
             return true;
         }
 
+        /// <summary>
+        /// Locates the <see cref="TextBox"/> for data input and gets a string value representing the data contained therein.
+        /// </summary>
+        /// <returns>The text value of the <see cref="TextBox"/>.</returns>
         private string GetTextBoxValue()
         {
             StackPanel sp = (StackPanel)UIPanel.Children[0];
@@ -368,6 +437,10 @@ namespace WindowsClient
             return null;
         }
 
+        /// <summary>
+        /// Locates the <see cref="DatePicker"/> for data input and the <see cref="TextBox"/> and gets the date and time therefrom, respectively.
+        /// </summary>
+        /// <returns>A <see cref="DateTime"/> if no error is found in parsing; otherwise, <c>null</c> if an error is encountered.</returns>
         private DateTime? GetDateTimeValue()
         {
             string output = "";
@@ -398,6 +471,10 @@ namespace WindowsClient
             return null;
         }
 
+        /// <summary>
+        /// Locates the <see cref="CheckBox"/> for data input and gets a string value representing the data contained therein.
+        /// </summary>
+        /// <returns>The checked value of the <see cref="CheckBox"/>.</returns>
         private bool? GetCheckBoxValue()
         {
             StackPanel sp = (StackPanel)UIPanel.Children[0];
@@ -412,6 +489,11 @@ namespace WindowsClient
             return null;
         }
 
+        /// <summary>
+        /// Parses a <see cref="T:System.Collections.Generic.List&lt;string&gt;"/> from a string seperating on "\r\n".
+        /// </summary>
+        /// <param name="input">The string to parse.</param>
+        /// <returns>A list of strings.</returns>
         private System.Collections.Generic.List<string> ParseListFromString(string input)
         {
             string[] temp;
@@ -428,6 +510,10 @@ namespace WindowsClient
             return output;
         }
 
+        /// <summary>
+        /// Builds the right-hand side of the GUI based on the argument.
+        /// </summary>
+        /// <param name="mpe">The <see cref="MetaPropEntity"/>.</param>
         private void BuildGui(MetaPropEntity mpe)
         {
             UIPanel.Children.Clear();
@@ -479,6 +565,14 @@ namespace WindowsClient
             }
         }
 
+        /// <summary>
+        /// Adds controls suitable for textual input.
+        /// </summary>
+        /// <param name="title">The title.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="isReadOnly">if set to <c>true</c> then the control is 
+        /// read-only and cannot be modified by the user.</param>
+        /// <returns>A <see cref="StackPanel"/> containing all the necessary UI controls.</returns>
         private StackPanel AddText(string title, string value, bool isReadOnly)
         {
             StackPanel sp = new StackPanel();
@@ -505,6 +599,14 @@ namespace WindowsClient
             return sp;
         }
 
+        /// <summary>
+        /// Adds controls suitable for date and time input.
+        /// </summary>
+        /// <param name="title">The title.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="isReadOnly">if set to <c>true</c> then the control is 
+        /// read-only and cannot be modified by the user.</param>
+        /// <returns>A <see cref="StackPanel"/> containing all the necessary UI controls.</returns>
         private StackPanel AddDateTime(string title, DateTime value, bool isReadOnly)
         {
             StackPanel sp = new StackPanel();
@@ -542,6 +644,14 @@ namespace WindowsClient
             return sp;
         }
 
+        /// <summary>
+        /// Adds controls suitable for check box input.
+        /// </summary>
+        /// <param name="title">The title.</param>
+        /// <param name="isChecked">if set to <c>true</c> the box is checked.</param>
+        /// <param name="isReadOnly">if set to <c>true</c> then the control is 
+        /// read-only and cannot be modified by the user.</param>
+        /// <returns>A <see cref="StackPanel"/> containing all the necessary UI controls.</returns>
         private StackPanel AddCheckBox(string title, bool isChecked, bool isReadOnly)
         {
             StackPanel sp = new StackPanel();
@@ -567,6 +677,14 @@ namespace WindowsClient
             return sp;
         }
 
+        /// <summary>
+        /// Adds controls suitable for multiline textual input.
+        /// </summary>
+        /// <param name="title">The title.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="isReadOnly">if set to <c>true</c> then the control is 
+        /// read-only and cannot be modified by the user.</param>
+        /// <returns>A <see cref="StackPanel"/> containing all the necessary UI controls.</returns>
         private StackPanel AddMultilineText(string title, string value, bool isReadOnly)
         {
             StackPanel sp = new StackPanel();

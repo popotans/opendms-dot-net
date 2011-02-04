@@ -17,11 +17,38 @@ using System;
 
 namespace WindowsClient
 {
+    /// <summary>
+    /// Represents a data item (row) to be displayed on a data grid.
+    /// </summary>
     public class SearchWindowDataItem
     {
+        /// <summary>
+        /// Gets or sets the <see cref="Guid"/> of the Asset.
+        /// </summary>
+        /// <value>
+        /// The <see cref="Guid"/>.
+        /// </value>
         public string Guid { get; set; }
+        /// <summary>
+        /// Gets or sets the title.
+        /// </summary>
+        /// <value>
+        /// The title.
+        /// </value>
         public string Title { get; set; }
+        /// <summary>
+        /// Gets or sets the extension.
+        /// </summary>
+        /// <value>
+        /// The extension.
+        /// </value>
         public string Extension { get; set; }
+        /// <summary>
+        /// Gets or sets who the Asset is locked by.
+        /// </summary>
+        /// <value>
+        /// The user.
+        /// </value>
         public string LockedBy { get; set; }
     }
 }
