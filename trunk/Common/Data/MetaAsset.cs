@@ -270,6 +270,33 @@ namespace Common.Data
         }
 
         /// <summary>
+        /// Copies this instance to a new <see cref="MetaAsset"/> using the specified new Guid.
+        /// </summary>
+        /// <param name="newGuid">The new Guid.</param>
+        /// <param name="saveToFS">if set to <c>true</c> then the new <see cref="MetaAsset"/> is saved to the file system before being returned.</param>
+        /// <param name="fileSystem">A reference to the file system.</param>
+        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
+        /// <returns>The instantiated <see cref="MetaAsset"/> reference.</returns>
+        public MetaAsset CopyToNew(Guid newGuid, bool saveToFS, FileSystem.IO fileSystem, Logger logger)
+        {
+            Dictionary<string, object>.Enumerator en;
+            Dictionary<string, object> uprop = new Dictionary<string, object>();
+            MetaAsset newMa;
+            
+            en = this.UserProperties.GetEnumerator();
+            while(en.MoveNext())
+                uprop.Add(en.Current.Key, en.Current.Value);
+
+            newMa = MetaAsset.Create(newGuid, this.ETag, this.MetaVersion, this.DataVersion, this.LockedBy,
+                this.LockedAt, this.Creator, this.Length, this.Md5, this.Extension, this.Created, this.Modified,
+                this.LastAccess, this.Title, this.Tags, uprop, fileSystem, logger);
+
+            if (saveToFS) newMa.Save();
+
+            return newMa;
+        }
+
+        /// <summary>
         /// Assigns a FileSystem.MetaResource to this object - should be used when State is None
         /// </summary>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
@@ -434,6 +461,72 @@ namespace Common.Data
         }
 
         #region Remote Communications Code
+
+        /// <summary>
+        /// Gets the current <see cref="Head"/> from the server.
+        /// </summary>
+        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
+        /// <returns><see cref="Head"/> if successful, otherwise <c>null</c>.</returns>
+        public Head GetHeadFromServer(Work.AssetJobBase job, Logger networkLogger)
+        {
+            if (Data.AssetType.IsNullOrUnknown(_assetType))
+                throw new InvalidOperationException();
+
+            string md5;
+            ETag etag;
+            Network.Message msg;
+
+            try
+            {
+                msg = new Network.Message(ServerSettings.Instance.ServerIp, ServerSettings.Instance.ServerPort,
+                    _assetType.VirtualPath, Guid, _assetType, Network.OperationType.HEAD,
+                    Network.DataStreamMethod.Memory, null, null, null, null, false, false, true, true,
+                    ServerSettings.Instance.NetworkBufferSize, ServerSettings.Instance.NetworkTimeout,
+                    _logger, networkLogger);
+            }
+            catch (Exception e)
+            {
+                if (_logger != null)
+                    _logger.Write(Logger.LevelEnum.Normal, Logger.ExceptionToString(e));
+                throw e;
+            }
+
+            try
+            {
+                msg.Send();
+            }
+            catch (Exception e)
+            {
+                if (_logger != null)
+                    _logger.Write(Logger.LevelEnum.Normal, Logger.ExceptionToString(e));
+                throw e;
+            }
+
+            if (job.AbortAction)
+            {
+                msg.State.Dispose();
+                return null;
+            }
+
+            if (msg.State.Response.Headers["ETag"] == null || 
+                msg.State.Response.Headers["MD5"] == null)
+                return null;
+
+            etag = new ETag(msg.State.Response.Headers["ETag"].Replace("\"", ""));
+            md5 = msg.State.Response.Headers["MD5"];
+
+            if (_logger != null)
+            {
+                _logger.Write(Logger.LevelEnum.Debug, "Header received on " +
+                    job.Id.ToString() + " for " + GuidString +
+                    " with value of ETag: " + etag.Value + ", MD5: " + md5);
+            }
+
+            msg.State.Dispose();
+
+            return new Head(etag, md5);
+        }
 
         /// <summary>
         /// Gets the current <see cref="ETag"/> from the server.
@@ -779,6 +872,87 @@ namespace Common.Data
             return sr;
         }
 
+        /// <summary>
+        /// Creates this <see cref="MetaAsset"/> on the server returning a <see cref="NetworkPackage.ServerResponse"/> representing the result.
+        /// </summary>
+        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
+        /// <returns>A <see cref="NetworkPackage.ServerResponse"/> returned by the server.</returns>
+        public NetworkPackage.ServerResponse CreateOnServer(Work.AssetJobBase job, Logger networkLogger)
+        {
+            NetworkPackage.ServerResponse sr;
+            Network.Message msg;
+            FileSystem.IOStream iostream;
+
+            try
+            {
+                iostream = _resource.GetExclusiveReadStream("Common.Data.MetaAsset.CreateOnServer()");
+            }
+            catch (Exception e)
+            {
+                if (_logger != null)
+                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while " +
+                        "attempting to open a resource.\r\n" + Logger.ExceptionToString(e));
+                throw e;
+            }
+
+            try
+            {
+                msg = new Network.Message(ServerSettings.Instance.ServerIp, ServerSettings.Instance.ServerPort,
+                    _assetType.VirtualPath, _guid, _assetType, Network.OperationType.POST, Network.DataStreamMethod.Stream,
+                    iostream.Stream, null, iostream.Stream.Length, null, false, false, false, false,
+                    ServerSettings.Instance.NetworkBufferSize, ServerSettings.Instance.NetworkTimeout,
+                    _logger, networkLogger);
+            }
+            catch (Exception e)
+            {
+                _resource.CloseStream();
+
+                if (_logger != null)
+                    _logger.Write(Logger.LevelEnum.Normal, Logger.ExceptionToString(e));
+                throw e;
+            }
+
+            if (job.AbortAction)
+            {
+                _resource.CloseStream();
+                msg.State.Dispose();
+                return null;
+            }
+
+            try
+            {
+                msg.Send();
+            }
+            catch (Exception e)
+            {
+                _resource.CloseStream();
+
+                if (_logger != null)
+                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while " +
+                        "attempting to send the asset to the server.\r\n" + Logger.ExceptionToString(e));
+                throw e;
+            }
+
+            _resource.CloseStream();
+
+            sr = new NetworkPackage.ServerResponse();
+
+            try
+            {
+                sr.Deserialize(msg.State.Stream);
+            }
+            catch (Exception e)
+            {
+                if (_logger != null)
+                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while " +
+                        "attempting to deserialize the result.\r\n" + Logger.ExceptionToString(e));
+                throw e;
+            }
+
+            return sr;
+        }
+
         #endregion
 
         #region Local IO Code
@@ -838,13 +1012,28 @@ namespace Common.Data
                     return false;
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                if (generalLogger != null)
+                    generalLogger.Write(Logger.LevelEnum.Normal, "Failed to load the meta asset.\r\n" + 
+                        Logger.ExceptionToString(e));
+
                 return false;
             }
 
             // Import it to this object
-            ImportFromNetworkRepresentation(networkMetaAsset);
+            try
+            {
+                ImportFromNetworkRepresentation(networkMetaAsset);
+            }
+            catch (Exception e)
+            {
+                if (generalLogger != null)
+                    generalLogger.Write(Logger.LevelEnum.Normal, "Failed to import the meta asset.\r\n" +
+                        Logger.ExceptionToString(e));
+
+                return false;
+            }
 
             _state.State = AssetState.Flags.CanTransfer |
                 AssetState.Flags.InMemory |
@@ -1111,6 +1300,15 @@ namespace Common.Data
         public void SetDataVersion(uint value)
         {
             _dataversion = value;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="Extension"/> property.
+        /// </summary>
+        /// <param name="ext">The value.</param>
+        public void SetExtension(string ext)
+        {
+            _extension = ext;
         }
 
         /// <summary>

@@ -331,6 +331,21 @@ namespace Common.FileSystem
         }
 
         /// <summary>
+        /// Renames the this Resource to the new name.
+        /// </summary>
+        /// <param name="newGuid">The new Guid.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// The new name is not a full path, it is simply a name including extension.
+        /// </remarks>
+        public bool Rename(Guid newGuid)
+        {
+            string oldName = RelativeFilepath;
+            _guid = newGuid;
+            return _fileSystem.Rename("\\" + oldName, _guid.ToString("N") + _extension, false);
+        }
+
+        /// <summary>
         /// Deletes this Resource from the file system.
         /// </summary>
         public void DeleteFromFilesystem()

@@ -99,6 +99,17 @@ namespace Common.Data
         }
 
         /// <summary>
+        /// Renames this <see cref="DataAsset"/> to use the new Guid and does the same for the underlying <see cref="FileSystem.DataResource"/>.
+        /// </summary>
+        /// <param name="newGuid">The new GUID.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
+        public bool RenameTo(Guid newGuid)
+        {
+            _guid = newGuid;
+            return _resource.Rename(newGuid);
+        }
+
+        /// <summary>
         /// Copies the current version of this <see cref="DataAsset"/> to a file using the version scheme for numbering.
         /// </summary>
         /// <param name="version">The version number to use when titling the file</param>

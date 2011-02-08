@@ -297,6 +297,7 @@ namespace HttpModule
             }
 
             app.Response.AppendHeader("ETag", ma.ETag.Value);
+            app.Response.AppendHeader("MD5", ma.Md5);
             app.CompleteRequest();
 
             if (_networkLogger != null)
@@ -382,6 +383,141 @@ namespace HttpModule
                     "Response for GetMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
             return;
+        }
+
+        /// <summary>
+        /// Responds to a POST request for a <see cref="Common.Data.MetaAsset"/> by receiving the stream, deserializing then saving.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <remarks>This is accessable at http://[host]:[port]/meta using the HTTP POST verb.</remarks>
+        [ServicePoint("/meta", ServicePointAttribute.VerbType.POST)]
+        public void CreateMeta(HttpApplication app)
+        {
+            Storage.ResultType result;
+            Guid guid = Guid.NewGuid();
+            ServerResponse resp;
+            Index index = new Index();
+            Common.Data.MetaAsset ma = null;
+            MetaAsset netMa = new MetaAsset();
+            string errorMessage;
+            Dictionary<string, string> userInfo = ParseUserInfo(app);
+            Dictionary<string, string> queryString = ParseQueryString(app);
+
+            // We need to get a new Guid and ensure it is unique
+            while (_fileSystem.ResourceExists(Common.Data.AssetType.Meta.VirtualPath + "\\" + guid.ToString("N") + ".xml"))
+            {
+                guid = Guid.NewGuid();
+            }
+
+            if (_networkLogger != null)
+                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "CreateMeta request received to create a new resource, the id will be " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
+
+            // Deserialize the request stream
+            try
+            {
+                netMa.Deserialize(app.Request.InputStream);
+
+                if (_generalLogger != null)
+                    _generalLogger.Write(Common.Logger.LevelEnum.Debug, "The new meta asset that will have id " + guid.ToString("N") + " was successfully deserialized for user '" + userInfo["username"] + "'.");
+            }
+            catch (Exception e)
+            {
+                if (_generalLogger != null)
+                    _generalLogger.Write(Common.Logger.LevelEnum.Normal, "An exception occurred while attempting to deserialize the received meta asset.\r\n" + Common.Logger.ExceptionToString(e));
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, e.Message);
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                if (_networkLogger != null)
+                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the CreateMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Add the Guid to the netMa
+            if (netMa.ContainsKey("$guid"))
+                netMa["$guid"] = guid;
+            else
+                netMa.Add("$guid", guid);
+
+            // Create the MetaAsset
+            try
+            {
+                ma = Common.Data.MetaAsset.Create(netMa, _fileSystem, _generalLogger);
+            }
+            catch (Exception e)
+            {
+                if (_generalLogger != null)
+                    _generalLogger.Write(Common.Logger.LevelEnum.Normal, "An exception occurred while attempting to instantiate a meta asset based on the received meta asset.\r\n" + Common.Logger.ExceptionToString(e));
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, e.Message);
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                if (_networkLogger != null)
+                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Save it
+            if (queryString["releaselock"] == "true")
+                result = _storage.SaveMeta(ma, userInfo["username"], true, out errorMessage);
+            else
+                result = _storage.SaveMeta(ma, userInfo["username"], false, out errorMessage);
+
+            // Define the result
+            switch (result)
+            {
+                case Storage.ResultType.NotFound:
+                    resp = new ServerResponse(false, ServerResponse.ErrorCode.ResourceDoesNotExist, errorMessage);
+                    break;
+                case Storage.ResultType.Success:
+                    resp = new ServerResponse(true, ServerResponse.ErrorCode.None, guid.ToString("N"));
+                    break;
+                case Storage.ResultType.PermissionsError:
+                    resp = new ServerResponse(false, ServerResponse.ErrorCode.InvalidPermissions, errorMessage);
+                    break;
+                case Storage.ResultType.ResourceIsLocked:
+                    resp = new ServerResponse(false, ServerResponse.ErrorCode.ReasourceIsLocked, errorMessage);
+                    break;
+                default:
+                    resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, errorMessage);
+                    break;
+            }
+
+            if (!(bool)resp["Pass"])
+            {
+                if (_generalLogger != null)
+                    _generalLogger.Write(Common.Logger.LevelEnum.Normal,
+                        "An " + result.ToString() + " occurred while attempting to save the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                if (_networkLogger != null)
+                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the CreateMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            if (!index.IndexMeta(ma, _fileSystem))
+            {
+                if (_generalLogger != null)
+                    _generalLogger.Write(Common.Logger.LevelEnum.Normal,
+                        "Failed to index the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.FailedIndexing,
+                    "The MetaAsset could not be indexed.");
+            }
+
+            // Send the result
+            resp.Serialize().WriteTo(app.Response.OutputStream);
+            app.CompleteRequest();
+
+            if (_networkLogger != null)
+                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Response for the CreateMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
         }
 
         /// <summary>
@@ -608,7 +744,7 @@ namespace HttpModule
 
             return;
         }
-
+        
         /// <summary>
         /// Responds to a PUT request for a <see cref="Common.Data.DataAsset"/> by copying the stream to the file system and 
         /// sends to the Solr installation for indexing.

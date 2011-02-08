@@ -108,6 +108,24 @@ namespace Common
         public const string JOB_GETETAG_FAILED_STATE_USER = "The system failed to retrieve an identifier indicating if the resource is outdated.  The system will stop attempting to perform the current action.  You might need to retry your action.";
         public const string JOB_GETETAG_FAILED_STATE_LOG = "GetETagJob failed because the MetaAsset was not properly set for the remote resource with id {0} on using job id {1}";
 
+        // Job SaveResource Failed 9
+        public const int JOB_CREATERESOURCE_FAILED_CODE = 0x11001;
+        public const string JOB_CREATERESOURCE_FAILED_CAPTION = "Failed to Create the Resource";
+        public const string JOB_CREATERESOURCE_FAILED_USER = "The system failed to create a resource.  The system will stop attempting to perform the current action.  You might need to retry your action.";
+        public const string JOB_CREATERESOURCE_FAILED_LOG = "CreateResourceJob.Run failed to save the remote resource with id {0} on using job id {1}";
+
+        // Job GetHead Failed 10
+        public const int JOB_GETHEAD_FAILED_CODE = 0x11010;
+        public const string JOB_GETHEAD_FAILED_CAPTION = "Failed to Retrieve the Header information";
+        public const string JOB_GETHEAD_FAILED_USER = "The system failed to retrieve an identifier indicating if the resource is outdated.  The system will stop attempting to perform the current action.  You might need to retry your action.";
+        public const string JOB_GETHEAD_FAILED_LOG = "GetHeadJob failed to retrieve the Header information for the remote resource with id {0} on using job id {1}";
+
+        // Job GetHead Failed due to Invalid State 11
+        public const int JOB_GETHEAD_FAILED_STATE_CODE = 0x11000;
+        public const string JOB_GETHEAD_FAILED_STATE_CAPTION = "Failed to Retrieve the Header information";
+        public const string JOB_GETHEAD_FAILED_STATE_USER = "The system failed to retrieve an identifier indicating if the resource is outdated.  The system will stop attempting to perform the current action.  You might need to retry your action.";
+        public const string JOB_GETHEAD_FAILED_STATE_LOG = "GetHeadJob failed because the MetaAsset was not properly set for the remote resource with id {0} on using job id {1}";
+
 
 
         /// <summary>
@@ -273,7 +291,39 @@ namespace Common
         }
 
         /// <summary>
-        /// Creates a get etag faled error message.
+        /// Creates a get head failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <param name="job">The job.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
+        public static ErrorMessage GetHeadFailed(Exception e, Work.AssetJobBase job)
+        {
+            return new ErrorMessage(JOB_GETHEAD_FAILED_CODE, JOB_GETHEAD_FAILED_CAPTION, JOB_GETHEAD_FAILED_USER,
+                                    string.Format(JOB_GETHEAD_FAILED_LOG, job.FullAsset.MetaAsset.GuidString, job.Id.ToString()),
+                                    true, true, e);
+        }
+
+        /// <summary>
+        /// Creates a get etag failed due to invalid state error message.
+        /// </summary>
+        /// <param name="job">The job.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
+        public static ErrorMessage GetHeadFailedDueToInvalidState(Work.AssetJobBase job)
+        {
+            if (job.FullAsset != null && job.FullAsset.MetaAsset != null)
+                return new ErrorMessage(JOB_GETHEAD_FAILED_STATE_CODE, JOB_GETHEAD_FAILED_STATE_CAPTION,
+                                    JOB_GETHEAD_FAILED_STATE_USER,
+                                    string.Format(JOB_GETHEAD_FAILED_STATE_LOG, job.FullAsset.MetaAsset.GuidString, job.Id.ToString()),
+                                    true, true);
+
+            return new ErrorMessage(JOB_GETHEAD_FAILED_STATE_CODE, JOB_GETHEAD_FAILED_STATE_CAPTION,
+                                    JOB_GETHEAD_FAILED_STATE_USER,
+                                    string.Format(JOB_GETHEAD_FAILED_STATE_LOG, "Unknown", job.Id.ToString()),
+                                    true, true);
+        }
+
+        /// <summary>
+        /// Creates a get etag failed error message.
         /// </summary>
         /// <param name="e">The exception.</param>
         /// <param name="job">The job.</param>
@@ -338,6 +388,31 @@ namespace Common
             return new ErrorMessage(JOB_SAVERESOURCE_FAILED_CODE, JOB_SAVERESOURCE_FAILED_CAPTION,
                                     JOB_SAVERESOURCE_FAILED_USER + "  " + additionalMessageUser,
                                     string.Format(JOB_SAVERESOURCE_FAILED_LOG + "  " + additionalMessageLog,
+                                        job.FullAsset.MetaAsset.GuidString, job.Id.ToString()),
+                                    true, true);
+        }
+
+        /// <summary>
+        /// Creates a create resource failed error message.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        /// <param name="job">The job.</param>
+        /// <param name="additionalMessageUser">The additional message to display to user.</param>
+        /// <param name="additionalMessageLog">The additional message to save to the log.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
+        public static ErrorMessage CreateResourceFailed(Exception e, Work.AssetJobBase job, string additionalMessageUser,
+            string additionalMessageLog)
+        {
+            if (e != null)
+                return new ErrorMessage(JOB_CREATERESOURCE_FAILED_CODE, JOB_CREATERESOURCE_FAILED_CAPTION,
+                                        JOB_CREATERESOURCE_FAILED_USER + "  " + additionalMessageUser,
+                                        string.Format(JOB_CREATERESOURCE_FAILED_LOG + "  " + additionalMessageLog,
+                                            job.FullAsset.MetaAsset.GuidString, job.Id.ToString()),
+                                        true, true, e);
+
+            return new ErrorMessage(JOB_CREATERESOURCE_FAILED_CODE, JOB_CREATERESOURCE_FAILED_CAPTION,
+                                    JOB_CREATERESOURCE_FAILED_USER + "  " + additionalMessageUser,
+                                    string.Format(JOB_CREATERESOURCE_FAILED_LOG + "  " + additionalMessageLog,
                                         job.FullAsset.MetaAsset.GuidString, job.Id.ToString()),
                                     true, true);
         }

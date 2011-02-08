@@ -236,7 +236,17 @@ namespace Common.FileSystem
         /// <returns><c>True</c> when the file at the relative path exists; otherwise, <c>false</c>.</returns>
         public bool ResourceExists(string relativePath)
         {
-            return File.Exists(_rootPath + relativePath);
+            return File.Exists(_rootPath + relativePath.TrimStart(Path.DirectorySeparatorChar));
+        }
+
+        /// <summary>
+        /// Determines if the relative path is a directory on the underlying file system.
+        /// </summary>
+        /// <param name="relativePath">The relative path of the directory.</param>
+        /// <returns><c>True</c> when the directory at the relative path exists; otherwise, <c>false</c>.</returns>
+        public bool DirectoryExists(string relativePath)
+        {
+            return Directory.Exists(_rootPath + relativePath);
         }
 
         /// <summary>
@@ -329,6 +339,121 @@ namespace Common.FileSystem
         }
 
         /// <summary>
+        /// Renames a directory.
+        /// </summary>
+        /// <param name="relativeSourcePath">The relative source path.</param>
+        /// <param name="newDirName">New name of the directory.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
+        public bool RenameDirectory(string relativeSourcePath, string newDirName)
+        {
+            string destinationRelativePath = relativeSourcePath.TrimEnd(new char[] { Path.DirectorySeparatorChar });
+
+            destinationRelativePath = relativeSourcePath.Substring(0, relativeSourcePath.LastIndexOf(Path.DirectorySeparatorChar) + 1);
+            destinationRelativePath += newDirName;
+
+            lock (_openStates)
+            {
+                if (_openStates.Count > 0)
+                {
+                    if (_logger != null)
+                        _logger.Write(Logger.LevelEnum.Normal, "Cannot rename directory as their are resources currently open.");
+                    return false;
+                }
+
+                try
+                {
+                    Directory.Move(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativeSourcePath,
+                        _rootPath.TrimEnd(Path.DirectorySeparatorChar) + destinationRelativePath);
+                }
+                catch (Exception e)
+                {
+                    if (_logger != null)
+                    {
+                        _logger.Write(Logger.LevelEnum.Normal, "Rename directory failed with the following exception:\r\n" +
+                            Logger.ExceptionToString(e));
+                    }
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Renames the source resource to the destination.
+        /// </summary>
+        /// <param name="relativeSourcePath">The relative source path.</param>
+        /// <param name="newFileName">New name of the file, only provide the filename, not the any path information.</param>
+        /// <param name="overwrite">If set to <c>true</c> and the destination file exists it will be overwritten.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
+        public bool Rename(string relativeSourcePath, string newFileName, bool overwrite)
+        {
+            FileState state;
+            string destinationRelativePath = relativeSourcePath.Substring(0, relativeSourcePath.LastIndexOf(Path.DirectorySeparatorChar) +1);
+            destinationRelativePath += newFileName;
+
+            //if (!relativeSourcePath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            //    relativeSourcePath += Path.DirectorySeparatorChar.ToString();
+            //if (!destinationRelativePath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            //    destinationRelativePath += Path.DirectorySeparatorChar.ToString();
+
+            lock (_openStates)
+            {
+                // Check for conflicting usage
+                if (HandleExists(relativeSourcePath, out state))
+                {
+                    if (_logger != null)
+                    {
+                        _logger.Write(Logger.LevelEnum.Normal, "Resource " + relativeSourcePath +
+                            "cannot be renamed as it is " +
+                            "open by another process, the owning process information follows:\r\n" +
+                            state.GetLogString());
+                    }
+                    return false;
+                }
+
+                // Make sure the source exists
+                if (!ResourceExists(relativeSourcePath))
+                {
+                    if (_logger != null)
+                    {
+                        _logger.Write(Logger.LevelEnum.Normal, "Resource " + relativeSourcePath +
+                            " does not exist.");
+                    }
+                    return false;
+                }
+
+                // Make sure the destination does not exist if overwrite is false
+                if (!overwrite && ResourceExists(destinationRelativePath))
+                {
+                    if (_logger != null)
+                    {
+                        _logger.Write(Logger.LevelEnum.Normal, "Rename failed because the destination relative path of \"" +
+                            destinationRelativePath + "\" already exists and overwrite was set to false.");
+                    }
+                    return false;
+                }
+
+                try
+                {
+                    File.Move(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativeSourcePath, 
+                        _rootPath.TrimEnd(Path.DirectorySeparatorChar) + destinationRelativePath);
+                }
+                catch (Exception e)
+                {
+                    if (_logger != null)
+                    {
+                        _logger.Write(Logger.LevelEnum.Normal, "Rename failed with the following exception:\r\n" +
+                            Logger.ExceptionToString(e));
+                    }
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Copies the source resource to the destination creating a new resource.
         /// </summary>
         /// <param name="relativeSourcePath">The source file.</param>
@@ -400,6 +525,53 @@ namespace Common.FileSystem
         }
 
         /// <summary>
+        /// Gets the <see cref="DirectoryInfo"/> object for the relative path.
+        /// </summary>
+        /// <param name="relativePath">The relative path.</param>
+        /// <returns>A <see cref="DirectoryInfo"/> for the relative path.</returns>
+        public DirectoryInfo GetDirectoryInfo(string relativePath)
+        {
+            return new DirectoryInfo(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativePath);
+        }
+
+        /// <summary>
+        /// Deletes the directory.
+        /// </summary>
+        /// <param name="relativePath">The relative path.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
+        public bool DeleteDirectory(string relativePath)
+        {
+            relativePath = relativePath.Trim(Path.DirectorySeparatorChar);
+
+            if (relativePath == Data.AssetType.Meta.VirtualPath ||
+                relativePath == Data.AssetType.Data.VirtualPath ||
+                relativePath == "settings")
+            {
+                if (_logger != null)
+                    _logger.Write(Logger.LevelEnum.Normal, "Could not delete the directory at " +
+                        relativePath + " because it is a required directory.");
+                return false;
+            }
+
+            try
+            {
+                Directory.Delete(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativePath);
+            }
+            catch (Exception e)
+            {
+                if (_logger != null)
+                {
+                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while attempting " +
+                        "to delete the directory from the underlying file system.\r\n" +
+                        Logger.ExceptionToString(e));
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Deletes a file from the local file system if there is no conflicting usage by this
         /// <see cref="IO"/> object.
         /// </summary>
@@ -435,9 +607,28 @@ namespace Common.FileSystem
                     return true;
                 }
 
-                // NOTE - there is no need to remove from _openStates as we checked to see if it
-                // existed there earlier and it does not, else we would have failed earlier
-                File.Delete(_rootPath + relativePath);
+
+                // Sometimes, due to multi-threading, we can be running a "change" process received from the
+                // FileSystemWatcher or something else.  Accordingly, we need to make multiple attempts, we
+                // will do 5 trys.
+                for (int i = 0; i < 5; i++)
+                {
+                    // NOTE - there is no need to remove from _openStates as we checked to see if it
+                    // existed there earlier and it does not, else we would have failed earlier
+                    try
+                    {
+                        File.Delete(_rootPath + relativePath);
+                        break;
+                    }
+                    catch (System.IO.IOException e)
+                    {
+                        if (_logger != null)
+                        {
+                            _logger.Write(Logger.LevelEnum.Debug, "Resource " + relativePath +
+                                "does not exist.");
+                        }
+                    }
+                }
             }
 
             return true;
@@ -531,6 +722,19 @@ namespace Common.FileSystem
         public ulong GetFileLength(string relativePath)
         {
             return (ulong)new FileInfo(_rootPath + relativePath).Length;
+        }
+
+        /// <summary>
+        /// Gets the relative path from full path.
+        /// </summary>
+        /// <param name="fullPath">The full path.</param>
+        /// <returns>A string representing the relative path.</returns>
+        public string GetRelativePathFromFullPath(string fullPath)
+        {
+            if (fullPath.Contains(_rootPath))
+                return fullPath.Replace(_rootPath, @"\");
+            else
+                throw new ArgumentException("The argument does not contain the root path of \"" + _rootPath + "\"");
         }
 
         /// <summary>

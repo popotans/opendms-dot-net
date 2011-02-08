@@ -49,7 +49,15 @@ namespace Common.Work
             /// <summary>
             /// Uploads the full asset to the remote host.
             /// </summary>
-            SaveResource
+            SaveResource,
+            /// <summary>
+            /// Uploads the full asset to the remote host creating a new resource.
+            /// </summary>
+            CreateResource,
+            /// <summary>
+            /// Downloads the Header information (ETag and MD5) from the remote host.
+            /// </summary>
+            GetHead
         }
 
         /// <summary>
@@ -130,7 +138,12 @@ namespace Common.Work
                 {
                     case JobType.GetETag:
                         job = new GetETagJob(requestor, _id++, fullAsset,
-                            actUpdateUI, timeout, _errorManager, _fileSystem, _generalLogger, 
+                            actUpdateUI, timeout, _errorManager, _fileSystem, _generalLogger,
+                            _networkLogger);
+                        break;
+                    case JobType.GetHead:
+                        job = new GetHeadJob(requestor, _id++, fullAsset,
+                            actUpdateUI, timeout, _errorManager, _fileSystem, _generalLogger,
                             _networkLogger);
                         break;
                     case JobType.DownloadAsset:
@@ -142,7 +155,11 @@ namespace Common.Work
                             _fileSystem, _generalLogger, _networkLogger);
                         break;
                     case JobType.SaveResource:
-                        job = new SaveResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout, 
+                        job = new SaveResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout,
+                            _errorManager, _fileSystem, _generalLogger, _networkLogger);
+                        break;
+                    case JobType.CreateResource:
+                        job = new CreateResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout,
                             _errorManager, _fileSystem, _generalLogger, _networkLogger);
                         break;
                     default:

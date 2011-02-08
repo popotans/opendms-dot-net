@@ -48,6 +48,7 @@
     <Compile Include="Data\DataAsset.cs" />
     <Compile Include="Data\ETag.cs" />
     <Compile Include="Data\FullAsset.cs" />
+    <Compile Include="Data\Head.cs" />
     <Compile Include="Data\InvalidAssetStateException.cs" />
     <Compile Include="Data\MetaAsset.cs" />
     <Compile Include="ErrorMessage.cs" />
@@ -81,8 +82,10 @@
     <Compile Include="NetworkPackage\MetaAsset.cs" />
     <Compile Include="ServerSettings.cs" />
     <Compile Include="Network\NetworkException.cs" />
+    <Compile Include="Work\CreateResourceJob.cs" />
     <Compile Include="Work\DownloadAssetJob.cs" />
     <Compile Include="Work\GetETagJob.cs" />
+    <Compile Include="Work\GetHeadJob.cs" />
     <Compile Include="Work\IWorkRequestor.cs" />
     <Compile Include="Work\JobBase.cs" />
     <Compile Include="Work\AssetJobBase.cs" />
