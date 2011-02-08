@@ -3,6 +3,10 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r10
++ Added support for an MD5 to the HTTP verb HEAD at path /meta so that now it has an ETag and MD5 value returned.
++ Created the CreateMeta method in ServiceHandler.cs for creation of a meta asset.
+
 r6
 - Code comments were added.
 - Code documentation was generated.

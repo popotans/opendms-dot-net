@@ -408,7 +408,7 @@ namespace WindowsClient
                         return false; // this prevents the UI from changing
                 }
 
-                mpe.Value = var_list.ToArray();
+                mpe.Value = var_list;
                 mpe.IsUpdated = true;
             }
             else if (mpe.Value.GetType() == typeof(Common.Data.ETag))

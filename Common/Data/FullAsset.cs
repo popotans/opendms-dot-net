@@ -36,6 +36,7 @@ namespace Common.Data
         /// The <see cref="DataAsset"/>.
         /// </value>
         public DataAsset DataAsset { get; set; }
+
         /// <summary>
         /// Gets the unique identifier which is common to both the <see cref="MetaAsset"/> and the <see cref="DataAsset"/>.
         /// </summary>
@@ -50,6 +51,12 @@ namespace Common.Data
         }
 
         /// <summary>
+        /// This is a crappy implementation to provide support for CreateResourceJob to allow it to set the Guid 
+        /// assigned on the client.  Ideally in the future this will be removed.
+        /// </summary>
+        public Guid PreviousGuid { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FullAsset"/> class.
         /// </summary>
         /// <param name="ma">The <see cref="MetaAsset"/>.</param>
@@ -58,6 +65,24 @@ namespace Common.Data
         {
             MetaAsset = ma;
             DataAsset = da;
+        }
+
+        /// <summary>
+        /// Gets the header information for this asset from the server including an <see cref="ETag"/> and a string value
+        /// representing the MD5 of the data asset, by calling <see cref="M:MetaAsset.GetHeadFromServer"/>.
+        /// </summary>
+        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> logger where network events are documented.</param>
+        /// <returns>The <see cref="ETag"/> from the server.</returns>
+        public Head GetHeadFromServer(Work.AssetJobBase job, Logger networkLogger)
+        {
+            if (MetaAsset == null)
+                throw new Work.JobException("MetaAsset cannot be null.");
+
+            if (!MetaAsset.AssetState.HasFlag(AssetState.Flags.CanTransfer))
+                throw new InvalidAssetStateException(MetaAsset.AssetState, "Cannot download");
+
+            return MetaAsset.GetHeadFromServer(job, networkLogger);
         }
 
         /// <summary>
@@ -105,6 +130,67 @@ namespace Common.Data
             job.UpdateLastAction();
 
             if (!DataAsset.DownloadFromServer(job, MetaAsset, networkLogger))
+            {
+                job.SetErrorFlag();
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Creates both the <see cref="MetaAsset"/> and the <see cref="DataAsset"/> on the server.
+        /// </summary>
+        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
+        /// <param name="generalLogger">A reference to the <see cref="Logger"/> logger where general events are documented.</param>
+        /// <param name="networkLogger">A reference to the <see cref="Logger"/> logger where network events are documented.</param>
+        /// <returns>
+        ///   <c>True</c> if successful; otherwise <c>false</c>.
+        /// </returns>
+        public bool CreateOnServer(Work.AssetJobBase job, FileSystem.IO fileSystem, Logger generalLogger, Logger networkLogger)
+        {
+            Guid newGuid;
+            Data.MetaAsset oldMa = MetaAsset;
+
+            if (MetaAsset == null)
+                throw new Work.JobException("MetaAsset cannot be null.");
+            if (DataAsset == null)
+                throw new Work.JobException("DataAsset cannot be null.");
+
+            if (!MetaAsset.AssetState.HasFlag(AssetState.Flags.CanTransfer))
+                throw new InvalidAssetStateException(MetaAsset.AssetState, "Cannot upload MetaAsset");
+
+            if (!DataAsset.AssetState.HasFlag(AssetState.Flags.CanTransfer))
+                throw new InvalidAssetStateException(MetaAsset.AssetState, "Cannot upload DataAsset");
+
+            NetworkPackage.ServerResponse sr;
+
+            PreviousGuid = MetaAsset.Guid;
+
+            sr = MetaAsset.CreateOnServer(job, networkLogger);
+            if (!(bool)sr["Pass"])
+            {
+                job.SetErrorFlag();
+                return false;
+            }
+
+            job.UpdateLastAction();
+            
+            // Get the newGuid from the response
+            newGuid = new Guid((string)sr["Message"]);
+
+            // Update the MetaAsset to change to the new Guid and save it to the file system
+            MetaAsset = MetaAsset.CopyToNew(newGuid, true, fileSystem, generalLogger);
+
+            // Delete the old MA
+            oldMa.Resource.DeleteFromFilesystem();
+
+            // Rename the DA
+            DataAsset.RenameTo(newGuid);
+
+            sr = DataAsset.SaveToServer(job, MetaAsset, networkLogger);
+            if (!(bool)sr["Pass"])
             {
                 job.SetErrorFlag();
                 return false;

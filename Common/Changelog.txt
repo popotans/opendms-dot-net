@@ -3,6 +3,9 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r10
++ Created the ability to create resources (Created the Work.GetHeadJob and Work.CreateResourceJob classes)
+
 r5
 - Code comments added to Common
 - Code documentation generated for Common
