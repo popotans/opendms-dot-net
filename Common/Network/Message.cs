@@ -395,11 +395,12 @@ namespace Common.Network
             long totalBytes = 0, bytesSent = 0;
 
             // Gets the network stream to write on
-            if (_state.OperationType == OperationType.POST || _state.OperationType == OperationType.PUT)
+            if (_state.Stream != null && 
+                (_state.OperationType == OperationType.POST || _state.OperationType == OperationType.PUT))
             {
                 outStream = GetNetworkStreamOut();
 
-                // As a precaution, reset the stream's position
+                // As a precaution, reset the stream's position                    
                 if (_state.Stream.CanSeek)
                     _state.Stream.Position = 0;
 

@@ -3,6 +3,10 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r11
+- Verified proper operation of the HTTP verb PUT at the specialized _lock path (Server side locking and unlocking of resources).
+- Modified the HTTP GET at the /meta path to return a MD5 and the ETag for the resource.
+
 r10
 + Added support for an MD5 to the HTTP verb HEAD at path /meta so that now it has an ETag and MD5 value returned.
 + Created the CreateMeta method in ServiceHandler.cs for creation of a meta asset.
