@@ -57,7 +57,15 @@ namespace Common.Work
             /// <summary>
             /// Downloads the Header information (ETag and MD5) from the remote host.
             /// </summary>
-            GetHead
+            GetHead,
+            /// <summary>
+            /// Updates the MetaAsset on the server applying a lock
+            /// </summary>
+            Lock,
+            /// <summary>
+            /// Updates the MetaAsset on the server releasing the lock
+            /// </summary>
+            Unlock
         }
 
         /// <summary>
@@ -161,6 +169,16 @@ namespace Common.Work
                     case JobType.CreateResource:
                         job = new CreateResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout,
                             _errorManager, _fileSystem, _generalLogger, _networkLogger);
+                        break;
+                    case JobType.Lock:
+                        job = new LockJob(requestor, _id++, fullAsset,
+                            actUpdateUI, timeout, _errorManager, _fileSystem, _generalLogger,
+                            _networkLogger);
+                        break;
+                    case JobType.Unlock:
+                        job = new UnlockJob(requestor, _id++, fullAsset,
+                            actUpdateUI, timeout, _errorManager, _fileSystem, _generalLogger,
+                            _networkLogger);
                         break;
                     default:
                         throw new Exception("Unknown job type");

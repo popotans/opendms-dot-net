@@ -620,7 +620,7 @@ namespace Common.FileSystem
                         File.Delete(_rootPath + relativePath);
                         break;
                     }
-                    catch (System.IO.IOException e)
+                    catch (System.IO.IOException)
                     {
                         if (_logger != null)
                         {

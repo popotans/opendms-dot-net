@@ -3,6 +3,9 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r11
++ Added the right click context menu for tree items and the functions (Release, Lock, Unlock) thereof.
+
 r10
 + Added monitoring of the root/data directory to ensure changes to monitored resources result in triggering the WindowsClient to understand the resource needs updated.
 + Added button to add a resource to the client's repository

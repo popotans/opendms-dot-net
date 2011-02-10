@@ -121,10 +121,22 @@ namespace Common
         public const string JOB_GETHEAD_FAILED_LOG = "GetHeadJob failed to retrieve the Header information for the remote resource with id {0} on using job id {1}";
 
         // Job GetHead Failed due to Invalid State 11
-        public const int JOB_GETHEAD_FAILED_STATE_CODE = 0x11000;
+        public const int JOB_GETHEAD_FAILED_STATE_CODE = 0x11011;
         public const string JOB_GETHEAD_FAILED_STATE_CAPTION = "Failed to Retrieve the Header information";
         public const string JOB_GETHEAD_FAILED_STATE_USER = "The system failed to retrieve an identifier indicating if the resource is outdated.  The system will stop attempting to perform the current action.  You might need to retry your action.";
         public const string JOB_GETHEAD_FAILED_STATE_LOG = "GetHeadJob failed because the MetaAsset was not properly set for the remote resource with id {0} on using job id {1}";
+
+        // Job Lock Failed due to Invalid State 12
+        public const int JOB_LOCK_FAILED_CODE = 0x11100;
+        public const string JOB_LOCK_FAILED_CAPTION = "Failed to Lock Resource";
+        public const string JOB_LOCK_FAILED_USER = "The system failed to lock the resource.  The system will stop attempting to perform the current action.  You might need to retry your action.";
+        public const string JOB_LOCK_FAILED_LOG = "LockJob.Run failed to lock the remote resource with id {0} on using job id {1}";
+
+        // Job Unlock Failed due to Invalid State 13
+        public const int JOB_UNLOCK_FAILED_CODE = 0x11101;
+        public const string JOB_UNLOCK_FAILED_CAPTION = "Failed to Unlock Resource";
+        public const string JOB_UNLOCK_FAILED_USER = "The system failed to unlock the resource.  The system will stop attempting to perform the current action.  You might need to retry your action.";
+        public const string JOB_UNLOCK_FAILED_LOG = "UnlockJob.Run failed to unlock the remote resource with id {0} on using job id {1}";
 
 
 
@@ -525,6 +537,40 @@ namespace Common
         {
             return new ErrorMessage(METAFORM_DESERIALIZATION_FAILED_CODE, METAFORM_DESERIALIZATION_FAILED_CAPTION,
                                     METAFORM_DESERIALIZATION_FAILED_USER, METAFORM_DESERIALIZATION_FAILED_LOG, true, true, e);
+        }
+
+        /// <summary>
+        /// Creates a lock resource failed error message.
+        /// </summary>
+        /// <param name="job">The job.</param>
+        /// <param name="additionalMessageUser">The additional message to display to user.</param>
+        /// <param name="additionalMessageLog">The additional message to save to the log.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
+        public static ErrorMessage LockFailed(Work.AssetJobBase job, string additionalMessageUser,
+            string additionalMessageLog)
+        {
+            return new ErrorMessage(JOB_LOCK_FAILED_CODE, JOB_LOCK_FAILED_CAPTION,
+                                    JOB_LOCK_FAILED_USER + "  " + additionalMessageUser,
+                                    string.Format(JOB_LOCK_FAILED_LOG + "  " + additionalMessageLog,
+                                        job.FullAsset.MetaAsset.GuidString, job.Id.ToString()),
+                                    true, true);
+        }
+
+        /// <summary>
+        /// Creates an unlock resource failed error message.
+        /// </summary>
+        /// <param name="job">The job.</param>
+        /// <param name="additionalMessageUser">The additional message to display to user.</param>
+        /// <param name="additionalMessageLog">The additional message to save to the log.</param>
+        /// <returns>An <see cref="ErrorMessage"/>.</returns>
+        public static ErrorMessage UnlockFailed(Work.AssetJobBase job, string additionalMessageUser,
+            string additionalMessageLog)
+        {
+            return new ErrorMessage(JOB_UNLOCK_FAILED_CODE, JOB_UNLOCK_FAILED_CAPTION,
+                                    JOB_UNLOCK_FAILED_USER + "  " + additionalMessageUser,
+                                    string.Format(JOB_UNLOCK_FAILED_LOG + "  " + additionalMessageLog,
+                                        job.FullAsset.MetaAsset.GuidString, job.Id.ToString()),
+                                    true, true);
         }
     }
 }

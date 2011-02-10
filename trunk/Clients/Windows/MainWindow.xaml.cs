@@ -38,6 +38,9 @@ namespace WindowsClient
     /// </summary>
     public partial class MainWindow : Window, Common.Work.IWorkRequestor
     {
+        /// <summary>
+        /// This property is a temporary placeholder for a username
+        /// </summary>
         public const string TEMP_USERNAME = "lucas";
 
         /// <summary>
@@ -694,6 +697,7 @@ namespace WindowsClient
         TreeViewItem AddTreeResource(FullAsset fullAsset, bool isLoading, bool isLoaded)
         {
             TreeViewItem tvi;
+            System.Windows.Controls.ContextMenu menu = new System.Windows.Controls.ContextMenu();
 
             tvi = new TreeViewItem();
             tvi.Selected += new RoutedEventHandler(TreeViewItem_Selected);
@@ -714,10 +718,244 @@ namespace WindowsClient
                 UpdateStatus(tvi, "Not Loaded");
             }
 
+            tvi.ContextMenu = new System.Windows.Controls.ContextMenu();
+            tvi.ContextMenu.PlacementTarget = tvi;
+            tvi.ContextMenu.IsOpen = false;
+
+
+            System.Windows.Controls.MenuItem mi1 = new MenuItem();
+            mi1.Header = "Lock";
+            mi1.Click += new RoutedEventHandler(MenuItem_Click);
+            System.Windows.Controls.MenuItem mi2 = new MenuItem();
+            mi2.Header = "Unlock";
+            mi2.Click += new RoutedEventHandler(MenuItem_Click);
+            System.Windows.Controls.MenuItem mi3 = new MenuItem();
+            mi3.Header = "Release";
+            mi3.Click += new RoutedEventHandler(MenuItem_Click);
+
+
+            tvi.ContextMenu.Items.Add(mi1);
+            tvi.ContextMenu.Items.Add(mi2);
+            tvi.ContextMenu.Items.Add(mi3);
+
             ResourceTree.Items.Add(tvi);
             
             return tvi;
         }
+
+        /// <summary>
+        /// Handles the Click event of the MenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
+        void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            TreeViewItem tvi;
+            MenuItem mi = (MenuItem)sender;
+            DependencyObject dobj = VisualTreeHelper.GetParent((DependencyObject)sender);
+
+            while (dobj.GetType() != typeof(System.Windows.Controls.ContextMenu))
+            {
+                dobj = VisualTreeHelper.GetParent((DependencyObject)dobj);
+            }
+
+            tvi = (TreeViewItem)((System.Windows.Controls.ContextMenu)dobj).PlacementTarget;
+
+            switch ((string)mi.Header)
+            {
+                case "Release": 
+                    // Releases the lock on the resource at the server and removes the resource from 
+                    // the local filesystem also removing it from the ResourceTree
+                    ReleaseResource(tvi);
+                    break;
+                case "Lock":
+                    // Applies a lock on the resource at the server and downloads an updated MetaAsset
+                    LockResource(tvi);
+                    break;
+                case "Unlock":
+                    // Releases a lock on the resource at the server and downloads an updated MetaAsset
+                    UnlockResource(tvi);
+                    break;
+                default:
+                    throw new Exception("Unknown context menu item.");
+            }
+        }
+
+        /// <summary>
+        /// Releases the resource - unlocks the resource on the server and removes it from the local client.
+        /// </summary>
+        /// <param name="tvi">The <see cref="TreeViewItem"/>.</param>
+        private void ReleaseResource(TreeViewItem tvi)
+        {
+            TVIState tviState = (TVIState)tvi.Tag;
+            LockJob.UpdateUIDelegate actUpdateUI = ReleaseResourceCallback;
+            _workMaster.AddJob(this, Master.JobType.Unlock, tviState.FullAsset, actUpdateUI, 10000);
+        }
+
+        /// <summary>
+        /// Calls <see cref="M:ReleaseResourceCallback(UnlockJob, FullAsset)"/>.
+        /// </summary>
+        /// <param name="job">The <see cref="JobBase"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
+        void ReleaseResourceCallback(JobBase job, FullAsset fullAsset)
+        {
+            ReleaseResourceCallback((UnlockJob)job, fullAsset);
+        }
+
+        /// <summary>
+        /// Called when a job has terminated on a Resource.
+        /// </summary>
+        /// <param name="job">The <see cref="UnlockJob"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
+        void ReleaseResourceCallback(UnlockJob job, FullAsset fullAsset)
+        {
+            TVIState tviState;
+            TreeViewItem tvi;
+
+            if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
+            {
+                if (GeneralLogger != null)
+                    GeneralLogger.Write(Common.Logger.LevelEnum.Normal, "Unable to locate the resource in the GUI tree.");
+
+                MessageBox.Show("A request was received releasing a resource on the server, but I am unable to locate the resource.", "Resource not Found");
+                return;
+            }
+
+            tviState = (TVIState)tvi.Tag;
+            tviState.FullAsset = job.FullAsset;
+
+            if (job.IsFinished)
+            {
+                if (ResourceTree.Items.Contains(tvi))
+                    ResourceTree.Items.Remove(tvi);
+
+                job.FullAsset.DataAsset.Resource.DeleteFromFilesystem();
+                job.FullAsset.MetaAsset.Resource.DeleteFromFilesystem();
+            }
+        }
+
+        /// <summary>
+        /// Locks the resource - applies a lock on the resource on the server side
+        /// </summary>
+        /// <param name="tvi">The tvi.</param>
+        private void LockResource(TreeViewItem tvi)
+        {
+            TVIState tviState = (TVIState)tvi.Tag;
+            LockJob.UpdateUIDelegate actUpdateUI = LockResourceCallback;
+            _workMaster.AddJob(this, Master.JobType.Lock, tviState.FullAsset, actUpdateUI, 100000);
+        }
+
+        /// <summary>
+        /// Calls <see cref="M:LockResourceCallback(LockJob, FullAsset)"/>.
+        /// </summary>
+        /// <param name="job">The <see cref="JobBase"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
+        void LockResourceCallback(JobBase job, FullAsset fullAsset)
+        {
+            LockResourceCallback((LockJob)job, fullAsset);
+        }
+
+        /// <summary>
+        /// Called when a job has terminated on a Resource.
+        /// </summary>
+        /// <param name="job">The <see cref="LockJob"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>
+        /// Runs on the UI thread.
+        /// </remarks>
+        void LockResourceCallback(LockJob job, FullAsset fullAsset)
+        {
+            TVIState tviState;
+            TreeViewItem tvi;
+
+            if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
+            {
+                if (GeneralLogger != null)
+                    GeneralLogger.Write(Common.Logger.LevelEnum.Normal, "Unable to locate the resource in the GUI tree.");
+
+                MessageBox.Show("A request was received locking a resource on the server, but I am unable to locate the resource.", "Resource not Found");
+                return;
+            }
+
+            tviState = (TVIState)tvi.Tag;
+            tviState.FullAsset = job.FullAsset;
+
+            if (job.IsFinished)
+            {
+                tviState.UpdateEvent(false, true, false, false, false);
+                tviState.UpdateResourceStatus(false, false, true, true, true);
+                TreeViewItemProps.SetIsLoading(tvi, false);
+                TreeViewItemProps.SetIsCanceled(tvi, false);
+                TreeViewItemProps.SetPercentComplete(tvi, 100);
+                UpdateStatus(tvi, "Loaded");
+
+                job.FullAsset.MetaAsset.ApplyLock(DateTime.Now, TEMP_USERNAME);
+                job.FullAsset.MetaAsset.Save();
+            }
+        }
+
+        /// <summary>
+        /// Unlocks the resource - releases the lock on the resource on the server side
+        /// </summary>
+        /// <param name="tvi">The tvi.</param>
+        private void UnlockResource(TreeViewItem tvi)
+        {
+            TVIState tviState = (TVIState)tvi.Tag;
+            LockJob.UpdateUIDelegate actUpdateUI = UnlockResourceCallback;
+            _workMaster.AddJob(this, Master.JobType.Unlock, tviState.FullAsset, actUpdateUI, 100000);
+        }
+
+        /// <summary>
+        /// Calls <see cref="M:UnlockResourceCallback(UnlockJob, FullAsset)"/>.
+        /// </summary>
+        /// <param name="job">The <see cref="JobBase"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
+        void UnlockResourceCallback(JobBase job, FullAsset fullAsset)
+        {
+            UnlockResourceCallback((UnlockJob)job, fullAsset);
+        }
+
+        /// <summary>
+        /// Called when a job has terminated on a Resource.
+        /// </summary>
+        /// <param name="job">The <see cref="UnlockJob"/>.</param>
+        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <remarks>Runs on the UI thread.</remarks>
+        void UnlockResourceCallback(UnlockJob job, FullAsset fullAsset)
+        {
+            TVIState tviState;
+            TreeViewItem tvi;
+
+            if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
+            {
+                if (GeneralLogger != null)
+                    GeneralLogger.Write(Common.Logger.LevelEnum.Normal, "Unable to locate the resource in the GUI tree.");
+
+                MessageBox.Show("A request was received unlocking a resource on the server, but I am unable to locate the resource.", "Resource not Found");
+                return;
+            }
+
+            tviState = (TVIState)tvi.Tag;
+            tviState.FullAsset = job.FullAsset;
+
+            if (job.IsFinished)
+            {
+                tviState.UpdateEvent(false, true, false, false, false);
+                tviState.UpdateResourceStatus(false, false, true, true, true);
+                TreeViewItemProps.SetIsLoading(tvi, false);
+                TreeViewItemProps.SetIsCanceled(tvi, false);
+                TreeViewItemProps.SetPercentComplete(tvi, 100);
+                UpdateStatus(tvi, "Loaded");
+
+                job.FullAsset.MetaAsset.ReleaseLock();
+                job.FullAsset.MetaAsset.Save();
+            }
+        }
+
 
         /// <summary>
         /// Handles the Selected event of the TreeViewItem control.
@@ -1518,6 +1756,11 @@ namespace WindowsClient
             _workMaster.AddJob(this, Master.JobType.GetETag, fullAsset, actUpdateUI, 100000);
         }
 
+        /// <summary>
+        /// Handles the Click event of the BtnAddResource control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnAddResource_Click(object sender, RoutedEventArgs e)
         {
             TreeViewItem tvi;
