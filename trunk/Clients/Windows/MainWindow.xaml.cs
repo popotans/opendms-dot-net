@@ -97,10 +97,6 @@ namespace WindowsClient
         public static Dictionary<Guid, Guid> IdTranslation;
 
         /// <summary>
-        /// A reference to a global <see cref="Settings"/>.
-        /// </summary>
-        public static Settings Settings;
-        /// <summary>
         /// A reference to a global <see cref="ErrorManager"/>.
         /// </summary>
         public static Common.ErrorManager ErrorManager;
@@ -109,13 +105,9 @@ namespace WindowsClient
         /// </summary>
         public static Common.FileSystem.IO FileSystem;
         /// <summary>
-        /// A reference to a global <see cref="Common.Logger"/> to document general events.
+        /// A reference to a global set of loggers to document events.
         /// </summary>
-        public static Common.Logger GeneralLogger;
-        /// <summary>
-        /// A reference to a global <see cref="Common.Logger"/> to document network events.
-        /// </summary>
-        public static Common.Logger NetworkLogger;
+        public static Common.Logger Logger;
 
 
 
@@ -126,18 +118,27 @@ namespace WindowsClient
         public MainWindow()
         {
             InitializeComponent();
-            bool testTouch = Common.ServerSettings.Instance.IsLoaded;
 
-            Settings = Settings.Load();
+            // Settings should come first
+            Settings.Instance = Settings.Load(Utilities.GetAppPath() + "Settings.xml");
+            if (Settings.Instance == null)
+            {
+                SettingsWindow win = new SettingsWindow();
+                Settings.Instance = new Settings();
+                win.ShowDialog();
+            }
+
+            // File System must after settings
+            FileSystem = new Common.FileSystem.IO(Settings.Instance.StorageLocation);
+
+            Logger = new Common.Logger(Utilities.GetAppPath());
+
             Common.ErrorManager.UpdateUI actErrorUpdateUI = ErrorUpdateUI;
-            GeneralLogger = new Common.Logger("GeneralLog.txt");
-            NetworkLogger = new Common.Logger("NetworkLog.txt");
-            FileSystem = new Common.FileSystem.IO(Settings.StorageLocation, GeneralLogger);
 
-            ErrorManager = new Common.ErrorManager(actErrorUpdateUI, GeneralLogger);
+            ErrorManager = new Common.ErrorManager(actErrorUpdateUI);
             _statusBarItemGuid = Guid.Empty;
-            _workMaster = new Master(ErrorManager, FileSystem, GeneralLogger, NetworkLogger);
-            _fsWatcher = new FileSystemWatcher(MainWindow.Settings.StorageLocation);
+            _workMaster = new Master(ErrorManager, FileSystem);
+            _fsWatcher = new FileSystemWatcher(Settings.Instance.StorageLocation);
             _fsWatcher.IncludeSubdirectories = true;
             _fsWatcher.NotifyFilter = NotifyFilters.LastWrite;
             _fsWatcher.Changed += new FileSystemEventHandler(FS_Changed);
@@ -164,12 +165,6 @@ namespace WindowsClient
             ResourceTree.Items.Clear();
             //CreateTestSearchForm();
             //CreateTestResources();
-
-            if (!Settings.SettingsFileExists)
-            {
-                SettingsWindow win = new SettingsWindow();
-                win.ShowDialog();
-            }
 
             LoadLocalResources();
         }
@@ -237,7 +232,7 @@ namespace WindowsClient
             sf.Add(new Common.NetworkPackage.FormProperty(Common.NetworkPackage.FormProperty.SupportedDataType.Text, "User Field 1", "prop1", ""));
             sf.Add(new Common.NetworkPackage.FormProperty(Common.NetworkPackage.FormProperty.SupportedDataType.Date, "User Field 2", "prop2", ""));
 
-            sf.SaveToFile("settings\\searchform.xml", FileSystem, GeneralLogger, true);
+            sf.SaveToFile("settings\\searchform.xml", FileSystem, true);
         }
 
         /// <summary>
@@ -247,7 +242,7 @@ namespace WindowsClient
         void LoadLocalResources()
         {
             MetaAsset ma;
-            FullAsset fullAsset;
+            FullAsset fullAsset = null;
             Guid guid = Guid.Empty;
             string temp;
             LoadResourceJob.UpdateUIDelegate actUpdateUI = CheckHeadStatus;
@@ -266,10 +261,10 @@ namespace WindowsClient
 
                 if (guid != Guid.Empty)
                 {
-                    ma = new MetaAsset(guid, FileSystem, GeneralLogger);
-                    if (ma.Load(GeneralLogger))
+                    ma = new MetaAsset(guid, FileSystem);
+                    if (ma.Load())
                     {
-                        fullAsset = new FullAsset(ma, new DataAsset(ma, FileSystem, GeneralLogger));
+                        fullAsset = new FullAsset(ma, new DataAsset(ma, FileSystem));
                         _workMaster.AddJob(this, Master.JobType.GetHead, fullAsset, actUpdateUI, 100000);
                     }
                     else
@@ -816,9 +811,7 @@ namespace WindowsClient
 
             if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
             {
-                if (GeneralLogger != null)
-                    GeneralLogger.Write(Common.Logger.LevelEnum.Normal, "Unable to locate the resource in the GUI tree.");
-
+                Common.Logger.General.Error("Unable to locate the resource in the GUI tree.");
                 MessageBox.Show("A request was received releasing a resource on the server, but I am unable to locate the resource.", "Resource not Found");
                 return;
             }
@@ -873,9 +866,7 @@ namespace WindowsClient
 
             if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
             {
-                if (GeneralLogger != null)
-                    GeneralLogger.Write(Common.Logger.LevelEnum.Normal, "Unable to locate the resource in the GUI tree.");
-
+                Common.Logger.General.Error("Unable to locate the resource in the GUI tree.");
                 MessageBox.Show("A request was received locking a resource on the server, but I am unable to locate the resource.", "Resource not Found");
                 return;
             }
@@ -932,9 +923,7 @@ namespace WindowsClient
 
             if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
             {
-                if (GeneralLogger != null)
-                    GeneralLogger.Write(Common.Logger.LevelEnum.Normal, "Unable to locate the resource in the GUI tree.");
-
+                Common.Logger.General.Error("Unable to locate the resource in the GUI tree.");
                 MessageBox.Show("A request was received unlocking a resource on the server, but I am unable to locate the resource.", "Resource not Found");
                 return;
             }
@@ -1052,7 +1041,7 @@ namespace WindowsClient
                         tviState.UpdateEvent(true, false, false, false, false);
                         tviOwner.Background = _normalBrush;
                         _workMaster.AddJob(this, Master.JobType.GetETag, fullAsset, actUpdateUI, 
-                            (uint)Common.ServerSettings.Instance.NetworkTimeout);
+                            (uint)Settings.Instance.NetworkTimeout);
                     }
                 }
             }
@@ -1215,9 +1204,7 @@ namespace WindowsClient
 
             if (tvi == null)
             {
-                if (GeneralLogger != null)
-                    GeneralLogger.Write(Common.Logger.LevelEnum.Normal, "Unable to locate the resource in the GUI tree.");
-
+                Common.Logger.General.Error("Unable to locate the resource in the GUI tree.");
                 MessageBox.Show("A request was received regarding the status of a resource to be created on the server, but I am unable to locate the resource.", "Resource not Found");
                 return;
             }
@@ -1364,8 +1351,8 @@ namespace WindowsClient
                 return;
 
             // Reload the meta
-            ma = MetaAsset.Load(((TVIState)tvi.Tag).FullAsset.Guid, FileSystem, GeneralLogger, NetworkLogger);
-            da = new DataAsset(ma, FileSystem, GeneralLogger);
+            ma = MetaAsset.Load(((TVIState)tvi.Tag).FullAsset.Guid, FileSystem);
+            da = new DataAsset(ma, FileSystem);
             fullAsset = new FullAsset(ma, da);
 
             ((TVIState)tvi.Tag).UpdateEvent(true, false, false, false, false);
@@ -1615,10 +1602,10 @@ namespace WindowsClient
                 return;
 
             LoadResourceJob.UpdateUIDelegate actUpdateUI = LoadResourceCallback;
-            MetaAsset ma = new MetaAsset(guid, FileSystem, GeneralLogger);
+            MetaAsset ma = new MetaAsset(guid, FileSystem);
             if(ma.ResourceExistsOnFilesystem())
-                ma.Load(GeneralLogger);
-            FullAsset fullAsset = new FullAsset(ma, new DataAsset(ma, FileSystem, GeneralLogger));
+                ma.Load();
+            FullAsset fullAsset = new FullAsset(ma, new DataAsset(ma, FileSystem));
             //string datapath = resource.StorageLocation + new AssetType(AssetType.Data).VirtualPath + "\\";
 
             _workMaster.AddJob(this, Master.JobType.LoadResource, fullAsset, actUpdateUI, 150000);
@@ -1677,7 +1664,7 @@ namespace WindowsClient
             // Create new meta asset
             ma = Common.Data.MetaAsset.Create(Guid.NewGuid(), new ETag("1"), 1, 1, "lucas", DateTime.Now, 
                 "Lucas", 0, null, ".txt", DateTime.Now, DateTime.Now, DateTime.Now, "Test", tags, 
-                dict1, FileSystem, GeneralLogger);
+                dict1, FileSystem);
 
             // Open the stream to create the new data asset
             dataRelativePath = Common.Data.AssetType.Data.VirtualPath + 
@@ -1699,7 +1686,7 @@ namespace WindowsClient
             ma.Save();
 
             // Give us an instance of the data object representing the data asset
-            da = new DataAsset(ma, FileSystem, GeneralLogger);
+            da = new DataAsset(ma, FileSystem);
 
             // Construct the full asset
             return new FullAsset(ma, da);
@@ -1728,7 +1715,7 @@ namespace WindowsClient
 
             ma.Save();
 
-            _workMaster.AddJob(this, Master.JobType.GetETag, tviState.FullAsset, actUpdateUI, (uint)Common.ServerSettings.Instance.NetworkTimeout);
+            _workMaster.AddJob(this, Master.JobType.GetETag, tviState.FullAsset, actUpdateUI, (uint)Settings.Instance.NetworkTimeout);
         }
 
         /// <summary>
@@ -1781,7 +1768,7 @@ namespace WindowsClient
                 ofd = new System.Windows.Forms.OpenFileDialog();
                 ofd.Multiselect = false;
 
-                rootPath = Settings.StorageLocation.TrimEnd(System.IO.Path.DirectorySeparatorChar);
+                rootPath = Settings.Instance.StorageLocation.TrimEnd(System.IO.Path.DirectorySeparatorChar);
                 metaRelPath = "\\" + AssetType.Meta.VirtualPath + "\\";
                 dataRelPath = "\\" + AssetType.Data.VirtualPath + "\\";
 
@@ -1802,11 +1789,11 @@ namespace WindowsClient
                     File.Copy(ofd.FileName, rootPath + dataRelPath);
                     
                     // Create MetaAsset
-                    ma = new MetaAsset(guid, FileSystem, GeneralLogger);
+                    ma = new MetaAsset(guid, FileSystem);
                     ma.SetExtension(dataExt);
 
                     // Create DataAsset - attaching MA
-                    da = new DataAsset(ma, FileSystem, GeneralLogger);
+                    da = new DataAsset(ma, FileSystem);
 
                     // Create the FullAsset
                     fa = new FullAsset(ma, da);

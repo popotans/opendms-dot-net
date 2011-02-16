@@ -39,21 +39,15 @@ namespace Common
         /// A reference to the method handling update UI events.
         /// </summary>
         private UpdateUI _actUpdateUI;
-        /// <summary>
-        /// A reference to the <see cref="Logger"/> that this instance should use to document events.
-        /// </summary>
-        private Logger _generalLogger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ErrorManager"/> class.
         /// </summary>
         /// <param name="actUpdateUI">A reference to the method handling update UI events.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public ErrorManager(UpdateUI actUpdateUI, Logger generalLogger)
+        public ErrorManager(UpdateUI actUpdateUI)
         {
             _errors = new List<ErrorMessage>();
             _actUpdateUI = actUpdateUI;
-            _generalLogger = generalLogger;
         }
 
         /// <summary>
@@ -113,7 +107,7 @@ namespace Common
             {
                 if (errors[i].SaveToLog)
                 {
-                    _generalLogger.Write(Logger.LevelEnum.Normal, errors[i].LogFormat());
+                    Logger.General.Error(errors[i].LogFormat());
                 }
             }
         }

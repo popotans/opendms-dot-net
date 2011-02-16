@@ -78,7 +78,7 @@ namespace Common.Network
                 {
                     if (item.Value.StartsWith("file://"))
                     {
-                        byte[] buffer = new byte[ServerSettings.Instance.NetworkBufferSize];
+                        byte[] buffer = new byte[SettingsBase.Instance.NetworkBufferSize];
                         int bytesRead = 0;
                         FileSystem.IOStream iostream;
                         string filepath = item.Value.Substring(7);
@@ -132,7 +132,7 @@ namespace Common.Network
             {
                 string str = "";
                 int bytesRead = 0;
-                byte[] buffer = new byte[ServerSettings.Instance.NetworkBufferSize];
+                byte[] buffer = new byte[SettingsBase.Instance.NetworkBufferSize];
                 Stream stream = e.Response.GetResponseStream();
 
                 while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)

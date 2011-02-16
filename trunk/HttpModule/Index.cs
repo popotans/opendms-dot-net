@@ -56,8 +56,8 @@ namespace HttpModule
             Common.NetworkPackage.ServerResponse resp;
 
             response = Common.Network.MultipartFormMessage.Send("http://" +
-                Settings.Instance.SearchHost.Address.ToString() + ":" +
-                Settings.Instance.SearchHost.Port.ToString() + "/solr/update/extract", postParameters,
+                Settings.Instance.SearchHostIP + ":" +
+                Settings.Instance.SearchHostPort.ToString() + "/solr/update/extract", postParameters,
                 fileSystem, out resp);
 
             if (response.StatusCode == HttpStatusCode.OK)
@@ -91,8 +91,8 @@ namespace HttpModule
             Common.NetworkPackage.ServerResponse resp;
 
             response = Common.Network.MultipartFormMessage.Send("http://" +
-                Settings.Instance.SearchHost.Address.ToString() + ":" +
-                Settings.Instance.SearchHost.Port.ToString() + "/solr/update/extract", postParameters,
+                Settings.Instance.SearchHostIP + ":" +
+                Settings.Instance.SearchHostPort.ToString() + "/solr/update/extract", postParameters,
                 fileSystem, out resp);
 
             if (response.StatusCode == HttpStatusCode.OK)

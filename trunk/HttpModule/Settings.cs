@@ -14,68 +14,156 @@
  */
 
 using System;
-using System.Net;
+using System.IO;
 
 namespace HttpModule
 {
     /// <summary>
     /// Represents the settings for this HttpModule.
     /// </summary>
-    public class Settings
+    public class Settings 
+        : Common.SettingsBase
     {
         /// <summary>
         /// A global instance of this class.
         /// </summary>
-        public static Settings Instance = new Settings();
+        public new static Settings Instance
+        {
+            get
+            {
+                return (Settings)Common.SettingsBase.Instance;
+            }
+            set
+            {
+                Common.SettingsBase.Instance = value;
+            }
+        }
 
-        /// <summary>
-        /// Gets or sets the host.
-        /// </summary>
-        /// <value>
-        /// The host.
-        /// </value>
-        public IPEndPoint Host { get; set; }
         /// <summary>
         /// Gets or sets the storage location.
         /// </summary>
         /// <value>
         /// The storage location.
         /// </value>
-        public string StorageLocation { get; set; }
-        /// <summary>
-        /// Gets or sets the lease expiration.
-        /// </summary>
-        /// <value>
-        /// The lease expiration.
-        /// </value>
-        public long LeaseExpiration { get; set; }
+        public string StorageLocation
+        {
+            get
+            {
+                if (ContainsKey("StorageLocation"))
+                    return (string)this["StorageLocation"];
+                else
+                    return @"C:\DataStore\";
+            }
+            set
+            {
+                if (ContainsKey("StorageLocation"))
+                    this["StorageLocation"] = value;
+                else
+                    Add("StorageLocation", value);
+            }
+        }
+
         /// <summary>
         /// Gets or sets the size of the file buffer.
         /// </summary>
         /// <value>
         /// The size of the file buffer.
         /// </value>
-        public int FileBufferSize { get; set; }
+        public int FileBufferSize
+        {
+            get
+            {
+                if (ContainsKey("FileBufferSize"))
+                    return (int)this["FileBufferSize"];
+                else
+                    return 20480;
+            }
+            set
+            {
+                if (ContainsKey("FileBufferSize"))
+                    this["FileBufferSize"] = value;
+                else
+                    Add("FileBufferSize", value);
+            }
+        }
 
         /// <summary>
-        /// Gets or sets the search host.
+        /// Gets or sets the search host ip.
         /// </summary>
         /// <value>
-        /// The search host.
+        /// The search host ip.
         /// </value>
-        public IPEndPoint SearchHost { get; set; }
+        public string SearchHostIP
+        {
+            get
+            {
+                if (ContainsKey("SearchHostIP"))
+                    return (string)this["SearchHostIP"];
+                else
+                    return "127.0.0.1";
+            }
+            set
+            {
+                if (ContainsKey("SearchHostIP"))
+                    this["SearchHostIP"] = value;
+                else
+                    Add("SearchHostIP", value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the search host port.
+        /// </summary>
+        /// <value>
+        /// The search host port.
+        /// </value>
+        public int SearchHostPort
+        {
+            get
+            {
+                if (ContainsKey("SearchHostPort"))
+                    return (int)this["SearchHostPort"];
+                else
+                    return 8080;
+            }
+            set
+            {
+                if (ContainsKey("SearchHostPort"))
+                    this["SearchHostPort"] = value;
+                else
+                    Add("SearchHostPort", value);
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Settings"/> class.
         /// </summary>
-        public Settings()
+        public Settings() 
+            : base()
         {
-            Host = new IPEndPoint(IPAddress.Parse("192.168.1.103"), 9160);
-            StorageLocation = @"C:\DataStore\";
-            LeaseExpiration = 900000; // 15 minutes
-            FileBufferSize = 20480;
-            SearchHost = new IPEndPoint(IPAddress.Parse("192.168.1.50"), 8080);
         }
 
+        /// <summary>
+        /// Loads a <see cref="Settings"/> from the specified relative filepath.
+        /// </summary>
+        /// <param name="relativeFilepath">The relative filepath.</param>
+        /// <param name="fileSystem">A reference to a <see cref="Common.FileSystem.IO"/>.</param>
+        /// <returns>A <see cref="Settings"/>.</returns>
+        public new static Settings Load(string relativeFilepath, Common.FileSystem.IO fileSystem)
+        {
+            Settings sb = new Settings();
+
+            try
+            {
+                if (sb.ReadFromFile(relativeFilepath, fileSystem))
+                    return sb;
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
+
+            return null;
+        }
     }
 }

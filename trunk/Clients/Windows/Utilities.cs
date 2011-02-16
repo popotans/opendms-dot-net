@@ -70,7 +70,8 @@ namespace WindowsClient
         /// <returns></returns>
         public static string GetAppPath()
         {
-            string str = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
+            string str = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "");
+
             if (!str.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString())) 
                 str += System.IO.Path.DirectorySeparatorChar.ToString();
             return str;

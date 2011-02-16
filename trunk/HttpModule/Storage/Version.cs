@@ -24,10 +24,6 @@ namespace HttpModule
     public class Version
     {
         /// <summary>
-        /// A reference to the <see cref="Common.Logger"/> that this instance should use to document events.
-        /// </summary>
-        private Common.Logger _logger;
-        /// <summary>
         /// Represents a pair of <see cref="MetaAsset"/> and <see cref="DataAsset"/>
         /// </summary>
         private FullAsset _fullAsset;
@@ -83,8 +79,7 @@ namespace HttpModule
         /// <summary>
         /// Initializes a new instance of the <see cref="Version"/> class.
         /// </summary>
-        /// <param name="logger">A reference to the <see cref="Common.Logger"/> that this instance should use to document events.</param>
-        private Version(Common.Logger logger)
+        private Version()
         {
         }
 
@@ -92,10 +87,8 @@ namespace HttpModule
         /// Initializes a new instance of the <see cref="Version"/> class.
         /// </summary>
         /// <param name="fullAsset">Represents a pair of <see cref="MetaAsset"/> and <see cref="DataAsset"/></param>
-        /// <param name="logger">A reference to the <see cref="Common.Logger"/> that this instance should use to document events.</param>
-        public Version(FullAsset fullAsset, Common.Logger logger)
+        public Version(FullAsset fullAsset)
         {
-            _logger = logger;
             _fullAsset = fullAsset;
         }
 
@@ -109,9 +102,7 @@ namespace HttpModule
             // Meta
             if (!_metaAsset.CopyCurrentToVersionScheme())
             {
-                if (_logger != null)
-                    _logger.Write(Common.Logger.LevelEnum.Normal,
-                        "Failed to copy the current meta asset to a destination using the version scheme.");
+                Common.Logger.General.Error("Failed to copy the current meta asset to a destination using the version scheme.");
                 return false;
             }
 
@@ -128,9 +119,7 @@ namespace HttpModule
             // Data
             if (!_dataAsset.CopyCurrentToVersionScheme(_metaAsset.DataVersion))
             {
-                if (_logger != null)
-                    _logger.Write(Common.Logger.LevelEnum.Normal,
-                        "Failed to copy the current data asset to a destination using the version scheme.");
+                Common.Logger.General.Error("Failed to copy the current data asset to a destination using the version scheme.");
                 return false;
             }
 

@@ -98,9 +98,9 @@ namespace WindowsClient
             
             try
             {
-                msg = new Common.Network.Message(Common.ServerSettings.Instance.ServerIp, Common.ServerSettings.Instance.ServerPort, "_settings", "searchform", Common.Network.OperationType.GET,
-                     Common.Network.DataStreamMethod.Memory, null, null, null, null, false, false, true, true, Common.ServerSettings.Instance.NetworkBufferSize,
-                     Common.ServerSettings.Instance.NetworkTimeout, MainWindow.GeneralLogger, MainWindow.NetworkLogger);
+                msg = new Common.Network.Message(Settings.Instance.ServerIp, Settings.Instance.ServerPort, "_settings", "searchform", Common.Network.OperationType.GET,
+                     Common.Network.DataStreamMethod.Memory, null, null, null, null, false, false, true, true, Settings.Instance.NetworkBufferSize,
+                     Settings.Instance.NetworkTimeout);
                 msg.Send();
             }
             catch (Exception e)
@@ -213,10 +213,10 @@ namespace WindowsClient
 
             queryString = queryString.Trim();
 
-            msg = new Common.Network.Message(Common.ServerSettings.Instance.ServerIp, Common.ServerSettings.Instance.ServerPort,
+            msg = new Common.Network.Message(Settings.Instance.ServerIp, Settings.Instance.ServerPort,
                 "search", queryString, Common.Network.OperationType.GET, Common.Network.DataStreamMethod.Memory, null, 
-                null, null, null, false, false, false, false, Common.ServerSettings.Instance.NetworkBufferSize, 
-                Common.ServerSettings.Instance.NetworkTimeout, MainWindow.GeneralLogger, MainWindow.NetworkLogger);
+                null, null, null, false, false, false, false, Settings.Instance.NetworkBufferSize, 
+                Settings.Instance.NetworkTimeout);
 
             // TODO : make this async with a searching frame
             msg.Send();
@@ -241,7 +241,7 @@ namespace WindowsClient
 
             for(int i=0; i<result.Count; i++)
             {
-                ma = new Common.Data.MetaAsset(MainWindow.GeneralLogger);
+                ma = new Common.Data.MetaAsset();
                 ma.ImportFromNetworkRepresentation(result[i]);
 
                 grid.Items.Add(new SearchWindowDataItem() { 

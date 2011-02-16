@@ -42,14 +42,11 @@ namespace Common.Work
         /// <param name="progressMethod">The <see cref="T:ProgressMethodType"/>.</param>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public AssetJobBase(IWorkRequestor requestor, ulong id, Data.FullAsset fullAsset, 
             UpdateUIDelegate actUpdateUI, uint timeout, ProgressMethodType progressMethod, 
-            ErrorManager errorManager, FileSystem.IO fileSystem,
-            Logger generalLogger, Logger networkLogger)
+            ErrorManager errorManager, FileSystem.IO fileSystem)
             : base(requestor, id, actUpdateUI, timeout, progressMethod, errorManager, 
-            fileSystem, generalLogger, networkLogger)
+            fileSystem)
         {
             _fullAsset = fullAsset;
         }

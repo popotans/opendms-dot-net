@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsClient", "Clients\Wi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "WindowsClientSetup", "Installers\WindowsClientSetup\WindowsClientSetup.vdproj", "{24771D88-8676-4366-889D-0F985063C44F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,12 @@ Global
 		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Release|x86.ActiveCfg = Release|Any CPU
+		{24771D88-8676-4366-889D-0F985063C44F}.Debug|Any CPU.ActiveCfg = Debug
+		{24771D88-8676-4366-889D-0F985063C44F}.Debug|Mixed Platforms.ActiveCfg = Debug
+		{24771D88-8676-4366-889D-0F985063C44F}.Debug|x86.ActiveCfg = Debug
+		{24771D88-8676-4366-889D-0F985063C44F}.Release|Any CPU.ActiveCfg = Release
+		{24771D88-8676-4366-889D-0F985063C44F}.Release|Mixed Platforms.ActiveCfg = Release
+		{24771D88-8676-4366-889D-0F985063C44F}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

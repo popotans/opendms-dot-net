@@ -78,8 +78,8 @@ namespace WindowsClient
         {
             Thread download;
 
-            _metaasset = new Common.Data.MetaAsset(_guid, MainWindow.FileSystem, MainWindow.GeneralLogger);
-            if (!_metaasset.Load(MainWindow.GeneralLogger))
+            _metaasset = new Common.Data.MetaAsset(_guid, MainWindow.FileSystem);
+            if (!_metaasset.Load())
             {
                 MessageBox.Show("The resource's meta data could not be loaded.");
                 return;
@@ -101,9 +101,9 @@ namespace WindowsClient
 
             try
             {
-                msg = new Common.Network.Message(Common.ServerSettings.Instance.ServerIp, Common.ServerSettings.Instance.ServerPort, "_settings", "metaform", Common.Network.OperationType.GET,
-                     Common.Network.DataStreamMethod.Memory, null, null, null, null, false, false, true, true, Common.ServerSettings.Instance.NetworkBufferSize,
-                     Common.ServerSettings.Instance.NetworkTimeout, MainWindow.GeneralLogger, MainWindow.NetworkLogger);
+                msg = new Common.Network.Message(Settings.Instance.ServerIp, Settings.Instance.ServerPort, "_settings", "metaform", Common.Network.OperationType.GET,
+                     Common.Network.DataStreamMethod.Memory, null, null, null, null, false, false, true, true, Settings.Instance.NetworkBufferSize,
+                     Settings.Instance.NetworkTimeout);
                 msg.Send();
             }
             catch (Exception e)

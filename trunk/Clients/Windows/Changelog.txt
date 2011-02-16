@@ -3,6 +3,10 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r12
+- Impelemented log4net as the logging system
+- Changed the method of handling settings
+
 r11
 + Added the right click context menu for tree items and the functions (Release, Lock, Unlock) thereof.
 

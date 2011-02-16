@@ -48,17 +48,14 @@ namespace HttpModule
         /// Executes the specified search on the Solr instance.
         /// </summary>
         /// <param name="queryString">The query string.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Common.Logger"/> that this instance should use to document general events.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Common.Logger"/> that this instance should use to document network events.</param>
         /// <param name="response">The Solr instance response.</param>
         /// <returns>A collection of results.</returns>
-        public List<SolrResult> Execute(string queryString, Common.Logger generalLogger, Common.Logger networkLogger,
-            out Common.NetworkPackage.ServerResponse response)
+        public List<SolrResult> Execute(string queryString, out Common.NetworkPackage.ServerResponse response)
         {
             List<SolrResult> results;
             Common.Network.Message msg = null;
             System.IO.MemoryStream ms = new System.IO.MemoryStream();
-            byte[] buffer = new byte[Common.ServerSettings.Instance.NetworkBufferSize];
+            byte[] buffer = new byte[Common.SettingsBase.Instance.NetworkBufferSize];
             int bytesRead = 0;
             XmlReader reader = null;
 
@@ -69,8 +66,7 @@ namespace HttpModule
                 msg = new Common.Network.Message(_host, _port, "solr/select", queryString, 
                     Common.Network.OperationType.GET, Common.Network.DataStreamMethod.Memory, 
                     null, null, null, null, false, true, true, true,
-                    Common.ServerSettings.Instance.NetworkBufferSize, Common.ServerSettings.Instance.NetworkTimeout, 
-                    generalLogger, networkLogger);
+                    Common.SettingsBase.Instance.NetworkBufferSize, Common.SettingsBase.Instance.NetworkTimeout);
             }
             catch (Exception)
             {

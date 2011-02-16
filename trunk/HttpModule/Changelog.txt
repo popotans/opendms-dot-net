@@ -3,6 +3,10 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r12
+- Impelemented log4net as the logging system
+- Changed the method of handling settings
+
 r11
 - Verified proper operation of the HTTP verb PUT at the specialized _lock path (Server side locking and unlocking of resources).
 - Modified the HTTP GET at the /meta path to return a MD5 and the ETag for the resource.

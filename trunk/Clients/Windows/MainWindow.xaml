@@ -19,7 +19,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:WindowsClient"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="WindowsClient.MainWindow"
-    Title="LawOffice - lo*Drive" Height="525" Width="515" x:Name="Window">
+    Title="OpenDMS.NET WindowsClient" Height="525" Width="515" x:Name="Window">
     <Grid 
 		Width="500" HorizontalAlignment="Left" Height="487" VerticalAlignment="Top">
         <Grid.RowDefinitions>

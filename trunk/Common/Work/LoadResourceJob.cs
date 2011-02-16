@@ -33,13 +33,11 @@ namespace Common.Work
         /// <param name="timeout">The timeout duration.</param>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public LoadResourceJob(IWorkRequestor requestor, ulong id, Data.FullAsset fullAsset, 
             UpdateUIDelegate actUpdateUI, uint timeout, ErrorManager errorManager,
-            FileSystem.IO fileSystem, Logger generalLogger, Logger networkLogger)
+            FileSystem.IO fileSystem)
             : base(requestor, id, fullAsset, actUpdateUI, timeout, ProgressMethodType.Determinate, 
-            errorManager, fileSystem, generalLogger, networkLogger)
+            errorManager, fileSystem)
         {
         }
 
@@ -75,7 +73,7 @@ namespace Common.Work
 
             try
             {
-                remoteEtag = _fullAsset.GetETagFromServer(this, _networkLogger);
+                remoteEtag = _fullAsset.GetETagFromServer(this);
             }
             catch (Exception e)
             {
@@ -98,7 +96,7 @@ namespace Common.Work
                 }
 
                 // Getting Meta
-                if (!_fullAsset.MetaAsset.DownloadFromServer(this, _networkLogger))
+                if (!_fullAsset.MetaAsset.DownloadFromServer(this))
                 {
                     _errorManager.AddError(ErrorMessage.JobRunFailed(null, this));
                     _currentState = State.Error;
@@ -114,14 +112,14 @@ namespace Common.Work
                 }
 
                 // Reform the DataAsset - so we have the extension from the downloaded resource
-                _fullAsset.DataAsset = new Data.DataAsset(_fullAsset.MetaAsset, _fileSystem, _generalLogger);
+                _fullAsset.DataAsset = new Data.DataAsset(_fullAsset.MetaAsset, _fileSystem);
 
                 UpdateLastAction();
 
                 _fullAsset.DataAsset.OnProgress += new Data.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
 
                 // Getting Data
-                if (!_fullAsset.DataAsset.DownloadFromServer(this, _fullAsset.MetaAsset, _networkLogger))
+                if (!_fullAsset.DataAsset.DownloadFromServer(this, _fullAsset.MetaAsset))
                 {
                     _errorManager.AddError(ErrorMessage.JobRunFailed(null, this));
                     _currentState = State.Error;
