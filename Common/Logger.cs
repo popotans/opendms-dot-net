@@ -14,7 +14,10 @@
  */
 
 using System;
-using System.IO;
+using log4net;
+using log4net.Appender;
+using log4net.Layout;
+using log4net.Repository.Hierarchy;
 
 namespace Common
 {
@@ -24,164 +27,81 @@ namespace Common
     public class Logger
     {
         /// <summary>
-        /// An enumeration of logging levels.
+        /// Gets or sets the general logger.
         /// </summary>
-        public enum LevelEnum
-        {
-            /// <summary>
-            /// Normal logging.
-            /// </summary>
-            Normal = 0,
-            /// <summary>
-            /// Log everything.
-            /// </summary>
-            Debug
-        }
-
+        /// <value>
+        /// The general logger.
+        /// </value>
+        public static ILog General { get; set; }
         /// <summary>
-        /// A reference to the <see cref="StreamWriter"/> object used to write entries.
+        /// Gets or sets the network logger.
         /// </summary>
-        private StreamWriter _writer;
+        /// <value>
+        /// The network logger.
+        /// </value>
+        public static ILog Network { get; set; }
         /// <summary>
-        /// <c>True</c> if the stream is open.
+        /// Gets or sets the security logger.
         /// </summary>
-        private bool _isOpen;
-
-        //public static Logger Instance = new Logger();
+        /// <value>
+        /// The security logger.
+        /// </value>
+        public static ILog Security { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Logger"/> class.
         /// </summary>
+        public Logger(string path)
+        {
+            log4net.Config.BasicConfigurator.Configure();
+
+            General = LogManager.GetLogger("general.log");
+            AddAppender(General, CreateRollingFileAppender(path, "general.log"));
+            SetLevel(General, "ALL");
+
+            Network = LogManager.GetLogger("network.log");
+            AddAppender(Network, CreateRollingFileAppender(path, "network.log"));
+            SetLevel(Network, "ALL");
+
+            Security = LogManager.GetLogger("security.log");
+            AddAppender(Security, CreateRollingFileAppender(path, "security.log"));
+            SetLevel(Security, "ALL");
+        }
+
+        private void SetLevel(ILog log, string levelName)
+        {
+            log4net.Repository.Hierarchy.Logger logger = (log4net.Repository.Hierarchy.Logger)log.Logger;
+            logger.Level = logger.Hierarchy.LevelMap[levelName];
+        }
+
+        private void AddAppender(ILog log, IAppender appender)
+        {
+            log4net.Repository.Hierarchy.Logger logger = (log4net.Repository.Hierarchy.Logger)log.Logger;
+            logger.AddAppender(appender);
+        }
+
+        /// <summary>
+        /// Creates a new Rolling File Appender at the specified path with the specified name.
+        /// </summary>
+        /// <param name="path">The directory path to the log file</param>
         /// <param name="logName">Name of the log.</param>
-        public Logger(string logName)
+        private IAppender CreateRollingFileAppender(string path, string logName)
         {
-            try
-            {
-                _writer = new StreamWriter(new FileStream(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\" + logName,
-                    FileMode.Append, FileAccess.Write, FileShare.Read));
-                _isOpen = true;
-            }
-            catch (Exception)
-            {
-            }
+            log4net.Appender.RollingFileAppender rfa = new log4net.Appender.RollingFileAppender();
 
-            Write(LevelEnum.Debug, "Logging started.");
-        }
+            rfa.Name = logName;
+            rfa.File = path + logName;
+            rfa.AppendToFile = true;
+            rfa.RollingStyle = log4net.Appender.RollingFileAppender.RollingMode.Size;
+            rfa.MaxSizeRollBackups = 14;
+            rfa.CountDirection = 1;
+            rfa.MaximumFileSize = "15000KB";
+            rfa.StaticLogFileName = true;
+            rfa.Layout = new log4net.Layout.PatternLayout(@"%d [%t] %-5p %c %n%m%n------------------------------------------------------------------------------------------%n");
+            rfa.ActivateOptions();
+            rfa.Threshold = log4net.Core.Level.Debug;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Logger"/> class.
-        /// </summary>
-        /// <param name="logPath">The log path.</param>
-        /// <param name="logName">Name of the log.</param>
-        public Logger(string logPath, string logName)
-        {
-            try
-            {
-                _writer = new StreamWriter(new FileStream(logPath + logName, FileMode.Append, FileAccess.Write, FileShare.Read));
-                _isOpen = true;
-            }
-            catch (Exception)
-            {
-            }
-
-            Write(LevelEnum.Debug, "Logging started.");
-        }
-
-        /// <summary>
-        /// Releases unmanaged resources and performs other cleanup operations before the
-        /// <see cref="Logger"/> is reclaimed by garbage collection.
-        /// </summary>
-        ~Logger()
-        {
-            if (_writer != null && _writer.BaseStream != null 
-                && _writer.BaseStream.CanWrite)
-                Close();
-        }
-
-        /// <summary>
-        /// Writes the specified text to the log if the logging level is met.
-        /// </summary>
-        /// <param name="level">The logging level of the text.</param>
-        /// <param name="text">The text to log.</param>
-        public void Write(LevelEnum level, string text)
-        {
-            // TODO : Make this check level.
-            if (_writer == null) return;
-
-            lock (_writer)
-            {
-                _writer.WriteLine("------------------------------------------------------------------------------------------------------------------");
-                _writer.WriteLine("Level: " + level.ToString());
-                _writer.WriteLine("Timestamp: " + DateTime.Now.ToString());
-                _writer.WriteLine("Message: " + text);
-                _writer.Flush();
-            }
-        }
-
-        /// <summary>
-        /// Closes this instance.
-        /// </summary>
-        public void Close()
-        {
-            if (_writer != null && _isOpen)
-            {
-                Write(LevelEnum.Debug, "Logging stopped.");
-                _writer.Close();
-                _writer.Dispose();
-            }
-            _isOpen = false;
-        }
-
-        /// <summary>
-        /// Converts an exception to a string representation for logging.
-        /// </summary>
-        /// <param name="ex">The exception.</param>
-        /// <returns>The string representation.</returns>
-        public static string ExceptionToString(Exception ex)
-        {
-            System.Diagnostics.StackTrace stackTrace;
-            string fileNames;
-            int lineNumber;
-            System.Reflection.MethodBase methodBase;
-            string methodName;
-            string output = "";
-            string indent = "\t";
-            Exception ie = ex;
-
-            stackTrace = new System.Diagnostics.StackTrace(ex, true);
-            fileNames = stackTrace.GetFrame((stackTrace.FrameCount - 1)).GetFileName();
-            lineNumber = stackTrace.GetFrame((stackTrace.FrameCount - 1)).GetFileLineNumber();
-            methodBase = stackTrace.GetFrame((stackTrace.FrameCount - 1)).GetMethod();
-            methodName = methodBase.Name;
-
-            output = "****** Exception Logging ******\r\n";
-            output = "Filename: " + fileNames + "\r\n" +
-                        "Line number: " + lineNumber.ToString() + "\r\n" +
-                        "Method name: " + methodName + "\r\n" +
-                        "ExceptionType: " + ex.GetType().Name + "\r\n" +
-                        "HelpLink: " + ex.HelpLink + "\r\n" +
-                        "Message: " + ex.Message + "\r\n" +
-                        "Source: " + ex.Source + "\r\n" +
-                        "TargetSite: " + ex.TargetSite + "\r\n" +
-                        "StackTrace: " + ex.StackTrace;
-
-            while (!((ie.InnerException == null)))
-            {
-                ie = ie.InnerException;
-                output =    indent + "****** Exception Logging ******\r\n" +
-                            indent + "Filename: " + fileNames + "\r\n" +
-                            indent + "Line number: " + lineNumber.ToString() + "\r\n" +
-                            indent + "Method name: " + methodName + "\r\n" +
-                            indent + "ExceptionType: " + ex.GetType().Name + "\r\n" +
-                            indent + "HelpLink: " + ex.HelpLink + "\r\n" +
-                            indent + "Message: " + ex.Message + "\r\n" +
-                            indent + "Source: " + ex.Source + "\r\n" +
-                            indent + "TargetSite: " + ex.TargetSite + "\r\n" +
-                            indent + "StackTrace: " + ex.StackTrace;
-                indent += "\t";
-            }
-
-            return output;
+            return rfa;
         }
     }
 }

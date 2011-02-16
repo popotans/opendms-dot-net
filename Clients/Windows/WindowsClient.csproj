@@ -58,6 +58,9 @@
     <StartupObject>WindowsClient.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>C:\Users\Lucas\Desktop\incubating-log4net-1.2.10\log4net-1.2.10\bin\net\2.0\debug\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -141,6 +144,7 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <None Include="app.config" />
+    <None Include="log4net.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -177,6 +181,10 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Changelog.txt" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="libs\log4net.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

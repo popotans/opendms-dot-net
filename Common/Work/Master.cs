@@ -96,24 +96,13 @@ namespace Common.Work
         /// A reference to the <see cref="FileSystem.IO"/>.
         /// </summary>
         private FileSystem.IO _fileSystem;
-        /// <summary>
-        /// A reference to the <see cref="Logger"/> that this instance should use to document general events.
-        /// </summary>
-        private Logger _generalLogger;
-        /// <summary>
-        /// A reference to the <see cref="Logger"/> that this instance should use to document network events.
-        /// </summary>
-        private Logger _networkLogger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Master"/> class.
         /// </summary>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
-        public Master(ErrorManager errorManager, FileSystem.IO fileSystem, 
-            Logger generalLogger, Logger networkLogger)
+        public Master(ErrorManager errorManager, FileSystem.IO fileSystem)
         {
             _jobQueue = new List<AssetJobBase>();
             _executingJobs = new List<AssetJobBase>();
@@ -122,8 +111,6 @@ namespace Common.Work
             _id = 1;
             _errorManager = errorManager;
             _fileSystem = fileSystem;
-            _generalLogger = generalLogger;
-            _networkLogger = networkLogger;
         }
 
         /// <summary>
@@ -146,39 +133,35 @@ namespace Common.Work
                 {
                     case JobType.GetETag:
                         job = new GetETagJob(requestor, _id++, fullAsset,
-                            actUpdateUI, timeout, _errorManager, _fileSystem, _generalLogger,
-                            _networkLogger);
+                            actUpdateUI, timeout, _errorManager, _fileSystem);
                         break;
                     case JobType.GetHead:
                         job = new GetHeadJob(requestor, _id++, fullAsset,
-                            actUpdateUI, timeout, _errorManager, _fileSystem, _generalLogger,
-                            _networkLogger);
+                            actUpdateUI, timeout, _errorManager, _fileSystem);
                         break;
                     case JobType.DownloadAsset:
                         job = new DownloadAssetJob(requestor, _id++, fullAsset, actUpdateUI, timeout, 
-                            _errorManager, _fileSystem, _generalLogger, _networkLogger);
+                            _errorManager, _fileSystem);
                         break;
                     case JobType.LoadResource:
                         job = new LoadResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout, _errorManager, 
-                            _fileSystem, _generalLogger, _networkLogger);
+                            _fileSystem);
                         break;
                     case JobType.SaveResource:
                         job = new SaveResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout,
-                            _errorManager, _fileSystem, _generalLogger, _networkLogger);
+                            _errorManager, _fileSystem);
                         break;
                     case JobType.CreateResource:
                         job = new CreateResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout,
-                            _errorManager, _fileSystem, _generalLogger, _networkLogger);
+                            _errorManager, _fileSystem);
                         break;
                     case JobType.Lock:
                         job = new LockJob(requestor, _id++, fullAsset,
-                            actUpdateUI, timeout, _errorManager, _fileSystem, _generalLogger,
-                            _networkLogger);
+                            actUpdateUI, timeout, _errorManager, _fileSystem);
                         break;
                     case JobType.Unlock:
                         job = new UnlockJob(requestor, _id++, fullAsset,
-                            actUpdateUI, timeout, _errorManager, _fileSystem, _generalLogger,
-                            _networkLogger);
+                            actUpdateUI, timeout, _errorManager, _fileSystem);
                         break;
                     default:
                         throw new Exception("Unknown job type");

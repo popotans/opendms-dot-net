@@ -35,10 +35,6 @@ namespace Common.Data
         /// </summary>
         protected FileSystem.ResourceBase _resource;
         /// <summary>
-        /// A reference to the <see cref="Logger"/> that this instance should use to document events.
-        /// </summary>
-        protected Logger _logger;
-        /// <summary>
         /// The <see cref="AssetState"/> describes the current state of the asset, actions on the asset should first check its state.
         /// </summary>
         protected AssetState _state;
@@ -69,9 +65,8 @@ namespace Common.Data
         /// <summary>
         /// Initializes a new instance of the <see cref="AssetBase"/> class.
         /// </summary>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public AssetBase(Logger logger) : 
-            this(Guid.Empty, null, logger)
+        public AssetBase() : 
+            this(Guid.Empty, null)
         {
         }
 
@@ -79,9 +74,8 @@ namespace Common.Data
         /// Initializes a new instance of the <see cref="AssetBase"/> class.
         /// </summary>
         /// <param name="assetType">The <see cref="AssetType"/> of this instance (Meta or Data).</param>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public AssetBase(AssetType assetType, Logger logger)
-            : this(Guid.Empty, assetType, logger)
+        public AssetBase(AssetType assetType)
+            : this(Guid.Empty, assetType)
         {
         }
 
@@ -90,13 +84,11 @@ namespace Common.Data
         /// </summary>
         /// <param name="guid">The Guid providing a unique reference for this Asset.</param>
         /// <param name="assetType">The <see cref="AssetType"/> of this instance (Meta or Data).</param>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public AssetBase(Guid guid, AssetType assetType, Logger logger)
+        public AssetBase(Guid guid, AssetType assetType)
         {
             _guid = guid;
             _assetType = assetType;
             _resource = null;
-            _logger = logger;
             _state = new AssetState(AssetState.Flags.None);
         }
 

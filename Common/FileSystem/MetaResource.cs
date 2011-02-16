@@ -28,9 +28,8 @@ namespace Common.FileSystem
         /// </summary>
         /// <param name="guid">A <see cref="Guid"/> providing a unique reference to the Asset.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public MetaResource(Guid guid, IO fileSystem, Logger logger)
-            : base(guid, ResourceType.Meta, ".xml", fileSystem, logger)
+        public MetaResource(Guid guid, IO fileSystem)
+            : base(guid, ResourceType.Meta, ".xml", fileSystem)
         {
         }
     }

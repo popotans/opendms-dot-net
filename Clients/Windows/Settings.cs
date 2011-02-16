@@ -15,87 +15,146 @@
 
 using System;
 using System.IO;
-using System.Xml.Serialization;
 
 namespace WindowsClient
 {
     /// <summary>
     /// Represents settings for a client.
     /// </summary>
-    [XmlRoot("Settings")]
-    public class Settings
+    public class Settings 
+        : Common.SettingsBase
     {
         /// <summary>
-        /// Gets a value indicating whether the settings file exists locally on disk.
+        /// A global instance of this class.
         /// </summary>
-        /// <value>
-        ///   <c>true</c> if the settings file exists; otherwise, <c>false</c>.
-        /// </value>
-        [XmlIgnore]
-        public bool SettingsFileExists 
-        { 
-            get 
+        public new static Settings Instance
+        {
+            get
             {
-                return File.Exists(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\Settings.xml");
+                return (Settings)Common.SettingsBase.Instance;
+            }
+            set
+            {
+                Common.SettingsBase.Instance = value;
             }
         }
 
         /// <summary>
-        /// The physical location of the root directory for the client
+        /// Gets or sets the storage location.
         /// </summary>
-        public string StorageLocation;
+        /// <value>
+        /// The storage location.
+        /// </value>
+        public string StorageLocation
+        {
+            get
+            {
+                if (ContainsKey("StorageLocation"))
+                    return (string)this["StorageLocation"];
+                else
+                    return @"C:\DataStore\";
+            }
+            set
+            {
+                if (ContainsKey("StorageLocation"))
+                    this["StorageLocation"] = value;
+                else
+                    Add("StorageLocation", value);
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Settings"/> class.
         /// </summary>
         public Settings()
+            : base()
         {
-            StorageLocation = @"C:\ClientDataStore\";
         }
 
         /// <summary>
-        /// Save settings to the file backing store
+        /// Saves this instance to disk.
         /// </summary>
-        public void Save()
+        /// <param name="fullFilepath">The full filepath where to save the file.</param>
+        public void Save(string fullFilepath)
         {
-            if (StorageLocation.EndsWith("/"))
-                StorageLocation = StorageLocation.TrimEnd('/') + Path.DirectorySeparatorChar;
-            else if(!StorageLocation.EndsWith(Path.DirectorySeparatorChar.ToString()))
-                StorageLocation += Path.DirectorySeparatorChar;
-            XmlSerializer s = new XmlSerializer(typeof(Settings));
-            TextWriter w = new StreamWriter(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\Settings.xml");
-            s.Serialize(w, this);
-            w.Close();
+            int bytesRead = 0;
+            byte[] buffer = new byte[20480];
+            MemoryStream ms = new MemoryStream();
+            FileStream fs;
+
+            try
+            {
+                ms = Serialize();
+            }
+            catch (Exception e)
+            {
+                Common.Logger.General.Error("An exception occurred while attempting to serialize the settings.", e);
+                return;
+            }
+
+            try
+            {
+                fs = new FileStream(fullFilepath, FileMode.Create, FileAccess.Write, FileShare.Read, 20480);
+            }
+            catch (Exception e)
+            {
+                Common.Logger.General.Error("An exception occurred while accessing the settings file on disk.", e);
+                return;
+            }
+
+            try
+            {
+                while ((bytesRead = ms.Read(buffer, 0, buffer.Length)) > 0)
+                    fs.Write(buffer, 0, bytesRead);
+            }
+            catch (Exception e)
+            {
+                fs.Close();
+                fs.Dispose();
+                Common.Logger.General.Error("An exception occurred while writting to the settings file.", e);
+                return;
+            }
+
+
+            fs.Close();
+            fs.Dispose();
         }
 
         /// <summary>
-        /// Load settings from the file backing store
+        /// Loads a <see cref="Settings"/> from the specified relative filepath.
         /// </summary>
-        /// <returns>An instantiated instance.</returns>
-        public static Settings Load()
+        /// <param name="fullFilepath">The full filepath where to save the file.</param>
+        /// <returns>A <see cref="Settings"/>.</returns>
+        public static Settings Load(string fullFilepath)
         {
-            Settings settings = new Settings();
-            string filepath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\Settings.xml";
-            
-            if (File.Exists(filepath))
-            {
-                XmlSerializer s = new XmlSerializer(typeof(Settings));
-                TextReader r = new StreamReader(filepath);
-                settings = (Settings)s.Deserialize(r);
-                r.Close();
+            Settings sb = new Settings();
+            FileStream s = null;
 
-                if (settings.StorageLocation.EndsWith("/"))
-                    settings.StorageLocation = settings.StorageLocation.TrimEnd('/') + Path.DirectorySeparatorChar;
-                else if (!settings.StorageLocation.EndsWith(Path.DirectorySeparatorChar.ToString()))
-                    settings.StorageLocation += Path.DirectorySeparatorChar;
-            }
-            else
+            try
             {
-                settings = new Settings();
-                //settings.Save();
+                s = new FileStream(fullFilepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
             }
 
-            return settings;
+            try
+            {
+                sb.Deserialize(s);
+            }
+            catch (Exception e)
+            {
+                s.Close();
+                s.Dispose();
+                Common.Logger.General.Error("An exception occurred while attempting to deserialize the resource.", e);
+                return null;
+            }
+
+            s.Close();
+            s.Dispose();
+
+            return sb;
         }
     }
 }

@@ -66,14 +66,6 @@ namespace Common.Network
         /// The <see cref="Guid"/> indentifying the unique asset on which this <see cref="Message"/> operates.
         /// </summary>
         private Guid _guid;
-        /// <summary>
-        /// A reference to the <see cref="Logger"/> that this instance should use to document events.
-        /// </summary>
-        private Logger _generalLogger;
-        /// <summary>
-        /// A reference to the <see cref="Logger"/> that this instance should use to document network events.
-        /// </summary>
-        private Logger _networkLogger;
 
         /// <summary>
         /// Gets the <see cref="State"/> of this <see cref="Message"/>.
@@ -107,18 +99,14 @@ namespace Common.Network
         /// <param name="useGzip">if set to <c>true</c> the host will be request to respond using gzip.</param>
         /// <param name="bufferSize">Size of the buffer in bytes.</param>
         /// <param name="timeoutDuration">Duration of time that must pass before a timeout occurrs.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public Message(string host, int port, string virtualPath, Guid guid,
                        Common.Data.AssetType assetType, OperationType operation,
                        DataStreamMethod dataStreamMethod, Stream requestStream,
                        string contentType, long? contentLength, string encodedCredentials,
                        bool keepAlive, bool use100Continue, bool useDeflate, bool useGzip,
-                       int bufferSize, int timeoutDuration, Logger generalLogger, Logger networkLogger)
+                       int bufferSize, int timeoutDuration)
         {
             _guid = guid;
-            _generalLogger = generalLogger;
-            _networkLogger = networkLogger;
 
             if (guid == null || guid == Guid.Empty)
             {
@@ -126,19 +114,12 @@ namespace Common.Network
                      contentType, contentLength, encodedCredentials, keepAlive, use100Continue,
                      useDeflate, useGzip, bufferSize, timeoutDuration);
             }
-            else// if (Data.AssetType.IsNullOrUnknown(assetType))
+            else
             {
                 Init(host, port, virtualPath, guid.ToString("N"), operation, dataStreamMethod, 
                      requestStream, contentType, contentLength, encodedCredentials, keepAlive, 
                      use100Continue, useDeflate, useGzip, bufferSize, timeoutDuration);
             }
-            //else
-            //{
-            //    Init(host, port, virtualPath, guid.ToString("N") + assetType.ToString(),
-            //         operation, dataStreamMethod, requestStream, contentType, contentLength,
-            //         encodedCredentials, keepAlive, use100Continue, useDeflate, useGzip,
-            //         bufferSize, timeoutDuration);
-            //}
         }
 
         /// <summary>
@@ -160,18 +141,12 @@ namespace Common.Network
         /// <param name="useGzip">if set to <c>true</c> the host will be request to respond using gzip.</param>
         /// <param name="bufferSize">Size of the buffer in bytes.</param>
         /// <param name="timeoutDuration">Duration of time that must pass before a timeout occurrs.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public Message(string host, int port, string virtualPath, string filename,
                        OperationType operation, DataStreamMethod dataStreamMethod, 
                        Stream requestStream, string contentType, long? contentLength, 
                        string encodedCredentials, bool keepAlive, bool use100Continue,
-                       bool useDeflate, bool useGzip, int bufferSize, int timeoutDuration, 
-                       Logger generalLogger, Logger networkLogger)
+                       bool useDeflate, bool useGzip, int bufferSize, int timeoutDuration)
         {
-            _generalLogger = generalLogger;
-            _networkLogger = networkLogger;
-
             Init(host, port, virtualPath, filename, operation, dataStreamMethod, requestStream, 
                  contentType, contentLength, encodedCredentials, keepAlive, use100Continue, 
                  useDeflate, useGzip, bufferSize, timeoutDuration);
@@ -222,24 +197,15 @@ namespace Common.Network
             }
             catch (Exception e)
             {
-                if (_generalLogger != null)
-                {
-                    _generalLogger.Write(Logger.LevelEnum.Normal,
-                        "Failed to create the HttpWebRequest object.\r\n" + 
-                        Logger.ExceptionToString(e));
-                }
+                Logger.Network.Error("Failed to create the HttpWebRequest object.", e);
                 throw new NetworkException(_state, "Unable to create the HttpWebRequest", e);
             }
 
             if (httpWebRequest == null)
                 throw new NetworkException(_state, "Unable to create the HttpWebRequest");
 
-
-            if (_networkLogger != null)
-            {
-                _networkLogger.Write(Logger.LevelEnum.Debug, "HttpWebRequest Created.");
-            }
-
+            Logger.Network.Debug("HttpWebRequest Created.");
+            
             httpWebRequest.Method = operation.ToString();
             httpWebRequest.ContentType = contentType;
             httpWebRequest.KeepAlive = keepAlive;
@@ -279,11 +245,7 @@ namespace Common.Network
                 //httpWebRequest.AllowWriteStreamBuffering = true;
             }
 
-            if (_networkLogger != null)
-            {
-                _networkLogger.Write(Logger.LevelEnum.Debug, "Network Message Initialized:\r\n" +
-                    _state.GetLogString());
-            }
+            Logger.Network.Debug("Network Message Initialized: " + _state.GetLogString());
         }
 
         /// <summary>
@@ -308,17 +270,11 @@ namespace Common.Network
             try { outStream = _state.Request.GetRequestStream(); }
             catch (Exception e)
             {
-                if(_networkLogger != null)
-                    _networkLogger.Write(Logger.LevelEnum.Normal,
-                        "An exception occurred while calling GetRequestStream()\r\n" +
-                        Logger.ExceptionToString(e));
-
+                Logger.Network.Error("An exception occurred while calling GetRequestStream().", e);
                 throw new NetworkException(_state, "Unable to get the request stream", e);
             }
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Logger.LevelEnum.Debug, 
-                    "GetNetorkStreamOut() successfully obtained the request stream.");
+            Logger.Network.Debug("GetNetorkStreamOut() successfully obtained the request stream.");
 
             return outStream;
         }
@@ -335,17 +291,11 @@ namespace Common.Network
             }
             catch (Exception e)
             {
-                if (_networkLogger != null)
-                    _networkLogger.Write(Logger.LevelEnum.Normal,
-                        "An exception occurred while calling GetResponse()\r\n" +
-                        Logger.ExceptionToString(e));
-
+                Logger.Network.Error("An exception occurred while calling GetResponse().", e);
                 throw new NetworkException(_state, "Unable to get the server response", e);
             }
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Logger.LevelEnum.Debug,
-                    "GetNetworkStreamIn() successfully obtained the HttpWebResponse.");
+            Logger.Network.Error("GetNetworkStreamIn() successfully obtained the HttpWebResponse.");
 
             try
             {
@@ -357,27 +307,17 @@ namespace Common.Network
                     if (OnTimeout != null) OnTimeout(_state);
                 else
                 {
-                    if (_networkLogger != null)
-                        _networkLogger.Write(Logger.LevelEnum.Normal,
-                            "An exception occurred while calling GetResponseStream()\r\n" +
-                            Logger.ExceptionToString(e));
-
+                    Logger.Network.Error("An exception occurred while calling GetResponseStream().", e);
                     throw new NetworkException(_state, "Unable to get the response stream", e);
                 }
 			}
             catch (Exception e)
             {
-                if (_networkLogger != null)
-                    _networkLogger.Write(Logger.LevelEnum.Normal,
-                        "An exception occurred while calling GetResponseStream()\r\n" +
-                        Logger.ExceptionToString(e));
-
+                Logger.Network.Error("An exception occurred while calling GetResponseStream().", e);
                 throw new NetworkException(_state, "Unable to get the response stream", e);
             }
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Logger.LevelEnum.Debug,
-                    "GetNetworkStreamIn() successfully obtained the response stream.");
+            Logger.Network.Debug("GetNetworkStreamIn() successfully obtained the response stream.");
 
             return _state.Stream;
         }
@@ -408,9 +348,7 @@ namespace Common.Network
                 {
                     buffer = new byte[_state.Stream.Length];
 
-                    if (_networkLogger != null)
-                        _networkLogger.Write(Logger.LevelEnum.Debug, 
-                            "Starting writing the package to the network stream as one block.");
+                    Logger.Network.Debug("Starting writing the package to the network stream as one block.");
 
                     if (_state.StreamIsBinary)
                     {
@@ -428,10 +366,8 @@ namespace Common.Network
                         outStream.Close();
                         _state.Stream.Close();
                     }
-
-                    if (_networkLogger != null)
-                        _networkLogger.Write(Logger.LevelEnum.Debug,
-                            "Finished writing the package to the network stream as one block.");
+                    
+                    Logger.Network.Debug("Finished writing the package to the network stream as one block.");
 
                     if (OnUploadProgress != null) OnUploadProgress(_state, 1, buffer.Length, buffer.Length);
                 }
@@ -439,10 +375,8 @@ namespace Common.Network
                 {
                     buffer = new byte[_state.BufferSize];
                     totalBytes = _state.Stream.Length;
-
-                    if (_networkLogger != null)
-                        _networkLogger.Write(Logger.LevelEnum.Debug,
-                            "Starting writing the package to the network stream in multiple blocks.");
+                    
+                    Logger.Network.Debug("Starting writing the package to the network stream in multiple blocks.");
 
                     if (_state.StreamIsBinary)
                     {
@@ -469,9 +403,7 @@ namespace Common.Network
                         _state.Stream.Close();
                     }
 
-                    if (_networkLogger != null)
-                        _networkLogger.Write(Logger.LevelEnum.Debug,
-                            "Finished writing the package to the network stream in multiple blocks.");
+                    Logger.Network.Debug("Finished writing the package to the network stream in multiple blocks.");
                 }
 
                 _state.Stream.Dispose();

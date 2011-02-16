@@ -52,12 +52,9 @@ namespace HttpModule
         /// <summary>
         /// Executes the search.
         /// </summary>
-        /// <param name="generalLogger">A reference to the <see cref="Common.Logger"/> that this instance should use to document general events.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Common.Logger"/> that this instance should use to document network events.</param>
         /// <param name="response">The response from the Solr server.</param>
         /// <returns>The results of the search.</returns>
-        public Common.NetworkPackage.SearchResult Execute(Common.Logger generalLogger, Common.Logger networkLogger, 
-            out Common.NetworkPackage.ServerResponse response)
+        public Common.NetworkPackage.SearchResult Execute(out Common.NetworkPackage.ServerResponse response)
         {
             string errorMessage;
             Common.Data.MetaAsset ma;
@@ -65,10 +62,10 @@ namespace HttpModule
             Common.NetworkPackage.SearchResult retVal = new Common.NetworkPackage.SearchResult();
             List<SolrResult> results;
 
-            SolrSearch search = new SolrSearch(Settings.Instance.SearchHost.Address.ToString(),
-                Settings.Instance.SearchHost.Port);
+            SolrSearch search = new SolrSearch(Settings.Instance.SearchHostIP,
+                Settings.Instance.SearchHostPort);
 
-            results = search.Execute(_queryString, generalLogger, networkLogger, out response);
+            results = search.Execute(_queryString, out response);
 
             if (response != null)
                 return null;

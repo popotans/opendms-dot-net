@@ -34,13 +34,11 @@ namespace Common.Work
         /// <param name="timeout">The timeout duration.</param>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public SaveResourceJob(IWorkRequestor requestor, ulong id, Data.FullAsset fullAsset,
             UpdateUIDelegate actUpdateUI, uint timeout, ErrorManager errorManager,
-            FileSystem.IO fileSystem, Logger generalLogger, Logger networkLogger)
+            FileSystem.IO fileSystem)
             : base(requestor, id, fullAsset, actUpdateUI, timeout, ProgressMethodType.Determinate,
-            errorManager, fileSystem, generalLogger, networkLogger)
+            errorManager, fileSystem)
         {
         }
 
@@ -74,7 +72,7 @@ namespace Common.Work
 
             _fullAsset.DataAsset.OnProgress += new Data.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
 
-            if (!_fullAsset.SaveToServer(this, _networkLogger))
+            if (!_fullAsset.SaveToServer(this))
             {
                 _errorManager.AddError(ErrorMessage.SaveResourceFailed(null, this, 
                     "Please review the log file for details", "Review prior log entries for details."));
@@ -96,7 +94,7 @@ namespace Common.Work
             try
             {
                 // Downloads it
-                _fullAsset.MetaAsset.DownloadFromServer(this, _networkLogger);
+                _fullAsset.MetaAsset.DownloadFromServer(this);
             }
             catch (Exception e)
             {

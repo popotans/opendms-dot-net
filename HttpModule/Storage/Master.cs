@@ -30,20 +30,14 @@ namespace HttpModule.Storage
         /// A reference to <see cref="Common.FileSystem.IO"/> allowing file system access.
         /// </summary>
         private Common.FileSystem.IO _fileSystem;
-        /// <summary>
-        /// A reference to the <see cref="Common.Logger"/> that this instance should use to document events.
-        /// </summary>
-        private Common.Logger _generalLogger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Master"/> class.
         /// </summary>
         /// <param name="fileSystem">A reference to <see cref="Common.FileSystem.IO"/> allowing file system access.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Common.Logger"/> that this instance should use to document events.</param>
-        public Master(Common.FileSystem.IO fileSystem, Common.Logger generalLogger)
+        public Master(Common.FileSystem.IO fileSystem)
         {
             _fileSystem = fileSystem;
-            _generalLogger = generalLogger;
         }
 
         /// <summary>
@@ -62,15 +56,14 @@ namespace HttpModule.Storage
         public ResultType LoadMetaLite(Guid guid, out MetaAsset ma, out string errorMessage)
         {
             errorMessage = null;
-            ma = new MetaAsset(guid, _fileSystem, _generalLogger);
+            ma = new MetaAsset(guid, _fileSystem);
 
             if (!ma.ResourceExistsOnFilesystem())
                 return ResultType.NotFound;
 
-            if (!ma.Load(_generalLogger))
+            if (!ma.Load())
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal, "Failed to load the meta asset.");
+                Common.Logger.General.Error("Failed to load the meta asset.");
                 errorMessage = "The meta asset could not be loaded.";
                 return ResultType.IOError;
             }
@@ -264,7 +257,7 @@ namespace HttpModule.Storage
             if ((result = LoadMeta(guid, !readOnly, true, requestingUser, false, out ma, out errorMessage)) != ResultType.Success)
                 return result;
 
-            da = new DataAsset(ma, _fileSystem, _generalLogger);
+            da = new DataAsset(ma, _fileSystem);
 
             iostream = da.GetReadStream();
 
@@ -299,10 +292,10 @@ namespace HttpModule.Storage
             result = LoadMeta(ma.Guid, false, true, requestingUser, false, out currentMa, out errorMessage);
 
             // Get DA
-            currentDa = new DataAsset(currentMa, _fileSystem, _generalLogger);
+            currentDa = new DataAsset(currentMa, _fileSystem);
 
             // Get Version
-            currentVersion = new Version(new FullAsset(currentMa, currentDa), _generalLogger);
+            currentVersion = new Version(new FullAsset(currentMa, currentDa));
 
             if (result == ResultType.NotFound)
             {
@@ -378,10 +371,10 @@ namespace HttpModule.Storage
             if ((result = LoadMeta(guid, true, true, requestingUser, false, out currentMa, out errorMessage)) != ResultType.Success)
                 return result;
 
-            da = new DataAsset(currentMa, _fileSystem, _generalLogger);
+            da = new DataAsset(currentMa, _fileSystem);
 
             // Get Version
-            currentVersion = new Version(new FullAsset(currentMa, da), _generalLogger);
+            currentVersion = new Version(new FullAsset(currentMa, da));
 
             if (currentMa.DataVersion >= 1)
             {
@@ -517,7 +510,7 @@ namespace HttpModule.Storage
 
             // TODO : setup user checking
 
-            if (!searchForm.ReadFromFile(relativeFilepath, _fileSystem, _generalLogger))
+            if (!searchForm.ReadFromFile(relativeFilepath, _fileSystem))
             {
                 errorMessage = "Unable to read from the saved search form.";
                 return ResultType.Failure;
@@ -544,7 +537,7 @@ namespace HttpModule.Storage
 
             try
             {
-                if (!metaForm.ReadFromFile(relativeFilepath, _fileSystem, _generalLogger))
+                if (!metaForm.ReadFromFile(relativeFilepath, _fileSystem))
                 {
                     errorMessage = "Unable to read from the saved search form.";
                     return ResultType.Failure;

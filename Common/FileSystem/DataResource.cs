@@ -29,9 +29,8 @@ namespace Common.FileSystem
         /// <param name="guid">A <see cref="Guid"/> providing a unique reference to the Asset.</param>
         /// <param name="extension">The extension of the resource (e.g., .doc, .xsl, .odt)</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public DataResource(Guid guid, string extension, IO fileSystem, Logger logger)
-            : base(guid, ResourceType.Data, extension, fileSystem, logger)
+        public DataResource(Guid guid, string extension, IO fileSystem)
+            : base(guid, ResourceType.Data, extension, fileSystem)
         {
         }
     }

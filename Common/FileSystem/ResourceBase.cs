@@ -28,10 +28,6 @@ namespace Common.FileSystem
         /// </summary>
         private IO _fileSystem;
         /// <summary>
-        /// A reference to the <see cref="Logger"/> that this instance should use to document events.
-        /// </summary>
-        private Logger _logger;
-        /// <summary>
         /// A <see cref="Guid"/> that provides a unique reference to a Resource.
         /// </summary>
         private Guid _guid;
@@ -128,14 +124,12 @@ namespace Common.FileSystem
         /// <param name="type">The <see cref="ResourceType"/> of this instance (Meta or Data).</param>
         /// <param name="extension">The extension of the file on the file system.</param>
         /// <param name="fileSystem">A reference to a <see cref="IO"/> object.</param>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public ResourceBase(Guid guid, ResourceType type, string extension, IO fileSystem, Logger logger)
+        public ResourceBase(Guid guid, ResourceType type, string extension, IO fileSystem)
         {
             if(type == ResourceType.Unknown)
                 throw new ArgumentException("Argument type must be Meta or Data.");
 
             _fileSystem = fileSystem;
-            _logger = logger;
             _guid = guid;
             _type = type;
             _stream = null;
@@ -240,16 +234,12 @@ namespace Common.FileSystem
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "Failed to open the resource.\r\n" +
-                        Logger.ExceptionToString(e));
+                Logger.General.Error("Failed to open the resource.", e);
             }
 
             if (_stream == null)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "Failed to open the resource.\r\n");
-
+                Logger.General.Error("Failed to open the resource.");
                 return _stream;
             }
 
@@ -282,16 +272,12 @@ namespace Common.FileSystem
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "Failed to open the resource.\r\n" +
-                        Logger.ExceptionToString(e));
+                Logger.General.Error("Failed to open the resource.", e);
             }
 
             if (_stream == null)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "Failed to open the resource.\r\n");
-
+                Logger.General.Error("Failed to open the resource.");
                 return _stream;
             }
 

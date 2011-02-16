@@ -65,9 +65,8 @@ namespace Common.Data
         /// <summary>
         /// Initializes a new instance of the <see cref="DataAsset"/> class.
         /// </summary>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public DataAsset(Logger logger)
-            : base(logger)
+        public DataAsset()
+            : base()
         {
             BytesComplete = BytesTotal = 0;
         }
@@ -77,9 +76,8 @@ namespace Common.Data
         /// </summary>
         /// <param name="ma">The <see cref="MetaAsset"/> that is paired with this <see cref="DataAsset"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public DataAsset(MetaAsset ma, FileSystem.IO fileSystem, Logger logger)
-            : this(ma.Guid, ma.Extension, fileSystem, logger)
+        public DataAsset(MetaAsset ma, FileSystem.IO fileSystem)
+            : this(ma.Guid, ma.Extension, fileSystem)
         {
         }
 
@@ -89,11 +87,10 @@ namespace Common.Data
         /// <param name="guid">A <see cref="Guid"/> providing a unique reference to the Asset.</param>
         /// <param name="extension">The extension of the resource (e.g., .doc, .xsl, .odt)</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/> instance.</param>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public DataAsset(Guid guid, string extension, FileSystem.IO fileSystem, Logger logger)
-            : base(guid, AssetType.Data, logger)
+        public DataAsset(Guid guid, string extension, FileSystem.IO fileSystem)
+            : base(guid, AssetType.Data)
         {
-            _resource = new FileSystem.DataResource(guid, extension, fileSystem, logger);
+            _resource = new FileSystem.DataResource(guid, extension, fileSystem);
             BytesComplete = BytesTotal = 0;
             _state = new AssetState() { State = AssetState.Flags.CanTransfer };
         }
@@ -140,7 +137,6 @@ namespace Common.Data
         /// </summary>
         /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> which has called this method.</param>
         /// <param name="ma">A reference to the <see cref="MetaAsset"/> that corresponds to this <see cref="DataAsset"/>.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that is used to document network events.</param>
         /// <returns><c>True</c> if successful, <c>false</c> otherwise.</returns>
         /// <example>
         /// This sample shows how to call the <see cref="DownloadFromServer"/> method.
@@ -149,7 +145,7 @@ namespace Common.Data
         /// // is instantiated as a <see cref="MetaAsset"/>.
         /// void A()
         /// {
-        ///     if (!_dataAsset.DownloadFromServer(job, _metaAsset, networkLogger))
+        ///     if (!_dataAsset.DownloadFromServer(job, _metaAsset))
         ///     {
         ///         job.SetErrorFlag();
         ///         return;
@@ -157,14 +153,14 @@ namespace Common.Data
         /// }       
         /// </code>
         /// </example>
-        public bool DownloadFromServer(Work.AssetJobBase job, MetaAsset ma, Logger networkLogger)
+        public bool DownloadFromServer(Work.AssetJobBase job, MetaAsset ma)
         {
             if (!_state.HasFlag(AssetState.Flags.CanTransfer))
                 throw new InvalidAssetStateException(_state, "Cannot download");
 
             IOStream iostream;
             Network.Message msg;
-            byte[] buffer = new byte[ServerSettings.Instance.NetworkBufferSize];
+            byte[] buffer = new byte[SettingsBase.Instance.NetworkBufferSize];
             int bytesRead = 0;
             int percentDone = 0;
 
@@ -172,16 +168,14 @@ namespace Common.Data
             {
                 // Resolved : why is this using the Memory DataStreamMethod?
                 // Reason: this specifies how the request is sent to the server, nothing to do with response
-                msg = new Network.Message(ServerSettings.Instance.ServerIp, ServerSettings.Instance.ServerPort,
+                msg = new Network.Message(SettingsBase.Instance.ServerIp, SettingsBase.Instance.ServerPort,
                     _assetType.VirtualPath, Guid, _assetType, Network.OperationType.GET,
                     Network.DataStreamMethod.Memory, null, null, null, null, false, false, true, true,
-                    ServerSettings.Instance.NetworkBufferSize, ServerSettings.Instance.NetworkTimeout,
-                    _logger, networkLogger);
+                    SettingsBase.Instance.NetworkBufferSize, SettingsBase.Instance.NetworkTimeout);
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, Logger.ExceptionToString(e));
+                Logger.Network.Error("An exception occurred while creating the network message.", e);
                 throw e;
             }
 
@@ -191,8 +185,7 @@ namespace Common.Data
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, Logger.ExceptionToString(e));
+                Logger.Network.Error("An exception occurred while sending the network message.", e);
                 throw e;
             }
 
@@ -213,9 +206,7 @@ namespace Common.Data
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while " +
-                        "attempting to open a resource.\r\n" + Logger.ExceptionToString(e));
+                Logger.General.Error("An exception occurred while attempting to open a resource.", e);
                 throw e;
             }
 
@@ -266,16 +257,15 @@ namespace Common.Data
         /// </summary>
         /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> which has called this method.</param>
         /// <param name="ma">A reference to the <see cref="MetaAsset"/> that corresponds to this <see cref="DataAsset"/>.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that is used to document network events.</param>
         /// <returns>A <see cref="NetworkPackage.ServerResponse"/> representing the result of the save.</returns>
         /// <example>
         /// This sample shows how to call the <see cref="SaveToServer"/> method.
         /// <code>
-        /// // This code assumes _dataAsset is instantiated as a <see cref="DataAsset"/>, the job and networkLogger
+        /// // This code assumes _dataAsset is instantiated as a <see cref="DataAsset"/>, and the job
         /// // are passed as arguments in this example.
-        /// void A(Work.AssetJobBase job, Logger networkLogger)
+        /// void A(Work.AssetJobBase job)
         /// {
-        ///     NetworkPackage.ServerResponse sr = _dataAsset.SaveToServer(job, networkLogger);
+        ///     NetworkPackage.ServerResponse sr = _dataAsset.SaveToServer(job);
         ///     
         ///     if (!(bool)sr["Pass"])
         ///     {
@@ -285,8 +275,7 @@ namespace Common.Data
         /// }
         /// </code>
         /// </example>
-        public NetworkPackage.ServerResponse SaveToServer(Work.AssetJobBase job, MetaAsset ma,
-            Logger networkLogger)
+        public NetworkPackage.ServerResponse SaveToServer(Work.AssetJobBase job, MetaAsset ma)
         {
             if (!_state.HasFlag(AssetState.Flags.CanTransfer))
                 throw new InvalidAssetStateException(_state, "Cannot download");
@@ -301,9 +290,7 @@ namespace Common.Data
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while " +
-                        "attempting to open a resource.\r\n" + Logger.ExceptionToString(e));
+                Logger.General.Error("An exception occurred while attempting to open a resource.", e);
                 throw e;
             }
 
@@ -316,16 +303,15 @@ namespace Common.Data
 
             try
             {
-                msg = new Network.Message(ServerSettings.Instance.ServerIp, ServerSettings.Instance.ServerPort,
+                msg = new Network.Message(SettingsBase.Instance.ServerIp, SettingsBase.Instance.ServerPort,
                     _assetType.VirtualPath, _guid, _assetType, Network.OperationType.PUT,
                     Network.DataStreamMethod.Stream, iostream.Stream, null, iostream.Stream.Length,
-                    null, false, false, false, false, ServerSettings.Instance.NetworkBufferSize,
-                    ServerSettings.Instance.NetworkTimeout, _logger, networkLogger);
+                    null, false, false, false, false, SettingsBase.Instance.NetworkBufferSize,
+                    SettingsBase.Instance.NetworkTimeout);
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, Logger.ExceptionToString(e));
+                Logger.Network.Error("An exception occurred while creating the network message.", e);
                 throw e;
             }
 
@@ -342,9 +328,7 @@ namespace Common.Data
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while " +
-                        "attempting to send the asset to the server.\r\n" + Logger.ExceptionToString(e));
+                Logger.Network.Error("An exception occurred while sending the network message.", e);
                 throw e;
             }
 
@@ -358,9 +342,7 @@ namespace Common.Data
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while " +
-                        "attempting to deserialize the result.\r\n" + Logger.ExceptionToString(e));
+                Logger.Network.Error("An exception occurred while calling NetworkPackage.ServerResponse.Deserialize().", e);
                 throw e;
             }
 
@@ -397,9 +379,7 @@ namespace Common.Data
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while " +
-                        "attempting to open a resource.\r\n" + Logger.ExceptionToString(e));
+                Logger.General.Error("An exception occurred while attempting to open a resource.", e);
                 throw e;
             }
 
@@ -436,9 +416,7 @@ namespace Common.Data
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while " +
-                        "attempting to open a resource.\r\n" + Logger.ExceptionToString(e));
+                Logger.General.Error("An exception occurred while attempting to open a resource.", e);
                 throw e;
             }
 

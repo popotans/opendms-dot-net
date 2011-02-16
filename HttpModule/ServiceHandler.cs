@@ -36,25 +36,39 @@ namespace HttpModule
         /// </summary>
         private Common.FileSystem.IO _fileSystem;
         /// <summary>
-        /// A reference to the <see cref="Common.Logger"/> that this instance should use to document general events.
+        /// A reference to a global set of loggers to document events.
         /// </summary>
-        private Common.Logger _generalLogger;
-        /// <summary>
-        /// A reference to the <see cref="Common.Logger"/> that this instance should use to document network events.
-        /// </summary>
-        private Common.Logger _networkLogger;
+        public static Common.Logger _logger;
+
+        
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceHandler"/> class.
         /// </summary>
         public ServiceHandler()
         {
-            if(!System.IO.Directory.Exists(@"C:\DataStore\logs"))
-                System.IO.Directory.CreateDirectory(@"C:\DataStore\logs");
-            _generalLogger = new Common.Logger(@"C:\DataStore\logs\", "GeneralLog.txt");
-            _networkLogger = new Common.Logger(@"C:\DataStore\logs\", "NetworkLog.txt");
-            _fileSystem = new Common.FileSystem.IO(@"C:\DataStore\", _generalLogger);
-            _storage = new Storage.Master(_fileSystem, _generalLogger);
+            // File System must come first
+            _fileSystem = new Common.FileSystem.IO(@"C:\DataStore\");
+
+            // Settings should come second
+            if (!_fileSystem.DirectoryExists("settings"))
+                _fileSystem.CreateDirectoryPath("settings");
+            Settings.Instance = Settings.Load(@"settings\Settings.xml", _fileSystem);
+            if (Settings.Instance == null)
+            {
+                Settings.Instance = new Settings();
+                Settings.Instance.SearchHostIP = "127.0.0.1";
+                Settings.Instance.Save(@"settings\Settings.xml", _fileSystem);
+            }
+
+            // Third should be logging facilities
+            if (!_fileSystem.DirectoryExists("logs"))
+                _fileSystem.CreateDirectoryPath("logs");
+
+            _logger = new Common.Logger(@"C:\DataStore\logs\");
+ 
+            // Finally, storage facilities should be created
+            _storage = new Storage.Master(_fileSystem);
         }
 
 
@@ -134,21 +148,17 @@ namespace HttpModule
             Dictionary<string, string> userInfo = ParseUserInfo(app);
             Dictionary<string, string> queryString = ParseQueryString(app);
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Request for search form was received from user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Request for search form was received from user '" + userInfo["username"] + "'.");
 
             if (_storage.GetSearchForm(userInfo["username"], out searchForm, out errorMessage) != Storage.ResultType.Success)
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal, 
-                        "An error occurred while attempting to load the search form to respond to the request from user '" + userInfo["username"] + "'.\r\n" + errorMessage);
+                Common.Logger.General.Error("An error occurred while attempting to load the search form to respond to the request from user '" + userInfo["username"] + "'.\r\n" + errorMessage);
 
                 resp = new ServerResponse(false, ServerResponse.ErrorCode.None, "Failed to load the search form template.");
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Search form error message has been sent to user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("Search form error message has been sent to user '" + userInfo["username"] + "'.");
 
                 return;
             }
@@ -156,8 +166,7 @@ namespace HttpModule
             searchForm.Serialize().WriteTo(app.Response.OutputStream);
             app.CompleteRequest();
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Search form was sent to user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Search form was sent to user '" + userInfo["username"] + "'.");
         }
 
         /// <summary>
@@ -174,24 +183,20 @@ namespace HttpModule
             Dictionary<string, string> userInfo = ParseUserInfo(app);
             Dictionary<string, string> queryString = ParseQueryString(app);
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Request for meta property form was received from user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Request for meta property form was received from user '" + userInfo["username"] + "'.");
 
             if (_storage.GetMetaForm(userInfo["username"], out metaForm, out errorMessage) != Storage.ResultType.Success)
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal,
-                        "The MetaPropertiesForm.xml could not be found, the default form has been saved locally to be used in the future, furthermore it was sent as a response to the request from user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("The MetaPropertiesForm.xml could not be found, the default form has been saved locally to be used in the future, furthermore it was sent as a response to the request from user '" + userInfo["username"] + "'.");
 
                 metaForm = MetaForm.GetDefault();
-                metaForm.SaveToFile("settings\\metapropertiesform.xml", _fileSystem, _generalLogger, false);
+                metaForm.SaveToFile("settings\\metapropertiesform.xml", _fileSystem, false);
             }
 
             metaForm.Serialize().WriteTo(app.Response.OutputStream);
             app.CompleteRequest();
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Meta properties form was sent to user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Meta properties form was sent to user '" + userInfo["username"] + "'.");
         }
 
         /// <summary>
@@ -207,12 +212,11 @@ namespace HttpModule
             ServerResponse response;
             Dictionary<string, string> userInfo = ParseUserInfo(app);
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Search request received from user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Search request received from user '" + userInfo["username"] + "'.");
 
             search = new HttpModule.Search(app.Request.Url.Query, userInfo["username"], _storage);
 
-            result = search.Execute(_generalLogger, _networkLogger, out response);
+            result = search.Execute(out response);
 
             if (response != null)
             {
@@ -220,9 +224,7 @@ namespace HttpModule
                 response.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug,
-                        "Error response for search request has been sent to user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("Error response for search request has been sent to user '" + userInfo["username"] + "'.");
 
                 return;
             }
@@ -230,9 +232,7 @@ namespace HttpModule
             result.Serialize().WriteTo(app.Response.OutputStream);
             app.CompleteRequest();
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug,
-                    "Response for search request has been sent to user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Response for search request has been sent to user '" + userInfo["username"] + "'.");
         }
 
         /// <summary>
@@ -244,7 +244,6 @@ namespace HttpModule
         [ServicePoint("/meta", ServicePointAttribute.VerbType.HEAD)]
         public void Head(HttpApplication app)
         {
-            Common.Logger.LevelEnum logLevel;
             string errorMessage;
             ServerResponse resp;
             Common.Data.MetaAsset ma;
@@ -253,15 +252,13 @@ namespace HttpModule
             Dictionary<string, string> userInfo = ParseUserInfo(app);
             Dictionary<string, string> queryString = ParseQueryString(app);
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Head request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Head request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
 
             result = _storage.GetMeta(guid, userInfo["username"], true, out ma, out errorMessage);
 
             // If unsuccessful and not found -> kick it out
             if (result != Storage.ResultType.Success && result != Storage.ResultType.NotFound)
             {
-                logLevel = Common.Logger.LevelEnum.Normal;
                 switch (result)
                 {
                     case Storage.ResultType.IOError:
@@ -274,7 +271,6 @@ namespace HttpModule
                         resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, errorMessage);
                         break;
                     case Storage.ResultType.ResourceIsLocked:
-                        logLevel = Common.Logger.LevelEnum.Debug;
                         resp = new ServerResponse(false, ServerResponse.ErrorCode.ReasourceIsLocked, errorMessage);
                         break;
                     default:
@@ -282,16 +278,12 @@ namespace HttpModule
                         break;
                 }
 
-                if (_generalLogger != null)
-                    _generalLogger.Write(logLevel,
-                        "An " + result.ToString() + " occurred while attempting to load the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("An " + result.ToString() + " occurred while attempting to load the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug,
-                        "An error response for Head request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for Head request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
@@ -300,9 +292,7 @@ namespace HttpModule
             app.Response.AppendHeader("MD5", ma.Md5);
             app.CompleteRequest();
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug,
-                    "Response for Head request has been sent for id " + guid.ToString("N") + ", the ETag value was " + ma.ETag.Value.ToString() + " for user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Response for Head request has been sent for id " + guid.ToString("N") + ", the ETag value was " + ma.ETag.Value.ToString() + " for user '" + userInfo["username"] + "'.");
 
             return;
         }
@@ -316,7 +306,6 @@ namespace HttpModule
         [ServicePoint("/meta", ServicePointAttribute.VerbType.GET)]
         public void GetMeta(HttpApplication app)
         {
-            Common.Logger.LevelEnum logLevel;
             Storage.ResultType result;
             ServerResponse resp;
             string errorMessage;
@@ -325,8 +314,7 @@ namespace HttpModule
             Dictionary<string, string> userInfo = ParseUserInfo(app);
             Dictionary<string, string> queryString = ParseQueryString(app);
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "GetMeta request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("GetMeta request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
 
             if (queryString["readonly"] == "true")
                 result = _storage.GetMeta(guid, userInfo["username"], true, out ma, out errorMessage);
@@ -336,7 +324,6 @@ namespace HttpModule
             // If unsuccessful -> kick it out
             if (result != Storage.ResultType.Success)
             {
-                logLevel = Common.Logger.LevelEnum.Normal;
                 switch (result)
                 {
                     case Storage.ResultType.NotFound:
@@ -352,7 +339,6 @@ namespace HttpModule
                         resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, errorMessage);
                         break;
                     case Storage.ResultType.ResourceIsLocked:
-                        logLevel = Common.Logger.LevelEnum.Debug;
                         resp = new ServerResponse(false, ServerResponse.ErrorCode.ReasourceIsLocked, errorMessage);
                         break;
                     default:
@@ -360,16 +346,12 @@ namespace HttpModule
                         break;
                 }
 
-                if (_generalLogger != null)
-                    _generalLogger.Write(logLevel,
-                        "An " + result.ToString() + " occurred while attempting to load the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("An " + result.ToString() + " occurred while attempting to load the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug,
-                        "An error response for GetMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for GetMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
@@ -378,9 +360,7 @@ namespace HttpModule
             ma.ExportToNetworkRepresentation().Serialize().WriteTo(app.Response.OutputStream);
             app.CompleteRequest();
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug,
-                    "Response for GetMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Response for GetMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
             return;
         }
@@ -409,28 +389,24 @@ namespace HttpModule
                 guid = Guid.NewGuid();
             }
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "CreateMeta request received to create a new resource, the id will be " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("CreateMeta request received to create a new resource, the id will be " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
 
             // Deserialize the request stream
             try
             {
                 netMa.Deserialize(app.Request.InputStream);
 
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Debug, "The new meta asset that will have id " + guid.ToString("N") + " was successfully deserialized for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("The new meta asset that will have id " + guid.ToString("N") + " was successfully deserialized for user '" + userInfo["username"] + "'.");
             }
             catch (Exception e)
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal, "An exception occurred while attempting to deserialize the received meta asset.\r\n" + Common.Logger.ExceptionToString(e));
+                Common.Logger.General.Error("An exception occurred while attempting to deserialize the received meta asset.", e);
 
                 resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, e.Message);
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the CreateMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for the CreateMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
@@ -444,19 +420,17 @@ namespace HttpModule
             // Create the MetaAsset
             try
             {
-                ma = Common.Data.MetaAsset.Create(netMa, _fileSystem, _generalLogger);
+                ma = Common.Data.MetaAsset.Create(netMa, _fileSystem);
             }
             catch (Exception e)
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal, "An exception occurred while attempting to instantiate a meta asset based on the received meta asset.\r\n" + Common.Logger.ExceptionToString(e));
+                Common.Logger.General.Error("An exception occurred while attempting to instantiate a meta asset based on the received meta asset.", e);
 
                 resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, e.Message);
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
@@ -489,24 +463,19 @@ namespace HttpModule
 
             if (!(bool)resp["Pass"])
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal,
-                        "An " + result.ToString() + " occurred while attempting to save the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("An " + result.ToString() + " occurred while attempting to save the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the CreateMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for the CreateMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
 
             if (!index.IndexMeta(ma, _fileSystem))
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal,
-                        "Failed to index the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("Failed to index the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 resp = new ServerResponse(false, ServerResponse.ErrorCode.FailedIndexing,
                     "The MetaAsset could not be indexed.");
@@ -516,8 +485,7 @@ namespace HttpModule
             resp.Serialize().WriteTo(app.Response.OutputStream);
             app.CompleteRequest();
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Response for the CreateMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Response for the CreateMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
         }
 
         /// <summary>
@@ -528,7 +496,6 @@ namespace HttpModule
         [ServicePoint("/meta", ServicePointAttribute.VerbType.PUT)]
         public void SaveMeta(HttpApplication app)
         {
-            Common.Logger.LevelEnum logLevel = Common.Logger.LevelEnum.Debug;
             Storage.ResultType result;
             ServerResponse resp;
             Common.Data.MetaAsset ma = null;
@@ -539,27 +506,22 @@ namespace HttpModule
             Dictionary<string, string> userInfo = ParseUserInfo(app);
             Dictionary<string, string> queryString = ParseQueryString(app);
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "SaveMeta request received for " + guid.ToString("N")  + " by user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("SaveMeta request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
 
             try
             {
                 netMa.Deserialize(app.Request.InputStream);
-
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Debug, "Meta asset with id " + guid.ToString("N") + " was successfully deserialized for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Debug("Meta asset with id " + guid.ToString("N") + " was successfully deserialized for user '" + userInfo["username"] + "'.");
             }
             catch(Exception e)
             {
-                if(_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal, "An exception occurred while attempting to deserialize the received meta asset.\r\n" + Common.Logger.ExceptionToString(e));
+                Common.Logger.General.Error("An exception occurred while attempting to deserialize the received meta asset.", e);
 
                 resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, e.Message);
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if(_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
@@ -567,19 +529,17 @@ namespace HttpModule
             // Create the MetaAsset
             try
             {
-                ma = Common.Data.MetaAsset.Create(netMa, _fileSystem, _generalLogger);
+                ma = Common.Data.MetaAsset.Create(netMa, _fileSystem);
             }
             catch (Exception e)
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal, "An exception occurred while attempting to instantiate a meta asset based on the received meta asset.\r\n" + Common.Logger.ExceptionToString(e));
+                Common.Logger.General.Error("An exception occurred while attempting to instantiate a meta asset based on the received meta asset.", e);
 
                 resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, e.Message);
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
@@ -587,16 +547,14 @@ namespace HttpModule
             // Make sure the Guid of the Request.Path matches the Guid in the package
             if (guid != ma.Guid)
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal, "The resource id in the url did not match the guid in the meta asset package.");
+                Common.Logger.General.Error("The resource id in the url did not match the guid in the meta asset package.");
 
                 resp = new ServerResponse(false, ServerResponse.ErrorCode.InvalidGuid,
                     "The resource id in the url did not match the guid in the package, these values must match.");
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
@@ -620,7 +578,6 @@ namespace HttpModule
                     resp = new ServerResponse(false, ServerResponse.ErrorCode.InvalidPermissions, errorMessage);
                     break;
                 case Storage.ResultType.ResourceIsLocked:
-                    logLevel = Common.Logger.LevelEnum.Normal;
                     resp = new ServerResponse(false, ServerResponse.ErrorCode.ReasourceIsLocked, errorMessage);
                     break;
                 default:
@@ -630,24 +587,19 @@ namespace HttpModule
 
             if (!(bool)resp["Pass"])
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(logLevel,
-                        "An " + result.ToString() + " occurred while attempting to save the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("An " + result.ToString() + " occurred while attempting to save the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
 
             if (!index.IndexMeta(ma, _fileSystem))
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal,
-                        "Failed to index the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("Failed to index the meta asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 resp = new ServerResponse(false, ServerResponse.ErrorCode.FailedIndexing,
                     "The MetaAsset could not be indexed.");
@@ -657,8 +609,7 @@ namespace HttpModule
             resp.Serialize().WriteTo(app.Response.OutputStream);
             app.CompleteRequest();
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
         }
 
         /// <summary>
@@ -669,7 +620,6 @@ namespace HttpModule
         [ServicePoint("/data", ServicePointAttribute.VerbType.GET)]
         public void GetData(HttpApplication app)
         {
-            Common.Logger.LevelEnum logLevel;
             Common.FileSystem.IOStream iostream;
             Storage.ResultType result;
             ServerResponse resp;
@@ -678,8 +628,7 @@ namespace HttpModule
             Dictionary<string, string> userInfo = ParseUserInfo(app);
             Dictionary<string, string> queryString = ParseQueryString(app);
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "GetData request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("GetData request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
 
             result = _storage.GetData(guid, userInfo["username"], (queryString["readonly"] == "true"), 
                 out errorMessage, out iostream);
@@ -687,7 +636,6 @@ namespace HttpModule
             // If unsuccessful -> kick it out
             if (result != Storage.ResultType.Success)
             {
-                logLevel = Common.Logger.LevelEnum.Normal;
                 switch (result)
                 {
                     case Storage.ResultType.NotFound:
@@ -703,7 +651,6 @@ namespace HttpModule
                         resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, errorMessage);
                         break;
                     case Storage.ResultType.ResourceIsLocked:
-                        logLevel = Common.Logger.LevelEnum.Debug;
                         resp = new ServerResponse(false, ServerResponse.ErrorCode.ReasourceIsLocked, errorMessage);
                         break;
                     default:
@@ -711,21 +658,17 @@ namespace HttpModule
                         break;
                 }
 
-                if (_generalLogger != null)
-                    _generalLogger.Write(logLevel,
-                        "An " + result.ToString() + " occurred while attempting to load the data asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("An " + result.ToString() + " occurred while attempting to load the data asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug,
-                        "An error response for GetData request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for GetData request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
 
-            byte[] buffer = new byte[Common.ServerSettings.Instance.NetworkBufferSize];
+            byte[] buffer = new byte[Common.SettingsBase.Instance.NetworkBufferSize];
             int bytesRead = 0;
 
             // Send it to the user.
@@ -738,9 +681,7 @@ namespace HttpModule
 
             app.CompleteRequest();
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug,
-                    "Response for GetData request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Response for GetData request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
             return;
         }
@@ -757,7 +698,6 @@ namespace HttpModule
             // Indexing example
             // curl "http://localhost:8080/solr/update/extract?literal.id=05d51eda96a269c9d474578cb300242d&literal.extension=.odt&literal.title=Test2&literal.tags=tag2&literal.tags=tag1&commit=true" -F "myfile=@05d51eda96a269c9d474578cb300242d.odt"
 
-            Common.Logger.LevelEnum logLevel = Common.Logger.LevelEnum.Debug;
             Common.Data.MetaAsset ma;
             ServerResponse resp;
             Storage.ResultType result;
@@ -767,8 +707,7 @@ namespace HttpModule
             Dictionary<string, string> userInfo = ParseUserInfo(app);
             Dictionary<string, string> queryString = ParseQueryString(app);
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "SaveData request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("SaveData request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
 
             if (queryString["releaselock"] == "true")
                 result = _storage.SaveData(guid, app.Request.InputStream, userInfo["username"], true, out ma, out errorMessage);
@@ -797,24 +736,19 @@ namespace HttpModule
 
             if (!(bool)resp["Pass"])
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(logLevel,
-                        "An " + result.ToString() + " occurred while attempting to save the data asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("An " + result.ToString() + " occurred while attempting to save the data asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 resp.Serialize().WriteTo(app.Response.OutputStream);
                 app.CompleteRequest();
 
-                if (_networkLogger != null)
-                    _networkLogger.Write(Common.Logger.LevelEnum.Debug, "An error response for the SaveData request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.Network.Debug("An error response for the SaveData request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 return;
             }
 
             if (!index.IndexData(guid, "data\\" + guid.ToString("N") + ma.Extension, _fileSystem))
             {
-                if (_generalLogger != null)
-                    _generalLogger.Write(Common.Logger.LevelEnum.Normal,
-                        "Failed to index the data asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                Common.Logger.General.Error("Failed to index the data asset with id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
 
                 resp = new ServerResponse(false, ServerResponse.ErrorCode.FailedIndexing,
                     "The DataAsset could not be indexed.");
@@ -824,8 +758,7 @@ namespace HttpModule
             resp.Serialize().WriteTo(app.Response.OutputStream);
             app.CompleteRequest();
 
-            if (_networkLogger != null)
-                _networkLogger.Write(Common.Logger.LevelEnum.Debug, "Response for the SaveData request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+            Common.Logger.Network.Debug("Response for the SaveData request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
         }
 
         /// <summary>
@@ -855,7 +788,7 @@ namespace HttpModule
             ma = Common.Data.MetaAsset.Create(new Guid("05d51eda96a269c9d474578cb300242d"), 
                 new Common.Data.ETag("1"), 1, 1, "lucas", DateTime.Now, 
                 "Lucas J. Nodine", 26703, md5, ".odt", DateTime.Now, DateTime.Now, DateTime.Now, 
-                "Some document", tags, uprop, _fileSystem, _generalLogger);
+                "Some document", tags, uprop, _fileSystem);
             
             if (_storage.SaveMeta(ma, "lucas", false, out errorMessage) != Storage.ResultType.Success)
             {
@@ -962,8 +895,6 @@ namespace HttpModule
         {
             _storage = null;
             _fileSystem = null;
-            _networkLogger.Close();
-            _generalLogger.Close();
         }
     }
 }

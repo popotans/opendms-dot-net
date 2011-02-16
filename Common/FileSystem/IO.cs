@@ -33,10 +33,6 @@ namespace Common.FileSystem
         /// </summary>
         private int _bufferSize;
         /// <summary>
-        /// A reference to the <see cref="Logger"/> that this instance should use to document events.
-        /// </summary>
-        private Logger _logger;
-        /// <summary>
         /// A collection of open <see cref="FileState"/> objects.
         /// </summary>
         private List<FileState> _openStates;
@@ -46,17 +42,7 @@ namespace Common.FileSystem
         /// </summary>
         /// <param name="rootPath">The path to the root directory to be used with this system.</param>
         public IO(string rootPath)
-            : this(rootPath, 40960, null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="IO"/> class.
-        /// </summary>
-        /// <param name="rootPath">The path to the root directory to be used with this system.</param>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public IO(string rootPath, Logger logger)
-            : this(rootPath, 40960, logger)
+            : this(rootPath, 40960)
         {
         }
 
@@ -65,8 +51,7 @@ namespace Common.FileSystem
         /// </summary>
         /// <param name="rootPath">The path to the root directory to be used with this system.</param>
         /// <param name="bufferSize">A positive Int32 value greater than 0 indicating the buffer size. For bufferSize values between one and eight, the actual buffer size is set to eight bytes.</param>
-        /// <param name="logger">A reference to the <see cref="Logger"/> that this instance should use to document events.</param>
-        public IO(string rootPath, int bufferSize, Logger logger)
+        public IO(string rootPath, int bufferSize)
         {
             if(!rootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
                 !rootPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
@@ -77,7 +62,6 @@ namespace Common.FileSystem
 
             _rootPath = rootPath;
             _bufferSize = bufferSize;
-            _logger = logger;
             _openStates = new List<FileState>();
         }
 
@@ -137,12 +121,8 @@ namespace Common.FileSystem
                     {
                         if ((state.Share & (FileShare)access) != (FileShare)access)
                         {
-                            if (_logger != null)
-                            {
-                                _logger.Write(Logger.LevelEnum.Normal,
-                                    "The resource is already open, the requested action conflicts with the " +
-                                    "current accessability of the resource.\r\n" + state.GetLogString());
-                            }
+                            if(Logger.General != null)
+                                Logger.General.Warn("The resource is already open, the requested action conflicts with the current accessability of the resource.  " + state.GetLogString());
                             return null;
                         }
                     }
@@ -155,22 +135,15 @@ namespace Common.FileSystem
                 }
                 catch (Exception e)
                 {
-                    if (_logger != null)
-                    {
-                        _logger.Write(Logger.LevelEnum.Normal,
-                            "An exception occurred while attempting to open a resource\r\n" +
-                            Logger.ExceptionToString(e));
-                    }
+                    if(Logger.General != null)
+                        Logger.General.Error("An exception occurred while attempting to open a resource.", e);
                     return null;
                 }
 
                 _openStates.Add(stream.State);
 
-                if (_logger != null)
-                {   // Log if facility is provided
-                    _logger.Write(Logger.LevelEnum.Debug,
-                        "Opened file handle\r\n" + stream.GetLogString());
-                }
+                if(Logger.General != null)
+                    Logger.General.Debug("Opened file handle " + stream.GetLogString());
             }
 
             return stream;
@@ -198,11 +171,8 @@ namespace Common.FileSystem
                         state.Stream.Close();
                         state.Stream = null;
 
-                        if (_logger != null)
-                        {
-                            _logger.Write(Logger.LevelEnum.Debug,
-                                "Closed file handle\r\n" + stream.GetLogString());
-                        }
+                        if (Logger.General != null)
+                            Logger.General.Debug("Closed file handle " + stream.GetLogString());
 
                         _openStates.Remove(state);
                         state = null;
@@ -312,12 +282,7 @@ namespace Common.FileSystem
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                {
-                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while attempting to " +
-                        "copy the resource, the destination file will be deleted.\r\n" +
-                        Logger.ExceptionToString(e));
-                }
+                Logger.General.Error("An exception occurred while attempting to copy the resource, the destination file will be deleted.", e);
 
                 // Close the resources
                 destinationStream.Close();
@@ -355,8 +320,7 @@ namespace Common.FileSystem
             {
                 if (_openStates.Count > 0)
                 {
-                    if (_logger != null)
-                        _logger.Write(Logger.LevelEnum.Normal, "Cannot rename directory as their are resources currently open.");
+                    Logger.General.Error("Cannot rename directory as their are resources currently open.");
                     return false;
                 }
 
@@ -367,11 +331,7 @@ namespace Common.FileSystem
                 }
                 catch (Exception e)
                 {
-                    if (_logger != null)
-                    {
-                        _logger.Write(Logger.LevelEnum.Normal, "Rename directory failed with the following exception:\r\n" +
-                            Logger.ExceptionToString(e));
-                    }
+                    Logger.General.Error("Rename directory failed.", e);
                     return false;
                 }
 
@@ -402,35 +362,24 @@ namespace Common.FileSystem
                 // Check for conflicting usage
                 if (HandleExists(relativeSourcePath, out state))
                 {
-                    if (_logger != null)
-                    {
-                        _logger.Write(Logger.LevelEnum.Normal, "Resource " + relativeSourcePath +
-                            "cannot be renamed as it is " +
+                    Logger.General.Error("Resource " + relativeSourcePath + "cannot be renamed as it is " +
                             "open by another process, the owning process information follows:\r\n" +
                             state.GetLogString());
-                    }
                     return false;
                 }
 
                 // Make sure the source exists
                 if (!ResourceExists(relativeSourcePath))
                 {
-                    if (_logger != null)
-                    {
-                        _logger.Write(Logger.LevelEnum.Normal, "Resource " + relativeSourcePath +
-                            " does not exist.");
-                    }
+                    Logger.General.Error("Resource " + relativeSourcePath + " does not exist.");
                     return false;
                 }
 
                 // Make sure the destination does not exist if overwrite is false
                 if (!overwrite && ResourceExists(destinationRelativePath))
                 {
-                    if (_logger != null)
-                    {
-                        _logger.Write(Logger.LevelEnum.Normal, "Rename failed because the destination relative path of \"" +
+                    Logger.General.Error("Rename failed because the destination relative path of \"" +
                             destinationRelativePath + "\" already exists and overwrite was set to false.");
-                    }
                     return false;
                 }
 
@@ -441,11 +390,7 @@ namespace Common.FileSystem
                 }
                 catch (Exception e)
                 {
-                    if (_logger != null)
-                    {
-                        _logger.Write(Logger.LevelEnum.Normal, "Rename failed with the following exception:\r\n" +
-                            Logger.ExceptionToString(e));
-                    }
+                    Logger.General.Error("Rename failed.", e);
                     return false;
                 }
             }
@@ -495,12 +440,8 @@ namespace Common.FileSystem
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                {
-                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while attempting to " +
-                        "copy the resource, the destination file will be deleted.\r\n" +
-                        Logger.ExceptionToString(e));
-                }
+                Logger.General.Error("An exception occurred while attempting to " +
+                        "copy the resource, the destination file will be deleted.", e);
 
                 // Close the resources
                 dest.Close();
@@ -547,9 +488,7 @@ namespace Common.FileSystem
                 relativePath == Data.AssetType.Data.VirtualPath ||
                 relativePath == "settings")
             {
-                if (_logger != null)
-                    _logger.Write(Logger.LevelEnum.Normal, "Could not delete the directory at " +
-                        relativePath + " because it is a required directory.");
+                Logger.General.Error("Could not delete the directory at " +relativePath + " because it is a required directory.");
                 return false;
             }
 
@@ -559,12 +498,7 @@ namespace Common.FileSystem
             }
             catch (Exception e)
             {
-                if (_logger != null)
-                {
-                    _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while attempting " +
-                        "to delete the directory from the underlying file system.\r\n" +
-                        Logger.ExceptionToString(e));
-                }
+                Logger.General.Error("An exception occurred while attempting to delete the directory from the underlying file system.", e);
                 return false;
             }
 
@@ -587,23 +521,14 @@ namespace Common.FileSystem
                 // Check for conflicting usage
                 if(HandleExists(relativePath, out state))
                 {
-                    if (_logger != null)
-                    {
-                        _logger.Write(Logger.LevelEnum.Normal, "Resource " + relativePath + 
-                            "cannot be deleted as it is " +
-                            "open by another process, the owning process information follows:\r\n" +
-                            state.GetLogString());
-                    }
+                    Logger.General.Error("Resource " + relativePath + "cannot be deleted as it is " +
+                            "open by another process, the owning process information follows: " + state.GetLogString());
                     return false;
                 }
 
                 if (!ResourceExists(relativePath))
                 {
-                    if (_logger != null)
-                    {
-                        _logger.Write(Logger.LevelEnum.Debug, "Resource " + relativePath +
-                            "does not exist.");
-                    }
+                    Logger.General.Error("Resource does not exist.");
                     return true;
                 }
 
@@ -620,13 +545,9 @@ namespace Common.FileSystem
                         File.Delete(_rootPath + relativePath);
                         break;
                     }
-                    catch (System.IO.IOException)
+                    catch (System.IO.IOException e)
                     {
-                        if (_logger != null)
-                        {
-                            _logger.Write(Logger.LevelEnum.Debug, "Resource " + relativePath +
-                                "does not exist.");
-                        }
+                        Logger.General.Error("Resource " + relativePath + "does not exist.", e);
                     }
                 }
             }
@@ -656,13 +577,8 @@ namespace Common.FileSystem
                 {
                     if(HandleExists(relativePaths[i], out state))
                     {
-                        if (_logger != null)
-                        {
-                            _logger.Write(Logger.LevelEnum.Normal, "Resource " + relativePaths[i] +
-                                "cannot be deleted as it is " +
-                                "open by another process, the owning process information follows:\r\n" +
-                                state.GetLogString());
-                        }
+                        Logger.General.Error("Resource " + relativePaths[i] + "cannot be deleted as it is " +
+                                "open by another process, the owning process information follows:" + state.GetLogString());
                         return false;
                     }
                 }
@@ -673,11 +589,7 @@ namespace Common.FileSystem
                 {
                     if (!ResourceExists(relativePaths[i]))
                     {
-                        if (_logger != null)
-                        {
-                            _logger.Write(Logger.LevelEnum.Debug, "Resource " + relativePaths[i] +
-                                "does not exist.");
-                        }
+                        Logger.General.Error("Resource " + relativePaths[i] + "does not exist.");
                     }
                 }
 
@@ -690,12 +602,8 @@ namespace Common.FileSystem
                     }
                     catch (Exception e)
                     {
-                        if (_logger != null)
-                        {
-                            _logger.Write(Logger.LevelEnum.Normal, "An exception occurred while attempting " +
-                                "to delete the resource from the underlying filesystem.\r\n" +
-                                Logger.ExceptionToString(e));
-                        }
+                        Logger.General.Error("An exception occurred while attempting " +
+                                "to delete the resource from the underlying filesystem.", e);
                         exceptions.Add(e);
                     }
                 }
@@ -753,11 +661,8 @@ namespace Common.FileSystem
 
             if (!ResourceExists(relativePath))
             {
-                if (_logger != null)
-                {
-                    _logger.Write(Logger.LevelEnum.Normal, "Cannot compute the MD5 value of the specified " +
+                Logger.General.Error("Cannot compute the MD5 value of the specified " +
                         "resource as it does not exist, resource: " + relativePath);
-                }
                 throw new FileNotFoundException("File not found", _rootPath + relativePath);
             }
 
@@ -788,11 +693,8 @@ namespace Common.FileSystem
 
             if (!ResourceExists(relativePath))
             {
-                if (_logger != null)
-                {
-                    _logger.Write(Logger.LevelEnum.Normal, "Cannot compute the MD5 value of the specified " +
+                Logger.General.Error("Cannot compute the MD5 value of the specified " +
                         "resource as it does not exist, resource: " + relativePath);
-                }
                 throw new FileNotFoundException("File not found", _rootPath + relativePath);
             }
 

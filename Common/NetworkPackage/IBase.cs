@@ -60,15 +60,13 @@ namespace Common.NetworkPackage
         /// Saves this object to the file system.
         /// </summary>
         /// <param name="resource">The <see cref="FileSystem.MetaResource"/> providing file system access.</param>
-        /// <param name="logger">A reference to a <see cref="Logger"/> providing access to a logging facility for events.</param>
         /// <param name="overwrite">if set to <c>true</c> overwrite any existing file; otherwise, <c>false</c>.</param>
-        void Save(FileSystem.MetaResource resource, Logger logger, bool overwrite);
+        void Save(FileSystem.MetaResource resource, bool overwrite);
         /// <summary>
         /// Loads this object from the file system.
         /// </summary>
         /// <param name="resource">The <see cref="FileSystem.MetaResource"/> providing file system access.</param>
-        /// <param name="logger">A reference to a <see cref="Logger"/> providing access to a logging facility for events.</param>
         /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
-        bool Read(FileSystem.MetaResource resource, Logger logger);
+        bool Read(FileSystem.MetaResource resource);
     }
 }

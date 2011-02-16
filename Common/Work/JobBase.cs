@@ -141,14 +141,6 @@ namespace Common.Work
         /// A reference to the <see cref="FileSystem.IO"/>.
         /// </summary>
         protected FileSystem.IO _fileSystem;
-        /// <summary>
-        /// A reference to the <see cref="Logger"/> that this instance should use to document general events.
-        /// </summary>
-        protected Logger _generalLogger;
-        /// <summary>
-        /// A reference to the <see cref="Logger"/> that this instance should use to document network events.
-        /// </summary>
-        protected Logger _networkLogger;
 
         /// <summary>
         /// Gets the id of the job.
@@ -249,11 +241,8 @@ namespace Common.Work
         /// <param name="progressMethod">The <see cref="ProgressMethodType"/>.</param>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Logger"/> that this instance should use to document general events.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> that this instance should use to document network events.</param>
         public JobBase(IWorkRequestor requestor, ulong id, UpdateUIDelegate actUpdateUI, uint timeout,
-            ProgressMethodType progressMethod, ErrorManager errorManager, FileSystem.IO fileSystem,
-            Logger generalLogger, Logger networkLogger)
+            ProgressMethodType progressMethod, ErrorManager errorManager, FileSystem.IO fileSystem)
         {
             _id = id;
             _actUpdateUI = actUpdateUI;
@@ -263,8 +252,6 @@ namespace Common.Work
             _errorManager = errorManager;
             _requestor = requestor;
             _fileSystem = fileSystem;
-            _generalLogger = generalLogger;
-            _networkLogger = networkLogger;
         }
 
         /// <summary>

@@ -71,9 +71,9 @@ namespace WindowsClient
         /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            textBox1.Text = MainWindow.Settings.StorageLocation;
-            textBox2.Text = Common.ServerSettings.Instance.ServerIp;
-            textBox3.Text = Common.ServerSettings.Instance.ServerPort.ToString();
+            textBox1.Text = Settings.Instance.StorageLocation;
+            textBox2.Text = Settings.Instance.ServerIp;
+            textBox3.Text = Settings.Instance.ServerPort.ToString();
         }
 
         /// <summary>
@@ -83,11 +83,10 @@ namespace WindowsClient
         /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         void BtnSave_Click(object sender, RoutedEventArgs e)
         {
-            MainWindow.Settings.StorageLocation = textBox1.Text.Trim();
-            Common.ServerSettings.Instance.ServerIp = textBox2.Text.Trim();
-            Common.ServerSettings.Instance.ServerPort = int.Parse(textBox3.Text.Trim());
-            MainWindow.Settings.Save();
-            Common.ServerSettings.Instance.Save();
+            Settings.Instance.StorageLocation = textBox1.Text.Trim();
+            Settings.Instance.ServerIp = textBox2.Text.Trim();
+            Settings.Instance.ServerPort = int.Parse(textBox3.Text.Trim());
+            Settings.Instance.Save(Utilities.GetAppPath() + "Settings.xml");
             this.Close();
         }
     }

@@ -72,9 +72,8 @@ namespace Common.Data
         /// representing the MD5 of the data asset, by calling <see cref="M:MetaAsset.GetHeadFromServer"/>.
         /// </summary>
         /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> logger where network events are documented.</param>
         /// <returns>The <see cref="ETag"/> from the server.</returns>
-        public Head GetHeadFromServer(Work.AssetJobBase job, Logger networkLogger)
+        public Head GetHeadFromServer(Work.AssetJobBase job)
         {
             if (MetaAsset == null)
                 throw new Work.JobException("MetaAsset cannot be null.");
@@ -82,16 +81,15 @@ namespace Common.Data
             if (!MetaAsset.AssetState.HasFlag(AssetState.Flags.CanTransfer))
                 throw new InvalidAssetStateException(MetaAsset.AssetState, "Cannot download");
 
-            return MetaAsset.GetHeadFromServer(job, networkLogger);
+            return MetaAsset.GetHeadFromServer(job);
         }
 
         /// <summary>
         /// Gets the <see cref="ETag"/> for this asset from the server by calling <see cref="M:MetaAsset.GetETagFromServer"/>.
         /// </summary>
         /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> logger where network events are documented.</param>
         /// <returns>The <see cref="ETag"/> from the server.</returns>
-        public ETag GetETagFromServer(Work.AssetJobBase job, Logger networkLogger)
+        public ETag GetETagFromServer(Work.AssetJobBase job)
         {
             if (MetaAsset == null)
                 throw new Work.JobException("MetaAsset cannot be null.");
@@ -99,16 +97,15 @@ namespace Common.Data
             if (!MetaAsset.AssetState.HasFlag(AssetState.Flags.CanTransfer))
                 throw new InvalidAssetStateException(MetaAsset.AssetState, "Cannot download");
 
-            return MetaAsset.GetETagFromServer(job, networkLogger);
+            return MetaAsset.GetETagFromServer(job);
         }
 
         /// <summary>
         /// Downloads both the <see cref="MetaAsset"/> and the <see cref="DataAsset"/> from the server.
         /// </summary>
         /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> logger where network events are documented.</param>
         /// <returns><c>True</c> if successful; otherwise <c>false</c>.</returns>
-        public bool DownloadFromServer(Work.AssetJobBase job, Logger networkLogger)
+        public bool DownloadFromServer(Work.AssetJobBase job)
         {
             if (MetaAsset == null)
                 throw new Work.JobException("MetaAsset cannot be null.");
@@ -121,7 +118,7 @@ namespace Common.Data
             if (!DataAsset.AssetState.HasFlag(AssetState.Flags.CanTransfer))
                 throw new InvalidAssetStateException(MetaAsset.AssetState, "Cannot download DataAsset");
 
-            if (!MetaAsset.DownloadFromServer(job, networkLogger))
+            if (!MetaAsset.DownloadFromServer(job))
             {
                 job.SetErrorFlag();
                 return false;
@@ -129,7 +126,7 @@ namespace Common.Data
 
             job.UpdateLastAction();
 
-            if (!DataAsset.DownloadFromServer(job, MetaAsset, networkLogger))
+            if (!DataAsset.DownloadFromServer(job, MetaAsset))
             {
                 job.SetErrorFlag();
                 return false;
@@ -143,12 +140,10 @@ namespace Common.Data
         /// </summary>
         /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        /// <param name="generalLogger">A reference to the <see cref="Logger"/> logger where general events are documented.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> logger where network events are documented.</param>
         /// <returns>
         ///   <c>True</c> if successful; otherwise <c>false</c>.
         /// </returns>
-        public bool CreateOnServer(Work.AssetJobBase job, FileSystem.IO fileSystem, Logger generalLogger, Logger networkLogger)
+        public bool CreateOnServer(Work.AssetJobBase job, FileSystem.IO fileSystem)
         {
             Guid newGuid;
             Data.MetaAsset oldMa = MetaAsset;
@@ -168,7 +163,7 @@ namespace Common.Data
 
             PreviousGuid = MetaAsset.Guid;
 
-            sr = MetaAsset.CreateOnServer(job, networkLogger);
+            sr = MetaAsset.CreateOnServer(job);
             if (!(bool)sr["Pass"])
             {
                 job.SetErrorFlag();
@@ -181,7 +176,7 @@ namespace Common.Data
             newGuid = new Guid((string)sr["Message"]);
 
             // Update the MetaAsset to change to the new Guid and save it to the file system
-            MetaAsset = MetaAsset.CopyToNew(newGuid, true, fileSystem, generalLogger);
+            MetaAsset = MetaAsset.CopyToNew(newGuid, true, fileSystem);
 
             // Delete the old MA
             oldMa.Resource.DeleteFromFilesystem();
@@ -189,7 +184,7 @@ namespace Common.Data
             // Rename the DA
             DataAsset.RenameTo(newGuid);
 
-            sr = DataAsset.SaveToServer(job, MetaAsset, networkLogger);
+            sr = DataAsset.SaveToServer(job, MetaAsset);
             if (!(bool)sr["Pass"])
             {
                 job.SetErrorFlag();
@@ -203,9 +198,8 @@ namespace Common.Data
         /// Saves both the <see cref="MetaAsset"/> and the <see cref="DataAsset"/> to the server.
         /// </summary>
         /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
-        /// <param name="networkLogger">A reference to the <see cref="Logger"/> logger where network events are documented.</param>
         /// <returns><c>True</c> if successful; otherwise <c>false</c>.</returns>
-        public bool SaveToServer(Work.AssetJobBase job, Logger networkLogger)
+        public bool SaveToServer(Work.AssetJobBase job)
         {
             if (MetaAsset == null)
                 throw new Work.JobException("MetaAsset cannot be null.");
@@ -220,7 +214,7 @@ namespace Common.Data
 
             NetworkPackage.ServerResponse sr;
 
-            sr = MetaAsset.SaveToServer(job, networkLogger);
+            sr = MetaAsset.SaveToServer(job);
             if (!(bool)sr["Pass"])
             {                
                 job.SetErrorFlag();
@@ -229,7 +223,7 @@ namespace Common.Data
 
             job.UpdateLastAction();
 
-            sr = DataAsset.SaveToServer(job, MetaAsset, networkLogger);
+            sr = DataAsset.SaveToServer(job, MetaAsset);
             if (!(bool)sr["Pass"])
             {
                 job.SetErrorFlag();
