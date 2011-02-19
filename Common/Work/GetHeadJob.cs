@@ -51,6 +51,7 @@ namespace Common.Work
             : base(requestor, id, fullAsset, actUpdateUI, timeout, 
             ProgressMethodType.Indeterminate, errorManager, fileSystem)
         {
+            Logger.General.Debug("GetHeadJob instantiated on job id " + id.ToString() + ".");
             ETag = null;
             MD5 = null;
         }
@@ -65,7 +66,11 @@ namespace Common.Work
         {
             Data.Head head;
 
+            Logger.General.Debug("GetHeadJob started on job id " + this.Id.ToString() + ".");
+
             _currentState = State.Active | State.Executing;
+
+            Logger.General.Debug("GetHeadJob timeout is starting on job id " + this.Id.ToString() + ".");
 
             try
             {
@@ -73,11 +78,17 @@ namespace Common.Work
             }
             catch (Exception e)
             {
-                _errorManager.AddError(ErrorMessage.TimeoutFailedToStart(e, this, "GetHeadJob"));
+                _errorManager.AddError(ErrorMessage.ErrorCode.TimeoutFailedToStart,
+                    "Timeout Failed to Start",
+                    "I failed start an operation preventing system lockup when a process takes to long to complete.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                    "Timeout failed to start on a GetHeadJob with id " + Id.ToString() + ".",
+                    true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("GetHeadJob timeout has started on job id " + Id.ToString() + ".");
 
             if (CheckForAbortAndUpdate())
             {
@@ -87,11 +98,17 @@ namespace Common.Work
 
             if (_fullAsset.MetaAsset == null)
             {
-                _errorManager.AddError(ErrorMessage.GetHeadFailedDueToInvalidState(this));
+                _errorManager.AddError(ErrorMessage.ErrorCode.InvalidState,
+                    "Cannot Check Status",
+                    "I cannot check the status of the asset at this time.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                    "GetHeadJob failed because the meta asset property of the full asset is null with id " + Id.ToString() + ".",
+                    true, true);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Begining getting of the head on server for GetHeadJob with id " + Id.ToString() + "."); 
 
             try
             {
@@ -101,11 +118,17 @@ namespace Common.Work
             }
             catch (Exception e)
             {
-                _errorManager.AddError(ErrorMessage.GetHeadFailed(e, this));
+                _errorManager.AddError(ErrorMessage.ErrorCode.GetHeadFailed,
+                    "Check Asset Status Failed",
+                    "I failed to check the status of the asset on the remote server, for additional details consult the logs.",
+                    "Failed to get the etag of the asset on the remote server for GetHeadJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
+                    true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Successfully completed getting the head for GetHeadJob with id " + Id.ToString() + ".");
 
             if (this.IsError || CheckForAbortAndUpdate())
             {

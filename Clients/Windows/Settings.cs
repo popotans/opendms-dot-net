@@ -88,7 +88,8 @@ namespace WindowsClient
             }
             catch (Exception e)
             {
-                Common.Logger.General.Error("An exception occurred while attempting to serialize the settings.", e);
+                if(Common.Logger.General != null)
+                    Common.Logger.General.Error("An exception occurred while attempting to serialize the settings.", e);
                 return;
             }
 
@@ -98,7 +99,8 @@ namespace WindowsClient
             }
             catch (Exception e)
             {
-                Common.Logger.General.Error("An exception occurred while accessing the settings file on disk.", e);
+                if (Common.Logger.General != null)
+                    Common.Logger.General.Error("An exception occurred while accessing the settings file on disk.", e);
                 return;
             }
 
@@ -111,10 +113,15 @@ namespace WindowsClient
             {
                 fs.Close();
                 fs.Dispose();
-                Common.Logger.General.Error("An exception occurred while writting to the settings file.", e);
+
+                if (Common.Logger.General != null)
+                    Common.Logger.General.Error("An exception occurred while writting to the settings file.", e);
+
                 return;
             }
 
+            if (Common.Logger.General != null)
+                Common.Logger.General.Info("Settings saved.");
 
             fs.Close();
             fs.Dispose();
@@ -129,6 +136,9 @@ namespace WindowsClient
         {
             Settings sb = new Settings();
             FileStream s = null;
+
+            if (!Directory.Exists(Path.GetDirectoryName(fullFilepath)))
+                Directory.CreateDirectory(Path.GetDirectoryName(fullFilepath));
 
             try
             {

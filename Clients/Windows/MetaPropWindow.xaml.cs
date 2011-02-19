@@ -108,7 +108,11 @@ namespace WindowsClient
             }
             catch (Exception e)
             {
-                MainWindow.ErrorManager.AddError(Common.ErrorMessage.MetaFormDownloadFailed(e));
+                MainWindow.ErrorManager.AddError(Common.ErrorMessage.ErrorCode.MetaFormDownloadFailed,
+                    "Failed to Download Properties",
+                    "I failed to download the available properties, please try again.",
+                    "Failed to download the meta properties to be displayed in the MetaPropWindow.",
+                    true, true, e);
                 return;
             }
 
@@ -120,7 +124,11 @@ namespace WindowsClient
             }
             catch (Exception e)
             {
-                MainWindow.ErrorManager.AddError(Common.ErrorMessage.MetaFormDeserializationFailed(e));
+                MainWindow.ErrorManager.AddError(Common.ErrorMessage.ErrorCode.MetaFormDeserializationFailed,
+                    "Failed to Read Properties",
+                    "I failed to read the available properties, please try again.",
+                    "Failed to deserialize the meta properties to be displayed in the MetaPropWindow.",
+                    true, true, e);
                 return;
             }
 

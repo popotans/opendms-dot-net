@@ -3,6 +3,9 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r13
+- Implemented a new way of handling the ErrorMessage class
+
 r12
 - Impelemented log4net as the logging system
 - Changed the method of handling settings

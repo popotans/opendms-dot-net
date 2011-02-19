@@ -76,5 +76,18 @@ namespace WindowsClient
                 str += System.IO.Path.DirectorySeparatorChar.ToString();
             return str;
         }
+
+        /// <summary>
+        /// Gets the AppPath for the platform on which it operates
+        /// </summary>
+        /// <returns></returns>
+        public static string GetAppDataPath()
+        {
+            string str = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            if (!str.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
+                str += System.IO.Path.DirectorySeparatorChar.ToString();
+            return str + "OpenDMS.NET" + System.IO.Path.DirectorySeparatorChar.ToString() +
+                "WindowsClient" + System.IO.Path.DirectorySeparatorChar.ToString();
+        }
     }
 }

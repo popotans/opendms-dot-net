@@ -120,7 +120,7 @@ namespace WindowsClient
             InitializeComponent();
 
             // Settings should come first
-            Settings.Instance = Settings.Load(Utilities.GetAppPath() + "Settings.xml");
+            Settings.Instance = Settings.Load(Utilities.GetAppDataPath() + "Settings.xml");
             if (Settings.Instance == null)
             {
                 SettingsWindow win = new SettingsWindow();
@@ -131,7 +131,7 @@ namespace WindowsClient
             // File System must after settings
             FileSystem = new Common.FileSystem.IO(Settings.Instance.StorageLocation);
 
-            Logger = new Common.Logger(Utilities.GetAppPath());
+            Logger = new Common.Logger(Utilities.GetAppDataPath());
 
             Common.ErrorManager.UpdateUI actErrorUpdateUI = ErrorUpdateUI;
 

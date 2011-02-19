@@ -3,6 +3,9 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r13
+- Fixed a bug in Settings.Save(string) preventing the save of a settings file when the loggers have not yet been instantiated.
+
 r12
 - Impelemented log4net as the logging system
 - Changed the method of handling settings
