@@ -39,6 +39,7 @@ namespace Common.Work
             : base(requestor, id, fullAsset, actUpdateUI, timeout, ProgressMethodType.Determinate,
             errorManager, fileSystem)
         {
+            Logger.General.Debug("LockJob instantiated on job id " + id.ToString() + ".");
         }
 
         /// <summary>
@@ -51,7 +52,12 @@ namespace Common.Work
         {
             NetworkPackage.ServerResponse sr;
             Network.Message msg = null;
+
+            Logger.General.Debug("LockJob started on job id " + this.Id.ToString() + ".");
+
             _currentState = State.Active | State.Executing;
+
+            Logger.General.Debug("LockJob timeout is starting on job id " + this.Id.ToString() + ".");
 
             try
             {
@@ -59,17 +65,25 @@ namespace Common.Work
             }
             catch (Exception e)
             {
-                _errorManager.AddError(ErrorMessage.TimeoutFailedToStart(e, this, "LockJob"));
+                _errorManager.AddError(ErrorMessage.ErrorCode.TimeoutFailedToStart,
+                    "Timeout Failed to Start",
+                    "I failed start an operation preventing system lockup when a process takes to long to complete.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                    "Timeout failed to start on a LockJob with id " + Id.ToString() + ".",
+                    true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("LockJob timeout has started on job id " + Id.ToString() + ".");
 
             if (IsError || CheckForAbortAndUpdate())
             {
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Begining formatting of network message for LockJob with id " + Id.ToString() + ".");
 
             try
             {
@@ -80,13 +94,20 @@ namespace Common.Work
             }
             catch (Exception e)
             {
-                Logger.Network.Error("An exception occurred while creating the network message.", e);
-                _errorManager.AddError(ErrorMessage.LockFailed(this,
-                    "Please review the log file for details", "Review prior log entries for details."));
+                Logger.Network.Error("An exception occurred while created the network message for LockJob with id " + Id.ToString() + ".", e);
+                _errorManager.AddError(ErrorMessage.ErrorCode.LockAssetFailed,
+                    "Locking of Asset Failed",
+                    "I failed to lock the asset.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                    "Failed to lock the asset for LockJob with id " + Id.ToString() + ".",
+                    true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Successfully completed formatting of network message for LockJob with id " + Id.ToString() + ".");
+
+            Logger.General.Debug("Beginning locking of asset on server for LockJob with id " + Id.ToString() + ".");
 
             try
             {
@@ -94,13 +115,18 @@ namespace Common.Work
             }
             catch (Exception e)
             {
-                Logger.Network.Error("An exception occurred while sending the network message.", e);
-                _errorManager.AddError(ErrorMessage.LockFailed(this,
-                    "Please review the log file for details", "Review prior log entries for details."));
+                Logger.Network.Error("An exception occurred while sending the network message for LockJob with id " + Id.ToString() + ".", e);
+                _errorManager.AddError(ErrorMessage.ErrorCode.LockAssetFailed,
+                   "Locking of Asset Failed",
+                   "I failed to lock the asset.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                   "Failed to lock the asset for LockJob with id " + Id.ToString() + ".",
+                   true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Successfully completed locking of asset on server for LockJob with id " + Id.ToString() + ".");
 
             if (IsError || CheckForAbortAndUpdate())
             {
@@ -110,29 +136,41 @@ namespace Common.Work
 
             sr = new NetworkPackage.ServerResponse();
 
+            Logger.General.Debug("Beginning deserialization of the server response for LockJob with id " + Id.ToString() + ".");
+
             try
             {
                 sr.Deserialize(msg.State.Stream);
             }
             catch (Exception e)
             {
-                Logger.Network.Error("An exception occurred while calling NetworkPackage.ServerResponse.Deserialize().", e);
-                _errorManager.AddError(ErrorMessage.LockFailed(this,
-                    "Please review the log file for details", "Review prior log entries for details."));
+                Logger.Network.Error("An exception occurred while calling NetworkPackage.ServerResponse.Deserialize() for LockJob with id " + Id.ToString() + ".", e);
+                _errorManager.AddError(ErrorMessage.ErrorCode.LockAssetFailed,
+                   "Locking of Asset Might Have Failed",
+                   "I delivered the command to lock the asset, but I received a response back from the server which I did not understand, thus, I cannot guarantee that the change was made.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                   "Failed to deserialize the server response for LockJob with id " + Id.ToString() + ".",
+                   true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
 
+            Logger.General.Debug("Successfully completed deserialization of the server response for LockJob with id " + Id.ToString() + ".");
+
             if (!(bool)sr["Pass"])
             {
                 Logger.Network.Error("Failed to lock the resource.");
-                _errorManager.AddError(ErrorMessage.LockFailed(this,
-                    "Please review the log file for details", "Review prior log entries for details."));
+                _errorManager.AddError(ErrorMessage.ErrorCode.LockAssetFailed,
+                   "Locking of Asset Failed",
+                   "I delivered the command to lock the asset, but I received a response stating that it failed.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                   "Failed to lock the asset on the server for LockJob with id " + Id.ToString() + ".",
+                   true, true);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Successfully completed locking of the asset for LockJob with id " + Id.ToString() + ".");
 
             _currentState = State.Active | State.Finished;
             _requestor.WorkReport(_actUpdateUI, this, _fullAsset);

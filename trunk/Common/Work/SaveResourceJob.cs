@@ -40,6 +40,7 @@ namespace Common.Work
             : base(requestor, id, fullAsset, actUpdateUI, timeout, ProgressMethodType.Determinate,
             errorManager, fileSystem)
         {
+            Logger.General.Debug("SaveResourceJob instantiated on job id " + id.ToString() + ".");
         }
 
         /// <summary>
@@ -50,7 +51,11 @@ namespace Common.Work
         /// </returns>
         public override JobBase Run()
         {
+            Logger.General.Debug("SaveResourceJob started on job id " + this.Id.ToString() + ".");
+
             _currentState = State.Active | State.Executing;
+
+            Logger.General.Debug("SaveResourceJob timeout is starting on job id " + this.Id.ToString() + ".");
 
             try
             {
@@ -58,11 +63,17 @@ namespace Common.Work
             }
             catch (Exception e)
             {
-                _errorManager.AddError(ErrorMessage.TimeoutFailedToStart(e, this, "SaveResourceJob"));
+                _errorManager.AddError(ErrorMessage.ErrorCode.TimeoutFailedToStart,
+                    "Timeout Failed to Start",
+                    "I failed start an operation preventing system lockup when a process takes to long to complete.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                    "Timeout failed to start on a SaveResourceJob with id " + Id.ToString() + ".",
+                    true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("SaveResourceJob timeout has started on job id " + Id.ToString() + ".");
 
             if (IsError || CheckForAbortAndUpdate())
             {
@@ -72,14 +83,21 @@ namespace Common.Work
 
             _fullAsset.DataAsset.OnProgress += new Data.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
 
+            Logger.General.Debug("Begining saving of the full asset on server for SaveResourceJob with id " + Id.ToString() + "."); 
+
             if (!_fullAsset.SaveToServer(this))
             {
-                _errorManager.AddError(ErrorMessage.SaveResourceFailed(null, this, 
-                    "Please review the log file for details", "Review prior log entries for details."));
+                _errorManager.AddError(ErrorMessage.ErrorCode.CreateAssetOnServerFailed,
+                    "Saving of Asset Failed",
+                    "I failed to save the asset on the remote server, for additional details consult the logs.",
+                    "Failed to create the asset on the remote server for SaveResourceJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
+                    true, true);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Completed saving the full asset on server for SaveResourceJob with id " + Id.ToString() + ".");
 
             // No need to monitor this event anymore
             _fullAsset.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
@@ -90,6 +108,8 @@ namespace Common.Work
                 return this;
             }
 
+            Logger.General.Debug("Updating the local meta asset for SaveResourceJob with id " + Id.ToString() + ".");
+
             // Now we need to update the local meta asset - version #s, etags and such
             try
             {
@@ -98,11 +118,17 @@ namespace Common.Work
             }
             catch (Exception e)
             {
-                _errorManager.AddError(ErrorMessage.LoadResourceFailed(e, this));
+                _errorManager.AddError(ErrorMessage.ErrorCode.DownloadMetaAssetFailed,
+                    "Updating Local Asset Failed",
+                    "I failed to update the local asset's meta information, but I did successfully save the asset on the server.  Please update the local asset.",
+                    "Failed to update the local asset's meta information for SaveResourceJob with id " + Id.ToString() + ", but the asset was successfully created on the server.",
+                    true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Updating the local meta asset for SaveResourceJob with id " + Id.ToString() + ", was successful.");
 
             _currentState = State.Active | State.Finished;
             _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
@@ -117,6 +143,8 @@ namespace Common.Work
         /// <param name="percentComplete">The percent complete.</param>
         void Run_DataAsset_OnProgress(Data.DataAsset sender, int percentComplete)
         {
+            Logger.General.Debug("SaveResourceJob with id " + Id.ToString() + " is now " + percentComplete.ToString() + "% complete.");
+
             UpdateProgress((ulong)sender.BytesComplete, (ulong)sender.BytesTotal);
 
             // Don't update the UI if finished, the final update is handled by the Run() method.

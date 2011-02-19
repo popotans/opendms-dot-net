@@ -64,6 +64,47 @@ namespace Common
         }
 
         /// <summary>
+        /// Adds the error.
+        /// </summary>
+        /// <param name="code">The code of the error.</param>
+        /// <param name="userMessageCaption">The user message caption.</param>
+        /// <param name="userMessageText">The user message text.</param>
+        /// <param name="logMessage">The log message.</param>
+        /// <param name="saveToLog">if set to <c>true</c> to save to log.</param>
+        /// <param name="displayToUser">if set to <c>true</c> to display to user.</param>
+        public void AddError(ErrorMessage.ErrorCode code, string userMessageCaption, string userMessageText,
+            string logMessage, bool saveToLog, bool displayToUser)
+        {
+            lock (_errors)
+            {
+                _errors.Add(new ErrorMessage(code, userMessageCaption, userMessageText, 
+                    logMessage, saveToLog, displayToUser));
+                Start();
+            }
+        }
+
+        /// <summary>
+        /// Adds the error.
+        /// </summary>
+        /// <param name="code">The code of the error.</param>
+        /// <param name="userMessageCaption">The user message caption.</param>
+        /// <param name="userMessageText">The user message text.</param>
+        /// <param name="logMessage">The log message.</param>
+        /// <param name="saveToLog">if set to <c>true</c> to save to log.</param>
+        /// <param name="displayToUser">if set to <c>true</c> to display to user.</param>
+        /// <param name="exception">The exception that accompanied or caused the error.</param>
+        public void AddError(ErrorMessage.ErrorCode code, string userMessageCaption, string userMessageText,
+            string logMessage, bool saveToLog, bool displayToUser, Exception exception)
+        {
+            lock (_errors)
+            {
+                _errors.Add(new ErrorMessage(code, userMessageCaption, userMessageText,
+                    logMessage, saveToLog, displayToUser, exception));
+                Start();
+            }
+        }
+
+        /// <summary>
         /// Starts this instance.
         /// </summary>
         public void Start()

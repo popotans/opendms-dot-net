@@ -105,7 +105,11 @@ namespace WindowsClient
             }
             catch (Exception e)
             {
-                MainWindow.ErrorManager.AddError(Common.ErrorMessage.SearchOptionDownloadFailed(e));
+                MainWindow.ErrorManager.AddError(Common.ErrorMessage.ErrorCode.SearchOptionDownloadFailed,
+                    "Failed to Download Search Fields",
+                    "I failed to download the available fields, please try again.",
+                    "Failed to download the search fields to be displayed in the SearchWindow.",
+                    true, true, e);
                 return;
             }
 
@@ -117,7 +121,11 @@ namespace WindowsClient
             }
             catch (Exception e)
             {
-                MainWindow.ErrorManager.AddError(Common.ErrorMessage.SearchOptionDeserializationFailed(e));
+                MainWindow.ErrorManager.AddError(Common.ErrorMessage.ErrorCode.SearchOptionDeserializationFailed,
+                    "Failed to Read Search Fields",
+                    "I failed to read the available searchable fields, please try again.",
+                    "Failed to deserialize the search fields to be displayed in the SearchWindow.",
+                    true, true, e);
                 return;
             }
 

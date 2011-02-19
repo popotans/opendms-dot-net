@@ -169,7 +169,11 @@ namespace Common.Work
             }
             catch (Exception e)
             {
-                _errorManager.AddError(ErrorMessage.JobCreateFailed(e, fullAsset, _id));
+                _errorManager.AddError(ErrorMessage.ErrorCode.JobCreationFailed,
+                    "Failed to Create Job",
+                    "You just took an action for which I am to create a job to accomplish that action, but I was unable to complete that request for an unknown reason, please check the logs.",
+                    "Common.Work.Master.AddJob() threw an exception while attempting to instantiate a new job with id " + _id.ToString() +".",
+                    true, true, e);
                 return;
             }
 
@@ -194,7 +198,11 @@ namespace Common.Work
                         _jobQueue.Remove(job);
                     }
                 }
-                _errorManager.AddError(ErrorMessage.JobStartFailed(e, job));
+                _errorManager.AddError(ErrorMessage.ErrorCode.JobStartFailed,
+                    "Failed to Start Job",
+                    "You just took an action for which I am to start a job to accomplish that action, but I was unable to complete that request for an unknown reason, please check the logs.",
+                    "Common.Work.Master.AddJob() threw an exception while attempting to start a new job with id " + _id.ToString() + ".",
+                    true, true, e);
             }
         }
 
@@ -220,7 +228,11 @@ namespace Common.Work
                                 try { StartJob(_jobQueue[pos]); }
                                 catch (Exception e)
                                 {
-                                    _errorManager.AddError(ErrorMessage.JobStartFailed(e, _jobQueue[pos]));
+                                    _errorManager.AddError(ErrorMessage.ErrorCode.JobStartFailed,
+                                        "Failed to Start Job",
+                                        "You just took an action for which I am to start a job to accomplish that action, but I was unable to complete that request for an unknown reason, please check the logs.",
+                                        "Common.Work.Master.PollForWork() threw an exception while attempting to start a new job with id " + _jobQueue[pos].Id.ToString() + ".",
+                                        true, true, e);
                                 }
                                 _jobQueue.Remove(_jobQueue[pos]);
                             }
@@ -233,9 +245,11 @@ namespace Common.Work
             }
             catch (Exception e)
             {
-                _errorManager.AddError(new ErrorMessage(0, "Error While Working", 
-                    "An error occurred while processing operations.  This operation has terminated, you might need to retry.", 
-                    "An unknown error occurred while polling for new work.", true, true, e));
+                _errorManager.AddError(ErrorMessage.ErrorCode.JobWorkingFailed,
+                    "Error While Working",
+                    "An error occurred while processing the requested actions.  This operation has terminated, you might need to retry.",
+                    "Common.Work.Master.PollForWork() threw an exception while polling for new work on job id " + _jobQueue[pos].Id.ToString() + ".",
+                    true, true, e);
             }
 
             lock (_workDispatcher) { _workDispatcher = null; }
@@ -278,6 +292,8 @@ namespace Common.Work
                 _executingJobs.Add(job);
             }
 
+            Logger.General.Debug("Job with id " + job.Id.ToString() + " is starting.");
+
             try
             {
                 t.Start(job);
@@ -294,8 +310,14 @@ namespace Common.Work
                     if(_executingJobs.Contains(job)) _executingJobs.Remove(job);
                 }
 
-                _errorManager.AddError(ErrorMessage.JobStartFailed(e, job));
+                _errorManager.AddError(ErrorMessage.ErrorCode.JobStartFailed,
+                    "Failed to Start Job",
+                    "You just took an action for which I am to start a job to accomplish that action, but I was unable to complete that request for an unknown reason, please check the logs.",
+                    "Common.Work.Master.StartJob() threw an exception while attempting to start a new job with id " + job.Id.ToString() + ".",
+                    true, true, e);
             }
+
+            Logger.General.Debug("Job with id " + job.Id.ToString() + " has started.");
 
             return t;
         }
@@ -330,7 +352,11 @@ namespace Common.Work
                             if (_executingJobs.Contains(job)) _executingJobs.Remove(job);
                         }
 
-                        _errorManager.AddError(ErrorMessage.JobRunFailed(e, job));
+                        _errorManager.AddError(ErrorMessage.ErrorCode.JobRunFailed,
+                            "Failed to Run Job",
+                            "You just took an action for which I am to run a job to accomplish that action, but I was unable to complete that request for an unknown reason, please check the logs.",
+                            "Common.Work.Master.RunJob() threw an exception while attempting to run the job with id " + job.Id.ToString() + ".",
+                            true, true, e);
                     }
                 }
                 
@@ -342,6 +368,8 @@ namespace Common.Work
                     }
                     _executingJobs.Remove(job);
                 }
+
+                Logger.General.Debug("Job with id " + job.Id.ToString() + " has completed.");
             }
         }
 
@@ -358,6 +386,7 @@ namespace Common.Work
                     if (_executingJobs[i].FullAsset == fullAsset)
                     {
                         _executingJobs[i].Cancel();
+                        Logger.General.Debug("Job with id " + _executingJobs[i].Id.ToString() + " has been canceled.");
                     }
                 }
             }

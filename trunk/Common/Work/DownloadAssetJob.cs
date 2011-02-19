@@ -39,6 +39,7 @@ namespace Common.Work
             : base(requestor, id, fullAsset, actUpdateUI, timeout, ProgressMethodType.Determinate,
             errorManager, fileSystem)
         {
+            Logger.General.Debug("DownloadAssetJob instantiated on job id " + id.ToString() + ".");
         }
 
         /// <summary>
@@ -49,7 +50,11 @@ namespace Common.Work
         /// </returns>
         public override JobBase Run()
         {
+            Logger.General.Debug("DownloadAssetJob started on job id " + this.Id.ToString() + ".");
+
             _currentState = State.Active | State.Executing;
+
+            Logger.General.Debug("DownloadAssetJob timeout is starting on job id " + this.Id.ToString() + ".");
 
             try
             {
@@ -57,19 +62,33 @@ namespace Common.Work
             }
             catch (Exception e)
             {
-                _errorManager.AddError(ErrorMessage.TimeoutFailedToStart(e, this, "DownloadAssetJob"));
+                _errorManager.AddError(ErrorMessage.ErrorCode.TimeoutFailedToStart,
+                    "Timeout Failed to Start",
+                    "I failed start an operation preventing system lockup when a process takes to long to complete.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                    "Timeout failed to start on a DownloadAssetJob with id " + Id.ToString() + ".",
+                    true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
 
+            Logger.General.Debug("DownloadAssetJob timeout has started on job id " + Id.ToString() + ".");
+
+            Logger.General.Debug("Begining meta asset download for DownloadAssetJob with id " + Id.ToString() + ".");
+
             if (!_fullAsset.MetaAsset.DownloadFromServer(this))
             {
-                _errorManager.AddError(ErrorMessage.JobRunFailed(null, this));
+                _errorManager.AddError(ErrorMessage.ErrorCode.DownloadMetaAssetFailed,
+                    "Downloading Asset Failed",
+                    "I failed to download the meta information.  Please try again.",
+                    "Failed to download the asset's meta information for DownloadAssetJob with id " + Id.ToString() + ".",
+                    true, true);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Successfully completed the meta asset download for DownloadAssetJob with id " + Id.ToString() + ".");
 
             // Check for Error
             if (this.IsError || CheckForAbortAndUpdate())
@@ -82,13 +101,21 @@ namespace Common.Work
 
             _fullAsset.DataAsset.OnProgress += new Data.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
 
+            Logger.General.Debug("Begining data asset download for DownloadAssetJob with id " + Id.ToString() + ".");
+
             if (!_fullAsset.DataAsset.DownloadFromServer(this, _fullAsset.MetaAsset))
             {
-                _errorManager.AddError(ErrorMessage.JobRunFailed(null, this));
+                _errorManager.AddError(ErrorMessage.ErrorCode.DownloadDataAssetFailed,
+                    "Downloading Asset Failed",
+                    "I failed to download the data asset.  Please try again.",
+                    "Failed to download the asset's data for DownloadAssetJob with id " + Id.ToString() + ".",
+                    true, true);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Successfully completed the data asset download for DownloadAssetJob with id " + Id.ToString() + ".");
 
             UpdateLastAction();
 
@@ -114,6 +141,8 @@ namespace Common.Work
         /// <param name="percentComplete">The percent complete.</param>
         void Run_DataAsset_OnProgress(Data.DataAsset sender, int percentComplete)
         {
+            Logger.General.Debug("DownloadAssetJob with id " + Id.ToString() + " is now " + percentComplete.ToString() + "% complete.");
+
             UpdateProgress((ulong)sender.BytesComplete, (ulong)sender.BytesTotal);
 
             // Don't update the UI if finished, the final update is handled by the Run() method.

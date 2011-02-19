@@ -86,7 +86,7 @@ namespace WindowsClient
             Settings.Instance.StorageLocation = textBox1.Text.Trim();
             Settings.Instance.ServerIp = textBox2.Text.Trim();
             Settings.Instance.ServerPort = int.Parse(textBox3.Text.Trim());
-            Settings.Instance.Save(Utilities.GetAppPath() + "Settings.xml");
+            Settings.Instance.Save(Utilities.GetAppDataPath() + "Settings.xml");
             this.Close();
         }
     }

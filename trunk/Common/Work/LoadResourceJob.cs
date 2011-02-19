@@ -39,6 +39,7 @@ namespace Common.Work
             : base(requestor, id, fullAsset, actUpdateUI, timeout, ProgressMethodType.Determinate, 
             errorManager, fileSystem)
         {
+            Logger.General.Debug("LoadResourceJob instantiated on job id " + id.ToString() + ".");
         }
 
         /// <summary>
@@ -51,19 +52,29 @@ namespace Common.Work
         {
             Data.ETag remoteEtag;
 
+            Logger.General.Debug("LoadResourceJob started on job id " + this.Id.ToString() + ".");
+
             _currentState = State.Active | State.Executing;
-            
+
+            Logger.General.Debug("LoadResourceJob timeout is starting on job id " + this.Id.ToString() + ".");
+
             try
             {
                 StartTimeout();
             }
             catch (Exception e)
             {
-                _errorManager.AddError(ErrorMessage.TimeoutFailedToStart(e, this, "LoadResourceJob"));
+                _errorManager.AddError(ErrorMessage.ErrorCode.TimeoutFailedToStart,
+                    "Timeout Failed to Start",
+                    "I failed start an operation preventing system lockup when a process takes to long to complete.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                    "Timeout failed to start on a LoadResourceJob with id " + Id.ToString() + ".",
+                    true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("LoadResourceJob timeout has started on job id " + Id.ToString() + ".");
 
             if (CheckForAbortAndUpdate())
             {
@@ -71,23 +82,32 @@ namespace Common.Work
                 return this;
             }
 
+            Logger.General.Debug("Begining getting of the etag on the server for LoadResourceJob with id " + Id.ToString() + "."); 
+
             try
             {
                 remoteEtag = _fullAsset.GetETagFromServer(this);
             }
             catch (Exception e)
             {
-                _errorManager.AddError(ErrorMessage.GetETagFailed(e, this));
+                _errorManager.AddError(ErrorMessage.ErrorCode.GetETagFailed,
+                    "Loading Asset Failed",
+                    "I failed to check the status of the asset on the remote server, for additional details consult the logs.",
+                    "Failed to get the etag of the asset on the remote server for LoadResourceJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
+                    true, true, e);
                 _currentState = State.Error;
                 _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                 return this;
             }
+
+            Logger.General.Debug("Successfully completed getting the etag for LoadResourceJob with id " + Id.ToString() + ".");
 
             UpdateLastAction();
 
             if (_fullAsset.MetaAsset.ETag.IsOlder(remoteEtag))
             {
                 // Local is older -> Get it
+                Logger.General.Debug("The local asset is older than the remote asset, thus downloading can begin.");
 
                 if (CheckForAbortAndUpdate())
                 {
@@ -95,14 +115,22 @@ namespace Common.Work
                     return this;
                 }
 
+                Logger.General.Debug("Begining meta asset download for LoadResourceJob with id " + Id.ToString() + ".");
+
                 // Getting Meta
                 if (!_fullAsset.MetaAsset.DownloadFromServer(this))
                 {
-                    _errorManager.AddError(ErrorMessage.JobRunFailed(null, this));
+                    _errorManager.AddError(ErrorMessage.ErrorCode.DownloadMetaAssetFailed,
+                        "Downloading Asset Failed",
+                        "I failed to download the meta information.  Please try again.",
+                        "Failed to download the asset's meta information for LoadResourceJob with id " + Id.ToString() + ".",
+                        true, true);
                     _currentState = State.Error;
                     _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                     return this;
                 }
+
+                Logger.General.Debug("Successfully completed the meta asset download for LoadResourceJob with id " + Id.ToString() + ".");
 
                 // Check for Error
                 if (this.IsError || CheckForAbortAndUpdate())
@@ -118,10 +146,16 @@ namespace Common.Work
 
                 _fullAsset.DataAsset.OnProgress += new Data.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
 
+                Logger.General.Debug("Begining data asset download for LoadResourceJob with id " + Id.ToString() + ".");
+
                 // Getting Data
                 if (!_fullAsset.DataAsset.DownloadFromServer(this, _fullAsset.MetaAsset))
                 {
-                    _errorManager.AddError(ErrorMessage.JobRunFailed(null, this));
+                    _errorManager.AddError(ErrorMessage.ErrorCode.DownloadDataAssetFailed,
+                        "Downloading Asset Failed",
+                        "I failed to download the data asset.  Please try again.",
+                        "Failed to download the asset's data for LoadResourceJob with id " + Id.ToString() + ".",
+                        true, true);
                     _currentState = State.Error;
                     _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                     return this;
@@ -133,6 +167,8 @@ namespace Common.Work
                     _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
                     return this;
                 }
+
+                Logger.General.Debug("Successfully completed the data asset download for LoadResourceJob with id " + Id.ToString() + ".");
 
                 UpdateLastAction();
             }
@@ -153,6 +189,8 @@ namespace Common.Work
         /// <param name="percentComplete">The percent complete.</param>
         void Run_DataAsset_OnProgress(Data.DataAsset sender, int percentComplete)
         {
+            Logger.General.Debug("LoadResourceJob with id " + Id.ToString() + " is now " + percentComplete.ToString() + "% complete.");
+
             UpdateProgress((ulong)sender.BytesComplete, (ulong)sender.BytesTotal);
             
             // Don't update the UI if finished, the final update is handled by the Run() method.
