@@ -193,6 +193,26 @@ namespace Common.FileSystem
         }
 
         /// <summary>
+        /// Copies the current version to the specified relative destination.
+        /// </summary>
+        /// <param name="destinationRelativeFilePath">The root relative destination file path.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
+        public bool CopyToRelativeFilePath(string destinationRelativeFilePath)
+        {
+            return _fileSystem.Copy(RelativeFilepath, destinationRelativeFilePath);
+        }
+
+        /// <summary>
+        /// Copies the specified relative source file path to the current version.
+        /// </summary>
+        /// <param name="sourceRelativeFilePath">The source relative file path.</param>
+        /// <returns></returns>
+        public bool CopyFromRelativeFilePath(string sourceRelativeFilePath)
+        {
+            return _fileSystem.Copy(sourceRelativeFilePath, RelativeFilepath);
+        }
+
+        /// <summary>
         /// Gets an <see cref="IOStream"/> using the specified parameters.
         /// </summary>
         /// <param name="mode">The <see cref="FileMode"/>.</param>
