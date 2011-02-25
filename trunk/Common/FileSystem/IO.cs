@@ -185,7 +185,7 @@ namespace Common.FileSystem
         }
 
         /// <summary>
-        /// Gets all files within a relative directory.
+        /// Gets all files within a relative directory returning the full filepath for each file.
         /// </summary>
         /// <param name="relativePath">The relative directory.</param>
         /// <returns>An array of strings containing the full filepath for each file found within the relative directory.</returns>
@@ -476,6 +476,19 @@ namespace Common.FileSystem
         }
 
         /// <summary>
+        /// Gets the full path of all directories contained within the argument relative path.
+        /// </summary>
+        /// <param name="relativePath">The relative path.</param>
+        /// <returns>An array of full filepaths for the contained directories.</returns>
+        public string[] GetDirectories(string relativePath)
+        {
+            if (relativePath.StartsWith("//"))
+                relativePath = relativePath.TrimStart('/');
+
+            return Directory.GetDirectories(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativePath);
+        }
+
+        /// <summary>
         /// Deletes the directory.
         /// </summary>
         /// <param name="relativePath">The relative path.</param>
@@ -550,6 +563,45 @@ namespace Common.FileSystem
                         Logger.General.Error("Resource " + relativePath + "does not exist.", e);
                     }
                 }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Deletes the directory and all contents.
+        /// </summary>
+        /// <param name="relativePath">The relative path.</param>
+        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
+        public bool DeleteDirectoryAndAllContents(string relativePath)
+        {
+            string[] files, dirs;
+
+            lock (_openStates)
+            {
+                // Get all files within the directory
+                files = GetFiles(relativePath);
+
+                // Delete all contained files
+                for (int i = 0; i < files.Length; i++)
+                {
+                    if (!Delete(GetRelativePathFromFullPath(files[i])))
+                        return false;
+                }
+
+                // Get all directories within the directory
+                dirs = GetDirectories(relativePath);
+
+                // Delete all directories and their contents within the directory
+                for (int i=0; i<dirs.Length; i++)
+                {
+                    if (!DeleteDirectoryAndAllContents(GetRelativePathFromFullPath(dirs[i])))
+                        return false;
+                }
+
+                // Delete this directory
+                if (!DeleteDirectory(relativePath))
+                    return false;
             }
 
             return true;

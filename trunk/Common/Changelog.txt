@@ -3,6 +3,9 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r14
++ Added some methods to support the new transaction system
+
 r13
 - Implemented a new way of handling the ErrorMessage class
 

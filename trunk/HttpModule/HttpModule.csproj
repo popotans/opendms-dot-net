@@ -73,6 +73,9 @@
     <Compile Include="SolrSearch.cs" />
     <Compile Include="Storage\ResultType.cs" />
     <Compile Include="Storage\Master.cs" />
+    <Compile Include="Transactions\Coordinator.cs" />
+    <Compile Include="Transactions\Lock.cs" />
+    <Compile Include="Transactions\Transaction.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="Storage\Version.cs" />
   </ItemGroup>
@@ -106,7 +109,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
+      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
