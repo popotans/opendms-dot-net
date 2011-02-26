@@ -472,6 +472,8 @@ namespace Common.FileSystem
         /// <returns>A <see cref="DirectoryInfo"/> for the relative path.</returns>
         public DirectoryInfo GetDirectoryInfo(string relativePath)
         {
+            if (!relativePath.StartsWith(Path.DirectorySeparatorChar.ToString()))
+                relativePath = Path.DirectorySeparatorChar.ToString() + relativePath;
             return new DirectoryInfo(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativePath);
         }
 
@@ -482,8 +484,8 @@ namespace Common.FileSystem
         /// <returns>An array of full filepaths for the contained directories.</returns>
         public string[] GetDirectories(string relativePath)
         {
-            if (relativePath.StartsWith("//"))
-                relativePath = relativePath.TrimStart('/');
+            if (!relativePath.StartsWith("//"))
+                relativePath = Path.DirectorySeparatorChar.ToString() + relativePath;
 
             return Directory.GetDirectories(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativePath);
         }
@@ -495,7 +497,10 @@ namespace Common.FileSystem
         /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool DeleteDirectory(string relativePath)
         {
-            relativePath = relativePath.Trim(Path.DirectorySeparatorChar);
+            relativePath = relativePath.Trim(Path.AltDirectorySeparatorChar);
+
+            if (!relativePath.StartsWith(Path.DirectorySeparatorChar.ToString()))
+                relativePath = Path.DirectorySeparatorChar.ToString() + relativePath;
 
             if (relativePath == Data.AssetType.Meta.VirtualPath ||
                 relativePath == Data.AssetType.Data.VirtualPath ||

@@ -3,6 +3,9 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r15
++ Addeded handling of the transaction system which can be accessed at the /tran path using ?func=begin, ?func=next, ?func=abort, ?func=commit, ?func=undo&step=x where X is any positive integer value.
+
 r14
 + Added the untested and unimplemented transaction system code found in HttpModule.Transactions
 

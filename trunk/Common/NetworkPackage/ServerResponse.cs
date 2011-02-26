@@ -76,7 +76,15 @@ namespace Common.NetworkPackage
             /// <summary>
             /// An unhandled exception occurred.
             /// </summary>
-            Exception
+            Exception,
+            /// <summary>
+            /// The function value was invalid.
+            /// </summary>
+            InvalidFunctionValue,
+            /// <summary>
+            /// The transaction failed.
+            /// </summary>
+            TransactionFailed
         }
 
         /// <summary>

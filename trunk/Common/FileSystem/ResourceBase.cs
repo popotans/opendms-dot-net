@@ -199,6 +199,8 @@ namespace Common.FileSystem
         /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool CopyToRelativeFilePath(string destinationRelativeFilePath)
         {
+            if (!_fileSystem.DirectoryExists(destinationRelativeFilePath))
+                _fileSystem.CreateDirectoryPath(destinationRelativeFilePath);
             return _fileSystem.Copy(RelativeFilepath, destinationRelativeFilePath);
         }
 
