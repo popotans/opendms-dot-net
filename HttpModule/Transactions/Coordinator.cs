@@ -47,7 +47,7 @@ namespace HttpModule.Transactions
             string tranPath;
             
             // base transaction path for this request
-            tranPath = @"transactions/" + guid.ToString("N") + "//";
+            tranPath = @"transactions\" + guid.ToString("N") + "\\";
 
             // Check lock, Apply lock
             result = _storage.LoadMeta(guid, true, true, requestingUser, false, out ma, out errorMessage);
@@ -77,7 +77,7 @@ namespace HttpModule.Transactions
             string tranPath;
 
             // base transaction path for this request
-            tranPath = @"transactions/" + guid.ToString("N") + "//";
+            tranPath = @"transactions\" + guid.ToString("N") + "\\";
 
             t = new Transaction(_fileSystem);
             if (!t.NextStep(tranPath, requestingUser))
@@ -96,7 +96,7 @@ namespace HttpModule.Transactions
             string tranPath;
 
             // base transaction path for this request
-            tranPath = @"transactions/" + guid.ToString("N") + "//";
+            tranPath = @"transactions\" + guid.ToString("N") + "\\";
 
             t = new Transaction(_fileSystem);
             if (!t.Undo(tranPath, requestingUser, steps))
@@ -115,7 +115,7 @@ namespace HttpModule.Transactions
             string tranPath;
 
             // base transaction path for this request
-            tranPath = @"transactions/" + guid.ToString("N") + "//";
+            tranPath = @"transactions\" + guid.ToString("N") + "\\";
 
             t = new Transaction(_fileSystem);
             if (!t.Abort(tranPath, requestingUser))
@@ -134,7 +134,7 @@ namespace HttpModule.Transactions
             string tranPath;
 
             // base transaction path for this request
-            tranPath = @"transactions/" + guid.ToString("N") + "//";
+            tranPath = @"transactions\" + guid.ToString("N") + "\\";
 
             t = new Transaction(_fileSystem);
             if (!t.Commit(guid, tranPath, requestingUser))

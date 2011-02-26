@@ -54,10 +54,10 @@ namespace HttpModule.Transactions
             l.SaveToFile(relativeTransactionPath + "lock.xml", _fileSystem, true);
 
             // Copy resource to 0 step directory
-            if (!fa.MetaAsset.Resource.CopyToRelativeFilePath(relativeTransactionPath + "0//meta.xml"))
+            if (!fa.MetaAsset.Resource.CopyToRelativeFilePath(relativeTransactionPath + "0\\meta.xml"))
                 return false;
 
-            if (!fa.DataAsset.Resource.CopyToRelativeFilePath(relativeTransactionPath + "0//data." + fa.MetaAsset.Extension))
+            if (!fa.DataAsset.Resource.CopyToRelativeFilePath(relativeTransactionPath + "0\\data" + fa.MetaAsset.Extension))
                 return false;
 
             return true;
@@ -66,8 +66,8 @@ namespace HttpModule.Transactions
         public bool Commit(Guid guid, string relativeTransactionPath, string requestingUser)
         {
             string temp;
-            MetaAsset ma;
-            DataAsset da;
+            MetaAsset originalMa;
+            DataAsset originalDa;
             Version version;
             Lock l = new Lock();
             int currentStep;
@@ -83,23 +83,24 @@ namespace HttpModule.Transactions
             // Get the current step
             currentStep = GetCurrentStep(relativeTransactionPath);
 
+            #region Put current asset into history
 
             // Load MetaAsset
-            ma = new MetaAsset(guid, _fileSystem);
+            originalMa = new MetaAsset(guid, _fileSystem);
 
             // Does it exist?
-            if (!ma.ResourceExistsOnFilesystem())
+            if (!originalMa.ResourceExistsOnFilesystem())
                 return false;
 
             // Load the MetaAsset
-            if (!ma.Load())
+            if (!originalMa.Load())
                 return false;
 
             // Load the DataAsset
-            da = new DataAsset(ma, _fileSystem);
+            originalDa = new DataAsset(originalMa, _fileSystem);
 
             // Create the Version
-            version = new Version(new FullAsset(ma, da));
+            version = new Version(new FullAsset(originalMa, originalDa));
 
             // Copy the current version's metaasset into history
             if (!version.CopyMetaUsingVersionScheme())
@@ -108,14 +109,14 @@ namespace HttpModule.Transactions
             // Copy the current version's dataasset into history
             if (!version.CopyDataUsingVersionScheme())
             {
-                temp = ma.Resource.RelativeDirectory + ma.GuidString + "_" + 
-                    version.ToString() + ma.Extension;
+                temp = originalMa.Resource.RelativeDirectory + originalMa.GuidString + "_" + 
+                    version.ToString() + originalMa.Extension;
 
                 // Delete the DA from history if it was created
                 if (_fileSystem.ResourceExists(temp))
                     _fileSystem.Delete(temp);
 
-                temp = ma.Resource.RelativeDirectory + ma.GuidString + "_" +
+                temp = originalMa.Resource.RelativeDirectory + originalMa.GuidString + "_" +
                     version.ToString() + ".xml";
 
                 // Delete the MA from history if it was created
@@ -127,17 +128,16 @@ namespace HttpModule.Transactions
 
             // If we have made it here, both MA and DA were stored into history
 
-            // Increment version
-            version.IncrementMetaVersion();
-            version.IncrementDataVersion();
+            #endregion
 
-            // Update the MA
-            ma.UpdateByServer(version.MetaAsset.ETag, version.MetaAsset.MetaVersion, version.MetaAsset.DataVersion,
-                requestingUser, DateTime.Now, ma.Creator, ma.Length, da.Resource.ComputeMd5(),
-                ma.Created, ma.Modified, ma.LastAccess);
+            // Copy the current step into the live asset position
+            originalMa.Resource.CopyFromRelativeFilePath(relativeTransactionPath + currentStep.ToString() + 
+                "\\meta.xml");
+            originalDa.Resource.CopyFromRelativeFilePath(relativeTransactionPath + currentStep.ToString() + 
+                "\\data" + GetDataExtension(relativeTransactionPath + currentStep.ToString()));
 
-            // Save the MA
-            ma.Save();
+            // Delete all content within the transaction path
+            _fileSystem.DeleteDirectoryAndAllContents(relativeTransactionPath);
 
             return true;
         }
@@ -173,6 +173,9 @@ namespace HttpModule.Transactions
 
             // Get the current step
             currentStep = GetCurrentStep(relativeTransactionPath);
+
+            if (steps > currentStep)
+                steps = currentStep;
 
             // Set the step to delete
             deleteStep = currentStep;
@@ -224,12 +227,16 @@ namespace HttpModule.Transactions
             // Get the extension of the data file
             extension = GetDataExtension(relativeTransactionPath + currentStep.ToString());
 
+            // Make non-existant directory
+            if (!_fileSystem.DirectoryExists(relativeTransactionPath + nextStep.ToString() + "\\"))
+                _fileSystem.CreateDirectoryPath(relativeTransactionPath + nextStep.ToString() + "\\");
+
             // Copy current to new step directory
-            if (!_fileSystem.Copy(relativeTransactionPath + currentStep.ToString() + "//meta.xml",
-                relativeTransactionPath + nextStep.ToString() + "//meta.xml"))
+            if (!_fileSystem.Copy(relativeTransactionPath + currentStep.ToString() + "\\meta.xml",
+                relativeTransactionPath + nextStep.ToString() + "\\meta.xml"))
                 return false;
-            if (!_fileSystem.Copy(relativeTransactionPath + currentStep.ToString() + "//data" + extension,
-                relativeTransactionPath + nextStep.ToString() + "//meta" + extension))
+            if (!_fileSystem.Copy(relativeTransactionPath + currentStep.ToString() + "\\data" + extension,
+                relativeTransactionPath + nextStep.ToString() + "\\data" + extension))
                 return false;
 
             // Update the lock

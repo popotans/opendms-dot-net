@@ -761,6 +761,91 @@ namespace HttpModule
             Common.Logger.Network.Debug("Response for the SaveData request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
         }
 
+        [ServicePoint("/tran", ServicePointAttribute.VerbType.POST)]
+        public void Transaction(HttpApplication app)
+        {
+            Transactions.Transaction tran;
+            Transactions.Coordinator tcord = new Transactions.Coordinator(_fileSystem, _storage);
+            ServerResponse resp = null;
+            string errMsg;
+            Guid guid = ParseGuid(app.Request.Path);
+            Dictionary<string, string> userInfo = ParseUserInfo(app);
+            Dictionary<string, string> queryString = ParseQueryString(app);
+
+            Common.Logger.Network.Debug("Transaction manipulation request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
+
+            if (queryString["func"] == null)
+            {
+                Common.Logger.Network.Info("The user '" + userInfo["username"] + "' requested a transaction manipulation but failed to indicate the desired function."); 
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.InvalidFunctionValue,
+                    "The function (\"func\") value was not supplied.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+                Common.Logger.Network.Debug("An error response for the transaction manipulation request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+                return;
+            }
+
+            switch (queryString["func"])
+            {
+                case "begin":
+                    tran = tcord.Begin(guid, userInfo["username"], 900000, out errMsg);
+                    break;
+                case "next":
+                    tran = tcord.NextStep(guid, userInfo["username"], out errMsg);
+                    break;
+                case "undo":
+                    int steps;
+
+                    if (app.Request.QueryString["steps"] == null)
+                    {
+                        resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "The querystring argument \"steps\" is missing.");
+                        Common.Logger.Network.Debug("User '" + userInfo["username"] + "' made a transaction manipulation request for undo on id " + guid.ToString("N") + ", but did not specify the \"steps\" argument.");
+                    }
+                    if (!int.TryParse(app.Request.QueryString["steps"], out steps))
+                    {
+                        resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "Invalid value for \"steps\".");
+                        Common.Logger.Network.Debug("User '" + userInfo["username"] + "' made a transaction manipulation request for undo on id " + guid.ToString("N") + ", but sent a bad value for the \"steps\" argument.");
+                    }
+
+                    if (resp != null)
+                    {
+                        resp.Serialize().WriteTo(app.Response.OutputStream);
+                        app.CompleteRequest();
+                        return;
+                    }
+
+                    tran = tcord.Undo(guid, userInfo["username"], steps, out errMsg);
+                    break;
+                case "abort":
+                    tran = tcord.Abort(guid, userInfo["username"], out errMsg);
+                    break;
+                case "commit":
+                    tran = tcord.Commit(guid, userInfo["username"], out errMsg);
+                    break;
+                default:
+                    tran = null;
+                    errMsg = "An unsupported function (\"func\") value was received.";
+                    break;
+            }
+
+            if (tran == null)
+            {
+                Common.Logger.General.Info("The transaction manipulation function requested by user '" + userInfo["username"] +
+                    "' on id " + guid.ToString("N") + " failed with the message: " + errMsg);
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, errMsg);
+            }
+            else
+            {
+                resp = new ServerResponse(true, ServerResponse.ErrorCode.None, "Transaction manipulation success.");
+            }
+
+            resp.Serialize().WriteTo(app.Response.OutputStream);
+            app.CompleteRequest();
+
+            Common.Logger.Network.Debug("Response for the transaction manipulation request has been sent for id " + 
+                guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+        }
+
         /// <summary>
         /// Test1 creates a new resource (or a new version thereof) every time it is called
         /// </summary>
@@ -874,6 +959,7 @@ namespace HttpModule
             dict.Add("releaselock", null);
             dict.Add("version", null);
             dict.Add("readonly", null);
+            dict.Add("func", null);
 
             if (!app.Request.QueryString.HasKeys())
                 return dict;
@@ -884,6 +970,8 @@ namespace HttpModule
                 dict["version"] = app.Request.QueryString["version"];
             if (!string.IsNullOrEmpty(app.Request.QueryString["readonly"]))
                 dict["readonly"] = app.Request.QueryString["readonly"];
+            if (!string.IsNullOrEmpty(app.Request.QueryString["func"]))
+                dict["func"] = app.Request.QueryString["func"];
 
             return dict;
         }

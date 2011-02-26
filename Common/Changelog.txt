@@ -3,6 +3,9 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r15
++ Added a few more methods and changed some methods to support implementation of the transaction system
+
 r14
 + Added some methods to support the new transaction system
 

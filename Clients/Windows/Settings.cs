@@ -57,9 +57,19 @@ namespace WindowsClient
             set
             {
                 if (ContainsKey("StorageLocation"))
-                    this["StorageLocation"] = value;
+                {
+                    if (!value.EndsWith("\\"))
+                        this["StorageLocation"] = value + Path.DirectorySeparatorChar;
+                    else
+                        this["StorageLocation"] = value;
+                }
                 else
-                    Add("StorageLocation", value);
+                {
+                    if (!value.EndsWith("\\"))
+                        Add("StorageLocation", value + Path.DirectorySeparatorChar);
+                    else
+                        Add("StorageLocation", value);
+                }
             }
         }
 

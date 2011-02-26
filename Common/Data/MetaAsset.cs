@@ -961,6 +961,52 @@ namespace Common.Data
         }
 
         /// <summary>
+        /// Loads this <see cref="MetaAsset"/> using the specified relative path.
+        /// </summary>
+        /// <param name="relativePath">The relative path.</param>
+        /// <param name="fileSystem">The <see cref="FileSystem.IO"/> instance.</param>
+        /// <returns></returns>
+        public bool Load(string relativePath, FileSystem.IO fileSystem)
+        {
+            NetworkPackage.MetaAsset networkMetaAsset;
+
+            networkMetaAsset = new NetworkPackage.MetaAsset();
+
+            // Read the file from the local store
+            try
+            {
+                if (!networkMetaAsset.ReadFromFile(relativePath, fileSystem))
+                {
+                    Logger.General.Error("Failed to load the meta asset.");
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.General.Error("Failed to load the meta asset.", e);
+                return false;
+            }
+
+            // Import it to this object
+            try
+            {
+                ImportFromNetworkRepresentation(networkMetaAsset);
+            }
+            catch (Exception e)
+            {
+                Logger.General.Error("Failed to import the meta asset.", e);
+                return false;
+            }
+
+            _state.State = AssetState.Flags.CanTransfer |
+                AssetState.Flags.InMemory |
+                AssetState.Flags.LoadedFromLocal |
+                AssetState.Flags.OnDisk;
+
+            return true;
+        }
+
+        /// <summary>
         /// Saves this <see cref="MetaAsset"/> to the file system.
         /// </summary>
         public void Save()
