@@ -52,7 +52,7 @@ namespace HttpModule.Transactions
             // Check lock, Apply lock
             result = _storage.LoadMeta(guid, true, true, requestingUser, false, out ma, out errorMessage);
 
-            if(result != Storage.ResultType.Success)
+            if(result != Storage.ResultType.Success && result != Storage.ResultType.NotFound)
                 return null;
 
             // Directory exists, fail out
@@ -64,7 +64,11 @@ namespace HttpModule.Transactions
 
             t = new Transaction(_fileSystem);
 
-            fa = new Common.Data.FullAsset(ma, new Common.Data.DataAsset(ma, _fileSystem));
+            if (result != Storage.ResultType.Success)
+                fa = null;
+            else
+                fa = new Common.Data.FullAsset(ma, new Common.Data.DataAsset(ma, _fileSystem));
+
             if (!t.Begin(fa, tranPath, requestingUser, durationOfExpiration))
                 return null;
 
@@ -146,5 +150,17 @@ namespace HttpModule.Transactions
             errorMessage = null;
             return t;
         }
+
+        public bool IsTransactionActive(Guid guid)
+        {
+            return _fileSystem.DirectoryExists(@"transactions\" + guid.ToString("N") + "\\");
+        }
+
+        public bool UserOwnsLock(Guid guid, string requestingUser)
+        {
+            Transaction t = new Transaction(_fileSystem);
+            return t.UserOwnsLock(@"transactions\" + guid.ToString("N") + "\\", requestingUser);
+        }
+
     }
 }
