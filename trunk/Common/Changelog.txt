@@ -3,6 +3,9 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r16
++ Added support for saving of meta and data assets within the transaction framework
+
 r15
 + Added a few more methods and changed some methods to support implementation of the transaction system
 

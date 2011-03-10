@@ -59,7 +59,7 @@ namespace Common.NetworkPackage
             if (this["$metaversion"].GetType() != typeof(uint)) return false;
             if (this["$dataversion"].GetType() != typeof(uint)) return false;
             if (ContainsKey("$lockedby")) { if (this["$lockedby"].GetType() != typeof(string)) return false; }
-            if (ContainsKey("$lockedat")) { if (this["$lockedat"].GetType() != typeof(DateTime?)) return false; }
+            if (ContainsKey("$lockedat")) { if (this["$lockedat"].GetType() != typeof(DateTime?) && this["$lockedat"].GetType() != typeof(DateTime)) return false; }
             if (this["$creator"].GetType() != typeof(string)) return false;
             if (this["$length"].GetType() != typeof(ulong)) return false;
             if (this["$md5"].GetType() != typeof(string)) return false;
@@ -68,7 +68,8 @@ namespace Common.NetworkPackage
             if (this["$modified"].GetType() != typeof(DateTime)) return false;
             if (this["$lastaccess"].GetType() != typeof(DateTime)) return false;
             if (this["$title"].GetType() != typeof(string)) return false;
-            if (this["$tags"].GetType() != typeof(System.Collections.Generic.List<string>)) return false;
+            if (this["$tags"].GetType() != typeof(System.Collections.Generic.List<string>) && 
+                this["$tags"].GetType() != typeof(string[])) return false;
 
             return true;
         }

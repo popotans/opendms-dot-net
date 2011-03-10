@@ -612,6 +612,156 @@ namespace HttpModule
             Common.Logger.Network.Debug("Response for the SaveMeta request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
         }
 
+        [ServicePoint("/tran/meta", ServicePointAttribute.VerbType.PUT)]
+        public void SaveMetaTransaction(HttpApplication app)
+        {
+            // curl -d @file_to_post.txt “http://www.domain.com/file.php”
+
+            string tranPath;
+            string errorMessage;
+            ServerResponse resp;
+            MetaAsset netMa = new MetaAsset();
+            MetaAsset currentStepMa = new MetaAsset();
+            int currentStep = 0;
+            uint metaversion, dataversion;
+            Common.Data.ETag etag;
+            Transactions.Coordinator tcord = new Transactions.Coordinator(_fileSystem, _storage);
+            Transactions.Transaction t;
+            Guid guid = ParseGuid(app.Request.Path);
+            Dictionary<string, string> userInfo = ParseUserInfo(app);
+            Dictionary<string, string> queryString = ParseQueryString(app);
+
+            tranPath = @"transactions\" + guid.ToString("N") + "\\";
+
+            Common.Logger.Network.Debug("SaveMetaTransaction request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
+
+            // Check for existing transaction
+            if (!tcord.IsTransactionActive(guid))
+            {
+                Common.Logger.General.Warn("A transaction does not exist on the asset with id " + guid.ToString("N") + ".");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "The asset with id " + guid.ToString("N") + " does not have an existing transaction.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Does user have ownership of the lock?
+            if (!tcord.UserOwnsLock(guid, userInfo["username"]))
+            {
+                Common.Logger.General.Warn("The user '" + userInfo["username"] + "' does not have ownership of the lock on the asset with id " + guid.ToString("N") + ".");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "The lock on this transaction is owned by another user.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // at this point the transaction exists and this user has ownership of the transaction
+
+            try
+            {
+                netMa.Deserialize(app.Request.InputStream);
+                Common.Logger.General.Debug("Meta asset with id " + guid.ToString("N") + " was successfully deserialized for user '" + userInfo["username"] + "'.");
+            }
+            catch (Exception e)
+            {
+                Common.Logger.General.Error("An exception occurred while attempting to deserialize the received meta asset.", e);
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.Exception, e.Message);
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Validate the netMa
+            if (!netMa.Validate())
+            {
+                Common.Logger.Network.Error("The meta asset received from user '" + userInfo["username"] + "' with id " + guid.ToString("N") + " did not pass a formatting validation check.");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.InvalidFormatting, "The asset received did not pass formatting validation.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            currentStep = new Transactions.Transaction(_fileSystem).GetCurrentStep(tranPath);
+
+            if (currentStep >= 0)
+            {
+                // Load the current MA for versioning
+                currentStepMa = new MetaAsset();
+                if (!currentStepMa.ReadFromFile(tranPath + currentStep.ToString() + "\\meta.xml", _fileSystem))
+                {
+                    Common.Logger.General.Error("An error while reading the current step's meta asset for resource with id " +
+                        guid.ToString("N") + ", this request was made by user '" + userInfo["username"] + "'.");
+
+                    resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "Could not read the meta asset from the current step.");
+                    resp.Serialize().WriteTo(app.Response.OutputStream);
+                    app.CompleteRequest();
+
+                    Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                    return;
+                }
+                metaversion = (uint)currentStepMa["$metaversion"] + 1;
+                dataversion = (uint)currentStepMa["$dataversion"];
+                etag = new Common.Data.ETag((string)currentStepMa["$etag"]).Increment();
+            }
+            else
+            {
+                metaversion = 1;
+                dataversion = 0;
+                etag = new Common.Data.ETag("1");
+            }
+
+            // Make a new step
+            if ((t = tcord.NextStep(guid, userInfo["username"], out errorMessage)) == null)
+            {
+                Common.Logger.General.Error("An error occurred while attempting to advance the transaction for the resource with id " + 
+                    guid.ToString("N") + ", this request was made by user '" + userInfo["username"] + "' and the error message was: " +
+                    errorMessage);
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, errorMessage);
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Update the metaversion
+            netMa["$metaversion"] = metaversion;
+
+            // Update the dataversion
+            netMa["$dataversion"] = dataversion;
+
+            // Update the etag
+            netMa["$etag"] = etag.Value;
+
+            // Save the meta to the transaction
+            netMa.SaveToFile(tranPath + t.GetCurrentStep(tranPath) + "\\meta.xml", _fileSystem, true);
+
+            resp = new ServerResponse(true, ServerResponse.ErrorCode.None);
+            resp.Serialize().WriteTo(app.Response.OutputStream);
+            app.CompleteRequest();
+
+            Common.Logger.Network.Debug("Response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+        }
+
         /// <summary>
         /// Responds to a GET request for a <see cref="Common.Data.DataAsset"/> by sending the binary data of the data resource.
         /// </summary>
@@ -759,6 +909,181 @@ namespace HttpModule
             app.CompleteRequest();
 
             Common.Logger.Network.Debug("Response for the SaveData request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+        }
+
+        [ServicePoint("/tran/data", ServicePointAttribute.VerbType.PUT)]
+        public void SaveDataTransaction(HttpApplication app)
+        {
+            Common.FileSystem.IOStream iostream;
+            string tranPath;
+            MetaAsset netMa;
+            ServerResponse resp;
+            Transactions.Coordinator tcord = new Transactions.Coordinator(_fileSystem, _storage);
+            Transactions.Transaction t = new Transactions.Transaction(_fileSystem);
+            Guid guid = ParseGuid(app.Request.Path);
+            Dictionary<string, string> userInfo = ParseUserInfo(app);
+            Dictionary<string, string> queryString = ParseQueryString(app);
+            int currentStep = 0;
+
+            tranPath = @"transactions\" + guid.ToString("N") + "\\";
+
+            Common.Logger.Network.Debug("SaveDataTransaction request received for " + guid.ToString("N") + " by user '" + userInfo["username"] + "'.");
+
+            // Check for existing transaction
+            if (!tcord.IsTransactionActive(guid))
+            {
+                Common.Logger.General.Warn("A transaction does not exist on the asset with id " + guid.ToString("N") + ".");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "The asset with id " + guid.ToString("N") + " does not have an existing transaction.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Does user have ownership of the lock?
+            if (!tcord.UserOwnsLock(guid, userInfo["username"]))
+            {
+                Common.Logger.General.Warn("The user '" + userInfo["username"] + "' does not have ownership of the lock on the asset with id " + guid.ToString("N") + ".");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "The lock on this transaction is owned by another user.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // at this point the transaction exists and this user has ownership of the transaction
+
+            // We need to know the current step
+            currentStep = t.GetCurrentStep(tranPath);
+
+            // Ensure the meta asset exists
+            if(!_fileSystem.ResourceExists(tranPath + "\\" + currentStep.ToString() + "\\meta.xml"))
+            {
+                Common.Logger.General.Warn("The transaction step could not save the data resource as requested by user '" + userInfo["username"] + "' because it does not have a meta resource for id " + guid.ToString("N") + ".");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "There is no matching meta resource for this data asset.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Load the NetworkPackage.MetaAsset
+            netMa = new MetaAsset();
+            if(!netMa.ReadFromFile(tranPath + "\\" + currentStep.ToString() + "\\meta.xml", _fileSystem))
+            {
+                Common.Logger.General.Error("The transaction step could not save the data resource as requested by user '" + userInfo["username"] + "' because it could not load the associated meta asset for id " + guid.ToString("N") + ".");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "The meta resource for this data asset could not be loaded.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Load the MetaAsset
+            Common.Data.MetaAsset ma = Common.Data.MetaAsset.Create(netMa, _fileSystem);
+
+            if (ma == null)
+            {
+                Common.Logger.General.Error("The transaction step could not save the data resource as requested by user '" + userInfo["username"] + "' because it could not load the associated meta asset for id " + guid.ToString("N") + ".");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "The meta resource for this data asset could not be loaded.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Save the Data Asset
+            iostream = _fileSystem.Open(tranPath + "\\" + currentStep.ToString() + "\\data" + ma.Extension,
+                FileMode.Create, FileAccess.Write, FileShare.None, FileOptions.None,
+                Settings.Instance.FileBufferSize, "HttpModule.ServiceHandler.SaveDataTransaction()");
+
+            if (iostream == null)
+            {
+                Common.Logger.General.Error("The transaction step could not save the data resource as requested by user '" + userInfo["username"] + "' because it could not open an output stream for id " + guid.ToString("N") + ".");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "The data asset could not be saved to disk.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Save the DA
+            iostream.CopyFrom(app.Request.InputStream);
+
+            // Close up streams
+            _fileSystem.Close(iostream);
+            app.Request.InputStream.Close();
+            app.Request.InputStream.Dispose();
+
+            // Do integrity checking for file size
+            if (_fileSystem.GetFileLength(tranPath + "\\" + currentStep.ToString() + "\\data" + ma.Extension) !=
+                ma.Length)
+            {
+                _fileSystem.Delete(tranPath + "\\" + currentStep.ToString() + "\\data" + ma.Extension);
+                Common.Logger.General.Warn("The data asset with id " + guid.ToString("N") + " received by user '" + userInfo["username"] + "' is not the length specified in the meta asset.");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "The data asset could not be saved to disk.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // Do integrity checking with MD5
+            if (!_fileSystem.VerifyMd5(tranPath + "\\" + currentStep.ToString() + "\\data" + ma.Extension, ma.Md5))
+            {
+                _fileSystem.Delete(tranPath + "\\" + currentStep.ToString() + "\\data" + ma.Extension);
+                Common.Logger.General.Warn("The data asset with id " + guid.ToString("N") + " received by user '" + userInfo["username"] + "' did not pass MD5 validation.");
+
+                resp = new ServerResponse(false, ServerResponse.ErrorCode.TransactionFailed, "The data asset could not be saved to disk.");
+                resp.Serialize().WriteTo(app.Response.OutputStream);
+                app.CompleteRequest();
+
+                Common.Logger.Network.Debug("An error response for the SaveMetaTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
+
+                return;
+            }
+
+            // If we make it to here, the file is received and has passed all integrity checking
+
+            // Update the dataversion, no need to update the etag because it was updated in the meta asset portion
+            // and a data asset cannot be updated without updating the meta asset
+            ma.UpdateByServer(ma.ETag, ma.MetaVersion, ma.DataVersion + 1, ma.LockedBy, ma.LockedAt,
+                ma.Creator, ma.Length, ma.Md5, ma.Created, ma.Modified, ma.LastAccess);
+
+            // Export the MetaAsset to a network version of it
+            netMa = ma.ExportToNetworkRepresentation();
+
+            // Save to the current step transaction file
+            netMa.SaveToFile(tranPath + "\\" + currentStep.ToString() + "\\meta.xml", _fileSystem, true);
+
+            // Create the response
+            resp = new ServerResponse(true, ServerResponse.ErrorCode.None);
+            resp.Serialize().WriteTo(app.Response.OutputStream);
+            app.CompleteRequest();
+
+            // Log
+            Common.Logger.Network.Debug("Response for the SaveDataTransaction request has been sent for id " + guid.ToString("N") + " for user '" + userInfo["username"] + "'.");
         }
 
         [ServicePoint("/tran", ServicePointAttribute.VerbType.POST)]
