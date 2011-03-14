@@ -12,7 +12,7 @@
     <AssemblyName>Common</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>2.0</OldToolsVersion>
@@ -43,9 +43,31 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CouchDB\Attachment.cs" />
+    <Compile Include="CouchDB\AttachmentCollection.cs" />
+    <Compile Include="CouchDB\ConvertTo.cs" />
+    <Compile Include="CouchDB\CouchDBException.cs" />
+    <Compile Include="CouchDB\Database.cs" />
+    <Compile Include="CouchDB\Document.cs" />
+    <Compile Include="CouchDB\DocumentCollection.cs" />
+    <Compile Include="CouchDB\DocumentCollectionConverter.cs" />
+    <Compile Include="CouchDB\DocumentConverter.cs" />
+    <Compile Include="CouchDB\Lucene\Search.cs" />
+    <Compile Include="CouchDB\Lucene\SearchResult.cs" />
+    <Compile Include="CouchDB\Lucene\SearchResultCollection.cs" />
+    <Compile Include="CouchDB\Lucene\SearchResultCollectionConverter.cs" />
+    <Compile Include="CouchDB\NetException.cs" />
+    <Compile Include="CouchDB\Result.cs" />
+    <Compile Include="CouchDB\Server.cs" />
+    <Compile Include="CouchDB\ServerResponse.cs" />
+    <Compile Include="CouchDB\Utilities.cs" />
+    <Compile Include="CouchDB\View.cs" />
+    <Compile Include="CouchDB\Web.cs" />
     <Compile Include="Data\AssetBase.cs" />
     <Compile Include="Data\AssetState.cs" />
     <Compile Include="Data\AssetType.cs" />
@@ -118,7 +140,7 @@
       <Properties InternalTargetFrameworkVersion="3.5" />
     </MonoDevelop>
     <VisualStudio>
-      <UserProperties BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" />
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>

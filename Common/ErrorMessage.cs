@@ -91,7 +91,13 @@ namespace Common
             /// Deserialization of the available meta properties failed.
             /// </summary>
             MetaFormDeserializationFailed,
+            /// <summary>
+            /// Downloading of search options failed.
+            /// </summary>
             SearchOptionDownloadFailed,
+            /// <summary>
+            /// Deserialization of search options failed.
+            /// </summary>
             SearchOptionDeserializationFailed
         }
         

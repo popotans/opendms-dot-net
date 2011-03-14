@@ -3,6 +3,10 @@ x Bug Fix
 - Informational or improvement
 + New Feature
 
+r17
++ Added the Common.CouchDB namespace and all code therein
+- Changed the framework from .NET 2.0 to .NET 4.0 - this might cause problems with Mono support.  Currently they show System.Web.Script.Serialization.JavaScriptSerializer.ConvertToType and Deserialize as "Missing".  Thus, if it is not supported before release, an alternative serialization/deserialization engine will need to be created for JSON.
+
 r16
 + Added support for saving of meta and data assets within the transaction framework
 
