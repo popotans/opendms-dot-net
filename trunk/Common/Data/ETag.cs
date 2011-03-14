@@ -31,6 +31,9 @@ namespace Common.Data
         /// </summary>
         public string Value { get { return _value; } }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ETag"/> class.
+        /// </summary>
         public ETag()
         {
             _value = null;

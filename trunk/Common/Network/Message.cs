@@ -420,23 +420,23 @@ namespace Common.Network
         {
             throw new NotSupportedException("Logging has not been implemented on Asynchronous Message Transfer, thus it should not be used.");
 
-            IAsyncResult asyncResult = null;
+            //IAsyncResult asyncResult = null;
 
-            if ((_state.OperationType == OperationType.POST || _state.OperationType == OperationType.PUT) &&
-                (_state.Stream != null))
-            {
-                asyncResult = _state.Request.BeginGetRequestStream(new AsyncCallback(MessageRequestCallback), _state);
-            }
-            else
-            {
-                asyncResult = _state.Request.BeginGetResponse(new AsyncCallback(MessageResponseCallback), _state);
-            }                
+            //if ((_state.OperationType == OperationType.POST || _state.OperationType == OperationType.PUT) &&
+            //    (_state.Stream != null))
+            //{
+            //    asyncResult = _state.Request.BeginGetRequestStream(new AsyncCallback(MessageRequestCallback), _state);
+            //}
+            //else
+            //{
+            //    asyncResult = _state.Request.BeginGetResponse(new AsyncCallback(MessageResponseCallback), _state);
+            //}                
             
-            _state.TimeoutWaitHandle = asyncResult.AsyncWaitHandle;
-            _state.TimeoutRegisteredWaitHandle = ThreadPool.RegisterWaitForSingleObject(_state.TimeoutWaitHandle,
-                new WaitOrTimerCallback(MessageTimeoutCallback), _state, _state.TimeoutDuration, true);
+            //_state.TimeoutWaitHandle = asyncResult.AsyncWaitHandle;
+            //_state.TimeoutRegisteredWaitHandle = ThreadPool.RegisterWaitForSingleObject(_state.TimeoutWaitHandle,
+            //    new WaitOrTimerCallback(MessageTimeoutCallback), _state, _state.TimeoutDuration, true);
 
-            return _state;
+            //return _state;
         }
 
         /// <summary>
