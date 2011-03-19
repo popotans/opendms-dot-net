@@ -18,12 +18,12 @@ using System;
 namespace Common.Work
 {
     /// <summary>
-    /// An implementation of <see cref="AssetJobBase"/> that uploads the asset to the server, creating
+    /// An implementation of <see cref="ResourceJobBase"/> that uploads the asset to the server, creating
     /// a new resource on the server and then downloads the updated <see cref="Data.MetaAsset"/> 
     /// saving it to disk.
     /// </summary>
     public class CreateResourceJob
-        : AssetJobBase
+        : ResourceJobBase
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CreateResourceJob"/> class.

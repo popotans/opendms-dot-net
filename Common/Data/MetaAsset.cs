@@ -457,9 +457,9 @@ namespace Common.Data
         /// <summary>
         /// Gets the current <see cref="Head"/> from the server.
         /// </summary>
-        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">The <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <returns><see cref="Head"/> if successful, otherwise <c>null</c>.</returns>
-        public Head GetHeadFromServer(Work.AssetJobBase job)
+        public Head GetHeadFromServer(Work.ResourceJobBase job)
         {
             if (Data.AssetType.IsNullOrUnknown(_assetType))
                 throw new InvalidOperationException();
@@ -515,9 +515,9 @@ namespace Common.Data
         /// <summary>
         /// Gets the current <see cref="ETag"/> from the server.
         /// </summary>
-        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">The <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <returns><see cref="ETag"/> if successful, otherwise <c>null</c>.</returns>
-        public ETag GetETagFromServer(Work.AssetJobBase job)
+        public ETag GetETagFromServer(Work.ResourceJobBase job)
         {
             if (Data.AssetType.IsNullOrUnknown(_assetType))
                 throw new InvalidOperationException();
@@ -667,9 +667,9 @@ namespace Common.Data
         /// <summary>
         /// Downloads the <see cref="MetaAsset"/> corresponding to this local <see cref="MetaAsset"/> from the server overwriting it on the local file system.
         /// </summary>
-        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">The <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <returns><c>True</c> if successful; otherwise <c>false</c>.</returns>
-        public bool DownloadFromServer(Work.AssetJobBase job)
+        public bool DownloadFromServer(Work.ResourceJobBase job)
         {
             if (!_state.HasFlag(AssetState.Flags.CanTransfer))
                 throw new InvalidAssetStateException(_state, "Cannot download");
@@ -744,9 +744,9 @@ namespace Common.Data
         /// <summary>
         /// Saves this <see cref="MetaAsset"/> to a the server returning a <see cref="NetworkPackage.ServerResponse"/> representing the result.
         /// </summary>
-        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">The <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <returns>A <see cref="NetworkPackage.ServerResponse"/> returned by the server.</returns>
-        public NetworkPackage.ServerResponse SaveToServer(Work.AssetJobBase job)
+        public NetworkPackage.ServerResponse SaveToServer(Work.ResourceJobBase job)
         {
             NetworkPackage.ServerResponse sr;
             Network.Message msg;
@@ -814,9 +814,9 @@ namespace Common.Data
         /// <summary>
         /// Creates this <see cref="MetaAsset"/> on the server returning a <see cref="NetworkPackage.ServerResponse"/> representing the result.
         /// </summary>
-        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">The <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <returns>A <see cref="NetworkPackage.ServerResponse"/> returned by the server.</returns>
-        public NetworkPackage.ServerResponse CreateOnServer(Work.AssetJobBase job)
+        public NetworkPackage.ServerResponse CreateOnServer(Work.ResourceJobBase job)
         {
             NetworkPackage.ServerResponse sr;
             Network.Message msg;
@@ -888,9 +888,9 @@ namespace Common.Data
         /// <summary>
         /// Loads this <see cref="MetaAsset"/> using its <see cref="FileSystem.MetaResource"/>.
         /// </summary>
-        /// <param name="job">The <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">The <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
-        public bool Load(Work.AssetJobBase job)
+        public bool Load(Work.ResourceJobBase job)
         {
             NetworkPackage.MetaAsset networkMetaAsset;
 

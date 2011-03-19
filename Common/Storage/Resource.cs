@@ -14,20 +14,22 @@
  */
 
 using System;
+using Common.CouchDB;
 
-namespace Common.Work
+namespace Common.Storage
 {
-    /// <summary>
-    /// Represents an interface used to indicate the inheriting class can request jobs of the <see cref="Master"/>.
-    /// </summary>
-    public interface IWorkRequestor
+    public sealed class Resource
     {
-        /// <summary>
-        /// WorkReport accepts a UpdateUIDelegate and its associated arguments and should handle pumping this message to the UI
-        /// </summary>
-        /// <param name="actUpdateUI">The act update UI.</param>
-        /// <param name="job">The job.</param>
-        /// <param name="resource">The resource.</param>
-        void WorkReport(JobBase.UpdateUIDelegate actUpdateUI, JobBase job, Storage.Resource resource);
+        private MetaAsset _metaAsset;
+        private DataAsset _dataAsset;
+
+        public MetaAsset MetaAsset { get { return _metaAsset; } }
+        public DataAsset DataAsset { get { return _dataAsset; } }
+
+        public Resource(Guid guid, Database cdb)
+        {
+            _metaAsset = new MetaAsset(guid, cdb);
+            _dataAsset = new DataAsset(_metaAsset, cdb);
+        }
     }
 }

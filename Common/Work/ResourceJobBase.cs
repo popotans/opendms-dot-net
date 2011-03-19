@@ -20,35 +20,34 @@ namespace Common.Work
     /// <summary>
     /// An abstract class that represents the base requirements for any inheriting class
     /// </summary>
-    public abstract class AssetJobBase : JobBase
+    public abstract class ResourceJobBase : JobBase
     {
         /// <summary>
-        /// A reference to a <see cref="Data.FullAsset"/> for this job.
+        /// A reference to a <see cref="Storage.Resource"/> for this job.
         /// </summary>
-        protected Data.FullAsset _fullAsset;
+        protected Storage.Resource _resource;
         /// <summary>
-        /// Gets a reference to the <see cref="Data.FullAsset"/> for this job.
+        /// Gets a reference to the <see cref="Storage.Resource"/> for this job.
         /// </summary>
-        public Data.FullAsset FullAsset { get { return _fullAsset; } }
+        public Storage.Resource Resource { get { return _resource; } }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AssetJobBase"/> class.
+        /// Initializes a new instance of the <see cref="ResourceJobBase"/> class.
         /// </summary>
         /// <param name="requestor">The object that requested performance of this job.</param>
         /// <param name="id">The id of this job.</param>
-        /// <param name="fullAsset">A reference to a <see cref="Data.FullAsset"/> for this job.</param>
+        /// <param name="resource">The resource.</param>
         /// <param name="actUpdateUI">The method to call to update the UI.</param>
         /// <param name="timeout">The timeout duration.</param>
         /// <param name="progressMethod">The <see cref="T:ProgressMethodType"/>.</param>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        public AssetJobBase(IWorkRequestor requestor, ulong id, Data.FullAsset fullAsset, 
+        public ResourceJobBase(IWorkRequestor requestor, ulong id, Storage.Resource resource, 
             UpdateUIDelegate actUpdateUI, uint timeout, ProgressMethodType progressMethod, 
-            ErrorManager errorManager, FileSystem.IO fileSystem)
-            : base(requestor, id, actUpdateUI, timeout, progressMethod, errorManager, 
-            fileSystem)
+            ErrorManager errorManager)
+            : base(requestor, id, actUpdateUI, timeout, progressMethod, errorManager)
         {
-            _fullAsset = fullAsset;
+            _resource = resource;
         }
     }
 }

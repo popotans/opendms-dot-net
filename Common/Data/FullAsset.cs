@@ -71,9 +71,9 @@ namespace Common.Data
         /// Gets the header information for this asset from the server including an <see cref="ETag"/> and a string value
         /// representing the MD5 of the data asset, by calling <see cref="M:MetaAsset.GetHeadFromServer"/>.
         /// </summary>
-        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">A reference to the <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <returns>The <see cref="ETag"/> from the server.</returns>
-        public Head GetHeadFromServer(Work.AssetJobBase job)
+        public Head GetHeadFromServer(Work.ResourceJobBase job)
         {
             if (MetaAsset == null)
                 throw new Work.JobException("MetaAsset cannot be null.");
@@ -87,9 +87,9 @@ namespace Common.Data
         /// <summary>
         /// Gets the <see cref="ETag"/> for this asset from the server by calling <see cref="M:MetaAsset.GetETagFromServer"/>.
         /// </summary>
-        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">A reference to the <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <returns>The <see cref="ETag"/> from the server.</returns>
-        public ETag GetETagFromServer(Work.AssetJobBase job)
+        public ETag GetETagFromServer(Work.ResourceJobBase job)
         {
             if (MetaAsset == null)
                 throw new Work.JobException("MetaAsset cannot be null.");
@@ -103,9 +103,9 @@ namespace Common.Data
         /// <summary>
         /// Downloads both the <see cref="MetaAsset"/> and the <see cref="DataAsset"/> from the server.
         /// </summary>
-        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">A reference to the <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <returns><c>True</c> if successful; otherwise <c>false</c>.</returns>
-        public bool DownloadFromServer(Work.AssetJobBase job)
+        public bool DownloadFromServer(Work.ResourceJobBase job)
         {
             if (MetaAsset == null)
                 throw new Work.JobException("MetaAsset cannot be null.");
@@ -138,12 +138,12 @@ namespace Common.Data
         /// <summary>
         /// Creates both the <see cref="MetaAsset"/> and the <see cref="DataAsset"/> on the server.
         /// </summary>
-        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">A reference to the <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
         /// <returns>
         ///   <c>True</c> if successful; otherwise <c>false</c>.
         /// </returns>
-        public bool CreateOnServer(Work.AssetJobBase job, FileSystem.IO fileSystem)
+        public bool CreateOnServer(Work.ResourceJobBase job, FileSystem.IO fileSystem)
         {
             Guid newGuid;
             Data.MetaAsset oldMa = MetaAsset;
@@ -197,9 +197,9 @@ namespace Common.Data
         /// <summary>
         /// Saves both the <see cref="MetaAsset"/> and the <see cref="DataAsset"/> to the server.
         /// </summary>
-        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> calling this method.</param>
+        /// <param name="job">A reference to the <see cref="Work.ResourceJobBase"/> calling this method.</param>
         /// <returns><c>True</c> if successful; otherwise <c>false</c>.</returns>
-        public bool SaveToServer(Work.AssetJobBase job)
+        public bool SaveToServer(Work.ResourceJobBase job)
         {
             if (MetaAsset == null)
                 throw new Work.JobException("MetaAsset cannot be null.");
@@ -238,7 +238,7 @@ namespace Common.Data
         /// </summary>
         /// <param name="job">The job.</param>
         /// <returns></returns>
-        public bool Load(Work.AssetJobBase job)
+        public bool Load(Work.ResourceJobBase job)
         {
             if (MetaAsset == null)
                 throw new Work.JobException("MetaAsset cannot be null.");

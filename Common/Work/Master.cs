@@ -71,11 +71,11 @@ namespace Common.Work
         /// <summary>
         /// A collection of jobs waiting for execution
         /// </summary>
-        private List<AssetJobBase> _jobQueue;
+        private List<ResourceJobBase> _jobQueue;
         /// <summary>
         /// A collection of jobs currently executing
         /// </summary>
-        private List<AssetJobBase> _executingJobs;
+        private List<ResourceJobBase> _executingJobs;
         /// <summary>
         /// A collection of <see cref="Guid"/> object representing the IDs of locked resources.
         /// </summary>
@@ -104,8 +104,8 @@ namespace Common.Work
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
         public Master(ErrorManager errorManager, FileSystem.IO fileSystem)
         {
-            _jobQueue = new List<AssetJobBase>();
-            _executingJobs = new List<AssetJobBase>();
+            _jobQueue = new List<ResourceJobBase>();
+            _executingJobs = new List<ResourceJobBase>();
             _lockedResourceIDs = new List<Guid>();
             _workDispatcher = null;
             _id = 1;
@@ -123,9 +123,9 @@ namespace Common.Work
         /// <param name="actUpdateUI">The method called to update the UI.</param>
         /// <param name="timeout">The timeout duration.</param>
         public void AddJob(IWorkRequestor requestor, JobType jobType, Data.FullAsset fullAsset, 
-            AssetJobBase.UpdateUIDelegate actUpdateUI, uint timeout)
+            ResourceJobBase.UpdateUIDelegate actUpdateUI, uint timeout)
         {
-            AssetJobBase job = null;
+            ResourceJobBase job = null;
 
             try
             {
@@ -140,7 +140,7 @@ namespace Common.Work
                             actUpdateUI, timeout, _errorManager, _fileSystem);
                         break;
                     case JobType.DownloadAsset:
-                        job = new DownloadAssetJob(requestor, _id++, fullAsset, actUpdateUI, timeout, 
+                        job = new GetResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout, 
                             _errorManager, _fileSystem);
                         break;
                     case JobType.LoadResource:
@@ -221,7 +221,7 @@ namespace Common.Work
                     while (pos < _jobQueue.Count)
                     {
                         // Run through the queue looking for jobs that can be performed
-                        if (!AssetIsLocked(_jobQueue[pos].FullAsset))
+                        if (!AssetIsLocked(_jobQueue[pos].Resource))
                         {
                             lock (_jobQueue)
                             {
@@ -279,7 +279,7 @@ namespace Common.Work
         /// </summary>
         /// <param name="job">The job.</param>
         /// <returns>The thread running the job.</returns>
-        public Thread StartJob(AssetJobBase job)
+        public Thread StartJob(ResourceJobBase job)
         {
             Thread t = new Thread(RunJob);
 
@@ -287,7 +287,7 @@ namespace Common.Work
             {
                 lock (_lockedResourceIDs)
                 {
-                    _lockedResourceIDs.Add(job.FullAsset.Guid);
+                    _lockedResourceIDs.Add(job.Resource.Guid);
                 }
                 _executingJobs.Add(job);
             }
@@ -304,8 +304,8 @@ namespace Common.Work
                 {
                     lock (_lockedResourceIDs)
                     {
-                        if (_lockedResourceIDs.Contains(job.FullAsset.Guid))
-                            _lockedResourceIDs.Remove(job.FullAsset.Guid);
+                        if (_lockedResourceIDs.Contains(job.Resource.Guid))
+                            _lockedResourceIDs.Remove(job.Resource.Guid);
                     }
                     if(_executingJobs.Contains(job)) _executingJobs.Remove(job);
                 }
@@ -328,13 +328,13 @@ namespace Common.Work
         /// <param name="obj">The job.</param>
         private void RunJob(object obj)
         {
-            if (obj.GetType().BaseType != typeof(AssetJobBase))
+            if (obj.GetType().BaseType != typeof(ResourceJobBase))
                 throw new ArgumentException("Argument must be of type Work.AssetJobBase");
 
-            AssetJobBase job = (AssetJobBase)obj;
+            ResourceJobBase job = (ResourceJobBase)obj;
             lock (job)
             {
-                lock (job.FullAsset)
+                lock (job.Resource)
                 {
                     try
                     {
@@ -346,8 +346,8 @@ namespace Common.Work
                         {
                             lock (_lockedResourceIDs)
                             {
-                                if (_lockedResourceIDs.Contains(job.FullAsset.Guid))
-                                    _lockedResourceIDs.Remove(job.FullAsset.Guid);
+                                if (_lockedResourceIDs.Contains(job.Resource.Guid))
+                                    _lockedResourceIDs.Remove(job.Resource.Guid);
                             }
                             if (_executingJobs.Contains(job)) _executingJobs.Remove(job);
                         }
@@ -364,7 +364,7 @@ namespace Common.Work
                 {
                     lock (_lockedResourceIDs)
                     {
-                        _lockedResourceIDs.Remove(job.FullAsset.Guid);
+                        _lockedResourceIDs.Remove(job.Resource.Guid);
                     }
                     _executingJobs.Remove(job);
                 }
@@ -383,7 +383,7 @@ namespace Common.Work
             {
                 for (int i = 0; i < _executingJobs.Count; i++)
                 {
-                    if (_executingJobs[i].FullAsset == fullAsset)
+                    if (_executingJobs[i].Resource == fullAsset)
                     {
                         _executingJobs[i].Cancel();
                         Logger.General.Debug("Job with id " + _executingJobs[i].Id.ToString() + " has been canceled.");
@@ -396,14 +396,14 @@ namespace Common.Work
         /// Finds the executing job for resource.
         /// </summary>
         /// <param name="fullAsset">The full asset.</param>
-        /// <returns>The <see cref="AssetJobBase"/> if found; otherwise, <c>null</c>.</returns>
-        public AssetJobBase FindExecutingJobForResource(Data.FullAsset fullAsset)
+        /// <returns>The <see cref="ResourceJobBase"/> if found; otherwise, <c>null</c>.</returns>
+        public ResourceJobBase FindExecutingJobForResource(Data.FullAsset fullAsset)
         {
             lock (_executingJobs)
             {
                 for (int i = 0; i < _executingJobs.Count; i++)
                 {
-                    if (_executingJobs[i].FullAsset == fullAsset)
+                    if (_executingJobs[i].Resource == fullAsset)
                     {
                         return _executingJobs[i];
                     }

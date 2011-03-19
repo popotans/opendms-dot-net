@@ -135,7 +135,7 @@ namespace Common.Data
         /// Downloads the current version of this <see cref="DataAsset"/> from the server and writes it 
         /// directly to the file system.
         /// </summary>
-        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> which has called this method.</param>
+        /// <param name="job">A reference to the <see cref="Work.ResourceJobBase"/> which has called this method.</param>
         /// <param name="ma">A reference to the <see cref="MetaAsset"/> that corresponds to this <see cref="DataAsset"/>.</param>
         /// <returns><c>True</c> if successful, <c>false</c> otherwise.</returns>
         /// <example>
@@ -153,7 +153,7 @@ namespace Common.Data
         /// }       
         /// </code>
         /// </example>
-        public bool DownloadFromServer(Work.AssetJobBase job, MetaAsset ma)
+        public bool DownloadFromServer(Work.ResourceJobBase job, MetaAsset ma)
         {
             if (!_state.HasFlag(AssetState.Flags.CanTransfer))
                 throw new InvalidAssetStateException(_state, "Cannot download");
@@ -255,7 +255,7 @@ namespace Common.Data
         /// <summary>
         /// Saves the current version of this <see cref="DataAsset"/> to the server.
         /// </summary>
-        /// <param name="job">A reference to the <see cref="Work.AssetJobBase"/> which has called this method.</param>
+        /// <param name="job">A reference to the <see cref="Work.ResourceJobBase"/> which has called this method.</param>
         /// <param name="ma">A reference to the <see cref="MetaAsset"/> that corresponds to this <see cref="DataAsset"/>.</param>
         /// <returns>A <see cref="NetworkPackage.ServerResponse"/> representing the result of the save.</returns>
         /// <example>
@@ -275,7 +275,7 @@ namespace Common.Data
         /// }
         /// </code>
         /// </example>
-        public NetworkPackage.ServerResponse SaveToServer(Work.AssetJobBase job, MetaAsset ma)
+        public NetworkPackage.ServerResponse SaveToServer(Work.ResourceJobBase job, MetaAsset ma)
         {
             if (!_state.HasFlag(AssetState.Flags.CanTransfer))
                 throw new InvalidAssetStateException(_state, "Cannot download");
