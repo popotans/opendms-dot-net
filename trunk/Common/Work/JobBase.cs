@@ -27,8 +27,8 @@ namespace Common.Work
         /// Represents the method that handles updating the UI.
         /// </summary>
         /// <param name="job">A reference to the calling <see cref="JobBase"/>.</param>
-        /// <param name="fullAsset">A reference to the <see cref="Data.FullAsset"/> within the job.</param>
-        public delegate void UpdateUIDelegate(JobBase job, Data.FullAsset fullAsset);
+        /// <param name="resource">The resource.</param>
+        public delegate void UpdateUIDelegate(JobBase job, Storage.Resource resource);
         /// <summary>
         /// Represents the method that handles the completion of a cancellation request.
         /// </summary>
@@ -240,9 +240,8 @@ namespace Common.Work
         /// <param name="timeout">The timeout duration.</param>
         /// <param name="progressMethod">The <see cref="ProgressMethodType"/>.</param>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
-        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
         public JobBase(IWorkRequestor requestor, ulong id, UpdateUIDelegate actUpdateUI, uint timeout,
-            ProgressMethodType progressMethod, ErrorManager errorManager, FileSystem.IO fileSystem)
+            ProgressMethodType progressMethod, ErrorManager errorManager)
         {
             _id = id;
             _actUpdateUI = actUpdateUI;
@@ -251,7 +250,6 @@ namespace Common.Work
             _progressMethod = progressMethod;
             _errorManager = errorManager;
             _requestor = requestor;
-            _fileSystem = fileSystem;
         }
 
         /// <summary>

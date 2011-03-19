@@ -18,10 +18,10 @@ using System;
 namespace Common.Work
 {
     /// <summary>
-    /// An implementation of <see cref="AssetJobBase"/> that downloads the asset if the ETag on 
+    /// An implementation of <see cref="ResourceJobBase"/> that downloads the asset if the ETag on 
     /// the host is newer and saves the asset to a local resource (on disk).
     /// </summary>
-    public class LoadResourceJob : AssetJobBase
+    public class LoadResourceJob : ResourceJobBase
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="LoadResourceJob"/> class.

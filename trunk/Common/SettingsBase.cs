@@ -35,6 +35,30 @@ namespace Common
         /// <value>
         /// The server ip.
         /// </value>
+        public string PostgresConnectionString
+        {
+            get
+            {
+                if (ContainsKey("PostgresConnectionString"))
+                    return (string)this["PostgresConnectionString"];
+                else
+                    return "Server=127.0.0.1;Port=5432;User Id=test;Password=test;Database=opendms;";
+            }
+            set
+            {
+                if (ContainsKey("PostgresConnectionString"))
+                    this["PostgresConnectionString"] = value;
+                else
+                    Add("PostgresConnectionString", value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the server ip.
+        /// </summary>
+        /// <value>
+        /// The server ip.
+        /// </value>
         public string ServerIp
         {
             get

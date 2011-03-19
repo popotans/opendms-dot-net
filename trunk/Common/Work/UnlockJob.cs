@@ -18,10 +18,10 @@ using System;
 namespace Common.Work
 {
     /// <summary>
-    /// An implementation of <see cref="AssetJobBase"/> that unlocks the asset 
+    /// An implementation of <see cref="ResourceJobBase"/> that unlocks the asset 
     /// on the remote host.
     /// </summary>
-    public class UnlockJob : AssetJobBase
+    public class UnlockJob : ResourceJobBase
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="UnlockJob"/> class.
@@ -88,7 +88,7 @@ namespace Common.Work
             try
             {
                 msg = new Network.Message(SettingsBase.Instance.ServerIp, SettingsBase.Instance.ServerPort,
-                    "_lock", FullAsset.Guid.ToString("N") + "?releaselock=true", Network.OperationType.PUT, 
+                    "_lock", Resource.Guid.ToString("N") + "?releaselock=true", Network.OperationType.PUT, 
                     Network.DataStreamMethod.Memory,
                     null, null, null, null, false, false, false, false,
                     SettingsBase.Instance.NetworkBufferSize, SettingsBase.Instance.NetworkTimeout);
