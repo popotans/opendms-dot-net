@@ -28,16 +28,15 @@ namespace Common.Work
         /// </summary>
         /// <param name="requestor">The object that requested performance of this job.</param>
         /// <param name="id">The id of this job.</param>
-        /// <param name="fullAsset">A reference to a <see cref="Data.FullAsset"/> for this job.</param>
+        /// <param name="resource">A reference to a <see cref="Storage.Resource"/> for this job.</param>
         /// <param name="actUpdateUI">The method to call to update the UI.</param>
         /// <param name="timeout">The timeout duration.</param>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        public UnlockJob(IWorkRequestor requestor, ulong id, Data.FullAsset fullAsset,
-            UpdateUIDelegate actUpdateUI, uint timeout, ErrorManager errorManager,
-            FileSystem.IO fileSystem)
-            : base(requestor, id, fullAsset, actUpdateUI, timeout, ProgressMethodType.Determinate,
-            errorManager, fileSystem)
+        public UnlockJob(IWorkRequestor requestor, ulong id, Storage.Resource resource,
+            UpdateUIDelegate actUpdateUI, uint timeout, ErrorManager errorManager)
+            : base(requestor, id, resource, actUpdateUI, timeout, ProgressMethodType.Determinate,
+            errorManager)
         {
             Logger.General.Debug("UnlockJob instantiated on job id " + id.ToString() + ".");
         }
@@ -71,7 +70,7 @@ namespace Common.Work
                     "Timeout failed to start on a UnlockJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
@@ -79,7 +78,7 @@ namespace Common.Work
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
@@ -88,7 +87,7 @@ namespace Common.Work
             try
             {
                 msg = new Network.Message(SettingsBase.Instance.ServerIp, SettingsBase.Instance.ServerPort,
-                    "_lock", Resource.Guid.ToString("N") + "?releaselock=true", Network.OperationType.PUT, 
+                    "_lock", Resource.MetaAsset.GuidString+ "?releaselock=true", Network.OperationType.PUT, 
                     Network.DataStreamMethod.Memory,
                     null, null, null, null, false, false, false, false,
                     SettingsBase.Instance.NetworkBufferSize, SettingsBase.Instance.NetworkTimeout);
@@ -97,18 +96,18 @@ namespace Common.Work
             {
                 Logger.Network.Error("An exception occurred while created the network message for UnlockJob with id " + Id.ToString() + ".", e);
                 _errorManager.AddError(ErrorMessage.ErrorCode.UnlockAssetFailed,
-                    "Unlocking of Asset Failed",
-                    "I failed to unlock the asset.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
-                    "Failed to unlock the asset for UnlockJob with id " + Id.ToString() + ".",
+                    "Unlocking of Resource Failed",
+                    "I failed to unlock the resource.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                    "Failed to unlock the resource for UnlockJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
             Logger.General.Debug("Successfully completed formatting of network message for UnlockJob with id " + Id.ToString() + ".");
 
-            Logger.General.Debug("Beginning unlocking of asset on server for UnlockJob with id " + Id.ToString() + ".");
+            Logger.General.Debug("Beginning unlocking of resource on server for UnlockJob with id " + Id.ToString() + ".");
 
             try
             {
@@ -118,20 +117,20 @@ namespace Common.Work
             {
                 Logger.Network.Error("An exception occurred while sending the network message for UnlockJob with id " + Id.ToString() + ".", e);
                 _errorManager.AddError(ErrorMessage.ErrorCode.UnlockAssetFailed,
-                   "Unlocking of Asset Failed",
-                   "I failed to unlock the asset.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
-                   "Failed to unlock the asset for UnlockJob with id " + Id.ToString() + ".",
+                   "Unlocking of Resource Failed",
+                   "I failed to unlock the resource.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                   "Failed to unlock the resource for UnlockJob with id " + Id.ToString() + ".",
                    true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
-            Logger.General.Debug("Successfully completed unlocking of asset on server for UnlockJob with id " + Id.ToString() + ".");
+            Logger.General.Debug("Successfully completed unlocking of resource on server for UnlockJob with id " + Id.ToString() + ".");
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
@@ -148,11 +147,11 @@ namespace Common.Work
                 Logger.Network.Error("An exception occurred while calling NetworkPackage.ServerResponse.Deserialize() for UnlockJob with id " + Id.ToString() + ".", e);
                 _errorManager.AddError(ErrorMessage.ErrorCode.UnlockAssetFailed,
                    "Unlocking of Asset Might Have Failed",
-                   "I delivered the command to unlock the asset, but I received a response back from the server which I did not understand, thus, I cannot guarantee that the change was made.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                   "I delivered the command to unlock the resource, but I received a response back from the server which I did not understand, thus, I cannot guarantee that the change was made.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
                    "Failed to deserialize the server response for UnlockJob with id " + Id.ToString() + ".",
                    true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
@@ -162,19 +161,19 @@ namespace Common.Work
             {
                 Logger.Network.Error("Failed to lock the resource.");
                 _errorManager.AddError(ErrorMessage.ErrorCode.UnlockAssetFailed,
-                   "Unlocking of Asset Failed",
-                   "I delivered the command to unlock the asset, but I received a response stating that it failed.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
+                   "Unlocking of Resource Failed",
+                   "I delivered the command to unlock the resource, but I received a response stating that it failed.  I am going to stop trying to perform the action you requested.  You might have to retry the action.",
                    "Failed to unlock the asset on the server for UnlockJob with id " + Id.ToString() + ".",
                    true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
-            Logger.General.Debug("Successfully completed unlocking of the asset for UnlockJob with id " + Id.ToString() + ".");
+            Logger.General.Debug("Successfully completed unlocking of the resource for UnlockJob with id " + Id.ToString() + ".");
 
             _currentState = State.Active | State.Finished;
-            _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+            _requestor.WorkReport(_actUpdateUI, this, _resource);
             return this;
         }
     }

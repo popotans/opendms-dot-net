@@ -44,6 +44,8 @@ namespace Common.Storage
         /// </summary>
         public event EventHandler OnComplete;
 
+        private string _extension = null;
+
         /// <summary>
         /// The quantity of bytes completed.
         /// </summary>
@@ -52,6 +54,28 @@ namespace Common.Storage
         /// The total quantity of bytes.
         /// </summary>
         public ulong BytesTotal;
+
+        public string RelativePath
+        {
+            get 
+            {
+                if (string.IsNullOrEmpty(_extension))
+                    throw new InvalidOperationException("An extension has not been set.");
+
+                return FileSystem.Path.RelativeMetaPath + GuidString + _extension;
+            }
+        }
+
+        public string FullPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_extension))
+                    throw new InvalidOperationException("An extension has not been set.");
+
+                return FileSystem.Path.FullMetaPath + GuidString + _extension; 
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataAsset"/> class.
@@ -73,7 +97,181 @@ namespace Common.Storage
             : base(guid, cdb)
         {
             BytesComplete = BytesTotal = 0;
+            _extension = extension;
             _state = new AssetState() { State = AssetState.Flags.CanTransfer };
+        }
+
+        public System.IO.Stream GetDownloadStream(Work.ResourceJobBase job, Document doc, out string errorMessage)
+        {
+            errorMessage = null;
+
+            if (job != null && job.AbortAction) return null;
+
+            // Attachment checking
+            if (doc.Attachments.Count <= 0)
+            {
+                errorMessage = "No Attachment was found in the Document.";
+                return null;
+            }
+            if (doc.Attachments.Count > 1)
+            {
+                errorMessage = "Only a one Attachment can be present in a Document.";
+                return null;
+            }
+
+            // Ensure it can be downloaded
+            if (!doc.Attachments[0].CanDownload)
+            {
+                errorMessage = "The Attachment cannot be downloaded.";
+                return null;
+            }
+
+            return doc.Attachments[0].GetDownloadStreamSync(_database.Server, _database,
+                Web.DataStreamMethod.Stream, false, false, true);
+        }
+
+        public bool DownloadAndSaveLocally(Work.ResourceJobBase job, MetaAsset ma,
+            FileSystem.IO fileSystem, out string errorMessage)
+        {
+            if (ma.Document == null)
+                ma.Document = new Document(ma.GuidString);
+
+            return DownloadAndSaveLocally(job, ma.Document, 
+                fileSystem, out errorMessage);
+        }
+
+        public bool DownloadAndSaveLocally(Work.ResourceJobBase job, Document doc,
+            FileSystem.IO fileSystem, out string errorMessage)
+        {
+            FileSystem.IOStream iostream;
+            System.IO.Stream stream;
+            errorMessage = null;
+
+            if (job != null && job.AbortAction) return false;
+
+            // Get the download stream
+            if ((stream = GetDownloadStream(job, doc, out errorMessage)) == null)
+                return false;
+
+            // Open the local stream
+            try
+            {
+                iostream = fileSystem.Open(RelativePath, System.IO.FileMode.Create,
+                    System.IO.FileAccess.Write, System.IO.FileShare.None, System.IO.FileOptions.None,
+                    "Common.Storage.DataAsset.DownloadAndSaveLocally()");
+            }
+            catch(Exception e)
+            {
+                errorMessage = "Failed to open an iostream for " + RelativePath;
+                Logger.General.Error("Failed to open an iostream for " + FullPath + " resulting in the following exception.", e);
+                return false;
+            }
+
+            // Copy the download stream into the local stream
+            try
+            {
+                iostream.CopyFrom(stream);
+            }
+            catch (Exception e)
+            {
+                errorMessage = "Failed to copy the data received to the file " + RelativePath;
+                Logger.General.Error("Failed to copy the data received on the network stream to the file " + FullPath + " resulting in the following exception.", e);
+                return false;
+            }
+
+            // Close the network stream
+            stream.Close();
+            stream.Dispose();
+
+            // Close the filestream
+            fileSystem.Close(iostream);
+
+            return true;
+        }
+
+        public bool CreateOnRemote(Work.ResourceJobBase job, MetaAsset ma,
+            FileSystem.IO fileSystem, out string errorMessage)
+        {
+            if (ma.Document == null)
+                ma.Document = new Document(ma.GuidString);
+
+            return CreateOnRemote(job, ma.Document,
+                fileSystem, out errorMessage);
+        }
+
+        public bool CreateOnRemote(Work.ResourceJobBase job, Document doc,
+            FileSystem.IO fileSystem, out string errorMessage)
+        {
+            CouchDB.Result result;
+            FileSystem.IOStream iostream;
+            string filename;
+            Attachment att;
+            errorMessage = null;
+
+            if (job != null && job.AbortAction) return false;
+
+            filename = System.IO.Path.GetFileName(RelativePath);
+
+            if(doc.GetPropertyAsUInt64("$length") > long.MaxValue)
+                throw new OverflowException("The length is to large to cast to long.");
+
+            // Create Attachment
+            att = new Attachment(filename, Utilities.MimeType(filename), 
+                (long)doc.GetPropertyAsUInt64("$length"), doc);
+
+            // Supply a stream
+            try
+            {
+                iostream = fileSystem.Open(RelativePath, System.IO.FileMode.Open, 
+                    System.IO.FileAccess.Read, System.IO.FileShare.None, 
+                    System.IO.FileOptions.None, 
+                    "Common.Storage.DataAsset.CreateOnRemote()");
+            }
+            catch(Exception e)
+            {
+                Logger.General.Error("Could not open the stream for " + FullPath, e);
+                errorMessage = "Failed to open file " + RelativePath;
+                return false;
+            }
+
+            att.Stream = iostream.Stream;
+
+            doc.Attachments.Add(att);
+
+            result = doc.Attachments[0].UploadSync(_database.Server, _database, 
+                Web.DataStreamMethod.Stream, false, true);
+
+            if (!result.IsPass)
+            {
+                errorMessage = result.Message;
+                Logger.General.Error("Uploading of attachment failed with message: " +
+                    result.Message);
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool UpdateOnRemote(Work.ResourceJobBase job, MetaAsset ma,
+            FileSystem.IO fileSystem, out string errorMessage)
+        {
+            if (ma.Document == null)
+                ma.Document = new Document(ma.GuidString);
+
+            return UpdateOnRemote(job, ma.Document,
+                fileSystem, out errorMessage);
+        }
+
+        public bool UpdateOnRemote(Work.ResourceJobBase job, Document doc,
+            FileSystem.IO fileSystem, out string errorMessage)
+        {
+            // The way our code works, on an update the MetaAsset actually issues an update
+            // which creates a new version on the couchdb server and this must be done
+            // using an update command.  However, an attachment will use the same
+            // command as the create because it is just simply added to the current
+            // CouchDB version.  Essentially, we can just use the CreateOnRemote method!
+            // This we piggy-back it.
+            return CreateOnRemote(job, doc, fileSystem, out errorMessage);
         }
     }
 }

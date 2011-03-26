@@ -28,16 +28,16 @@ namespace Common.Work
         /// </summary>
         /// <param name="requestor">The object that requested performance of this job.</param>
         /// <param name="id">The id of this job.</param>
-        /// <param name="fullAsset">A reference to a <see cref="Data.FullAsset"/> for this job.</param>
+        /// <param name="resource">A reference to a <see cref="Storage.Resource"/> for this job.</param>
         /// <param name="actUpdateUI">The method to call to update the UI.</param>
         /// <param name="timeout">The timeout duration.</param>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        public LockJob(IWorkRequestor requestor, ulong id, Data.FullAsset fullAsset,
+        public LockJob(IWorkRequestor requestor, ulong id, Storage.Resource resource,
             UpdateUIDelegate actUpdateUI, uint timeout, ErrorManager errorManager,
             FileSystem.IO fileSystem)
-            : base(requestor, id, fullAsset, actUpdateUI, timeout, ProgressMethodType.Determinate,
-            errorManager, fileSystem)
+            : base(requestor, id, resource, actUpdateUI, timeout, ProgressMethodType.Determinate,
+            errorManager)
         {
             Logger.General.Debug("LockJob instantiated on job id " + id.ToString() + ".");
         }
@@ -71,7 +71,7 @@ namespace Common.Work
                     "Timeout failed to start on a LockJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
@@ -79,7 +79,7 @@ namespace Common.Work
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
@@ -88,7 +88,7 @@ namespace Common.Work
             try
             {
                 msg = new Network.Message(SettingsBase.Instance.ServerIp, SettingsBase.Instance.ServerPort,
-                    "_lock", Resource.Guid.ToString("N"), Network.OperationType.PUT, Network.DataStreamMethod.Memory,
+                    "_lock", _resource.MetaAsset.GuidString, Network.OperationType.PUT, Network.DataStreamMethod.Memory,
                     null, null, null, null, false, false, false, false,
                     SettingsBase.Instance.NetworkBufferSize, SettingsBase.Instance.NetworkTimeout);
             }
@@ -101,7 +101,7 @@ namespace Common.Work
                     "Failed to lock the asset for LockJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
@@ -122,7 +122,7 @@ namespace Common.Work
                    "Failed to lock the asset for LockJob with id " + Id.ToString() + ".",
                    true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
@@ -130,7 +130,7 @@ namespace Common.Work
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
@@ -151,7 +151,7 @@ namespace Common.Work
                    "Failed to deserialize the server response for LockJob with id " + Id.ToString() + ".",
                    true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
@@ -166,14 +166,14 @@ namespace Common.Work
                    "Failed to lock the asset on the server for LockJob with id " + Id.ToString() + ".",
                    true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
             Logger.General.Debug("Successfully completed locking of the asset for LockJob with id " + Id.ToString() + ".");
 
             _currentState = State.Active | State.Finished;
-            _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+            _requestor.WorkReport(_actUpdateUI, this, _resource);
             return this;
         }
     }

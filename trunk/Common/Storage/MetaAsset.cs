@@ -25,10 +25,26 @@ namespace Common.Storage
     public sealed class MetaAsset
         : AssetBase
     {
-        private static const System.Collections.Generic.List<string> ReservedPropertyNames = InstantiateReservedProperties();
+        private static System.Collections.Generic.List<string> ReservedPropertyNames = InstantiateReservedProperties();
 
         private Document _doc;
         private System.Collections.Generic.Dictionary<string, object> _userProperties;
+
+        public Document Document 
+        {
+            get { return _doc; }
+            set { _doc = value; }
+        }
+
+        public string RelativePath
+        {
+            get { return FileSystem.Path.RelativeMetaPath + GuidString + ".xml"; }
+        }
+
+        public string FullPath
+        {
+            get { return FileSystem.Path.FullMetaPath + GuidString + ".xml"; }
+        }
 
         /// <summary>
         /// Gets or sets the username of the user holding the outstanding lock.
@@ -242,7 +258,7 @@ namespace Common.Storage
         }
 
         /// <summary>
-        /// Creates an instance of a <see cref="MetaAsset"/> object.
+        /// Instantiates an instance of a <see cref="MetaAsset"/> object.
         /// </summary>
         /// <param name="guid">A Guid that provides a unique reference to an Asset.</param>
         /// <param name="lockedby">The username of the user holding the outstanding lock.</param>
@@ -258,7 +274,7 @@ namespace Common.Storage
         /// <param name="userproperties">User defined propertes Key is the name or title of the property, object is the value of the property.</param>
         /// <param name="cdb">A reference to the <see cref="Database"/>.</param>
         /// <returns>The instantiated <see cref="MetaAsset"/> reference.</returns>
-        public static MetaAsset Create(Guid guid, string lockedby, DateTime? lockedat, string creator,
+        public static MetaAsset Instantiate(Guid guid, string lockedby, DateTime? lockedat, string creator,
             ulong length, string md5, string extension, DateTime created,
             DateTime lastaccess, string title, System.Collections.Generic.List<string> tags,
             System.Collections.Generic.Dictionary<string, object> userproperties, Database cdb)
@@ -295,7 +311,7 @@ namespace Common.Storage
         {
             MetaAsset newMa;
 
-            newMa = MetaAsset.Create(newGuid, LockedBy, LockedAt, Creator, Length, Md5, Extension,
+            newMa = MetaAsset.Instantiate(newGuid, LockedBy, LockedAt, Creator, Length, Md5, Extension,
                 Created, LastAccess, Title, Tags, UserProperties, cdb);
 
             return newMa;
@@ -331,8 +347,6 @@ namespace Common.Storage
                     return "The property '$lockedat' must be of type DateTime.";
             }
             if (this["$creator"].GetType() != typeof(string)) return "The required property '$creator' must be of type string.";
-            if (ContainsKey("$previousversion")) { if (this["$previousversion"].GetType() != typeof(string)) return "The property '$previousversion' must be of type string."; }
-            if (ContainsKey("$nextversion")) { if (this["$nextversion"].GetType() != typeof(string)) return "The property '$nextversion' must be of type string."; }
             if (this["$length"].GetType() != typeof(ulong)) return "The required property '$length' must be of type ulong.";
             if (this["$md5"].GetType() != typeof(string)) return "The required property '$md5' must be of type string.";
             if (this["$extension"].GetType() != typeof(string)) return "The required property '$extension' must be of type string.";
@@ -389,10 +403,11 @@ namespace Common.Storage
         /// Saves this instance to a file specified.
         /// </summary>
         /// <param name="job">The job.</param>
-        /// <param name="relativeFilePath">The relative file path.</param>
         /// <param name="fileSystem">The file system.</param>
-        /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
-        public bool SaveToLocal(Work.ResourceJobBase job, string relativeFilePath, FileSystem.IO fileSystem)
+        /// <returns>
+        ///   <c>True</c> if successful; otherwise, <c>false</c>.
+        /// </returns>
+        public bool SaveToLocal(Work.ResourceJobBase job, FileSystem.IO fileSystem)
         {
             if (job != null && job.AbortAction) return false;
 
@@ -406,11 +421,11 @@ namespace Common.Storage
             // Save the file
             try
             {
-                SaveToFile(relativeFilePath, fileSystem, true);
+                SaveToFile(RelativePath, fileSystem, true);
             }
             catch (Exception e)
             {
-                Logger.General.Error("Failed to write the meta asset to " + relativeFilePath, e);
+                Logger.General.Error("Failed to write the meta asset to " + FullPath, e);
                 return false;
             }
 
@@ -431,7 +446,11 @@ namespace Common.Storage
             
             _doc = new Document(GuidString);
 
+            Logger.General.Debug("Starting download of resource " + GuidString + " for job id " + job.Id.ToString());
+
             result = _doc.DownloadSync(_database.Server, _database, false);
+
+            Logger.General.Debug("Finished download of resource " + GuidString + " for job id " + job.Id.ToString());
 
             if (!result.IsPass)
             {
@@ -440,7 +459,139 @@ namespace Common.Storage
                 return false;
             }
 
+            if (!string.IsNullOrEmpty(errorMessage = ImportFromDocument(_doc)))
+            {
+                Logger.General.Error("Failed to import the couchdb resource with id " + GuidString + 
+                    ", the error message was '" + errorMessage + "'.");
+                errorMessage = "Failed to import the meta asset.";
+                return false;
+            }
+            
             return true;
+        }
+
+        public bool CreateOnRemote(Work.ResourceJobBase job, out string errorMessage)
+        {
+            CouchDB.Result result;
+
+            _doc = new Document(GuidString);
+            errorMessage = null;
+
+            if (!string.IsNullOrEmpty(errorMessage = ExportToDocument()))
+                return false;
+
+            if (!_doc.CanCreate)
+                throw new InvalidOperationException("The underlying Document's state will not allow creation.");
+
+            result = _doc.CreateSync(_database.Server, _database, false);
+
+            if (!result.IsPass)
+            {
+                errorMessage = result.Message;
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool UpdateOnRemote(Work.ResourceJobBase job, out string errorMessage)
+        {
+            CouchDB.Result result;
+            errorMessage = null;
+
+            if (!string.IsNullOrEmpty(errorMessage = ExportToDocument()))
+                return false;
+
+            if (!_doc.CanUpdate)
+                throw new InvalidOperationException("The underlying Document's state will not allow updating.");
+
+            result = _doc.CreateSync(_database.Server, _database, false);
+
+            if (!result.IsPass)
+            {
+                errorMessage = result.Message;
+                return false;
+            }
+
+            return true;
+        }
+
+        private string ImportFromDocument(Document doc)
+        {
+            // $guid is in doc.Id
+            if (!doc.Contains("$creator")) return "The required property '$creator' does not exist.";
+            if (!doc.Contains("$length")) return "The required property '$length' does not exist.";
+            if (!doc.Contains("$md5")) return "The required property '$md5' does not exist.";
+            if (!doc.Contains("$extension")) return "The required property '$extension' does not exist.";
+            if (!doc.Contains("$created")) return "The required property '$created' does not exist.";
+            if (!doc.Contains("$lastaccess")) return "The required property '$lastaccess' does not exist.";
+            if (!doc.Contains("$title")) return "The required property '$title' does not exist.";
+            if (!doc.Contains("$tags")) return "The required property '$tags' does not exist.";
+
+            if (doc.Contains("$lockedby"))
+            {
+                if ((string)doc["$lockedby"] != default(string) &&
+                    doc["$lockedby"].GetType() != typeof(string))
+                    return "The property '$lockedby' must be of type string.";
+            }
+            if (doc.Contains("$lockedat"))
+            {
+                if (doc["$lockedat"] != null &&
+                    doc["$lockedat"].GetType() != typeof(string))
+                    return "The property '$lockedat' must be of type string.";
+            }
+
+
+            if (ContainsKey("$guid")) this["$guid"] = new Guid(doc.Id);
+            else Add("$guid", new Guid(doc.Id));
+
+            if (ContainsKey("$creator")) this["$creator"] = doc.GetPropertyAsString("$creator");
+            else Add("$creator", doc.GetPropertyAsString("$creator"));
+            
+            if (ContainsKey("$length")) this["$length"] = doc.GetPropertyAsUInt64("$length");
+            else Add("$length", doc.GetPropertyAsUInt64("$length"));
+
+            if (ContainsKey("$md5")) this["$md5"] = doc.GetPropertyAsString("$md5");
+            else Add("$md5", doc.GetPropertyAsString("$md5"));
+
+            if (ContainsKey("$extension")) this["$extension"] = doc.GetPropertyAsString("$extension");
+            else Add("$extension", doc.GetPropertyAsString("$extension"));
+
+            if (ContainsKey("$created")) this["$created"] = doc.GetPropertyAsDateTime("$created");
+            else Add("$created", doc.GetPropertyAsDateTime("$created"));
+
+            if (ContainsKey("$lastaccess")) this["$lastaccess"] = doc.GetPropertyAsDateTime("$lastaccess");
+            else Add("$lastaccess", doc.GetPropertyAsDateTime("$lastaccess"));
+
+            if (ContainsKey("$title")) this["$title"] = doc.GetPropertyAsString("$title");
+            else Add("$title", doc.GetPropertyAsString("$title"));
+
+            if (ContainsKey("$tags")) this["$tags"] = doc.GetPropertyAsList<string>("$tags").ToArray();
+            else Add("$tags", doc.GetPropertyAsList<string>("$tags").ToArray());
+
+            return null;
+        }
+
+        private string ExportToDocument()
+        {
+            string str;
+
+            if (!string.IsNullOrEmpty(str = VerifyIntegrity()))
+                return str;
+
+            if (_doc == null)
+                throw new InvalidOperationException("CouchDB Document is null.");
+
+            _doc.SetProperty("$creator", Creator);
+            _doc.SetProperty("$length", Length);
+            _doc.SetProperty("$md5", Md5);
+            _doc.SetProperty("$extension", Extension);
+            _doc.SetProperty("$created", Created);
+            _doc.SetProperty("$lastaccess", LastAccess);
+            _doc.SetProperty("$title", Title);
+            _doc.SetProperty("$tags", Tags);
+
+            return null;
         }
     }
 }

@@ -83,9 +83,9 @@ namespace Common.FileSystem
                 switch (_type)
                 {
                     case ResourceType.Meta:
-                        return "meta" + Path.DirectorySeparatorChar.ToString();
+                        return "meta" + System.IO.Path.DirectorySeparatorChar.ToString();
                     case ResourceType.Data:
-                        return "data" + Path.DirectorySeparatorChar.ToString();
+                        return "data" + System.IO.Path.DirectorySeparatorChar.ToString();
                     default:
                         throw new IOException("Invalid ResourceType");
                 }

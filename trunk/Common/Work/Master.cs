@@ -34,36 +34,23 @@ namespace Common.Work
             /// </summary>
             None = 0,
             /// <summary>
-            /// Downloads the ETag from the remote host.
+            /// Downloads the resource from the remote host.
             /// </summary>
-            GetETag,
+            GetResource,
             /// <summary>
-            /// Downloads the full asset from the remote host.
-            /// </summary>
-            DownloadAsset,
-            /// <summary>
-            /// If the remote ETag is newer then downloads the full asset from the 
-            /// remote host, saving it to disk and updating the local meta asset.
-            /// </summary>
-            LoadResource,
-            /// <summary>
-            /// Uploads the full asset to the remote host.
+            /// Uploads the resource to the remote host.
             /// </summary>
             SaveResource,
             /// <summary>
-            /// Uploads the full asset to the remote host creating a new resource.
+            /// Uploads the resource to the remote host creating a new resource.
             /// </summary>
             CreateResource,
             /// <summary>
-            /// Downloads the Header information (ETag and MD5) from the remote host.
-            /// </summary>
-            GetHead,
-            /// <summary>
-            /// Updates the MetaAsset on the server applying a lock
+            /// Applies a lock
             /// </summary>
             Lock,
             /// <summary>
-            /// Updates the MetaAsset on the server releasing the lock
+            /// Releases the lock
             /// </summary>
             Unlock
         }
@@ -119,10 +106,10 @@ namespace Common.Work
         /// </summary>
         /// <param name="requestor">The object that requested performance of this job.</param>
         /// <param name="jobType">The <see cref="JobType"/> of the job.</param>
-        /// <param name="fullAsset">The full asset.</param>
+        /// <param name="resource">The resource.</param>
         /// <param name="actUpdateUI">The method called to update the UI.</param>
         /// <param name="timeout">The timeout duration.</param>
-        public void AddJob(IWorkRequestor requestor, JobType jobType, Data.FullAsset fullAsset, 
+        public void AddJob(IWorkRequestor requestor, JobType jobType, Storage.Resource resource, 
             ResourceJobBase.UpdateUIDelegate actUpdateUI, uint timeout)
         {
             ResourceJobBase job = null;
@@ -131,37 +118,25 @@ namespace Common.Work
             {
                 switch (jobType)
                 {
-                    case JobType.GetETag:
-                        job = new GetETagJob(requestor, _id++, fullAsset,
-                            actUpdateUI, timeout, _errorManager, _fileSystem);
-                        break;
-                    case JobType.GetHead:
-                        job = new GetHeadJob(requestor, _id++, fullAsset,
-                            actUpdateUI, timeout, _errorManager, _fileSystem);
-                        break;
-                    case JobType.DownloadAsset:
-                        job = new GetResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout, 
-                            _errorManager, _fileSystem);
-                        break;
-                    case JobType.LoadResource:
-                        job = new LoadResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout, _errorManager, 
-                            _fileSystem);
+                    case JobType.GetResource:
+                        job = new GetResourceJob(requestor, _id++, resource, actUpdateUI, timeout, 
+                            _errorManager);
                         break;
                     case JobType.SaveResource:
-                        job = new SaveResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout,
-                            _errorManager, _fileSystem);
+                        job = new SaveResourceJob(requestor, _id++, resource, actUpdateUI, timeout,
+                            _errorManager);
                         break;
                     case JobType.CreateResource:
-                        job = new CreateResourceJob(requestor, _id++, fullAsset, actUpdateUI, timeout,
-                            _errorManager, _fileSystem);
+                        job = new CreateResourceJob(requestor, _id++, resource, actUpdateUI, timeout,
+                            _errorManager);
                         break;
                     case JobType.Lock:
-                        job = new LockJob(requestor, _id++, fullAsset,
+                        job = new LockJob(requestor, _id++, resource,
                             actUpdateUI, timeout, _errorManager, _fileSystem);
                         break;
                     case JobType.Unlock:
-                        job = new UnlockJob(requestor, _id++, fullAsset,
-                            actUpdateUI, timeout, _errorManager, _fileSystem);
+                        job = new UnlockJob(requestor, _id++, resource,
+                            actUpdateUI, timeout, _errorManager);
                         break;
                     default:
                         throw new Exception("Unknown job type");
@@ -258,15 +233,15 @@ namespace Common.Work
         /// <summary>
         /// Checks if the specified asset is locked
         /// </summary>
-        /// <param name="fullAsset">The full asset.</param>
+        /// <param name="resource">The resource.</param>
         /// <returns><c>True</c> if locked; otherwise, <c>false</c>.</returns>
-        private bool AssetIsLocked(Data.FullAsset fullAsset)
+        private bool AssetIsLocked(Storage.Resource resource)
         {
             lock (_lockedResourceIDs)
             {
                 for (int i = 0; i < _lockedResourceIDs.Count; i++)
                 {
-                    if (_lockedResourceIDs[i] == fullAsset.Guid)
+                    if (_lockedResourceIDs[i] == resource.Guid)
                         return true;
                 }
             }
@@ -376,14 +351,14 @@ namespace Common.Work
         /// <summary>
         /// Cancels the currently executing job for a resource.
         /// </summary>
-        /// <param name="fullAsset">The full asset.</param>
-        public void CancelJobForResource(Data.FullAsset fullAsset)
+        /// <param name="resource">The resource.</param>
+        public void CancelJobForResource(Storage.Resource resource)
         {
             lock (_executingJobs)
             {
                 for (int i = 0; i < _executingJobs.Count; i++)
                 {
-                    if (_executingJobs[i].Resource == fullAsset)
+                    if (_executingJobs[i].Resource == resource)
                     {
                         _executingJobs[i].Cancel();
                         Logger.General.Debug("Job with id " + _executingJobs[i].Id.ToString() + " has been canceled.");
@@ -395,15 +370,15 @@ namespace Common.Work
         /// <summary>
         /// Finds the executing job for resource.
         /// </summary>
-        /// <param name="fullAsset">The full asset.</param>
+        /// <param name="resource">The resource.</param>
         /// <returns>The <see cref="ResourceJobBase"/> if found; otherwise, <c>null</c>.</returns>
-        public ResourceJobBase FindExecutingJobForResource(Data.FullAsset fullAsset)
+        public ResourceJobBase FindExecutingJobForResource(Storage.Resource resource)
         {
             lock (_executingJobs)
             {
                 for (int i = 0; i < _executingJobs.Count; i++)
                 {
-                    if (_executingJobs[i].Resource == fullAsset)
+                    if (_executingJobs[i].Resource == resource)
                     {
                         return _executingJobs[i];
                     }

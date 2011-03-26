@@ -76,6 +76,7 @@
     <Compile Include="CouchDB\Utilities.cs" />
     <Compile Include="CouchDB\View.cs" />
     <Compile Include="CouchDB\Web.cs" />
+    <Compile Include="FileSystem\Path.cs" />
     <Compile Include="Postgres\Database.cs" />
     <Compile Include="Postgres\Resource.cs" />
     <Compile Include="Data\AssetBase.cs" />
@@ -131,7 +132,6 @@
     <Compile Include="Work\JobBase.cs" />
     <Compile Include="Work\ResourceJobBase.cs" />
     <Compile Include="Work\JobException.cs" />
-    <Compile Include="Work\LoadResourceJob.cs" />
     <Compile Include="Work\LockJob.cs" />
     <Compile Include="Work\Master.cs" />
     <Compile Include="Work\SaveResourceJob.cs" />

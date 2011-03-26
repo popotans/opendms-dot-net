@@ -30,6 +30,30 @@ namespace Common
         public static SettingsBase Instance { get; set; }
 
         /// <summary>
+        /// Gets or sets the root storage location.
+        /// </summary>
+        /// <value>
+        /// The root storage location.
+        /// </value>
+        public string RootStorageLocation
+        {
+            get
+            {
+                if (ContainsKey("RootStorageLocation"))
+                    return (string)this["RootStorageLocation"];
+                else
+                    return @"C:\ClientDataStore\";
+            }
+            set
+            {
+                if (ContainsKey("RootStorageLocation"))
+                    this["RootStorageLocation"] = value;
+                else
+                    Add("RootStorageLocation", value);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the server ip.
         /// </summary>
         /// <value>

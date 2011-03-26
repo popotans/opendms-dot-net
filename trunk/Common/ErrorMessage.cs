@@ -30,7 +30,7 @@ namespace Common
             /// <summary>
             /// Creation of the asset on the server failed.
             /// </summary>
-            CreateAssetOnServerFailed,
+            CreateResourceOnServerFailed,
             /// <summary>
             /// The timeout mechanism failed to start.
             /// </summary>
@@ -76,9 +76,9 @@ namespace Common
             /// </summary>
             JobRunFailed,
             /// <summary>
-            /// Saving of the resource on the server failed.
+            /// Updating of the resource on the server failed.
             /// </summary>
-            SaveResourceFailed,
+            UpdateResourceFailed,
             /// <summary>
             /// Unlocking of the asset on the server failed.
             /// </summary>

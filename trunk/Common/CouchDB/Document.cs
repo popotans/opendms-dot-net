@@ -517,23 +517,6 @@ namespace Common.CouchDB
         }
 
         /// <summary>
-        /// Returns the count (number) of properties within the Document
-        /// </summary>
-        public int PropertyCount
-        {
-            get { return _properties.Count; }
-        }
-
-        /// <summary>
-        /// Gets a Dictionary Enumerator
-        /// </summary>
-        /// <returns></returns>
-        public Dictionary<string, object>.Enumerator GetPropertyEnumerator()
-        {
-            return _properties.GetEnumerator();
-        }
-
-        /// <summary>
         /// Checks to see if a key exists in the properties
         /// </summary>
         /// <param name="name"></param>
@@ -1206,5 +1189,223 @@ namespace Common.CouchDB
         }
 
         #endregion
+
+
+
+        /// <summary>
+        /// Returns the count (number) of properties in this instance
+        /// </summary>
+        public int PropertyCount
+        {
+            get { return _properties.Count; }
+        }
+
+        /// <summary>
+        /// Gets a Dictionary Enumerator for this instance's properties
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<string, object>.Enumerator GetPropertyEnumerator()
+        {
+            return _properties.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Gets the property value as a string
+        /// </summary>
+        /// <param name="key">The key which to get</param>
+        /// <returns>A string representation of the value</returns>
+        public string GetPropertyAsString(string key)
+        {
+            if (Contains(key))
+                return _properties[key].ToString();
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the property value as an Int64
+        /// </summary>
+        /// <param name="key">The key which to get</param>
+        /// <returns>An Int64 representation of the value</returns>
+        public Int64 GetPropertyAsInt64(string key)
+        {
+            if (Contains(key))
+                return Convert.ToInt64(this[key]);
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Gets the property value as an UInt64
+        /// </summary>
+        /// <param name="key">The key which to get</param>
+        /// <returns>An UInt64 representation of the value</returns>
+        public UInt64 GetPropertyAsUInt64(string key)
+        {
+            if (Contains(key))
+                return Convert.ToUInt64(this[key]);
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Gets the property specified as a nullable DateTime - technically adds the value of ticks to 1/1/1970
+        /// </summary>
+        /// <param name="key">The key of the property</param>
+        /// <returns>A nullable DateTime representation of the value</returns>
+        public DateTime? GetPropertyAsDateTime(string key)
+        {
+            if (Contains(key))
+            {
+                DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0); // Set base
+                object o = this[key]; // Get ticks since 1/1/1970
+                Double d = Convert.ToDouble(o); // Convert to Double
+                dt = dt.AddMilliseconds(d); // Add ticks to 1/1/1970
+                return dt;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the property as a Dictionary
+        /// </summary>
+        /// <typeparam name="T">The Type of value expected - if unknown use "object"</typeparam>
+        /// <param name="key">The key of the property</param>
+        /// <returns>A Dictionary<string, T> representation of the value</returns>
+        public Dictionary<string, T> GetPropertyAsDictionary<T>(string key)
+        {
+            if (Contains(key))
+                return (Dictionary<string, T>)this[key];
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the property as a List
+        /// </summary>
+        /// <typeparam name="T">The Type of value expected - if unknown use "object"</typeparam>
+        /// <param name="key">The key of the property</param>
+        /// <returns>A List<T> representation of the value</returns>
+        public List<T> GetPropertyAsList<T>(string key)
+        {
+            if (Contains(key))
+                return (List<T>)this[key];
+
+            return null;
+        }
+
+        public List<T> SetProperty<T>(string key, List<T> value)
+        {
+            if (Contains(key))
+                _properties[key] = value;
+            else
+                AddProperty(key, value);
+
+            return value;
+        }
+
+        /// <summary>
+        /// Sets the property to the specified DateTime - technically sets the value to the amount of ticks since 1/1/1970
+        /// </summary>
+        /// <param name="key">The key of the property</param>
+        /// <param name="value">The DateTime to set as the value</param>
+        /// <returns>An Int64 value that is set to the property</returns>
+        public Int64 SetProperty(string key, DateTime? value)
+        {
+            Int64 val = -1;
+            DateTime dta;
+
+            if (!value.HasValue)
+                return 0;
+
+            // Set the base date
+            dta = new DateTime(1970, 1, 1, 0, 0, 0);
+
+            // Subtract the dta (base) from the value
+            val = value.Value.Subtract(dta).Ticks;
+
+            // Lock it up
+            lock (_properties)
+            {
+                // Update if exists, else add
+                if (Contains(key))
+                    _properties[key] = val;
+                else
+                    AddProperty(key, val);
+            }
+
+            return val;
+        }
+
+        public string SetProperty(string key, string value)
+        {
+            if (Contains(key))
+                _properties[key] = value;
+            else
+                AddProperty(key, value);
+
+            return value;
+        }
+
+        public Int16 SetProperty(string key, Int16 value)
+        {
+            if (Contains(key))
+                _properties[key] = value;
+            else
+                AddProperty(key, value);
+
+            return value;
+        }
+
+        public UInt16 SetProperty(string key, UInt16 value)
+        {
+            if (Contains(key))
+                _properties[key] = value;
+            else
+                AddProperty(key, value);
+
+            return value;
+        }
+
+        public Int32 SetProperty(string key, Int32 value)
+        {
+            if (Contains(key))
+                _properties[key] = value;
+            else
+                AddProperty(key, value);
+
+            return value;
+        }
+
+        public UInt32 SetProperty(string key, UInt32 value)
+        {
+            if (Contains(key))
+                _properties[key] = value;
+            else
+                AddProperty(key, value);
+
+            return value;
+        }
+
+        public Int64 SetProperty(string key, Int64 value)
+        {
+            if (Contains(key))
+                _properties[key] = value;
+            else
+                AddProperty(key, value);
+
+            return value;
+        }
+
+        public UInt64 SetProperty(string key, UInt64 value)
+        {
+            if (Contains(key))
+                _properties[key] = value;
+            else
+                AddProperty(key, value);
+
+            return value;
+        }
     }
 }
