@@ -53,9 +53,9 @@ namespace Common.FileSystem
         /// <param name="bufferSize">A positive Int32 value greater than 0 indicating the buffer size. For bufferSize values between one and eight, the actual buffer size is set to eight bytes.</param>
         public IO(string rootPath, int bufferSize)
         {
-            if(!rootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
-                !rootPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
-                rootPath += Path.DirectorySeparatorChar.ToString();
+            if(!rootPath.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()) &&
+                !rootPath.EndsWith(System.IO.Path.AltDirectorySeparatorChar.ToString()))
+                rootPath += System.IO.Path.DirectorySeparatorChar.ToString();
             
             CreateDirectoryPath(rootPath + Data.AssetType.Meta.VirtualPath);
             CreateDirectoryPath(rootPath + Data.AssetType.Data.VirtualPath);
@@ -191,10 +191,10 @@ namespace Common.FileSystem
         /// <returns>An array of strings containing the full filepath for each file found within the relative directory.</returns>
         public string[] GetFiles(string relativePath)
         {
-            if (relativePath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            if (relativePath.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
                 CreateDirectoryPath(relativePath);
             else
-                CreateDirectoryPath(relativePath + Path.DirectorySeparatorChar.ToString());
+                CreateDirectoryPath(relativePath + System.IO.Path.DirectorySeparatorChar.ToString());
 
             return Directory.GetFiles(_rootPath + relativePath);
         }
@@ -206,7 +206,7 @@ namespace Common.FileSystem
         /// <returns><c>True</c> when the file at the relative path exists; otherwise, <c>false</c>.</returns>
         public bool ResourceExists(string relativePath)
         {
-            return File.Exists(_rootPath + relativePath.TrimStart(Path.DirectorySeparatorChar));
+            return File.Exists(_rootPath + relativePath.TrimStart(System.IO.Path.DirectorySeparatorChar));
         }
 
         /// <summary>
@@ -311,9 +311,9 @@ namespace Common.FileSystem
         /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool RenameDirectory(string relativeSourcePath, string newDirName)
         {
-            string destinationRelativePath = relativeSourcePath.TrimEnd(new char[] { Path.DirectorySeparatorChar });
+            string destinationRelativePath = relativeSourcePath.TrimEnd(new char[] { System.IO.Path.DirectorySeparatorChar });
 
-            destinationRelativePath = relativeSourcePath.Substring(0, relativeSourcePath.LastIndexOf(Path.DirectorySeparatorChar) + 1);
+            destinationRelativePath = relativeSourcePath.Substring(0, relativeSourcePath.LastIndexOf(System.IO.Path.DirectorySeparatorChar) + 1);
             destinationRelativePath += newDirName;
 
             lock (_openStates)
@@ -326,8 +326,8 @@ namespace Common.FileSystem
 
                 try
                 {
-                    Directory.Move(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativeSourcePath,
-                        _rootPath.TrimEnd(Path.DirectorySeparatorChar) + destinationRelativePath);
+                    Directory.Move(_rootPath.TrimEnd(System.IO.Path.DirectorySeparatorChar) + relativeSourcePath,
+                        _rootPath.TrimEnd(System.IO.Path.DirectorySeparatorChar) + destinationRelativePath);
                 }
                 catch (Exception e)
                 {
@@ -349,7 +349,7 @@ namespace Common.FileSystem
         public bool Rename(string relativeSourcePath, string newFileName, bool overwrite)
         {
             FileState state;
-            string destinationRelativePath = relativeSourcePath.Substring(0, relativeSourcePath.LastIndexOf(Path.DirectorySeparatorChar) +1);
+            string destinationRelativePath = relativeSourcePath.Substring(0, relativeSourcePath.LastIndexOf(System.IO.Path.DirectorySeparatorChar) + 1);
             destinationRelativePath += newFileName;
 
             //if (!relativeSourcePath.EndsWith(Path.DirectorySeparatorChar.ToString()))
@@ -385,8 +385,8 @@ namespace Common.FileSystem
 
                 try
                 {
-                    File.Move(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativeSourcePath, 
-                        _rootPath.TrimEnd(Path.DirectorySeparatorChar) + destinationRelativePath);
+                    File.Move(_rootPath.TrimEnd(System.IO.Path.DirectorySeparatorChar) + relativeSourcePath,
+                        _rootPath.TrimEnd(System.IO.Path.DirectorySeparatorChar) + destinationRelativePath);
                 }
                 catch (Exception e)
                 {
@@ -472,9 +472,9 @@ namespace Common.FileSystem
         /// <returns>A <see cref="DirectoryInfo"/> for the relative path.</returns>
         public DirectoryInfo GetDirectoryInfo(string relativePath)
         {
-            if (!relativePath.StartsWith(Path.DirectorySeparatorChar.ToString()))
-                relativePath = Path.DirectorySeparatorChar.ToString() + relativePath;
-            return new DirectoryInfo(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativePath);
+            if (!relativePath.StartsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
+                relativePath = System.IO.Path.DirectorySeparatorChar.ToString() + relativePath;
+            return new DirectoryInfo(_rootPath.TrimEnd(System.IO.Path.DirectorySeparatorChar) + relativePath);
         }
 
         /// <summary>
@@ -485,9 +485,9 @@ namespace Common.FileSystem
         public string[] GetDirectories(string relativePath)
         {
             if (!relativePath.StartsWith("//"))
-                relativePath = Path.DirectorySeparatorChar.ToString() + relativePath;
+                relativePath = System.IO.Path.DirectorySeparatorChar.ToString() + relativePath;
 
-            return Directory.GetDirectories(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativePath);
+            return Directory.GetDirectories(_rootPath.TrimEnd(System.IO.Path.DirectorySeparatorChar) + relativePath);
         }
 
         /// <summary>
@@ -497,10 +497,10 @@ namespace Common.FileSystem
         /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool DeleteDirectory(string relativePath)
         {
-            relativePath = relativePath.Trim(Path.AltDirectorySeparatorChar);
+            relativePath = relativePath.Trim(System.IO.Path.AltDirectorySeparatorChar);
 
-            if (!relativePath.StartsWith(Path.DirectorySeparatorChar.ToString()))
-                relativePath = Path.DirectorySeparatorChar.ToString() + relativePath;
+            if (!relativePath.StartsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
+                relativePath = System.IO.Path.DirectorySeparatorChar.ToString() + relativePath;
 
             if (relativePath == Data.AssetType.Meta.VirtualPath ||
                 relativePath == Data.AssetType.Data.VirtualPath ||
@@ -512,7 +512,7 @@ namespace Common.FileSystem
 
             try
             {
-                Directory.Delete(_rootPath.TrimEnd(Path.DirectorySeparatorChar) + relativePath);
+                Directory.Delete(_rootPath.TrimEnd(System.IO.Path.DirectorySeparatorChar) + relativePath);
             }
             catch (Exception e)
             {
@@ -675,8 +675,8 @@ namespace Common.FileSystem
         /// <param name="relativePath">The relative path of the file.</param>
         public void CreateDirectoryPath(string relativePath)
         {
-            if (!Directory.Exists(Path.GetDirectoryName(_rootPath + relativePath)))
-                Directory.CreateDirectory(Path.GetDirectoryName(_rootPath + relativePath));
+            if (!Directory.Exists(System.IO.Path.GetDirectoryName(_rootPath + relativePath)))
+                Directory.CreateDirectory(System.IO.Path.GetDirectoryName(_rootPath + relativePath));
         }
 
         /// <summary>

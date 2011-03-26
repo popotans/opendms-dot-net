@@ -65,7 +65,7 @@ namespace Common.CouchDB
 
                 if (doc == null)
                     throw new ArgumentNullException("obj", "The argument obj casts to a null value which cannot be handled");
-                
+
 
                 e = doc.GetPropertyEnumerator();
 

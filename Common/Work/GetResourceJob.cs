@@ -77,9 +77,10 @@ namespace Common.Work
 
             Logger.General.Debug("Begining meta asset download for GetResourceJob with id " + Id.ToString() + ".");
 
-            if (!_resource.MetaAsset.GetFromRemote(this, out errorMessage))
+            if (!_resource.GetMetaAssetFromRemote(this, out errorMessage))
             {
-                Logger.General.Error("Failed to download the asset's meta information for GetResourceJob with id " + Id.ToString() + ".");
+                Logger.General.Error("Failed to download the asset's meta information for GetResourceJob with id " + 
+                    Id.ToString() + " with error message: " + errorMessage);
                 _errorManager.AddError(ErrorMessage.ErrorCode.DownloadMetaAssetFailed,
                     "Downloading Asset Failed",
                     "I failed to download the meta information.  Please try again.",
@@ -105,33 +106,35 @@ namespace Common.Work
 
             Logger.General.Debug("Begining data asset download for GetResourceJob with id " + Id.ToString() + ".");
 
-            if (!_resource.DataAsset.DownloadFromServer(this, _resource.MetaAsset))
+            if (!_resource.DownloadDataAssetAndSaveLocally(this, _fileSystem, out errorMessage))
             {
+                Logger.General.Error("Failed to download the asset's data information for GetResourceJob with id " +
+                    Id.ToString() + " with error message: " + errorMessage);
                 _errorManager.AddError(ErrorMessage.ErrorCode.DownloadDataAssetFailed,
                     "Downloading Asset Failed",
                     "I failed to download the data asset.  Please try again.",
-                    "Failed to download the asset's data for DownloadAssetJob with id " + Id.ToString() + ".",
+                    "Failed to download the asset's data for GetResourceJob with id " + Id.ToString() + ".",
                     true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
-            Logger.General.Debug("Successfully completed the data asset download for DownloadAssetJob with id " + Id.ToString() + ".");
+            Logger.General.Debug("Successfully completed the data asset download for GetResourceJob with id " + Id.ToString() + ".");
 
             UpdateLastAction();
 
             // Check for Error
             if (this.IsError || CheckForAbortAndUpdate())
             {
-                _fullAsset.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _resource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
                 return this;
             }
 
             _currentState = State.Active | State.Finished;
-            _fullAsset.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
-            _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+            _resource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
+            _requestor.WorkReport(_actUpdateUI, this, _resource);
             return this;
         }
 
@@ -143,13 +146,13 @@ namespace Common.Work
         /// <param name="percentComplete">The percent complete.</param>
         void Run_DataAsset_OnProgress(Storage.DataAsset sender, int percentComplete)
         {
-            Logger.General.Debug("DownloadAssetJob with id " + Id.ToString() + " is now " + percentComplete.ToString() + "% complete.");
+            Logger.General.Debug("GetResourceJob with id " + Id.ToString() + " is now " + percentComplete.ToString() + "% complete.");
 
             UpdateProgress((ulong)sender.BytesComplete, (ulong)sender.BytesTotal);
 
             // Don't update the UI if finished, the final update is handled by the Run() method.
             if (sender.BytesComplete != sender.BytesTotal)
-                _requestor.WorkReport(_actUpdateUI, this, _fullAsset);
+                _requestor.WorkReport(_actUpdateUI, this, _resource);
         }
     }
 }

@@ -526,7 +526,7 @@ namespace Common.CouchDB
         /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
         /// <param name="use100Continue">Per RFC-2616 "causes the client to wait for a response, this is done to allow the server time to interpret the headers and determine if it will accept the request before sending the data"</param>
         /// <param name="useCompression">Set to true to request data using gzip/deflate when supported by CouchDB</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
+        /// <returns>A CouchDB.Result representing the result of the request or null if the request failed.</returns>
         public Stream GetDownloadStreamSync(Server server, Database db, Web.DataStreamMethod dataStreamMethod, bool keepAlive,
             bool use100Continue, bool useCompression)
         {
@@ -553,7 +553,10 @@ namespace Common.CouchDB
 
             Logger.General.Debug("Sychronous download stream for attachment established.");
 
-            return state.Stream;
+            if (sr.Ok.HasValue && sr.Ok.Value)
+                return state.Stream;
+            else
+                return null;
         }
 
         /// <summary>
