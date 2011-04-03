@@ -25,13 +25,14 @@ namespace Common.Storage
         : Common.NetworkPackage.DictionaryBase<string, object>
     {
         /// <summary>
-        /// A reference to the <see cref="Database"/>.
-        /// </summary>
-        protected Database _database;
-        /// <summary>
         /// The <see cref="AssetState"/> describes the current state of the asset, actions on the asset should first check its state.
         /// </summary>
         protected AssetState _state;
+
+        /// <summary>
+        /// A reference to the <see cref="Database"/>.
+        /// </summary>
+        public Database Database { get; set; }
 
         /// <summary>
         /// Gets a Guid that provides a unique reference to an Asset.
@@ -53,6 +54,11 @@ namespace Common.Storage
         /// </value>
         public AssetState AssetState { get { return _state; } }
 
+        public AssetBase()
+            : base("MetaAsset")
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AssetBase"/> class.
         /// </summary>
@@ -71,7 +77,7 @@ namespace Common.Storage
             : base("MetaAsset")
         {
             Guid = guid;
-            _database = cdb;
+            Database = cdb;
             _state = new AssetState(AssetState.Flags.None);
         }
 

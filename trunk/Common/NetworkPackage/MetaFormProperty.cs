@@ -98,7 +98,6 @@ namespace Common.NetworkPackage
             _supportedDataTypes.Add(typeof(DateTime));
             _supportedDataTypes.Add(typeof(System.Collections.Generic.List<string>));
             //_supportedDataTypes.Add(typeof(Dictionary<string, object>));
-            _supportedDataTypes.Add(typeof(Common.Data.ETag));
 
             DataType = null;
             PropertyName = null;
@@ -219,9 +218,6 @@ namespace Common.NetworkPackage
                     break;
                 case "System.Collections.Generic.List`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]":
                     _defaultValue = new System.Collections.Generic.List<string>();
-                    break;
-                case "Common.Data.ETag":
-                    _defaultValue = new Common.Data.ETag(xmlReader.GetAttribute("DefaultValue"));
                     break;
                 default:
                     throw new Exception("Unsupported type detected '" + DataType.GetType().FullName + "'.");

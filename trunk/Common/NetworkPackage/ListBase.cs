@@ -132,7 +132,7 @@ namespace Common.NetworkPackage
                                 xmlReader.ReadEndElement();
                                 return xmlReader;
                             case "MetaAsset":
-                                Add(XmlSerializer.Deserialize<T>(new MetaAsset(), xmlReader));
+                                Add(XmlSerializer.Deserialize<T>(new Storage.MetaAsset(), xmlReader));
                                 //xmlReader.ReadStartElement();
                                 break;
                             case "":

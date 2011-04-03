@@ -181,7 +181,10 @@ namespace Common.NetworkPackage
             else if (obj.GetType() == typeof(DictionaryEntry<TKey, TValue>))
             {
                 DictionaryEntry<TKey, TValue> entry = (DictionaryEntry<TKey, TValue>)obj;
-                Add(entry.Key, entry.Value);
+                if (!ContainsKey(entry.Key))
+                    Add(entry.Key, entry.Value);
+                else
+                    this[entry.Key] = entry.Value;
             }
             else
                 throw new ArgumentException("Argument 'obj' is of unhandled type.");

@@ -97,10 +97,6 @@ namespace Common.Network
         /// </summary>
         public Guid Guid;
         /// <summary>
-        /// A <see cref="Common.Data.AssetType"/> for this message.
-        /// </summary>
-        public Common.Data.AssetType AssetType;
-        /// <summary>
         /// The size of the network buffer.
         /// </summary>
         public int BufferSize;
@@ -143,7 +139,6 @@ namespace Common.Network
             DataStreamMethod = DataStreamMethod.Stream;
             OperationType = OperationType.GET;
             Guid = Guid.Empty;
-            AssetType = null;
             BufferSize = 4096;
             TimeoutDuration = 1000;
             Stream = null;
@@ -233,9 +228,6 @@ namespace Common.Network
 
             if (Guid != Guid.Empty)
                 output += "Guid=" + Guid.ToString("N") + "\r\n";
-
-            if (!Data.AssetType.IsNullOrUnknown(AssetType))
-                output += "AssetType=" + AssetType.VirtualPath.ToString() + "\r\n";
 
             output += "BufferSize=" + BufferSize.ToString() + "\r\n" +
                 "TimeoutDuration=" + TimeoutDuration.ToString() + "\r\n" +

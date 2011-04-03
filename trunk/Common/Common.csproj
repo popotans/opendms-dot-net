@@ -79,15 +79,6 @@
     <Compile Include="FileSystem\Path.cs" />
     <Compile Include="Postgres\Database.cs" />
     <Compile Include="Postgres\Resource.cs" />
-    <Compile Include="Data\AssetBase.cs" />
-    <Compile Include="Data\AssetState.cs" />
-    <Compile Include="Data\AssetType.cs" />
-    <Compile Include="Data\DataAsset.cs" />
-    <Compile Include="Data\ETag.cs" />
-    <Compile Include="Data\FullAsset.cs" />
-    <Compile Include="Data\Head.cs" />
-    <Compile Include="Data\InvalidAssetStateException.cs" />
-    <Compile Include="Data\MetaAsset.cs" />
     <Compile Include="ErrorMessage.cs" />
     <Compile Include="ErrorManager.cs" />
     <Compile Include="FileSystem\DataResource.cs" />
@@ -105,11 +96,9 @@
     <Compile Include="NetworkPackage\IBase.cs" />
     <Compile Include="NetworkPackage\List.cs" />
     <Compile Include="NetworkPackage\ListBase.cs" />
-    <Compile Include="NetworkPackage\ETag.cs" />
     <Compile Include="NetworkPackage\MetaForm.cs" />
     <Compile Include="NetworkPackage\MetaFormProperty.cs" />
     <Compile Include="NetworkPackage\SearchForm.cs" />
-    <Compile Include="NetworkPackage\SearchResult.cs" />
     <Compile Include="NetworkPackage\ServerResponse.cs" />
     <Compile Include="NetworkPackage\XmlSerializer.cs" />
     <Compile Include="Network\Message.cs" />
@@ -117,7 +106,6 @@
     <Compile Include="Network\State.cs" />
     <Compile Include="Postgres\Version.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="NetworkPackage\MetaAsset.cs" />
     <Compile Include="SettingsBase.cs" />
     <Compile Include="Network\NetworkException.cs" />
     <Compile Include="Storage\AssetBase.cs" />

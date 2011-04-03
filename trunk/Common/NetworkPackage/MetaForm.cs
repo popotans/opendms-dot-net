@@ -41,9 +41,6 @@ namespace Common.NetworkPackage
             MetaForm mf = new MetaForm();
 
             mf.Add(new MetaFormProperty(typeof(Guid), "$guid", "Guid", Guid.Empty, true));
-            mf.Add(new MetaFormProperty(typeof(Common.Data.ETag), "$etag", "ETag", new Common.Data.ETag("0"), true));
-            mf.Add(new MetaFormProperty(typeof(uint), "$metaversion", "Meta Asset Version", 0, true));
-            mf.Add(new MetaFormProperty(typeof(uint), "$dataversion", "Data Asset Version", 0, true));
             mf.Add(new MetaFormProperty(typeof(string), "$lockedby", "Locked by User", null, true));
             mf.Add(new MetaFormProperty(typeof(DateTime), "$lockedat", "Locked at Date/Time", DateTime.MinValue, true));
             mf.Add(new MetaFormProperty(typeof(string), "$creator", "Created by", null, true));

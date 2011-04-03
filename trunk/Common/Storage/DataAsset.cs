@@ -126,7 +126,7 @@ namespace Common.Storage
                 return null;
             }
 
-            return doc.Attachments[0].GetDownloadStreamSync(_database.Server, _database,
+            return doc.Attachments[0].GetDownloadStreamSync(Database.Server, Database,
                 Web.DataStreamMethod.Stream, false, false, true);
         }
 
@@ -238,7 +238,7 @@ namespace Common.Storage
 
             doc.Attachments.Add(att);
 
-            result = doc.Attachments[0].UploadSync(_database.Server, _database, 
+            result = doc.Attachments[0].UploadSync(Database.Server, Database, 
                 Web.DataStreamMethod.Stream, false, true);
 
             if (!result.IsPass)

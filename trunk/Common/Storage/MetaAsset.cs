@@ -237,6 +237,11 @@ namespace Common.Storage
         /// </value>
         public bool IsLocked { get { return LockedAt != null && !string.IsNullOrEmpty(LockedBy); } }
 
+        public MetaAsset()
+        {
+            SetProperty("$tags", new System.Collections.Generic.List<string>());
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MetaAsset"/> class.
         /// </summary>
@@ -255,6 +260,7 @@ namespace Common.Storage
         public MetaAsset(Guid guid, Database cdb)
             : base(guid, cdb)
         {
+            SetProperty("$tags", new System.Collections.Generic.List<string>());
         }
 
         /// <summary>
@@ -443,12 +449,15 @@ namespace Common.Storage
             errorMessage = null;
 
             if (job != null && job.AbortAction) return false;
+
+            if (Database == null) 
+                throw new InvalidOperationException("Property Database cannot be null.");
             
             _doc = new Document(GuidString);
 
             Logger.General.Debug("Starting download of resource " + GuidString + " for job id " + job.Id.ToString());
 
-            result = _doc.DownloadSync(_database.Server, _database, false);
+            result = _doc.DownloadSync(Database.Server, Database, false);
 
             Logger.General.Debug("Finished download of resource " + GuidString + " for job id " + job.Id.ToString());
 
@@ -472,18 +481,23 @@ namespace Common.Storage
 
         public bool CreateOnRemote(Work.ResourceJobBase job, out string errorMessage)
         {
-            CouchDB.Result result;
+            Result result;
 
             _doc = new Document(GuidString);
             errorMessage = null;
 
+            if (job != null && job.AbortAction) return false;
+
+            if (Database == null)
+                throw new InvalidOperationException("Property Database cannot be null.");
+            
             if (!string.IsNullOrEmpty(errorMessage = ExportToDocument()))
                 return false;
 
             if (!_doc.CanCreate)
                 throw new InvalidOperationException("The underlying Document's state will not allow creation.");
 
-            result = _doc.CreateSync(_database.Server, _database, false);
+            result = _doc.CreateSync(Database.Server, Database, false);
 
             if (!result.IsPass)
             {
@@ -499,13 +513,18 @@ namespace Common.Storage
             CouchDB.Result result;
             errorMessage = null;
 
+            if (job != null && job.AbortAction) return false;
+
+            if (Database == null)
+                throw new InvalidOperationException("Property Database cannot be null.");
+
             if (!string.IsNullOrEmpty(errorMessage = ExportToDocument()))
                 return false;
 
             if (!_doc.CanUpdate)
                 throw new InvalidOperationException("The underlying Document's state will not allow updating.");
 
-            result = _doc.CreateSync(_database.Server, _database, false);
+            result = _doc.CreateSync(Database.Server, Database, false);
 
             if (!result.IsPass)
             {
