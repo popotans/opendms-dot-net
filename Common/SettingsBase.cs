@@ -126,6 +126,54 @@ namespace Common
         }
 
         /// <summary>
+        /// Gets or sets the couchdb server ip.
+        /// </summary>
+        /// <value>
+        /// The server ip.
+        /// </value>
+        public string CouchServerIp
+        {
+            get
+            {
+                if (ContainsKey("CouchServerIp"))
+                    return (string)this["CouchServerIp"];
+                else
+                    return "127.0.0.1";
+            }
+            set
+            {
+                if (ContainsKey("CouchServerIp"))
+                    this["CouchServerIp"] = value;
+                else
+                    Add("CouchServerIp", value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the couchdb server port.
+        /// </summary>
+        /// <value>
+        /// The server port.
+        /// </value>
+        public int CouchServerPort
+        {
+            get
+            {
+                if (ContainsKey("CouchServerPort"))
+                    return (int)this["CouchServerPort"];
+                else
+                    return 80;
+            }
+            set
+            {
+                if (ContainsKey("CouchServerPort"))
+                    this["CouchServerPort"] = value;
+                else
+                    Add("CouchServerPort", value);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the size of the network buffer.
         /// </summary>
         /// <value>
@@ -150,10 +198,10 @@ namespace Common
         }
 
         /// <summary>
-        /// Gets or sets the network timeout duration.
+        /// Gets or sets the network timeout duration in milliseconds.
         /// </summary>
         /// <value>
-        /// The network timeout duration.
+        /// The network timeout duration in milliseconds.
         /// </value>
         public int NetworkTimeout
         {

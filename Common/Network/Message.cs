@@ -99,8 +99,7 @@ namespace Common.Network
         /// <param name="useGzip">if set to <c>true</c> the host will be request to respond using gzip.</param>
         /// <param name="bufferSize">Size of the buffer in bytes.</param>
         /// <param name="timeoutDuration">Duration of time that must pass before a timeout occurrs.</param>
-        public Message(string host, int port, string virtualPath, Guid guid,
-                       Common.Data.AssetType assetType, OperationType operation,
+        public Message(string host, int port, string virtualPath, Guid guid, OperationType operation,
                        DataStreamMethod dataStreamMethod, Stream requestStream,
                        string contentType, long? contentLength, string encodedCredentials,
                        bool keepAlive, bool use100Continue, bool useDeflate, bool useGzip,

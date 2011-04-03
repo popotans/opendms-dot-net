@@ -50,9 +50,9 @@ namespace Common.NetworkPackage
             {
                 xmlWriter = ((FormProperty)obj).Serialize(xmlWriter);
             }
-            else if (obj.GetType() == typeof(MetaAsset))
+            else if (obj.GetType() == typeof(Storage.MetaAsset))
             {
-                xmlWriter = ((MetaAsset)obj).Serialize(xmlWriter);
+                xmlWriter = ((Storage.MetaAsset)obj).Serialize(xmlWriter);
             }
             else if (obj.GetType() == typeof(MetaFormProperty))
             {
@@ -100,10 +100,10 @@ namespace Common.NetworkPackage
                 if(target == null) target = new DictionaryEntry<string, object>();
                 xmlReader = ((DictionaryEntry<string, object>)target).Deserialize(xmlReader);
             }
-            else if (target.GetType() == typeof(MetaAsset))
+            else if (target.GetType() == typeof(Storage.MetaAsset))
             {
-                if (target == null) target = new MetaAsset();
-                xmlReader = ((MetaAsset)target).Deserialize(xmlReader);
+                if (target == null) target = new Storage.MetaAsset();
+                xmlReader = ((Storage.MetaAsset)target).Deserialize(xmlReader);
             }
             else
             {

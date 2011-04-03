@@ -40,30 +40,6 @@ namespace HttpModule
         }
 
         /// <summary>
-        /// Gets or sets the storage location.
-        /// </summary>
-        /// <value>
-        /// The storage location.
-        /// </value>
-        public string StorageLocation
-        {
-            get
-            {
-                if (ContainsKey("StorageLocation"))
-                    return (string)this["StorageLocation"];
-                else
-                    return @"C:\DataStore\";
-            }
-            set
-            {
-                if (ContainsKey("StorageLocation"))
-                    this["StorageLocation"] = value;
-                else
-                    Add("StorageLocation", value);
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the size of the file buffer.
         /// </summary>
         /// <value>
@@ -88,59 +64,20 @@ namespace HttpModule
         }
 
         /// <summary>
-        /// Gets or sets the search host ip.
-        /// </summary>
-        /// <value>
-        /// The search host ip.
-        /// </value>
-        public string SearchHostIP
-        {
-            get
-            {
-                if (ContainsKey("SearchHostIP"))
-                    return (string)this["SearchHostIP"];
-                else
-                    return "127.0.0.1";
-            }
-            set
-            {
-                if (ContainsKey("SearchHostIP"))
-                    this["SearchHostIP"] = value;
-                else
-                    Add("SearchHostIP", value);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the search host port.
-        /// </summary>
-        /// <value>
-        /// The search host port.
-        /// </value>
-        public int SearchHostPort
-        {
-            get
-            {
-                if (ContainsKey("SearchHostPort"))
-                    return (int)this["SearchHostPort"];
-                else
-                    return 8080;
-            }
-            set
-            {
-                if (ContainsKey("SearchHostPort"))
-                    this["SearchHostPort"] = value;
-                else
-                    Add("SearchHostPort", value);
-            }
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="Settings"/> class.
         /// </summary>
         public Settings() 
             : base()
         {
+            FileBufferSize = FileBufferSize;
+            RootStorageLocation = @"C:\DataStore\";
+            PostgresConnectionString = PostgresConnectionString;
+            ServerIp = ServerIp;
+            ServerPort = ServerPort;
+            CouchServerIp = CouchServerIp;
+            CouchServerPort = CouchServerPort;
+            NetworkBufferSize = NetworkBufferSize;
+            NetworkTimeout = NetworkTimeout;
         }
 
         /// <summary>

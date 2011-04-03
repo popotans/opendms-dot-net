@@ -57,8 +57,13 @@ namespace Common.FileSystem
                 !rootPath.EndsWith(System.IO.Path.AltDirectorySeparatorChar.ToString()))
                 rootPath += System.IO.Path.DirectorySeparatorChar.ToString();
             
-            CreateDirectoryPath(rootPath + Data.AssetType.Meta.VirtualPath);
-            CreateDirectoryPath(rootPath + Data.AssetType.Data.VirtualPath);
+            CreateDirectoryPath(rootPath + FileSystem.Path.RelativeMetaPath);
+            CreateDirectoryPath(rootPath + FileSystem.Path.RelativeDataPath);
+
+            rootPath = rootPath.Replace(System.IO.Path.AltDirectorySeparatorChar, System.IO.Path.DirectorySeparatorChar);
+
+            if (!rootPath.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
+                _rootPath = rootPath + System.IO.Path.DirectorySeparatorChar.ToString();
 
             _rootPath = rootPath;
             _bufferSize = bufferSize;
@@ -502,11 +507,11 @@ namespace Common.FileSystem
             if (!relativePath.StartsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
                 relativePath = System.IO.Path.DirectorySeparatorChar.ToString() + relativePath;
 
-            if (relativePath == Data.AssetType.Meta.VirtualPath ||
-                relativePath == Data.AssetType.Data.VirtualPath ||
+            if (relativePath == FileSystem.Path.RelativeMetaPath ||
+                relativePath == FileSystem.Path.RelativeDataPath ||
                 relativePath == "settings")
             {
-                Logger.General.Error("Could not delete the directory at " +relativePath + " because it is a required directory.");
+                Logger.General.Error("Could not delete the directory at " + relativePath + " because it is a required directory.");
                 return false;
             }
 

@@ -38,13 +38,9 @@ namespace Common.NetworkPackage
             /// </summary>
             ExistingLease,
             /// <summary>
-            /// A resource already exists.
-            /// </summary>
-            ExistingResource,
-            /// <summary>
             /// The resource is locked.
             /// </summary>
-            ReasourceIsLocked,
+            ResourceIsLocked,
             /// <summary>
             /// The Guid is invalid.
             /// </summary>
@@ -62,14 +58,6 @@ namespace Common.NetworkPackage
             /// </summary>
             InvalidPermissions,
             /// <summary>
-            /// The search parameters are invalid.
-            /// </summary>
-            InvalidSearchParameters,
-            /// <summary>
-            /// The indexing failed.
-            /// </summary>
-            FailedIndexing,
-            /// <summary>
             /// The resource does not exist.
             /// </summary>
             ResourceDoesNotExist,
@@ -78,13 +66,9 @@ namespace Common.NetworkPackage
             /// </summary>
             Exception,
             /// <summary>
-            /// The function value was invalid.
+            /// The requested action cannot be completed because the resource has not been checked out.
             /// </summary>
-            InvalidFunctionValue,
-            /// <summary>
-            /// The transaction failed.
-            /// </summary>
-            TransactionFailed
+            ResourceNotCheckedOut
         }
 
         /// <summary>

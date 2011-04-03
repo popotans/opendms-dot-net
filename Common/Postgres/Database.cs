@@ -115,6 +115,9 @@ namespace Common.Postgres
 
         public void DBExec(NpgsqlCommand cmd)
         {
+            if (cmd.Connection == null || cmd.Connection.State != ConnectionState.Open)
+                cmd.Connection = _conn;
+
             cmd.ExecuteNonQuery();
         }
 

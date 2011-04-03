@@ -22,10 +22,74 @@ namespace Common.Postgres
     public class Resource
     {
         public Guid Id { get; set; }
+        public string LockedBy { get; set; }
+        public DateTime? LockedAt { get; set; }
 
         public Resource(Guid id)
         {
             Id = id;
+            LockedBy = null;
+            LockedAt = null;
+        }
+
+        public Resource(DataRow dr)
+        {
+            string id, lockedby, lockedat;
+
+            // Make sure the fields exist and get their names
+            id = Database.DetermineColumnName(dr, "tbl_resource.id", "id", "The row must contain a uuid value for 'id'");
+            lockedby = Database.DetermineColumnName(dr, "tbl_resource.lockedby", "lockedby", "The row must contain a string value for 'lockedby'");
+            lockedat = Database.DetermineColumnName(dr, "tbl_resource.lockedat", "lockedat", "The row must contain a date/time value for 'lockedat'");
+
+            try { Id = (Guid)dr[id]; }
+            catch { throw new Exception("The row must contain a uuid value for 'id'"); }
+            try 
+            {
+                if(dr[lockedby] != DBNull.Value)
+                    LockedBy = (string)dr[lockedby]; 
+            }
+            catch { throw new Exception("The row must contain a string value for 'lockedby'"); }
+            try
+            {
+                if (dr[lockedat] != DBNull.Value)
+                    LockedAt = (DateTime?)dr[lockedat]; 
+            }
+            catch { throw new Exception("The row must contain a date/time value for 'lockedat'"); }
+        }
+
+        public static Resource Get(Guid id)
+        {
+            Database db;
+            NpgsqlCommand cmd;
+            DataTable dt;
+            Resource r;
+
+            db = new Database(SettingsBase.Instance.PostgresConnectionString);
+            cmd = new NpgsqlCommand("SELECT * FROM tbl_resource WHERE id=:resourceid");
+            cmd.Parameters.Add(new NpgsqlParameter("resourceid", NpgsqlTypes.NpgsqlDbType.Uuid));
+            cmd.Parameters[0].Value = id;
+
+            db.Open();
+            dt = db.GetTable(cmd);
+            db.Close();
+
+            if (dt.Rows.Count <= 0)
+            {
+                Logger.General.Error("Could not find a resource with id " + id.ToString("N"));
+                return null;
+            }
+
+            try
+            {
+                r = new Resource(dt.Rows[0]);
+            }
+            catch
+            {
+                Logger.General.Error("Could not parse a resource with id " + id.ToString("N"));
+                return null;
+            }
+
+            return r;
         }
 
         public Version GetCurrentVersion()
@@ -34,13 +98,15 @@ namespace Common.Postgres
             NpgsqlCommand cmd;
             DataTable dt;
             Version v;
-            
+
             db = new Database(SettingsBase.Instance.PostgresConnectionString);
-            cmd = new NpgsqlCommand("SELECT * FROM tbl_version WHERE resource_id=:resourceid LIMIT 1");
+            cmd = new NpgsqlCommand("SELECT * FROM tbl_version WHERE resource_id=:resourceid ORDER BY version_number DESC LIMIT 1");
             cmd.Parameters.Add(new NpgsqlParameter("resourceid", NpgsqlTypes.NpgsqlDbType.Uuid));
             cmd.Parameters[0].Value = Id;
 
+            db.Open();
             dt = db.GetTable(cmd);
+            db.Close();
 
             if (dt.Rows.Count <= 0)
             {
@@ -59,6 +125,194 @@ namespace Common.Postgres
             }
 
             return v;
+        }
+
+        public Version GetVersion(UInt64 versionNumber)
+        {
+            Database db;
+            NpgsqlCommand cmd;
+            DataTable dt;
+            Version v;
+
+            db = new Database(SettingsBase.Instance.PostgresConnectionString);
+            cmd = new NpgsqlCommand("SELECT * FROM tbl_version WHERE resource_id=:resourceid AND version_number=:versionnumber");
+            cmd.Parameters.Add(new NpgsqlParameter("resourceid", NpgsqlTypes.NpgsqlDbType.Uuid));
+            cmd.Parameters[0].Value = Id;
+            cmd.Parameters.Add(new NpgsqlParameter("versionnumber", NpgsqlTypes.NpgsqlDbType.Bigint));
+            cmd.Parameters[1].Value = versionNumber;
+
+            db.Open();
+            dt = db.GetTable(cmd);
+            db.Close();
+
+            if (dt.Rows.Count <= 0)
+            {
+                Logger.General.Error("Could not find a version for resource id " + Id.ToString("N") + " with version number " + versionNumber.ToString());
+                return null;
+            }
+
+            try
+            {
+                v = new Version(dt.Rows[0]);
+            }
+            catch
+            {
+                Logger.General.Error("Could not parse version for resource id " + Id.ToString("N") + " with version number " + versionNumber.ToString());
+                return null;
+            }
+
+            return v;
+        }
+
+        public bool ApplyLock(string lockedby)
+        {
+            Database db;
+            NpgsqlCommand cmd;
+
+            db = new Database(SettingsBase.Instance.PostgresConnectionString);
+            cmd = new NpgsqlCommand("UPDATE tbl_resource SET lockedby=:lockedby, lockedat=:lockedat WHERE id=:resourceid");
+            cmd.Parameters.Add(new NpgsqlParameter("lockedby", NpgsqlTypes.NpgsqlDbType.Varchar, 100));
+            cmd.Parameters[0].Value = lockedby;
+            cmd.Parameters.Add(new NpgsqlParameter("lockedat", NpgsqlTypes.NpgsqlDbType.Timestamp));
+            cmd.Parameters[1].Value = NowAsUtc;
+            cmd.Parameters.Add(new NpgsqlParameter("resourceid", NpgsqlTypes.NpgsqlDbType.Uuid));
+            cmd.Parameters[2].Value = Id;
+
+
+            try
+            {
+                db.Open();
+                db.DBExec(cmd);
+            }
+            catch (Exception e)
+            {
+                Logger.General.Error("Could not apply lock on resource with id " + Id.ToString("N"), e);
+                return false;
+            }
+            finally
+            {
+                db.Close();
+            }
+
+            return true;
+        }
+
+        public bool ReleaseLock()
+        {
+            Database db;
+            NpgsqlCommand cmd;
+
+            db = new Database(SettingsBase.Instance.PostgresConnectionString);
+            cmd = new NpgsqlCommand("UPDATE tbl_resource SET lockedby=:lockedby, lockedat=:lockedat WHERE id=:resourceid");
+            cmd.Parameters.Add(new NpgsqlParameter("lockedby", NpgsqlTypes.NpgsqlDbType.Varchar, 100));
+            cmd.Parameters[0].Value = null;
+            cmd.Parameters.Add(new NpgsqlParameter("lockedat", NpgsqlTypes.NpgsqlDbType.Timestamp));
+            cmd.Parameters[1].Value = null;
+            cmd.Parameters.Add(new NpgsqlParameter("resourceid", NpgsqlTypes.NpgsqlDbType.Uuid));
+            cmd.Parameters[2].Value = Id;
+
+            try
+            {
+                db.Open();
+                db.DBExec(cmd);
+            }
+            catch (Exception e)
+            {
+                Logger.General.Error("Could not release lock on resource with id " + Id.ToString("N"), e);
+                return false;
+            }
+            finally
+            {
+                db.Close();
+            }
+
+            return true;
+        }
+
+        public Version CreateNewVersion()
+        {
+            Version version;
+
+            if ((version = Version.CreateNewVersion(this)) == null)
+                return null;
+
+            return version;
+        }
+
+        public bool CreateInDatabase(out Version newVersion)
+        {
+            Database db;
+            NpgsqlCommand cmd;
+
+            db = new Database(SettingsBase.Instance.PostgresConnectionString);
+            cmd = new NpgsqlCommand("INSERT INTO tbl_resource (id, lockedby, lockedat) VALUES (:a, :b, :c)");
+            cmd.Parameters.Add(new NpgsqlParameter("a", NpgsqlTypes.NpgsqlDbType.Uuid));
+            cmd.Parameters[0].Value = Id;
+            cmd.Parameters.Add(new NpgsqlParameter("b", NpgsqlTypes.NpgsqlDbType.Varchar, 50));
+            cmd.Parameters[1].Value = LockedBy;
+            cmd.Parameters.Add(new NpgsqlParameter("c", NpgsqlTypes.NpgsqlDbType.Timestamp));
+            cmd.Parameters[2].Value = LockedAt;
+
+            db.Open();
+            db.DBExec(cmd);
+            db.Close();
+
+            newVersion = Version.CreateNewVersion(this);
+
+            return true;
+        }
+
+        public static Resource CreateNewResource(string lockedBy, out Version newVersion)
+        {
+            Guid temp = Guid.Empty;
+            Resource resource;
+            bool loop = true;
+
+
+            while (loop)
+            {
+                temp = Guid.NewGuid();
+                loop = !TestResourceGuidForUniqueness(temp);
+            }
+
+            resource = new Resource(temp);
+
+            if (!string.IsNullOrEmpty(lockedBy))
+            {
+                resource.LockedAt = NowAsUtc;
+                resource.LockedBy = lockedBy;
+            }
+
+            resource.CreateInDatabase(out newVersion);
+            return resource;
+        }
+
+        private static bool TestResourceGuidForUniqueness(Guid resourceGuid)
+        {
+            Database db;
+            NpgsqlCommand cmd;
+            DataTable dt;
+
+            db = new Database(SettingsBase.Instance.PostgresConnectionString);
+            cmd = new NpgsqlCommand("SELECT * FROM tbl_resource WHERE id=:resourceGuid");
+            cmd.Parameters.Add(new NpgsqlParameter("resourceGuid", NpgsqlTypes.NpgsqlDbType.Uuid));
+            cmd.Parameters[0].Value = resourceGuid;
+
+            db.Open();
+            dt = db.GetTable(cmd);
+            db.Close();
+
+            return dt.Rows.Count == 0;
+        }
+
+        public static DateTime NowAsUtc
+        {
+            get 
+            { 
+                return new DateTime(DateTime.Now.Year, DateTime.Now.Month,
+                    DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second,
+                    DateTime.Now.Millisecond, DateTimeKind.Utc); 
+            }
         }
     }
 }
