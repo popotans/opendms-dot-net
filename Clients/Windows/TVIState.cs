@@ -105,12 +105,12 @@ namespace WindowsClient
         private ResourceStatusType _resourceStatusFlags;
 
         /// <summary>
-        /// Gets or sets the <see cref="Common.Data.FullAsset"/> for this instance.
+        /// Gets or sets the <see cref="Common.Storage.Resource"/> for this instance.
         /// </summary>
         /// <value>
-        /// The <see cref="Common.Data.FullAsset"/>.
+        /// The <see cref="Common.Storage.Resource"/>.
         /// </value>
-        public Common.Data.FullAsset FullAsset { get; set; }
+        public Common.Storage.Resource Resource { get; set; }
 
         /// <summary>
         /// Gets a value indicating whether this instance is loading.
@@ -219,12 +219,12 @@ namespace WindowsClient
         /// <summary>
         /// Initializes a new instance of the <see cref="TVIState"/> class.
         /// </summary>
-        /// <param name="fullAsset">The <see cref="Common.Data.FullAsset"/>.</param>
-        public TVIState(Common.Data.FullAsset fullAsset)
+        /// <param name="fullAsset">The <see cref="Common.Storage.Resource"/>.</param>
+        public TVIState(Common.Storage.Resource resource)
         {
             _eventFlags = EventFlagType.None;
             _resourceStatusFlags = ResourceStatusType.None;
-            FullAsset = fullAsset;
+            Resource = resource;
         }
 
         /// <summary>

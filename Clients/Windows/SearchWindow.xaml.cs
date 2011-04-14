@@ -230,10 +230,10 @@ namespace WindowsClient
             msg.Send();
 
             
-            Common.NetworkPackage.SearchResult sr = new Common.NetworkPackage.SearchResult();
-            sr.Deserialize(msg.State.Stream);
+            //Common.NetworkPackage.SearchResult sr = new Common.NetworkPackage.SearchResult();
+            //sr.Deserialize(msg.State.Stream);
 
-            DisplayResults(dgResults, sr);
+            //DisplayResults(dgResults, sr);
         }
 
         /// <summary>
@@ -241,25 +241,25 @@ namespace WindowsClient
         /// </summary>
         /// <param name="grid">The grid.</param>
         /// <param name="result">The result.</param>
-        private void DisplayResults(DataGrid grid, Common.NetworkPackage.SearchResult result)
-        {
-            Common.Data.MetaAsset ma;
+        //private void DisplayResults(DataGrid grid, Common.NetworkPackage.SearchResult result)
+        //{
+        //    Common.Data.MetaAsset ma;
 
-            grid.Items.Clear();
+        //    grid.Items.Clear();
 
-            for(int i=0; i<result.Count; i++)
-            {
-                ma = new Common.Data.MetaAsset();
-                ma.ImportFromNetworkRepresentation(result[i]);
+        //    for(int i=0; i<result.Count; i++)
+        //    {
+        //        ma = new Common.Data.MetaAsset();
+        //        ma.ImportFromNetworkRepresentation(result[i]);
 
-                grid.Items.Add(new SearchWindowDataItem() { 
-                    Guid = ma.GuidString, 
-                    Title = ma.Title, 
-                    Extension = ma.Extension, 
-                    LockedBy = ma.LockedBy 
-                });
-            }
-        }
+        //        grid.Items.Add(new SearchWindowDataItem() { 
+        //            Guid = ma.GuidString, 
+        //            Title = ma.Title, 
+        //            Extension = ma.Extension, 
+        //            LockedBy = ma.LockedBy 
+        //        });
+        //    }
+        //}
 
         /// <summary>
         /// Creates controls supporting textual input and adds it to the control panel container.

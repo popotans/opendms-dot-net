@@ -176,7 +176,7 @@ namespace HttpModule
         }
 
         /// <summary>
-        /// Responds to a checkin request releasing the lock on the resource from the requesting user.
+        /// Responds to a checkin request releasing the lock on the resource.
         /// http://localhost/_checkin/[guid]
         /// </summary>
         /// <param name="app">The <see cref="HttpApplication"/></param>
@@ -200,6 +200,25 @@ namespace HttpModule
             }
 
             resp = _storage.CheckinResource(guid, userInfo["username"], isNew);
+            resp.Serialize().WriteTo(app.Response.OutputStream);
+            app.CompleteRequest();
+            return;
+        }
+
+        /// <summary>
+        /// Responds to an unlock request releasing the lock on the resource.
+        /// http://localhost/_unlock/[guid]
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        [ServicePoint("/_checkin", ServicePointAttribute.VerbType.GET)]
+        public void Unlock(HttpApplication app)
+        {
+            ServerResponse resp;
+            Guid guid = ParseGuid(app.Request.Path);
+            Dictionary<string, string> userInfo = ParseUserInfo(app);
+            Dictionary<string, string> queryString = ParseQueryString(app);
+
+            resp = _storage.ReleaseLock(guid, userInfo["username"]);
             resp.Serialize().WriteTo(app.Response.OutputStream);
             app.CompleteRequest();
             return;

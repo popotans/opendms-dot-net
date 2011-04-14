@@ -46,7 +46,7 @@ namespace WindowsClient
         /// <summary>
         /// The <see cref="Common.Data.MetaAsset"/> being displayed.
         /// </summary>
-        private Common.Data.MetaAsset _metaasset;
+        private Common.Storage.MetaAsset _metaasset;
         /// <summary>
         /// The <see cref="Common.NetworkPackage.MetaForm"/> being displayed.
         /// </summary>
@@ -55,18 +55,23 @@ namespace WindowsClient
         /// The currently selected <see cref="TreeViewItem"/>
         /// </summary>
         private TreeViewItem _selectedTvi;
+        private Common.FileSystem.IO _fileSystem;
+        private Common.CouchDB.Database _couchdb;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetaPropWindow"/> class.
         /// </summary>
         /// <param name="guid">The <see cref="Guid"/> of the Asset.</param>
-        public MetaPropWindow(Guid guid)
+        /// <param name="fileSystem">The file system.</param>
+        public MetaPropWindow(Guid guid, Common.FileSystem.IO fileSystem, Common.CouchDB.Database couchdb)
         {
             InitializeComponent();
             _metaForm = null;
             _guid = guid;
             _metaasset = null;
             _selectedTvi = null;
+            _fileSystem = fileSystem;
+            _couchdb = couchdb;
         }
 
         /// <summary>
@@ -78,8 +83,8 @@ namespace WindowsClient
         {
             Thread download;
 
-            _metaasset = new Common.Data.MetaAsset(_guid, MainWindow.FileSystem);
-            if (!_metaasset.Load())
+            _metaasset = new Common.Storage.MetaAsset(_guid, _couchdb);
+            if (!_metaasset.LoadFromLocal(null, _metaasset.RelativePath, _fileSystem))
             {
                 MessageBox.Show("The resource's meta data could not be loaded.");
                 return;
@@ -156,7 +161,6 @@ namespace WindowsClient
         private void LoadTree()
         {
             object tempObj;
-            Common.NetworkPackage.MetaAsset netMa;
             Dictionary<string, object>.Enumerator en;
 
             // All of our *required* properties are going to be stated in _metaForm
@@ -170,14 +174,13 @@ namespace WindowsClient
             // 2) Replace default values with values in _metaasset
             // 3) Add to tree based on _metaasset.UserProperties
 
-            netMa = _metaasset.ExportToNetworkRepresentation();
             en = _metaasset.UserProperties.GetEnumerator();
 
             // Step 1 and 2
             for (int i = 0; i < _metaForm.Count; i++)
             {
                 // Here we accomplish 1 and 2 above at the same time (more efficient)
-                if((tempObj = netMa[_metaForm[i].PropertyName]) == null)
+                if((tempObj = _metaasset[_metaForm[i].PropertyName]) == null)
                     AddTreeViewItem(_metaForm[i].PropertyName, _metaForm[i].Label, _metaForm[i].DefaultValue, _metaForm[i].IsReadOnly);
                 else
                     AddTreeViewItem(_metaForm[i].PropertyName, _metaForm[i].Label, tempObj, _metaForm[i].IsReadOnly);
@@ -246,30 +249,26 @@ namespace WindowsClient
         /// </summary>
         private void UpdateMetaAssetFromTree()
         {
-            Common.NetworkPackage.MetaAsset netMa;
             MetaPropEntity mpe;
-
-            netMa = _metaasset.ExportToNetworkRepresentation();
 
             for (int i = 0; i < treeView1.Items.Count; i++)
             {
                 mpe = (MetaPropEntity)((TreeViewItem)treeView1.Items[i]).Tag;
                 if (mpe.IsUpdated && !mpe.IsReadOnly)
                 {
-                    if (netMa.ContainsKey(mpe.Key))
-                        netMa[mpe.Key] = mpe.Value;
+                    if (_metaasset.ContainsKey(mpe.Key))
+                        _metaasset[mpe.Key] = mpe.Value;
                     else
-                        netMa.Add(mpe.Key, mpe.Value);
+                        _metaasset.Add(mpe.Key, mpe.Value);
                 }
             }
 
             // Common.Data.MetaAsset requires that the '$tags' property be of type string[], so if it is not
             // then lets make it.
-            if (netMa["$tags"].GetType() == typeof(List<string>))
-                netMa["$tags"] = ((List<string>)netMa["$tags"]).ToArray();
+            if (_metaasset["$tags"].GetType() == typeof(List<string>))
+                _metaasset["$tags"] = ((List<string>)_metaasset["$tags"]).ToArray();
 
-            _metaasset.ImportFromNetworkRepresentation(netMa);
-            _metaasset.Save();
+            _metaasset.SaveToLocal(null, _fileSystem);
         }
 
         /// <summary>
@@ -419,10 +418,6 @@ namespace WindowsClient
                 mpe.Value = var_list;
                 mpe.IsUpdated = true;
             }
-            else if (mpe.Value.GetType() == typeof(Common.Data.ETag))
-            {
-                throw new Exception("Invalid, a user can never edit an ETag");
-            }
 
             return true;
         }
@@ -561,10 +556,6 @@ namespace WindowsClient
             else if (mpe.Value.GetType() == typeof(List<string>))
             {
                 UIPanel.Children.Add(AddMultilineText(mpe.Title, string.Join("\r\n", ((List<string>)mpe.Value).ToArray()), mpe.IsReadOnly));
-            }
-            else if (mpe.Value.GetType() == typeof(Common.Data.ETag))
-            {
-                UIPanel.Children.Add(AddText(mpe.Title, ((Common.Data.ETag)mpe.Value).Value, mpe.IsReadOnly));
             }
             else
             {

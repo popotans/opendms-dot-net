@@ -22,14 +22,16 @@ namespace Common.Work
     /// </summary>
     public abstract class ResourceJobBase : JobBase
     {
+        protected Storage.Resource _jobResource;
+
         /// <summary>
-        /// A reference to a <see cref="Storage.Resource"/> for this job.
+        /// A reference to a <see cref="Storage.Resource"/> which was passed to this job.
         /// </summary>
-        protected Storage.Resource _resource;
+        protected Storage.Resource _inputResource;
         /// <summary>
-        /// Gets a reference to the <see cref="Storage.Resource"/> for this job.
+        /// Gets a reference to the <see cref="Storage.Resource"/> which was passed to this job.
         /// </summary>
-        public Storage.Resource Resource { get { return _resource; } }
+        public Storage.Resource Resource { get { return _inputResource; } }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ResourceJobBase"/> class.
@@ -47,7 +49,8 @@ namespace Common.Work
             ErrorManager errorManager)
             : base(requestor, id, actUpdateUI, timeout, progressMethod, errorManager)
         {
-            _resource = resource;
+            _inputResource = resource;
+            _jobResource = Storage.Resource.DeepCopy(resource);
         }
     }
 }

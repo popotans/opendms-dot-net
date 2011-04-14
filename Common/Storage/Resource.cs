@@ -33,6 +33,12 @@ namespace Common.Storage
             _dataAsset = new DataAsset(_metaAsset, cdb);
         }
 
+        public Resource(MetaAsset ma, Database cdb)
+        {
+            _metaAsset = ma;
+            _dataAsset = new DataAsset(_metaAsset, cdb);
+        }
+
         public bool GetMetaAssetFromRemote(Work.ResourceJobBase job, out string errorMessage)
         {
             errorMessage = null;
@@ -114,6 +120,11 @@ namespace Common.Storage
                 return false;
 
             return true;
+        }
+
+        public static Resource DeepCopy(Resource resource)
+        {
+            return new Resource(resource.MetaAsset.Copy(resource.Guid, null), null);
         }
     }
 }
