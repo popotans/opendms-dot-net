@@ -45,6 +45,7 @@ namespace Common.Storage
         public event EventHandler OnComplete;
 
         private string _extension = null;
+        public string Extension { get { return _extension; } }
 
         /// <summary>
         /// The quantity of bytes completed.

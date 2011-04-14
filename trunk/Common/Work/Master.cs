@@ -52,7 +52,11 @@ namespace Common.Work
             /// <summary>
             /// Releases the lock
             /// </summary>
-            Unlock
+            Unlock,
+            /// <summary>
+            /// Checks whether the client and server files match
+            /// </summary>
+            CheckUpdateStatus
         }
 
         /// <summary>
@@ -137,6 +141,10 @@ namespace Common.Work
                     case JobType.Unlock:
                         job = new UnlockJob(requestor, _id++, resource,
                             actUpdateUI, timeout, _errorManager);
+                        break;
+                    case JobType.CheckUpdateStatus:
+                        job = new CheckUpdateStatusJob(requestor, _id++, resource, actUpdateUI,
+                            timeout, _errorManager);
                         break;
                     default:
                         throw new Exception("Unknown job type");

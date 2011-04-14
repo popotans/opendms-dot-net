@@ -70,7 +70,7 @@ namespace Common.Work
                     "Timeout failed to start on a UnlockJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
@@ -78,7 +78,7 @@ namespace Common.Work
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
@@ -101,7 +101,7 @@ namespace Common.Work
                     "Failed to unlock the resource for UnlockJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
@@ -122,7 +122,7 @@ namespace Common.Work
                    "Failed to unlock the resource for UnlockJob with id " + Id.ToString() + ".",
                    true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
@@ -130,7 +130,7 @@ namespace Common.Work
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
@@ -151,7 +151,7 @@ namespace Common.Work
                    "Failed to deserialize the server response for UnlockJob with id " + Id.ToString() + ".",
                    true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
@@ -166,14 +166,14 @@ namespace Common.Work
                    "Failed to unlock the asset on the server for UnlockJob with id " + Id.ToString() + ".",
                    true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
             Logger.General.Debug("Successfully completed unlocking of the resource for UnlockJob with id " + Id.ToString() + ".");
 
             _currentState = State.Active | State.Finished;
-            _requestor.WorkReport(_actUpdateUI, this, _resource);
+            _requestor.WorkReport(_actUpdateUI, this, _jobResource);
             return this;
         }
     }

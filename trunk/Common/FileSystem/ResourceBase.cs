@@ -26,7 +26,7 @@ namespace Common.FileSystem
         /// <summary>
         /// A reference to a <see cref="IO"/> object.
         /// </summary>
-        private IO _fileSystem;
+        protected IO _fileSystem;
         /// <summary>
         /// A <see cref="Guid"/> that provides a unique reference to a Resource.
         /// </summary>

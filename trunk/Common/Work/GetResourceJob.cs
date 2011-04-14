@@ -21,7 +21,8 @@ namespace Common.Work
     /// An implementation of <see cref="ResourceJobBase"/> that downloads the asset to the host 
     /// saving it to disk.
     /// </summary>
-    public class GetResourceJob : ResourceJobBase
+    public class GetResourceJob 
+        : ResourceJobBase
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="GetResourceJob"/> class.
@@ -50,11 +51,11 @@ namespace Common.Work
         {
             string errorMessage;
 
-            Logger.General.Debug("GetResourceJob started on job id " + this.Id.ToString() + ".");
+            Logger.General.Debug("GetResourceJob started on job id " + Id.ToString() + ".");
 
             _currentState = State.Active | State.Executing;
 
-            Logger.General.Debug("GetResourceJob timeout is starting on job id " + this.Id.ToString() + ".");
+            Logger.General.Debug("GetResourceJob timeout is starting on job id " + Id.ToString() + ".");
 
             try
             {
@@ -69,7 +70,7 @@ namespace Common.Work
                     "Timeout failed to start on a GetResourceJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
@@ -77,7 +78,7 @@ namespace Common.Work
 
             Logger.General.Debug("Begining meta asset download for GetResourceJob with id " + Id.ToString() + ".");
 
-            if (!_resource.GetMetaAssetFromRemote(this, out errorMessage))
+            if (!_jobResource.GetMetaAssetFromRemote(this, out errorMessage))
             {
                 Logger.General.Error("Failed to download the asset's meta information for GetResourceJob with id " + 
                     Id.ToString() + " with error message: " + errorMessage);
@@ -87,7 +88,7 @@ namespace Common.Work
                     "Failed to download the asset's meta information for GetResourceJob with id " + Id.ToString() + ".",
                     true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
@@ -96,17 +97,17 @@ namespace Common.Work
             // Check for Error
             if (this.IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
             UpdateLastAction();
 
-            _resource.DataAsset.OnProgress += new Storage.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
+            _jobResource.DataAsset.OnProgress += new Storage.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
 
             Logger.General.Debug("Begining data asset download for GetResourceJob with id " + Id.ToString() + ".");
 
-            if (!_resource.DownloadDataAssetAndSaveLocally(this, _fileSystem, out errorMessage))
+            if (!_jobResource.DownloadDataAssetAndSaveLocally(this, _fileSystem, out errorMessage))
             {
                 Logger.General.Error("Failed to download the asset's data information for GetResourceJob with id " +
                     Id.ToString() + " with error message: " + errorMessage);
@@ -116,7 +117,7 @@ namespace Common.Work
                     "Failed to download the asset's data for GetResourceJob with id " + Id.ToString() + ".",
                     true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
@@ -127,14 +128,14 @@ namespace Common.Work
             // Check for Error
             if (this.IsError || CheckForAbortAndUpdate())
             {
-                _resource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _jobResource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
             _currentState = State.Active | State.Finished;
-            _resource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
-            _requestor.WorkReport(_actUpdateUI, this, _resource);
+            _jobResource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
+            _requestor.WorkReport(_actUpdateUI, this, _jobResource);
             return this;
         }
 
@@ -152,7 +153,7 @@ namespace Common.Work
 
             // Don't update the UI if finished, the final update is handled by the Run() method.
             if (sender.BytesComplete != sender.BytesTotal)
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
         }
     }
 }

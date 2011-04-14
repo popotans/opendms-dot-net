@@ -28,7 +28,7 @@ using System.Windows.Shapes;
 using System.Collections;
 using System.ComponentModel;
 using System.IO;
-using Common.Data;
+using Common.Storage;
 using Common.Work;
 
 namespace WindowsClient
@@ -53,8 +53,8 @@ namespace WindowsClient
         /// Represents the method that handles a resource event.
         /// </summary>
         /// <param name="tvi">The <see cref="TreeViewItem"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        delegate void ResourceDelegate(TreeViewItem tvi, FullAsset fullAsset);
+        /// <param name="resource">The resource.</param>
+        delegate void ResourceDelegate(TreeViewItem tvi, Resource resource);
 
         /// <summary>
         /// The brush for outdated assets.
@@ -85,6 +85,9 @@ namespace WindowsClient
         /// A reference to the <see cref="FileSystemWatcher"/> monitoring the file system.
         /// </summary>
         FileSystemWatcher _fsWatcher;
+
+        Common.CouchDB.Database _couchdb;
+        Dictionary<string, Guid> _addedFileMappings;
 
         /// <summary>
         /// Provides Guid translation for different ids being received than are transmitted.
@@ -143,6 +146,7 @@ namespace WindowsClient
             _fsWatcher.NotifyFilter = NotifyFilters.LastWrite;
             _fsWatcher.Changed += new FileSystemEventHandler(FS_Changed);
             _fsWatcher.EnableRaisingEvents = true;
+            _addedFileMappings = new Dictionary<string, Guid>();
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
         }
 
@@ -242,11 +246,12 @@ namespace WindowsClient
         void LoadLocalResources()
         {
             MetaAsset ma;
-            FullAsset fullAsset = null;
+            Resource resource = null;
             Guid guid = Guid.Empty;
             string temp;
-            LoadResourceJob.UpdateUIDelegate actUpdateUI = CheckHeadStatus;
-            string[] files = FileSystem.GetFiles(AssetType.Meta.VirtualPath);
+
+            CheckUpdateStatusJob.UpdateUIDelegate actUpdateUI = CheckUpdateStatus;
+            string[] files = FileSystem.GetFiles(Common.FileSystem.Path.RelativeMetaPath);
 
             for (int i = 0; i < files.Length; i++)
             {
@@ -256,16 +261,17 @@ namespace WindowsClient
                 try { guid = new Guid(files[i]); }
                 catch
                 {
-                    MessageBox.Show("A file was found in the storage location that cannot exist.\r\nPlease remove: " + temp);
+                    guid = Guid.Empty;
                 }
 
                 if (guid != Guid.Empty)
                 {
-                    ma = new MetaAsset(guid, FileSystem);
-                    if (ma.Load())
+                    ma = new MetaAsset(guid, _couchdb);
+
+                    if (ma.LoadFromLocal(null, ma.RelativePath, FileSystem))
                     {
-                        fullAsset = new FullAsset(ma, new DataAsset(ma, FileSystem));
-                        _workMaster.AddJob(this, Master.JobType.GetHead, fullAsset, actUpdateUI, 100000);
+                        resource = new Resource(ma, _couchdb);
+                        _workMaster.AddJob(this, Master.JobType.CheckUpdateStatus, resource, actUpdateUI, 100000);
                     }
                     else
                     {
@@ -275,139 +281,15 @@ namespace WindowsClient
             }
         }
 
-        // Region commented as it is no longer used but I am not yet comfortable removing the code completely, thus it was made into a region :)
-        #region Obsolete Commented Code
-
-        ///// <summary>
-        ///// Calls <see cref="M:LoadMetaCallback(AssetJobBase job, FullAsset fullAsset)"/>.
-        ///// </summary>
-        ///// <param name="job">The <see cref="JobBase"/>.</param>
-        ///// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        ///// <remarks>Runs on the UI thread.</remarks>
-        //void LoadMetaCallback(JobBase job, FullAsset fullAsset)
-        //{
-        //    LoadMetaCallback((AssetJobBase)job, fullAsset);
-        //}
-
-        ///// <summary>
-        ///// Called when a job has terminated on a <see cref="MetaAsset"/>.
-        ///// </summary>
-        ///// <param name="job">The <see cref="AssetJobBase"/>.</param>
-        ///// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        ///// <remarks>Runs on the UI thread.</remarks>
-        //void LoadMetaCallback(AssetJobBase job, FullAsset fullAsset)
-        //{
-        //    TreeViewItem tvi;
-        //    TVIState tviState;
-        //    FullAsset localFullAsset;
-
-        //    tvi = FindTreeViewItem(fullAsset);
-
-        //    if (tvi != null)
-        //    {
-        //        tviState = (TVIState)tvi.Tag;
-        //        localFullAsset = tviState.FullAsset;
-        //        TreeViewItemProps.SetIsLoading(tvi, false);
-
-        //        if (job.IsCancelled)
-        //        {
-        //            tviState.UpdateEvent(false, false, true, false, false);
-        //            TreeViewItemProps.SetIsCanceled(tvi, true);
-        //            UpdateStatus(tvi, "Action cancelled by user");
-        //        }
-        //        else if (job.IsFinished)
-        //        {
-        //            tvi.Background = _normalBrush;
-        //            tviState.UpdateEvent(false, true, false, false, false);
-        //            TreeViewItemProps.SetPercentComplete(tvi, 100);
-
-        //            if (localFullAsset.MetaAsset.ETag.IsOlder(job.FullAsset.MetaAsset.ETag))
-        //            {
-        //                tvi.Background = _outdatedBrush;
-        //                tviState.UpdateResourceStatus(false, true, false, true, true);
-        //                UpdateStatus(tvi, "A newer version of this resource exists");
-        //            }
-        //            else
-        //            { // Impossible for remote to be newer, cus we just downloaded it
-        //                tviState.UpdateResourceStatus(false, false, true, true, true);
-        //                UpdateStatus(tvi, "Loaded");
-        //            }
-        //        }
-        //        else if (job.IsTimeout)
-        //        {
-        //            tvi.Background = _errorBrush;
-        //            tviState.UpdateEvent(false, false, false, true, false);
-        //            UpdateStatus(tvi, "Error: Timeout");
-        //        }
-        //        else if (job.IsError)
-        //        {
-        //            tviState.UpdateEvent(false, false, false, false, true);
-        //            UpdateStatus(tvi, "Error");
-        //        }
-        //        else
-        //        {
-        //            throw new Exception("Unhandled event");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        if (job.IsCancelled)
-        //        {
-        //            MessageBox.Show("Actions on resource " + job.FullAsset.Guid.ToString("N") + " were cancelled by the user.");
-        //        }
-        //        else if (job.IsFinished)
-        //        {
-        //            tvi = AddTreeResource(fullAsset, false, true);
-        //            tviState = (TVIState)tvi.Tag;
-        //            tvi.Background = _normalBrush;
-        //            TreeViewItemProps.SetPercentComplete(tvi, 100);
-        //            TreeViewItemProps.SetIsLoading(tvi, false);
-
-        //            if (job.FullAsset.MetaAsset.ETag == null)
-        //            {
-        //                // Remote resource does not exist on the server if the ETag is null
-        //                tvi.Background = _needUpdatedBrush;
-        //                tviState.UpdateResourceStatus(true, false, false, false, true);
-        //                UpdateStatus(tvi, "File needs saved to server");
-        //            }
-        //            else if (fullAsset.MetaAsset.ETag.IsOlder(job.FullAsset.MetaAsset.ETag))
-        //            {
-        //                tvi.Background = _outdatedBrush;
-        //                tviState.UpdateResourceStatus(false, true, false, true, true);
-        //                UpdateStatus(tvi, "A newer version of this resource exists");
-        //            }
-        //            else
-        //            {
-        //                tviState.UpdateResourceStatus(false, false, true, true, true);
-        //                UpdateStatus(tvi, "Loaded");
-        //            }
-        //        }
-        //        else if (job.IsTimeout)
-        //        {
-        //            MessageBox.Show("Actions on resource " + job.FullAsset.Guid.ToString("N") + " timed out.");
-        //        }
-        //        else if (job.IsError)
-        //        {
-
-        //        }
-        //        else
-        //        {
-        //            throw new Exception("Unhandled event");
-        //        }
-        //    }
-        //}
-
-        #endregion
-
         /// <summary>
         /// Calls <see cref="M:CheckHeadStatus(GetHeadJob job, FullAsset fullAsset)"/>.
         /// </summary>
         /// <param name="job">The <see cref="JobBase"/>.</param>
         /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void CheckHeadStatus(JobBase job, FullAsset fullAsset)
+        void CheckUpdateStatus(JobBase job, Resource resource)
         {
-            CheckHeadStatus((GetHeadJob)job, (FullAsset)fullAsset);
+            CheckUpdateStatus((CheckUpdateStatusJob)job, (Resource)resource);
         }
 
         /// <summary>
@@ -416,212 +298,57 @@ namespace WindowsClient
         /// <param name="job">The <see cref="GetHeadJob"/>.</param>
         /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void CheckHeadStatus(GetHeadJob job, FullAsset fullAsset)
+        void CheckUpdateStatus(CheckUpdateStatusJob job, Resource resource)
         {
+            string localResourceMd5 = null;
             TVIState tviState;
-            TreeViewItem tvi = FindTreeViewItem(fullAsset);
+            TreeViewItem tvi = FindTreeViewItem(resource);
 
             if (tvi == null)
             {
+                // Being loaded without being present in the tree (loaded from application startup)
                 if (job.IsCancelled)
                 {
-                    MessageBox.Show("Actions on resource " + job.FullAsset.Guid.ToString("N") + " were cancelled by the user.");
+                    MessageBox.Show("Actions on resource " + job.Resource.Guid.ToString("N") + " were cancelled by the user.");
                 }
                 else if (job.IsError)
                 {
-                    MessageBox.Show("An error occurred while trying to check the status of the resource " + job.FullAsset.Guid.ToString("N") + ".");
+                    MessageBox.Show("An error occurred while trying to check the status of the resource " + job.Resource.Guid.ToString("N") + ".");
                 }
                 else if (job.IsFinished)
                 {
-                    tvi = AddTreeResource(fullAsset, false, true);
+                    tvi = AddTreeResource(resource, false, true);
                     tviState = (TVIState)tvi.Tag;
                     TreeViewItemProps.SetPercentComplete(tvi, 100);
                     TreeViewItemProps.SetIsLoading(tvi, false);
+                    localResourceMd5 = new Common.FileSystem.MetaResource(resource.Guid, FileSystem).ComputeMd5();
 
-                    if (fullAsset.MetaAsset.ETag.IsOlder(job.ETag))
-                    {
-                        // The local version is older
-                        tvi.Background = _outdatedBrush;
-                        tviState.UpdateResourceStatus(false, true, false, true, true);
-                        UpdateStatus(tvi, "A newer version of this resource exists");
-                    }
-                    else if (fullAsset.MetaAsset.ETag.IsNewer(job.ETag))
+                    // If the local resource does not match the Md5 value of the remote resource, then...
+                    if (job.Resource.MetaAsset.Md5 != localResourceMd5)
                     {
                         // The local version is newer
                         tvi.Background = _needUpdatedBrush;
-                        if (job.ETag.Value == "0")
-                            tviState.UpdateResourceStatus(true, false, false, false, true);
-                        else
-                            tviState.UpdateResourceStatus(true, false, false, true, true);
+                        tviState.UpdateResourceStatus(true, false, false, true, true);
                         UpdateStatus(tvi, "File needs saved to server");
                     }
-                    else if (fullAsset.MetaAsset.ETag.Equals(job.ETag))
-                    {
-                        // This is horribly inefficient, computing the MD5 every time, it should be done once only.
-                        if (job.MD5 != fullAsset.DataAsset.Resource.ComputeMd5())
-                        {
-                            // The local version is newer
-                            tvi.Background = _needUpdatedBrush;
-                            if (job.ETag.Value == "0")
-                                tviState.UpdateResourceStatus(true, false, false, false, true);
-                            else
-                                tviState.UpdateResourceStatus(true, false, false, true, true);
-                            UpdateStatus(tvi, "File needs saved to server");
-                        }
-                        else
-                        {
-                            tvi.Background = _normalBrush;
-                            tviState.UpdateResourceStatus(false, false, true, true, true);
-                            UpdateStatus(tvi, "Loaded");
-                        }
-                    }
-                    else if (job.IsTimeout)
-                    {
-                        MessageBox.Show("Actions on resource " + job.FullAsset.Guid.ToString("N") + " timed out.");
-                    }
-                    else if (job.IsError)
-                    {
-
-                    }
                     else
                     {
-                        throw new Exception("Unhandled event");
-                    }
-                }
-            }
-            else
-            {
-                tviState = (TVIState)tvi.Tag;
-                TreeViewItemProps.SetIsLoading(tvi, false);
-
-                if (job.IsCancelled)
-                {
-                    TreeViewItemProps.SetIsCanceled(tvi, true);
-                    tviState.UpdateEvent(false, false, true, false, false);
-                    UpdateStatus(tvi, "Action cancelled by user");
-                }
-                else if (job.IsFinished)
-                {
-                    tvi.Background = _normalBrush;
-                    tviState.UpdateEvent(false, true, false, false, false);
-                    TreeViewItemProps.SetPercentComplete(tvi, 100);
-
-                    if (fullAsset.MetaAsset.ETag.IsOlder(job.ETag))
-                    {
-                        // Local is older
-                        tvi.Background = _outdatedBrush;
-                        tviState.UpdateResourceStatus(false, true, false, true, true);
-                        UpdateStatus(tvi, "A newer version of this resource exists");
-                    }
-                    else if (fullAsset.MetaAsset.ETag.IsNewer(job.ETag))
-                    {
-                        // Local is newer
-                        tvi.Background = _needUpdatedBrush;
-                        if (job.ETag.Value == "0")
-                            tviState.UpdateResourceStatus(true, false, false, false, true);
-                        else
-                            tviState.UpdateResourceStatus(true, false, false, true, true);
-                    }
-                    else
-                    {
-                        tviState.UpdateResourceStatus(false, false, true, true, true);
                         UpdateStatus(tvi, "Loaded");
                     }
                 }
                 else if (job.IsTimeout)
                 {
-                    tvi.Background = _errorBrush;
-                    tviState.UpdateEvent(false, false, false, true, false);
-                    UpdateStatus(tvi, "Error: Timeout");
+                    MessageBox.Show("Actions on resource " + job.Resource.Guid.ToString("N") + " timed out.");
                 }
                 else if (job.IsError)
                 {
-                    tviState.UpdateEvent(false, false, false, false, true);
-                    UpdateStatus(tvi, "Error");
+
                 }
                 else
                 {
                     throw new Exception("Unhandled event");
                 }
             }
-        }
-
-        /// <summary>
-        /// Calls <see cref="M:CheckETagStatus(GetETagJob job, FullAsset fullAsset)"/>.
-        /// </summary>
-        /// <param name="job">The <see cref="JobBase"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void CheckETagStatus(JobBase job, FullAsset fullAsset)
-        {
-            CheckETagStatus((GetETagJob)job, (FullAsset)fullAsset);
-        }
-
-        /// <summary>
-        /// Called when a <see cref="GetETagJob"/> has terminated.
-        /// </summary>
-        /// <param name="job">The <see cref="GetETagJob"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void CheckETagStatus(GetETagJob job, FullAsset fullAsset)
-        {
-            TVIState tviState;
-            TreeViewItem tvi = FindTreeViewItem(fullAsset);
-
-            if (tvi == null)
-            {
-                if (job.IsCancelled)
-                {
-                    MessageBox.Show("Actions on resource " + job.FullAsset.Guid.ToString("N") + " were cancelled by the user.");
-                }
-                else if (job.IsError)
-                {
-                    MessageBox.Show("An error occurred while trying to check the status of the resource " + job.FullAsset.Guid.ToString("N") + ".");
-                }
-                else if (job.IsFinished)
-                {
-                    tvi = AddTreeResource(fullAsset, false, true);
-                    tviState = (TVIState)tvi.Tag;
-                    TreeViewItemProps.SetPercentComplete(tvi, 100);
-                    TreeViewItemProps.SetIsLoading(tvi, false);
-
-                    if (fullAsset.MetaAsset.ETag.IsOlder(job.ETag))
-                    {
-                        // The local version is older
-                        tvi.Background = _outdatedBrush;
-                        tviState.UpdateResourceStatus(false, true, false, true, true);
-                        UpdateStatus(tvi, "A newer version of this resource exists");
-                    }
-                    else if (fullAsset.MetaAsset.ETag.IsNewer(job.ETag))
-                    {
-                        // The local version is newer
-                        tvi.Background = _needUpdatedBrush;
-                        if (job.ETag.Value == "0")
-                            tviState.UpdateResourceStatus(true, false, false, false, true);
-                        else
-                            tviState.UpdateResourceStatus(true, false, false, true, true);
-                        UpdateStatus(tvi, "File needs saved to server");
-                    }
-                    else if (fullAsset.MetaAsset.ETag.Equals(job.ETag))
-                    {
-                        tvi.Background = _normalBrush;
-                        tviState.UpdateResourceStatus(false, false, true, true, true);
-                        UpdateStatus(tvi, "Loaded");
-                    }
-                    else if (job.IsTimeout)
-                    {
-                        MessageBox.Show("Actions on resource " + job.FullAsset.Guid.ToString("N") + " timed out.");
-                    }
-                    else if (job.IsError)
-                    {
-
-                    }
-                    else
-                    {
-                        throw new Exception("Unhandled event");
-                    }
-                }
-            }
             else
             {
                 tviState = (TVIState)tvi.Tag;
@@ -638,26 +365,18 @@ namespace WindowsClient
                     tvi.Background = _normalBrush;
                     tviState.UpdateEvent(false, true, false, false, false);
                     TreeViewItemProps.SetPercentComplete(tvi, 100);
+                    localResourceMd5 = new Common.FileSystem.MetaResource(resource.Guid, FileSystem).ComputeMd5();
 
-                    if (fullAsset.MetaAsset.ETag.IsOlder(job.ETag))
+                    // If the local resource does not match the Md5 value of the remote resource, then...
+                    if (job.Resource.MetaAsset.Md5 != localResourceMd5)
                     {
-                        // Local is older
-                        tvi.Background = _outdatedBrush;
-                        tviState.UpdateResourceStatus(false, true, false, true, true);
-                        UpdateStatus(tvi, "A newer version of this resource exists");
-                    }
-                    else if (fullAsset.MetaAsset.ETag.IsNewer(job.ETag))
-                    {
-                        // Local is newer
+                        // The local version is newer
                         tvi.Background = _needUpdatedBrush;
-                        if (job.ETag.Value == "0")
-                            tviState.UpdateResourceStatus(true, false, false, false, true);
-                        else
-                            tviState.UpdateResourceStatus(true, false, false, true, true);
+                        tviState.UpdateResourceStatus(true, false, false, true, true);
+                        UpdateStatus(tvi, "File needs saved to server");
                     }
                     else
                     {
-                        tviState.UpdateResourceStatus(false, false, true, true, true);
                         UpdateStatus(tvi, "Loaded");
                     }
                 }
@@ -689,17 +408,17 @@ namespace WindowsClient
         /// A TreeViewItem representing the same as added to the TreeView
         /// </returns>
         /// <remarks>Runs on the UI thread.</remarks>
-        TreeViewItem AddTreeResource(FullAsset fullAsset, bool isLoading, bool isLoaded)
+        TreeViewItem AddTreeResource(Resource resource, bool isLoading, bool isLoaded)
         {
             TreeViewItem tvi;
             System.Windows.Controls.ContextMenu menu = new System.Windows.Controls.ContextMenu();
 
             tvi = new TreeViewItem();
             tvi.Selected += new RoutedEventHandler(TreeViewItem_Selected);
-            tvi.Header = fullAsset.Guid.ToString("N");
-            tvi.Tag = new TVIState(fullAsset);
+            tvi.Header = resource.Guid.ToString("N");
+            tvi.Tag = new TVIState(resource);
             ((TVIState)tvi.Tag).UpdateEvent(isLoading, isLoaded, false, false, false);
-            TreeViewItemProps.SetGuid(tvi, fullAsset.Guid.ToString("N"));
+            TreeViewItemProps.SetGuid(tvi, resource.Guid.ToString("N"));
             TreeViewItemProps.SetIsLoading(tvi, isLoading);
             TreeViewItemProps.SetIsCanceled(tvi, false);
             if (isLoaded)
@@ -718,19 +437,19 @@ namespace WindowsClient
             tvi.ContextMenu.IsOpen = false;
 
 
-            System.Windows.Controls.MenuItem mi1 = new MenuItem();
-            mi1.Header = "Lock";
-            mi1.Click += new RoutedEventHandler(MenuItem_Click);
-            System.Windows.Controls.MenuItem mi2 = new MenuItem();
-            mi2.Header = "Unlock";
-            mi2.Click += new RoutedEventHandler(MenuItem_Click);
+            //System.Windows.Controls.MenuItem mi1 = new MenuItem();
+            //mi1.Header = "Lock";
+            //mi1.Click += new RoutedEventHandler(MenuItem_Click);
+            //System.Windows.Controls.MenuItem mi2 = new MenuItem();
+            //mi2.Header = "Unlock";
+            //mi2.Click += new RoutedEventHandler(MenuItem_Click);
             System.Windows.Controls.MenuItem mi3 = new MenuItem();
             mi3.Header = "Release";
             mi3.Click += new RoutedEventHandler(MenuItem_Click);
 
 
-            tvi.ContextMenu.Items.Add(mi1);
-            tvi.ContextMenu.Items.Add(mi2);
+            //tvi.ContextMenu.Items.Add(mi1);
+            //tvi.ContextMenu.Items.Add(mi2);
             tvi.ContextMenu.Items.Add(mi3);
 
             ResourceTree.Items.Add(tvi);
@@ -763,14 +482,14 @@ namespace WindowsClient
                     // the local filesystem also removing it from the ResourceTree
                     ReleaseResource(tvi);
                     break;
-                case "Lock":
-                    // Applies a lock on the resource at the server and downloads an updated MetaAsset
-                    LockResource(tvi);
-                    break;
-                case "Unlock":
-                    // Releases a lock on the resource at the server and downloads an updated MetaAsset
-                    UnlockResource(tvi);
-                    break;
+                //case "Lock":
+                //    // Applies a lock on the resource at the server and downloads an updated MetaAsset
+                //    LockResource(tvi);
+                //    break;
+                //case "Unlock":
+                //    // Releases a lock on the resource at the server and downloads an updated MetaAsset
+                //    UnlockResource(tvi);
+                //    break;
                 default:
                     throw new Exception("Unknown context menu item.");
             }
@@ -784,32 +503,32 @@ namespace WindowsClient
         {
             TVIState tviState = (TVIState)tvi.Tag;
             LockJob.UpdateUIDelegate actUpdateUI = ReleaseResourceCallback;
-            _workMaster.AddJob(this, Master.JobType.Unlock, tviState.FullAsset, actUpdateUI, 10000);
+            _workMaster.AddJob(this, Master.JobType.Unlock, tviState.Resource, actUpdateUI, 10000);
         }
 
         /// <summary>
         /// Calls <see cref="M:ReleaseResourceCallback(UnlockJob, FullAsset)"/>.
         /// </summary>
         /// <param name="job">The <see cref="JobBase"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <param name="resource">The <see cref="Resource"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void ReleaseResourceCallback(JobBase job, FullAsset fullAsset)
+        void ReleaseResourceCallback(JobBase job, Resource resource)
         {
-            ReleaseResourceCallback((UnlockJob)job, fullAsset);
+            ReleaseResourceCallback((UnlockJob)job, resource);
         }
 
         /// <summary>
         /// Called when a job has terminated on a Resource.
         /// </summary>
         /// <param name="job">The <see cref="UnlockJob"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <param name="resource">The <see cref="Resource"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void ReleaseResourceCallback(UnlockJob job, FullAsset fullAsset)
+        void ReleaseResourceCallback(UnlockJob job, Resource resource)
         {
             TVIState tviState;
             TreeViewItem tvi;
 
-            if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
+            if ((tvi = FindTreeViewItem((Resource)resource)) == null)
             {
                 Common.Logger.General.Error("Unable to locate the resource in the GUI tree.");
                 MessageBox.Show("A request was received releasing a resource on the server, but I am unable to locate the resource.", "Resource not Found");
@@ -817,134 +536,17 @@ namespace WindowsClient
             }
 
             tviState = (TVIState)tvi.Tag;
-            tviState.FullAsset = job.FullAsset;
+            tviState.Resource = job.Resource;
 
             if (job.IsFinished)
             {
                 if (ResourceTree.Items.Contains(tvi))
                     ResourceTree.Items.Remove(tvi);
 
-                job.FullAsset.DataAsset.Resource.DeleteFromFilesystem();
-                job.FullAsset.MetaAsset.Resource.DeleteFromFilesystem();
+                FileSystem.Delete(job.Resource.MetaAsset.RelativePath);
+                FileSystem.Delete(job.Resource.DataAsset.RelativePath);
             }
         }
-
-        /// <summary>
-        /// Locks the resource - applies a lock on the resource on the server side
-        /// </summary>
-        /// <param name="tvi">The tvi.</param>
-        private void LockResource(TreeViewItem tvi)
-        {
-            TVIState tviState = (TVIState)tvi.Tag;
-            LockJob.UpdateUIDelegate actUpdateUI = LockResourceCallback;
-            _workMaster.AddJob(this, Master.JobType.Lock, tviState.FullAsset, actUpdateUI, 100000);
-        }
-
-        /// <summary>
-        /// Calls <see cref="M:LockResourceCallback(LockJob, FullAsset)"/>.
-        /// </summary>
-        /// <param name="job">The <see cref="JobBase"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void LockResourceCallback(JobBase job, FullAsset fullAsset)
-        {
-            LockResourceCallback((LockJob)job, fullAsset);
-        }
-
-        /// <summary>
-        /// Called when a job has terminated on a Resource.
-        /// </summary>
-        /// <param name="job">The <see cref="LockJob"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>
-        /// Runs on the UI thread.
-        /// </remarks>
-        void LockResourceCallback(LockJob job, FullAsset fullAsset)
-        {
-            TVIState tviState;
-            TreeViewItem tvi;
-
-            if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
-            {
-                Common.Logger.General.Error("Unable to locate the resource in the GUI tree.");
-                MessageBox.Show("A request was received locking a resource on the server, but I am unable to locate the resource.", "Resource not Found");
-                return;
-            }
-
-            tviState = (TVIState)tvi.Tag;
-            tviState.FullAsset = job.FullAsset;
-
-            if (job.IsFinished)
-            {
-                tviState.UpdateEvent(false, true, false, false, false);
-                tviState.UpdateResourceStatus(false, false, true, true, true);
-                TreeViewItemProps.SetIsLoading(tvi, false);
-                TreeViewItemProps.SetIsCanceled(tvi, false);
-                TreeViewItemProps.SetPercentComplete(tvi, 100);
-                UpdateStatus(tvi, "Loaded");
-
-                job.FullAsset.MetaAsset.ApplyLock(DateTime.Now, TEMP_USERNAME);
-                job.FullAsset.MetaAsset.Save();
-            }
-        }
-
-        /// <summary>
-        /// Unlocks the resource - releases the lock on the resource on the server side
-        /// </summary>
-        /// <param name="tvi">The tvi.</param>
-        private void UnlockResource(TreeViewItem tvi)
-        {
-            TVIState tviState = (TVIState)tvi.Tag;
-            LockJob.UpdateUIDelegate actUpdateUI = UnlockResourceCallback;
-            _workMaster.AddJob(this, Master.JobType.Unlock, tviState.FullAsset, actUpdateUI, 100000);
-        }
-
-        /// <summary>
-        /// Calls <see cref="M:UnlockResourceCallback(UnlockJob, FullAsset)"/>.
-        /// </summary>
-        /// <param name="job">The <see cref="JobBase"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void UnlockResourceCallback(JobBase job, FullAsset fullAsset)
-        {
-            UnlockResourceCallback((UnlockJob)job, fullAsset);
-        }
-
-        /// <summary>
-        /// Called when a job has terminated on a Resource.
-        /// </summary>
-        /// <param name="job">The <see cref="UnlockJob"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void UnlockResourceCallback(UnlockJob job, FullAsset fullAsset)
-        {
-            TVIState tviState;
-            TreeViewItem tvi;
-
-            if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
-            {
-                Common.Logger.General.Error("Unable to locate the resource in the GUI tree.");
-                MessageBox.Show("A request was received unlocking a resource on the server, but I am unable to locate the resource.", "Resource not Found");
-                return;
-            }
-
-            tviState = (TVIState)tvi.Tag;
-            tviState.FullAsset = job.FullAsset;
-
-            if (job.IsFinished)
-            {
-                tviState.UpdateEvent(false, true, false, false, false);
-                tviState.UpdateResourceStatus(false, false, true, true, true);
-                TreeViewItemProps.SetIsLoading(tvi, false);
-                TreeViewItemProps.SetIsCanceled(tvi, false);
-                TreeViewItemProps.SetPercentComplete(tvi, 100);
-                UpdateStatus(tvi, "Loaded");
-
-                job.FullAsset.MetaAsset.ReleaseLock();
-                job.FullAsset.MetaAsset.Save();
-            }
-        }
-
 
         /// <summary>
         /// Handles the Selected event of the TreeViewItem control.
@@ -957,7 +559,7 @@ namespace WindowsClient
             TreeViewItem tvi = (TreeViewItem)sender;
             TVIState tviState = (TVIState)tvi.Tag;
 
-            _statusBarItemGuid = tviState.FullAsset.Guid;
+            _statusBarItemGuid = tviState.Resource.Guid;
             SBItem.Content = TreeViewItemProps.GetStatus(tvi);
 
             // Outdated Brush = Local resource is outdated (older than remote)
@@ -1007,10 +609,10 @@ namespace WindowsClient
                 {
                     if (tviOwner.Tag != null)
                     {
-                        FullAsset fullAsset = ((TVIState)tviOwner.Tag).FullAsset;
+                        Resource resource = ((TVIState)tviOwner.Tag).Resource;
                         UpdateStatus(tviOwner, "Cancelling...");
                         tviOwner.Background = _errorBrush;
-                        _workMaster.CancelJobForResource(fullAsset);
+                        _workMaster.CancelJobForResource(resource);
                     }
                 }
             }
@@ -1025,7 +627,7 @@ namespace WindowsClient
         private void btnReload_Click(object sender, RoutedEventArgs e)
         {
             Button btnSender = (Button)e.OriginalSource;
-            LoadResourceJob.UpdateUIDelegate actUpdateUI = CheckETagStatus;
+            CheckUpdateStatusJob.UpdateUIDelegate actUpdateUI = CheckUpdateStatus;
             if (btnSender != null)
             {
                 TreeViewItem tviOwner = (TreeViewItem)btnSender.Tag;
@@ -1034,13 +636,13 @@ namespace WindowsClient
                     if (tviOwner.Tag != null)
                     {
                         TVIState tviState = (TVIState)tviOwner.Tag;
-                        FullAsset fullAsset = tviState.FullAsset;
+                        Resource resource = tviState.Resource;
                         TreeViewItemProps.SetIsCanceled(tviOwner, false);
                         TreeViewItemProps.SetIsLoading(tviOwner, true);
                         TreeViewItemProps.SetStatus(tviOwner, "Starting reload...");
                         tviState.UpdateEvent(true, false, false, false, false);
                         tviOwner.Background = _normalBrush;
-                        _workMaster.AddJob(this, Master.JobType.GetETag, fullAsset, actUpdateUI, 
+                        _workMaster.AddJob(this, Master.JobType.CheckUpdateStatus, resource, actUpdateUI, 
                             (uint)Settings.Instance.NetworkTimeout);
                     }
                 }
@@ -1053,9 +655,9 @@ namespace WindowsClient
         /// <param name="job">The <see cref="JobBase"/>.</param>
         /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void LoadResourceCallback(JobBase job, FullAsset fullAsset)
+        void GetResourceCallback(JobBase job, Resource resource)
         {
-            LoadResourceCallback((LoadResourceJob)job, fullAsset);
+            GetResourceCallback((GetResourceJob)job, resource);
         }
 
         /// <summary>
@@ -1064,14 +666,14 @@ namespace WindowsClient
         /// <param name="job">The <see cref="LoadResourceJob"/>.</param>
         /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void LoadResourceCallback(LoadResourceJob job, FullAsset fullAsset)
+        void GetResourceCallback(GetResourceJob job, Resource resource)
         {
             TVIState tviState;
             TreeViewItem tvi;
 
-            if ((tvi = FindTreeViewItem(fullAsset)) == null)
+            if ((tvi = FindTreeViewItem(resource)) == null)
             {
-                tvi = AddTreeResource(fullAsset, true, false);
+                tvi = AddTreeResource(resource, true, false);
             }
 
             tviState = (TVIState)tvi.Tag;
@@ -1124,8 +726,8 @@ namespace WindowsClient
         {
             TVIState tviState;
             TreeViewItem tvi;
-            FullAsset fullAsset;
-            LoadResourceJob.UpdateUIDelegate actUpdateUI = LoadResourceCallback;
+            Resource resource;
+            GetResourceJob.UpdateUIDelegate actUpdateUI = GetResourceCallback;
 
             if (ResourceTree.SelectedItem == null)
             {
@@ -1138,13 +740,13 @@ namespace WindowsClient
             if (tvi.Tag != null)
             {
                 tviState = (TVIState)tvi.Tag;
-                fullAsset = tviState.FullAsset;
+                resource = tviState.Resource;
                 tviState.UpdateEvent(true, false, false, false, false);
                 tviState.UpdateResourceStatus(null, null, null, true, true);
                 TreeViewItemProps.SetIsCanceled(tvi, false);
                 TreeViewItemProps.SetIsLoading(tvi, true);
                 tvi.Background = _normalBrush;
-                _workMaster.AddJob(this, Master.JobType.LoadResource, fullAsset, actUpdateUI, 150000);
+                _workMaster.AddJob(this, Master.JobType.GetResource, resource, actUpdateUI, 150000);
             }
         }
 
@@ -1154,9 +756,9 @@ namespace WindowsClient
         /// <param name="job">The <see cref="JobBase"/>.</param>
         /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void CreateResourceCallback(JobBase job, FullAsset fullAsset)
+        void CreateResourceCallback(JobBase job, Resource resource)
         {
-            CreateResourceCallback((CreateResourceJob)job, fullAsset);
+            CreateResourceCallback((CreateResourceJob)job, resource);
         }
 
         /// <summary>
@@ -1165,13 +767,13 @@ namespace WindowsClient
         /// <param name="job">The <see cref="SaveResourceJob"/>.</param>
         /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void CreateResourceCallback(CreateResourceJob job, FullAsset fullAsset)
+        void CreateResourceCallback(CreateResourceJob job, Resource resource)
         {
             TVIState tviState = null;
             TreeViewItem tvi, foundTvi;
-
+            
             // primary scan of all TVI's current guids
-            if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
+            if ((tvi = FindTreeViewItem((Resource)resource)) == null)
             {
                 // Creation is weird on the client.  The client currently has the user add an existing 
                 // resource to the client's repository.  The client assigns a Guid.  This Guid is used 
@@ -1186,14 +788,13 @@ namespace WindowsClient
                     foundTvi = (TreeViewItem)ResourceTree.Items[i];
                     if (foundTvi.Tag != null) // If null, then Tag has not been set, which means that LoadResource has not been called and thus, it cannot be the one we want
                     {
-                        if (((TVIState)foundTvi.Tag).FullAsset.Guid == fullAsset.PreviousGuid)
+                        if (((TVIState)foundTvi.Tag).Resource == resource)
                         {
                             tvi = foundTvi;
                             tviState = (TVIState)tvi.Tag;
-                            tviState.FullAsset.PreviousGuid = Guid.Empty; // Lock it out
-                            TreeViewItemProps.SetGuid(tvi, job.FullAsset.Guid.ToString("N"));
-                            tvi.Header = job.FullAsset.Guid.ToString("N");
-                            _statusBarItemGuid = job.FullAsset.Guid;
+                            TreeViewItemProps.SetGuid(tvi, job.Resource.Guid.ToString("N"));
+                            tvi.Header = job.Resource.Guid.ToString("N");
+                            _statusBarItemGuid = job.Resource.Guid;
                             break;
                         }
                     }
@@ -1211,7 +812,7 @@ namespace WindowsClient
 
 
             // Update the tviState.FullAsset reference
-            tviState.FullAsset = job.FullAsset;
+            tviState.Resource = job.Resource;
 
             if (job.IsCancelled)
             {
@@ -1253,9 +854,9 @@ namespace WindowsClient
         /// <param name="job">The <see cref="JobBase"/>.</param>
         /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void SaveResourceCallback(JobBase job, FullAsset fullAsset)
+        void SaveResourceCallback(JobBase job, Resource resource)
         {
-            SaveResourceCallback((SaveResourceJob)job, fullAsset);
+            SaveResourceCallback((SaveResourceJob)job, resource);
         }
 
         /// <summary>
@@ -1264,20 +865,20 @@ namespace WindowsClient
         /// <param name="job">The <see cref="SaveResourceJob"/>.</param>
         /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void SaveResourceCallback(SaveResourceJob job, FullAsset fullAsset)
+        void SaveResourceCallback(SaveResourceJob job, Resource resource)
         {
             TVIState tviState;
             TreeViewItem tvi;
 
-            if ((tvi = FindTreeViewItem((FullAsset)fullAsset)) == null)
+            if ((tvi = FindTreeViewItem((Resource)resource)) == null)
             {
-                tvi = AddTreeResource((FullAsset)fullAsset, true, false);
+                tvi = AddTreeResource((Resource)resource, true, false);
             }
 
             tviState = (TVIState)tvi.Tag;
 
             // Update the tviState.FullAsset reference
-            tviState.FullAsset = job.FullAsset;
+            tviState.Resource = job.Resource;
 
             if (job.IsCancelled)
             {
@@ -1325,9 +926,6 @@ namespace WindowsClient
         /// <remarks>Runs on the UI thread.</remarks>
         private void BtnSaveSelected_Click(object sender, RoutedEventArgs e)
         {
-            FullAsset fullAsset;
-            DataAsset da;
-            MetaAsset ma;
             TreeViewItem tvi;
             MetaPropWindow win;
             
@@ -1345,15 +943,15 @@ namespace WindowsClient
                 MessageBox.Show("Invalid Tag value.");
             }
 
-            win = new MetaPropWindow(((TVIState)tvi.Tag).FullAsset.Guid);
+            win = new MetaPropWindow(((TVIState)tvi.Tag).Resource.Guid, FileSystem, _couchdb);
 
             if (!win.ShowDialog().Value)
                 return;
-
+             
             // Reload the meta
-            ma = MetaAsset.Load(((TVIState)tvi.Tag).FullAsset.Guid, FileSystem);
-            da = new DataAsset(ma, FileSystem);
-            fullAsset = new FullAsset(ma, da);
+            ((TVIState)tvi.Tag).Resource.MetaAsset.LoadFromLocal(null,
+                Common.FileSystem.Path.RelativeMetaPath +
+                ((TVIState)tvi.Tag).Resource.Guid + ".xml", FileSystem);
 
             ((TVIState)tvi.Tag).UpdateEvent(true, false, false, false, false);
             TreeViewItemProps.SetIsCanceled(tvi, false);
@@ -1362,9 +960,11 @@ namespace WindowsClient
 
             // If this resource does not exist on the server then create, else update
             if (((TVIState)tvi.Tag).IsRemoteExistantKnown && !((TVIState)tvi.Tag).IsRemoteExistant)
-                _workMaster.AddJob(this, Master.JobType.CreateResource, fullAsset, CreateResourceCallback, 100000);
+                _workMaster.AddJob(this, Master.JobType.CreateResource, ((TVIState)tvi.Tag).Resource, 
+                    CreateResourceCallback, 100000);
             else
-                _workMaster.AddJob(this, Master.JobType.SaveResource, fullAsset, SaveResourceCallback, 100000);
+                _workMaster.AddJob(this, Master.JobType.SaveResource, ((TVIState)tvi.Tag).Resource, 
+                    SaveResourceCallback, 100000);
         }
 
         /// <summary>
@@ -1373,7 +973,7 @@ namespace WindowsClient
         /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
         /// <returns>A <see cref="TreeViewItem"/> if located; otherwise, <c>null</c>.</returns>
         /// <remarks>Runs on the UI thread.</remarks>
-        TreeViewItem FindTreeViewItem(FullAsset fullAsset)
+        TreeViewItem FindTreeViewItem(Resource resource)
         {
             TreeViewItem tvi;
 
@@ -1382,7 +982,7 @@ namespace WindowsClient
                 tvi = (TreeViewItem)ResourceTree.Items[i];
                 if (tvi.Tag != null) // If null, then Tag has not been set, which means that LoadResource has not been called and thus, it cannot be the one we want
                 {
-                    if (((TVIState)tvi.Tag).FullAsset.Guid == fullAsset.Guid)
+                    if (((TVIState)tvi.Tag).Resource.Guid == resource.Guid)
                         return tvi;
                 }
             }
@@ -1406,7 +1006,7 @@ namespace WindowsClient
                 tvi = (TreeViewItem)ResourceTree.Items[i];
                 if (tvi.Tag != null) // If null, then Tag has not been set, which means that LoadResource has not been called and thus, it cannot be the one we want
                 {
-                    if (((TVIState)tvi.Tag).FullAsset.Guid == guid)
+                    if (((TVIState)tvi.Tag).Resource.Guid == guid)
                     {
                         return tvi;
                     }
@@ -1464,7 +1064,7 @@ namespace WindowsClient
             if (tvi.Tag != null)
             {
                 tvi.Background = Brushes.Red;
-                actOpenResource.BeginInvoke(tvi, ((TVIState)tvi.Tag).FullAsset, 
+                actOpenResource.BeginInvoke(tvi, ((TVIState)tvi.Tag).Resource, 
                     OpenResource_AsyncCallback, actOpenResource);
             }
         }
@@ -1478,7 +1078,7 @@ namespace WindowsClient
         private void UpdateStatus(TreeViewItem tvi, string status)
         {
             TreeViewItemProps.SetStatus(tvi, status);
-            if(((TVIState)tvi.Tag).FullAsset.Guid == _statusBarItemGuid)
+            if (((TVIState)tvi.Tag).Resource.Guid == _statusBarItemGuid)
                 SBItem.Content = status;
         }
 
@@ -1489,29 +1089,29 @@ namespace WindowsClient
         /// Opens the resource.
         /// </summary>
         /// <param name="tvi">The <see cref="TreeViewItem"/> containing the resource.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <param name="resource">The <see cref="Resource"/>.</param>
         /// <remarks>Runs on a background thread.</remarks>
-        private void OpenResource(TreeViewItem tvi, FullAsset fullAsset)
+        private void OpenResource(TreeViewItem tvi, Resource resource)
         {
             string errorMessage;
             ResourceDelegate actCloseResource = CloseResource;
 
-            if (!ExternalApplication.OpenFileWithDefaultApplication(fullAsset.DataAsset, out errorMessage))
+            if (!ExternalApplication.OpenFileWithDefaultApplication(resource.DataAsset, out errorMessage))
                 MessageBox.Show(errorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
-            Dispatcher.BeginInvoke(actCloseResource, System.Windows.Threading.DispatcherPriority.Background, tvi, fullAsset);
+            Dispatcher.BeginInvoke(actCloseResource, System.Windows.Threading.DispatcherPriority.Background, tvi, resource);
         }
 
         /// <summary>
         /// Called when a resource is released.
         /// </summary>
         /// <param name="tvi">The <see cref="TreeViewItem"/> containing the resource.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
+        /// <param name="resource">The <see cref="Resource"/>.</param>
         /// <remarks>
         /// Runs on the UI thread.
         /// Can be called at any point after opening, depending on how the application handles file access.
         /// </remarks>
-        private void CloseResource(TreeViewItem tvi, FullAsset fullAsset)
+        private void CloseResource(TreeViewItem tvi, Resource resource)
         {
             tvi.Background = Brushes.Transparent;
         }
@@ -1569,11 +1169,11 @@ namespace WindowsClient
         /// <remarks>Runs on the UI thread.</remarks>
         private void BtnRefreshETagStatus_Click(object sender, RoutedEventArgs e)
         {
-            GetETagJob.UpdateUIDelegate actUpdateUI = CheckETagStatus;
+            CheckUpdateStatusJob.UpdateUIDelegate actUpdateUI = CheckUpdateStatus;
             for (int i = 0; i < ResourceTree.Items.Count; i++)
             {
-                _workMaster.AddJob(this, Master.JobType.GetETag, 
-                    ((TVIState)((TreeViewItem)ResourceTree.Items[i]).Tag).FullAsset, 
+                _workMaster.AddJob(this, Master.JobType.CheckUpdateStatus, 
+                    ((TVIState)((TreeViewItem)ResourceTree.Items[i]).Tag).Resource, 
                     actUpdateUI, 1000);
             }
         }
@@ -1586,9 +1186,9 @@ namespace WindowsClient
         /// <remarks>Runs on the UI thread.</remarks>
         private void BtnSearch_Click(object sender, RoutedEventArgs e)
         {
-            SearchWindow search = new SearchWindow();
-            search.OnResultSelected += new SearchWindow.SearchResultHandler(search_OnResultSelected);
-            search.Show();
+            //SearchWindow search = new SearchWindow();
+            //search.OnResultSelected += new SearchWindow.SearchResultHandler(search_OnResultSelected);
+            //search.Show();
         }
 
         /// <summary>
@@ -1598,17 +1198,17 @@ namespace WindowsClient
         /// <remarks>Runs on the UI thread.</remarks>
         void search_OnResultSelected(Guid guid)
         {
-            if (FindTreeViewItem(guid) != null)
-                return;
+            //if (FindTreeViewItem(guid) != null)
+            //    return;
 
-            LoadResourceJob.UpdateUIDelegate actUpdateUI = LoadResourceCallback;
-            MetaAsset ma = new MetaAsset(guid, FileSystem);
-            if(ma.ResourceExistsOnFilesystem())
-                ma.Load();
-            FullAsset fullAsset = new FullAsset(ma, new DataAsset(ma, FileSystem));
-            //string datapath = resource.StorageLocation + new AssetType(AssetType.Data).VirtualPath + "\\";
+            //GetResourceJob.UpdateUIDelegate actUpdateUI = GetResourceCallback;
+            //MetaAsset ma = new MetaAsset(guid, FileSystem);
+            //if(ma.ResourceExistsOnFilesystem())
+            //    ma.Load();
+            //FullAsset fullAsset = new FullAsset(ma, new DataAsset(ma, FileSystem));
+            ////string datapath = resource.StorageLocation + new AssetType(AssetType.Data).VirtualPath + "\\";
 
-            _workMaster.AddJob(this, Master.JobType.LoadResource, fullAsset, actUpdateUI, 150000);
+            //_workMaster.AddJob(this, Master.JobType.LoadResource, fullAsset, actUpdateUI, 150000);
         }
 
         /// <summary>
@@ -1618,9 +1218,9 @@ namespace WindowsClient
         /// <param name="job">The job for the method updating the UI.</param>
         /// <param name="fullAsset">The <see cref="FullAsset"/> for the method updating the UI.</param>
         /// <remarks>Runs on the job's thread.</remarks>
-        public void WorkReport(JobBase.UpdateUIDelegate actUpdateUI, JobBase job, FullAsset fullAsset)
+        public void WorkReport(JobBase.UpdateUIDelegate actUpdateUI, JobBase job, Resource resource)
         {
-            Dispatcher.BeginInvoke(actUpdateUI, job, fullAsset);
+            Dispatcher.BeginInvoke(actUpdateUI, job, resource);
         }
 
         /// <summary>
@@ -1644,13 +1244,13 @@ namespace WindowsClient
         /// data assets to disk and returning the instantiated FullAsset object.
         /// </summary>
         /// <returns></returns>
-        private Common.Data.FullAsset GenerateFullAsset()
+        private Common.Storage.Resource GenerateResource()
         {
             Common.FileSystem.IOStream iostream;
             byte[] buffer;
-            string dataRelativePath;
-            Common.Data.MetaAsset ma;
-            Common.Data.DataAsset da;
+            Common.Storage.MetaAsset ma;
+            Common.Storage.DataAsset da;
+            Resource resource;
             List<string> tags = new List<string>();
             Dictionary<string, object> dict1 = new Dictionary<string,object>();
             
@@ -1662,15 +1262,14 @@ namespace WindowsClient
             dict1.Add("prop3", "lucas");
 
             // Create new meta asset
-            ma = Common.Data.MetaAsset.Create(Guid.NewGuid(), new ETag("1"), 1, 1, "lucas", DateTime.Now, 
-                "Lucas", 0, null, ".txt", DateTime.Now, DateTime.Now, DateTime.Now, "Test", tags, 
-                dict1, FileSystem);
+            ma = Common.Storage.MetaAsset.Instantiate(Guid.NewGuid(), "lucas", DateTime.Now, 
+                "Lucas", 0, null, ".txt", DateTime.Now, DateTime.Now, "Test", tags, 
+                dict1, _couchdb);
+            resource = new Resource(ma, _couchdb);
+            da = resource.DataAsset;
 
             // Open the stream to create the new data asset
-            dataRelativePath = Common.Data.AssetType.Data.VirtualPath + 
-                System.IO.Path.DirectorySeparatorChar.ToString() + ma.GuidString + ".txt";
-
-            iostream = FileSystem.Open(dataRelativePath, FileMode.Create, FileAccess.Write, FileShare.None,
+            iostream = FileSystem.Open(da.RelativePath, FileMode.Create, FileAccess.Write, FileShare.None,
                 FileOptions.None, "WindowsClient.MainWindow.GenerateFullAsset()");
 
             // Write the new data asset
@@ -1679,17 +1278,13 @@ namespace WindowsClient
             FileSystem.Close(iostream);
 
             // Update the meta asset with md5 and length
-            ma.UpdateByServer(ma.ETag, ma.MetaVersion, ma.DataVersion, ma.LockedBy, ma.LockedAt, ma.Creator, (ulong)buffer.Length,
-                FileSystem.ComputeMd5(dataRelativePath), ma.Created, ma.Modified, ma.LastAccess);
+            ma.Length = (ulong)buffer.Length;
+            ma.Md5 = FileSystem.ComputeMd5(da.RelativePath);
 
             // Write the ma out to disk
-            ma.Save();
+            ma.SaveToLocal(null, FileSystem);
 
-            // Give us an instance of the data object representing the data asset
-            da = new DataAsset(ma, FileSystem);
-
-            // Construct the full asset
-            return new FullAsset(ma, da);
+            return resource;
         }
 
         /// <summary>
@@ -1699,23 +1294,23 @@ namespace WindowsClient
         /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void Btn1_Click(object sender, RoutedEventArgs e)
         {
-            if (ResourceTree.SelectedItem == null)
-            {
-                MessageBox.Show("A resource must be selected.");
-                return;
-            }
+            //if (ResourceTree.SelectedItem == null)
+            //{
+            //    MessageBox.Show("A resource must be selected.");
+            //    return;
+            //}
 
-            TVIState tviState = (TVIState)((TreeViewItem)ResourceTree.SelectedItem).Tag;
-            Common.Data.MetaAsset ma = tviState.FullAsset.MetaAsset;
-            LoadResourceJob.UpdateUIDelegate actUpdateUI = CheckETagStatus;
+            //TVIState tviState = (TVIState)((TreeViewItem)ResourceTree.SelectedItem).Tag;
+            //Common.Data.MetaAsset ma = tviState.FullAsset.MetaAsset;
+            //LoadResourceJob.UpdateUIDelegate actUpdateUI = CheckETagStatus;
 
-            tviState.FullAsset.MetaAsset.UpdateByServer(ma.ETag.Increment(), ma.MetaVersion + 1, 
-                ma.DataVersion + 1, ma.LockedBy, ma.LockedAt, ma.Creator, ma.Length, ma.Md5, 
-                ma.Created, ma.Modified, ma.LastAccess);
+            //tviState.FullAsset.MetaAsset.UpdateByServer(ma.ETag.Increment(), ma.MetaVersion + 1, 
+            //    ma.DataVersion + 1, ma.LockedBy, ma.LockedAt, ma.Creator, ma.Length, ma.Md5, 
+            //    ma.Created, ma.Modified, ma.LastAccess);
 
-            ma.Save();
+            //ma.Save();
 
-            _workMaster.AddJob(this, Master.JobType.GetETag, tviState.FullAsset, actUpdateUI, (uint)Settings.Instance.NetworkTimeout);
+            //_workMaster.AddJob(this, Master.JobType.GetETag, tviState.FullAsset, actUpdateUI, (uint)Settings.Instance.NetworkTimeout);
         }
 
         /// <summary>
@@ -1736,11 +1331,11 @@ namespace WindowsClient
         /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void Btn2_Click(object sender, RoutedEventArgs e)
         {
-            FullAsset fullAsset;
-            LoadResourceJob.UpdateUIDelegate actUpdateUI = CheckETagStatus;
+            //FullAsset fullAsset;
+            //LoadResourceJob.UpdateUIDelegate actUpdateUI = CheckETagStatus;
 
-            fullAsset = GenerateFullAsset();
-            _workMaster.AddJob(this, Master.JobType.GetETag, fullAsset, actUpdateUI, 100000);
+            //fullAsset = GenerateFullAsset();
+            //_workMaster.AddJob(this, Master.JobType.GetETag, fullAsset, actUpdateUI, 100000);
         }
 
         /// <summary>
@@ -1751,10 +1346,8 @@ namespace WindowsClient
         private void BtnAddResource_Click(object sender, RoutedEventArgs e)
         {
             TreeViewItem tvi;
-            MetaAsset ma;
-            DataAsset da;
-            FullAsset fa;
             TVIState tviState;
+            Resource resource;
             string metaRelPath, dataRelPath, dataExt, rootPath;
             Guid guid = Guid.NewGuid();
             List<string> uprop = new List<string>();
@@ -1767,50 +1360,43 @@ namespace WindowsClient
             {
                 ofd = new System.Windows.Forms.OpenFileDialog();
                 ofd.Multiselect = false;
-
-                rootPath = Settings.Instance.StorageLocation.TrimEnd(System.IO.Path.DirectorySeparatorChar);
-                metaRelPath = "\\" + AssetType.Meta.VirtualPath + "\\";
-                dataRelPath = "\\" + AssetType.Data.VirtualPath + "\\";
-
-
+                
                 if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     dataExt = System.IO.Path.GetExtension(ofd.FileName);
-                    while(FileSystem.ResourceExists(dataRelPath + guid.ToString("N") + dataExt) ||
-                        FileSystem.ResourceExists(metaRelPath + guid.ToString("N") + AssetType.Meta.GetExtension()))
+                    while(FileSystem.ResourceExists(Common.FileSystem.Path.RelativeDataPath + guid.ToString("N") + dataExt) ||
+                        FileSystem.ResourceExists(Common.FileSystem.Path.RelativeMetaPath + guid.ToString("N") + ".xml"))   
                     {
                         guid = Guid.NewGuid();
                     }
-
-                    metaRelPath += guid.ToString("N") + AssetType.Meta.GetExtension();
-                    dataRelPath += guid.ToString("N") + dataExt;
                     
+                    // Create Resource
+                    resource = new Resource(guid, _couchdb);
+
                     // Copy DataAsset
-                    File.Copy(ofd.FileName, rootPath + dataRelPath);
-                    
-                    // Create MetaAsset
-                    ma = new MetaAsset(guid, FileSystem);
-                    ma.SetExtension(dataExt);
+                    File.Copy(ofd.FileName, resource.DataAsset.RelativePath);
 
-                    // Create DataAsset - attaching MA
-                    da = new DataAsset(ma, FileSystem);
+                    // Fill out the MA info
+                    resource.MetaAsset.Extension = dataExt;
+                    resource.MetaAsset.Created = DateTime.Now;
+                    resource.MetaAsset.Creator = TEMP_USERNAME;
+                    resource.MetaAsset.LastAccess = DateTime.Now;
+                    resource.MetaAsset.Length = FileSystem.GetFileLength(resource.DataAsset.RelativePath);
+                    resource.MetaAsset.LockedAt = DateTime.Now;
+                    resource.MetaAsset.LockedBy = TEMP_USERNAME;
+                    resource.MetaAsset.Md5 = FileSystem.ComputeMd5(resource.DataAsset.RelativePath);
 
-                    // Create the FullAsset
-                    fa = new FullAsset(ma, da);
+                    resource.MetaAsset.Tags.Add("Seperate tags");
+                    resource.MetaAsset.Tags.Add("by a return");
 
-                    // Update the MA with DA info
-                    ma.UpdateByServer(ma.ETag, ma.MetaVersion, ma.DataVersion, ma.LockedBy, ma.LockedAt, TEMP_USERNAME,
-                        da.Resource.FileLength, da.Resource.ComputeMd5(), DateTime.Now, DateTime.Now, DateTime.Now);
+                    resource.MetaAsset.UserProperties.Add("prop1", (int)1);
+                    resource.MetaAsset.UserProperties.Add("prop2", DateTime.Now);
+                    resource.MetaAsset.UserProperties.Add("prop3", "string1");
 
-                    uprop.Add("Seperate tags");
-                    uprop.Add("by a return");
+                    resource.MetaAsset.SaveToLocal(null, FileSystem);
+                    resource.DataAsset.Save(new Common.FileSystem.MetaResource(guid, FileSystem), true);
 
-                    // Update the MA
-                    ma.UpdateByUser("Unknown", uprop);
-
-                    ma.Save();
-
-                    tvi = AddTreeResource(fa, false, true);
+                    tvi = AddTreeResource(resource, false, true);
                     tvi.Background = _needUpdatedBrush;
                     UpdateStatus(tvi, "File needs saved to server");
 
@@ -1820,6 +1406,5 @@ namespace WindowsClient
                 }
             }
         }
-
     }
 }

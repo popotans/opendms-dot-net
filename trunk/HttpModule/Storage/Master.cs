@@ -61,6 +61,7 @@ namespace HttpModule.Storage
         public Common.NetworkPackage.ServerResponse CheckoutResource(Guid resourceId, string requestingUser)
         {
             Common.Postgres.Resource pgResource;
+            Common.Postgres.Version pgVersion;
 
             // Get Resource from pgsql
             if ((pgResource = Common.Postgres.Resource.Get(resourceId)) == null)
@@ -87,9 +88,12 @@ namespace HttpModule.Storage
                     "The resource could not be locked due to an unexpected exception.");
             }
 
+            pgVersion = pgResource.GetCurrentVersion();
+
             // Give successful result
-            return new Common.NetworkPackage.ServerResponse(true, 
-                Common.NetworkPackage.ServerResponse.ErrorCode.None);
+            return new Common.NetworkPackage.ServerResponse(true,
+                Common.NetworkPackage.ServerResponse.ErrorCode.None,
+                pgVersion.VersionNumber.ToString() + "-" + pgVersion.VersionGuid.ToString("N"));
         }
 
         public Common.NetworkPackage.ServerResponse CheckinResource(Guid resourceId, string requestingUser, bool isNew)
@@ -147,6 +151,50 @@ namespace HttpModule.Storage
             return new Common.NetworkPackage.ServerResponse(true,
                 Common.NetworkPackage.ServerResponse.ErrorCode.None,
                 pgVersion.VersionNumber.ToString() + "-" + pgVersion.VersionGuid.ToString("N"));
+        }
+
+        public Common.NetworkPackage.ServerResponse ReleaseLock(Guid resourceId, string requestingUser)
+        {
+            Common.Postgres.Resource pgResource;
+
+            // Get the current Resource from pgsql
+            if ((pgResource = Common.Postgres.Resource.Get(resourceId)) == null)
+            {
+                return new Common.NetworkPackage.ServerResponse(false,
+                    Common.NetworkPackage.ServerResponse.ErrorCode.ResourceDoesNotExist,
+                    "The requested resource does not exist.");
+            }
+
+            // Now we need to do some lock checking.
+            // First, we need to check to see if a lock exists (not null)
+            // Second, we need to ensure that the lock is owned by this user
+            if (!string.IsNullOrEmpty(pgResource.LockedBy))
+            {
+                if (pgResource.LockedBy != requestingUser)
+                {
+                    return new Common.NetworkPackage.ServerResponse(false,
+                        Common.NetworkPackage.ServerResponse.ErrorCode.ResourceIsLocked,
+                        "The requested resource is locked by another user.");
+                }
+            }
+            else
+            {
+                return new Common.NetworkPackage.ServerResponse(false,
+                    Common.NetworkPackage.ServerResponse.ErrorCode.ResourceNotCheckedOut,
+                    "The requested resource cannot be unlocked because it has not been checked out.");
+            }
+
+            // Release lock
+            if (!pgResource.ReleaseLock())
+            {
+                return new Common.NetworkPackage.ServerResponse(false,
+                    Common.NetworkPackage.ServerResponse.ErrorCode.Exception,
+                    "The lock on the resource could not be released due to an unexpected exception.");
+            }
+
+            // Give successful result
+            return new Common.NetworkPackage.ServerResponse(true,
+                Common.NetworkPackage.ServerResponse.ErrorCode.None);
         }
 
         /// <summary>

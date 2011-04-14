@@ -71,7 +71,7 @@ namespace Common.Work
                     "Timeout failed to start on a SaveResourceJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
@@ -79,15 +79,15 @@ namespace Common.Work
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
-            _resource.DataAsset.OnProgress += new Storage.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
+            _jobResource.DataAsset.OnProgress += new Storage.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
 
             Logger.General.Debug("Begining saving of the resource on server for SaveResourceJob with id " + Id.ToString() + "."); 
 
-            if (!_resource.UpdateResourceOnRemote(this, _fileSystem, out errorMessage))
+            if (!_jobResource.UpdateResourceOnRemote(this, _fileSystem, out errorMessage))
             {
                 Logger.General.Error("Failed to create the resource for SaveResourceJob with id " +
                     Id.ToString() + " with error message: " + errorMessage);
@@ -97,23 +97,23 @@ namespace Common.Work
                     "Failed to update the resource on the remote server for SaveResourceJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
                     true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
             Logger.General.Debug("Completed saving the resource on server for SaveResourceJob with id " + Id.ToString() + ".");
 
             // No need to monitor this event anymore
-            _resource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
+            _jobResource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
                 return this;
             }
 
             _currentState = State.Active | State.Finished;
-            _requestor.WorkReport(_actUpdateUI, this, _resource);
+            _requestor.WorkReport(_actUpdateUI, this, _jobResource);
             return this;
         }
 
@@ -131,7 +131,7 @@ namespace Common.Work
 
             // Don't update the UI if finished, the final update is handled by the Run() method.
             if (sender.BytesComplete != sender.BytesTotal)
-                _requestor.WorkReport(_actUpdateUI, this, _resource);
+                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
         }
     }
 }

@@ -114,6 +114,7 @@
     <Compile Include="Storage\MetaAsset.cs" />
     <Compile Include="Storage\Resource.cs" />
     <Compile Include="Storage\VersionManager.cs" />
+    <Compile Include="Work\CheckUpdateStatusJob.cs" />
     <Compile Include="Work\CreateResourceJob.cs" />
     <Compile Include="Work\GetResourceJob.cs" />
     <Compile Include="Work\IWorkRequestor.cs" />
@@ -145,7 +146,7 @@
       <Properties InternalTargetFrameworkVersion="3.5" />
     </MonoDevelop>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" />
+      <UserProperties BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>

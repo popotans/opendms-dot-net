@@ -612,5 +612,15 @@ namespace Common.Storage
 
             return null;
         }
+
+        public static MetaAsset LoadFromLocal(string relativeFilePath, Database cdb, FileSystem.IO fileSystem)
+        {
+            MetaAsset ma = new MetaAsset(cdb);
+
+            if (!ma.LoadFromLocal(null, relativeFilePath, fileSystem))
+                return null;
+
+            return ma;
+        }
     }
 }

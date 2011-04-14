@@ -29,7 +29,7 @@ namespace WindowsClient
         /// <param name="dataAsset">The data asset.</param>
         /// <param name="errorMessage">The error message.</param>
         /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
-        public static bool OpenFileWithDefaultApplication(Common.Data.DataAsset dataAsset, out string errorMessage)
+        public static bool OpenFileWithDefaultApplication(Common.Storage.DataAsset dataAsset, out string errorMessage)
         {
             RegistryKey root, key;
             string progid, syntax;
@@ -38,7 +38,7 @@ namespace WindowsClient
             try
             {
                 root = Registry.ClassesRoot;
-                if ((key = root.OpenSubKey(dataAsset.Resource.Extension)) == null)
+                if ((key = root.OpenSubKey(dataAsset.Extension)) == null)
                 {
                     errorMessage = "There is no application associated with the resource's extension.";
                     return false;
@@ -102,7 +102,7 @@ namespace WindowsClient
 
 
             System.Diagnostics.Process p = System.Diagnostics.Process.Start(@"C:\Program Files (x86)\OpenOffice.org 3\program\swriter.exe", " -o " +
-                MainWindow.FileSystem.GetFullFilePath(dataAsset.Resource.RelativeFilepath));
+                MainWindow.FileSystem.GetFullFilePath(dataAsset.RelativePath));
 
             //System.Diagnostics.Process p = new System.Diagnostics.Process();
             //p.StartInfo.RedirectStandardOutput = false;
