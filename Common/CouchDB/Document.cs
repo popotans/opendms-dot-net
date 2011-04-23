@@ -645,6 +645,9 @@ namespace Common.CouchDB
             response = web.SendMessageSync(server, db, _id, null, Web.OperationType.GET, Web.DataStreamMethod.LoadToMemory,
                 null, "application/json", keepAlive, false, true, true, out state);
 
+            if (response.Ok.HasValue && response.Ok.Value == false)
+                return new Result(false, "Resource does not exist.", response.Exception);
+
             // Setup reading
             sr = new StreamReader(state.Stream);
 
@@ -855,10 +858,14 @@ namespace Common.CouchDB
             buffer = System.Text.Encoding.UTF8.GetBytes(ConvertTo.AsciiToUtf8(ConvertTo.DocumentToJson(this, new DocumentConverter.Post())));
             ms.Write(buffer, 0, buffer.Length);
 
+            ms.Position = 0;
+            string test = Common.Utilities.StreamToUtf8String(ms);
+            ms.Position = 0;
+
             Logger.General.Debug("Preparing to synchronously create document.");
 
-            // Dispatch the message - AFAIK CouchDB does not support compression in POST
-            response = web.SendMessageSync(server, db, _id, null, Web.OperationType.POST, Web.DataStreamMethod.LoadToMemory, ms,
+            // Dispatch the message - AFAIK CouchDB does not support compression in PUT
+            response = web.SendMessageSync(server, db, _id, null, Web.OperationType.PUT, Web.DataStreamMethod.LoadToMemory, ms,
                 "application/json", keepAlive, false, false, false, out state);
 
             // Setup

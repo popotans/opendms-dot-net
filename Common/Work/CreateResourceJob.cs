@@ -35,12 +35,12 @@ namespace Common.Work
         /// <param name="timeout">The timeout duration.</param>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        public CreateResourceJob(IWorkRequestor requestor, ulong id, Storage.Resource resource,
-            UpdateUIDelegate actUpdateUI, uint timeout, ErrorManager errorManager)
-            : base(requestor, id, resource, actUpdateUI, timeout, ProgressMethodType.Determinate,
-            errorManager)
+        /// <param name="couchdb">A reference to the <see cref="CouchDB.Database"/>.</param>
+        public CreateResourceJob(JobArgs args)
+            : base(args)
         {
-            Logger.General.Debug("CreateResourceJob instantiated on job id " + id.ToString() + ".");
+            args.ProgressMethod = ProgressMethodType.Determinate;
+            Logger.General.Debug("CreateResourceJob instantiated on job id " + args.Id.ToString() + ".");
         }
 
         /// <summary>
@@ -51,6 +51,8 @@ namespace Common.Work
         /// </returns>
         public override JobBase Run()
         {
+            FileSystem.MetaResource mr;
+            FileSystem.DataResource dr;
             Common.Postgres.Version pgVersion;
             string errorMessage = null;
 
@@ -73,7 +75,7 @@ namespace Common.Work
                     "Timeout failed to start on a CreateResourceJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -81,14 +83,21 @@ namespace Common.Work
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
             // Postgres work
-            Postgres.Resource.CreateNewResource(null, out pgVersion);
-            
-            // Assign the GUID received from Postgres
+            Postgres.Resource.CreateNewResource(RequestingUser, out pgVersion);
+
+            // Rename files to the proper new GUID
+            mr = new FileSystem.MetaResource(_jobResource.MetaAsset, _fileSystem);
+            dr = new FileSystem.DataResource(_jobResource.DataAsset, _fileSystem);
+
+            mr.Rename(pgVersion.VersionGuid);
+            dr.Rename(pgVersion.VersionGuid);
+
+            // Assign the GUID received from Postgres to our internal objects
             _jobResource.MetaAsset.Guid = _jobResource.DataAsset.Guid = pgVersion.VersionGuid;
 
 
@@ -107,7 +116,7 @@ namespace Common.Work
                     "Failed to create the resource on the remote server for CreateResourceJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
                     true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -118,14 +127,14 @@ namespace Common.Work
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
             Logger.General.Debug("Updating the local meta asset for CreateResourceJob with id " + Id.ToString() + ".");
 
             _currentState = State.Active | State.Finished;
-            _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+            ReportWork(this);
             return this;
         }
 
@@ -143,7 +152,7 @@ namespace Common.Work
 
             // Don't update the UI if finished, the final update is handled by the Run() method.
             if (sender.BytesComplete != sender.BytesTotal)
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
         }
     }
 }

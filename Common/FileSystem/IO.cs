@@ -37,6 +37,8 @@ namespace Common.FileSystem
         /// </summary>
         private List<FileState> _openStates;
 
+        public string RootPath { get { return _rootPath; } }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="IO"/> class.
         /// </summary>

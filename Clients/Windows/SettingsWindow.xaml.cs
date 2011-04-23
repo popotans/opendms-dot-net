@@ -74,6 +74,10 @@ namespace WindowsClient
             textBox1.Text = Settings.Instance.StorageLocation;
             textBox2.Text = Settings.Instance.ServerIp;
             textBox3.Text = Settings.Instance.ServerPort.ToString();
+            textBox4.Text = Settings.Instance.CouchServerIp;
+            textBox5.Text = Settings.Instance.CouchServerPort.ToString();
+            textBox6.Text = Settings.Instance.CouchDatabaseName;
+            textBox7.Text = Settings.Instance.PostgresConnectionString;
         }
 
         /// <summary>
@@ -86,6 +90,10 @@ namespace WindowsClient
             Settings.Instance.StorageLocation = textBox1.Text.Trim();
             Settings.Instance.ServerIp = textBox2.Text.Trim();
             Settings.Instance.ServerPort = int.Parse(textBox3.Text.Trim());
+            Settings.Instance.CouchServerIp = textBox4.Text.Trim();
+            Settings.Instance.CouchServerPort = int.Parse(textBox5.Text.Trim());
+            Settings.Instance.CouchDatabaseName = textBox6.Text.Trim();
+            Settings.Instance.PostgresConnectionString = textBox7.Text.Trim();
             Settings.Instance.Save(Utilities.GetAppDataPath() + "Settings.xml");
             this.Close();
         }

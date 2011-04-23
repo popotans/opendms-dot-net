@@ -63,7 +63,7 @@ namespace Common.Storage
                 if (string.IsNullOrEmpty(_extension))
                     throw new InvalidOperationException("An extension has not been set.");
 
-                return FileSystem.Path.RelativeMetaPath + GuidString + _extension;
+                return FileSystem.Path.RelativeDataPath + GuidString + _extension;
             }
         }
 
@@ -74,7 +74,7 @@ namespace Common.Storage
                 if (string.IsNullOrEmpty(_extension))
                     throw new InvalidOperationException("An extension has not been set.");
 
-                return FileSystem.Path.FullMetaPath + GuidString + _extension; 
+                return FileSystem.Path.FullDataPath + GuidString + _extension; 
             }
         }
 
@@ -194,7 +194,10 @@ namespace Common.Storage
             FileSystem.IO fileSystem, out string errorMessage)
         {
             if (ma.Document == null)
-                ma.Document = new Document(ma.GuidString);
+            {
+                errorMessage = "Invalid CouchDB Document.";
+                return false;
+            }
 
             return CreateOnRemote(job, ma.Document,
                 fileSystem, out errorMessage);
@@ -217,7 +220,7 @@ namespace Common.Storage
                 throw new OverflowException("The length is to large to cast to long.");
 
             // Create Attachment
-            att = new Attachment(filename, Utilities.MimeType(filename), 
+            att = new Attachment(filename, CouchDB.Utilities.MimeType(filename), 
                 (long)doc.GetPropertyAsUInt64("$length"), doc);
 
             // Supply a stream
@@ -235,7 +238,14 @@ namespace Common.Storage
                 return false;
             }
 
-            att.Stream = iostream.Stream;
+            try
+            {
+                att.Stream = iostream.Stream;
+            }
+            catch (Exception e)
+            {
+                string a = e.Message;
+            }
 
             doc.Attachments.Add(att);
 

@@ -22,6 +22,8 @@ namespace Common.Work
     /// </summary>
     public abstract class ResourceJobBase : JobBase
     {
+        protected JobArgs _args;
+        protected CouchDB.Database _couchdb;
         protected Storage.Resource _jobResource;
 
         /// <summary>
@@ -36,21 +38,21 @@ namespace Common.Work
         /// <summary>
         /// Initializes a new instance of the <see cref="ResourceJobBase"/> class.
         /// </summary>
-        /// <param name="requestor">The object that requested performance of this job.</param>
-        /// <param name="id">The id of this job.</param>
-        /// <param name="resource">The resource.</param>
-        /// <param name="actUpdateUI">The method to call to update the UI.</param>
-        /// <param name="timeout">The timeout duration.</param>
-        /// <param name="progressMethod">The <see cref="T:ProgressMethodType"/>.</param>
-        /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
-        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        public ResourceJobBase(IWorkRequestor requestor, ulong id, Storage.Resource resource, 
-            UpdateUIDelegate actUpdateUI, uint timeout, ProgressMethodType progressMethod, 
-            ErrorManager errorManager)
-            : base(requestor, id, actUpdateUI, timeout, progressMethod, errorManager)
+        /// <param name="args">The <see cref="JobArgs"/>.</param>
+        public ResourceJobBase(JobArgs args)
+            : base(args)
         {
-            _inputResource = resource;
-            _jobResource = Storage.Resource.DeepCopy(resource);
+            _args = args;
+            _inputResource = args.Resource;
+            _couchdb = args.CouchDB;
+            _jobResource = Storage.Resource.DeepCopy(_inputResource);
+        }
+
+        protected void ReportWork(ResourceJobBase job)
+        {
+            _requestor.WorkReport(new JobResult() { Resource = _jobResource, 
+                                                    Job = job, 
+                                                    InputArgs = _args });
         }
     }
 }

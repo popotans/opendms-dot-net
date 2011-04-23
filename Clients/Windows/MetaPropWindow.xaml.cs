@@ -557,6 +557,10 @@ namespace WindowsClient
             {
                 UIPanel.Children.Add(AddMultilineText(mpe.Title, string.Join("\r\n", ((List<string>)mpe.Value).ToArray()), mpe.IsReadOnly));
             }
+            else if (mpe.Value.GetType() == typeof(string[]))
+            {
+                UIPanel.Children.Add(AddMultilineText(mpe.Title, string.Join("\r\n", ((string[])mpe.Value)), mpe.IsReadOnly));
+            }
             else
             {
                 Type type = mpe.Value.GetType();

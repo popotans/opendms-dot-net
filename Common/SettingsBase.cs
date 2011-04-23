@@ -126,6 +126,30 @@ namespace Common
         }
 
         /// <summary>
+        /// Gets or sets the couchdb database name.
+        /// </summary>
+        /// <value>
+        /// The database name.
+        /// </value>
+        public string CouchDatabaseName
+        {
+            get
+            {
+                if (ContainsKey("CouchDatabaseName"))
+                    return (string)this["CouchDatabaseName"];
+                else
+                    return "opendms";
+            }
+            set
+            {
+                if (ContainsKey("CouchDatabaseName"))
+                    this["CouchDatabaseName"] = value;
+                else
+                    Add("CouchDatabaseName", value);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the couchdb server ip.
         /// </summary>
         /// <value>

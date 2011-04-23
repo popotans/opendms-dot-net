@@ -88,8 +88,8 @@ namespace Common.Storage
         /// <returns></returns>
         protected object GetProperty(string key)
         {
-            if (ContainsKey("LockedBy"))
-                return this["LockedBy"];
+            if (ContainsKey(key))
+                return this[key];
             else
                 return null;
         }
@@ -101,10 +101,10 @@ namespace Common.Storage
         /// <param name="value">The value.</param>
         protected void SetProperty(string key, object value)
         {
-            if (ContainsKey("LockedBy"))
-                this["LockedBy"] = value;
+            if (ContainsKey(key))
+                this[key] = value;
             else
-                Add("LockedBy", value);
+                Add(key, value);
         }
     }
 }

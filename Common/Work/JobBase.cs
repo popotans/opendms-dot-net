@@ -26,9 +26,8 @@ namespace Common.Work
         /// <summary>
         /// Represents the method that handles updating the UI.
         /// </summary>
-        /// <param name="job">A reference to the calling <see cref="JobBase"/>.</param>
-        /// <param name="resource">The resource.</param>
-        public delegate void UpdateUIDelegate(JobBase job, Storage.Resource resource);
+        /// <param name="result">The <see cref="JobResult"/>.</param>
+        public delegate void UpdateUIDelegate(JobResult result);
         /// <summary>
         /// Represents the method that handles the completion of a cancellation request.
         /// </summary>
@@ -141,6 +140,15 @@ namespace Common.Work
         /// A reference to the <see cref="FileSystem.IO"/>.
         /// </summary>
         protected FileSystem.IO _fileSystem;
+        /// <summary>
+        /// The user requesting the action.
+        /// </summary>
+        protected string _requestingUser;
+
+        /// <summary>
+        /// Gets the user requesting the action.
+        /// </summary>
+        public string RequestingUser { get { return _requestingUser; } }
 
         /// <summary>
         /// Gets the id of the job.
@@ -234,22 +242,18 @@ namespace Common.Work
         /// <summary>
         /// Initializes a new instance of the <see cref="JobBase"/> class.
         /// </summary>
-        /// <param name="requestor">The object that requested performance of this job.</param>
-        /// <param name="id">The id of this job.</param>
-        /// <param name="actUpdateUI">The method to call to update the UI.</param>
-        /// <param name="timeout">The timeout duration.</param>
-        /// <param name="progressMethod">The <see cref="ProgressMethodType"/>.</param>
-        /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
-        public JobBase(IWorkRequestor requestor, ulong id, UpdateUIDelegate actUpdateUI, uint timeout,
-            ProgressMethodType progressMethod, ErrorManager errorManager)
+        /// <param name="args">The <see cref="JobArgs"/>.</param>
+        public JobBase(JobArgs args)
         {
-            _id = id;
-            _actUpdateUI = actUpdateUI;
-            _timeout = timeout;
+            _id = args.Id;
+            _actUpdateUI = args.UpdateUICallback;
+            _timeout = args.Timeout;
+            _requestingUser = args.RequestingUser;
             _currentState = State.None;
-            _progressMethod = progressMethod;
-            _errorManager = errorManager;
-            _requestor = requestor;
+            _progressMethod = args.ProgressMethod;
+            _errorManager = args.ErrorManager;
+            _requestor = args.Requestor;
+            _fileSystem = args.FileSystem;
         }
 
         /// <summary>

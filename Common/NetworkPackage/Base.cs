@@ -200,6 +200,8 @@ namespace Common.NetworkPackage
 
             try
             {
+                string str = Utilities.StreamToUtf8String(ms);
+                ms.Position = 0;
                 iostream.CopyFrom(ms);
             }
             catch (Exception e)

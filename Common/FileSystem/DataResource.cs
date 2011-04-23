@@ -33,5 +33,10 @@ namespace Common.FileSystem
             : base(guid, ResourceType.Data, extension, fileSystem)
         {
         }
+
+        public DataResource(Storage.DataAsset da, IO fileSystem)
+            : base(da.Guid, ResourceType.Data, da.Extension, fileSystem)
+        {
+        }
     }
 }

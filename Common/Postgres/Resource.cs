@@ -291,7 +291,7 @@ namespace Common.Postgres
         {
             Database db;
             NpgsqlCommand cmd;
-            DataTable dt;
+            DataTable dt = null;
 
             db = new Database(SettingsBase.Instance.PostgresConnectionString);
             cmd = new NpgsqlCommand("SELECT * FROM tbl_resource WHERE id=:resourceGuid");

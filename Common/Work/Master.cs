@@ -87,13 +87,18 @@ namespace Common.Work
         /// A reference to the <see cref="FileSystem.IO"/>.
         /// </summary>
         private FileSystem.IO _fileSystem;
+        /// <summary>
+        /// A reference to the <see cref="CouchDB.Database"/>.
+        /// </summary>
+        private CouchDB.Database _couchdb;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Master"/> class.
         /// </summary>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
         /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        public Master(ErrorManager errorManager, FileSystem.IO fileSystem)
+        /// <param name="couchdb">A reference to the <see cref="CouchDB.Database"/>.</param>
+        public Master(ErrorManager errorManager, FileSystem.IO fileSystem, CouchDB.Database couchdb)
         {
             _jobQueue = new List<ResourceJobBase>();
             _executingJobs = new List<ResourceJobBase>();
@@ -102,49 +107,46 @@ namespace Common.Work
             _id = 1;
             _errorManager = errorManager;
             _fileSystem = fileSystem;
+            _couchdb = couchdb;
         }
 
         /// <summary>
-        /// Adds a work request to a list of pending requests.  The <see cref="Master"/> will assign
-        /// the request to a job and issue it to a worker thread as soon as it determines it is possible.
+        /// Adds the job.
         /// </summary>
-        /// <param name="requestor">The object that requested performance of this job.</param>
-        /// <param name="jobType">The <see cref="JobType"/> of the job.</param>
-        /// <param name="resource">The resource.</param>
-        /// <param name="actUpdateUI">The method called to update the UI.</param>
-        /// <param name="timeout">The timeout duration.</param>
-        public void AddJob(IWorkRequestor requestor, JobType jobType, Storage.Resource resource, 
-            ResourceJobBase.UpdateUIDelegate actUpdateUI, uint timeout)
+        /// <param name="args">The <see cref="JobArgs"/></param>
+        /// <param name="jobType">Type of the job.</param>
+        public void AddJob(JobArgs args)
         {
             ResourceJobBase job = null;
 
+            if (args.ErrorManager == null) args.ErrorManager = _errorManager;
+            if (args.FileSystem == null) args.FileSystem = _fileSystem;
+            if (args.CouchDB == null) args.CouchDB = _couchdb;
+
+            args.Id = _id;
+            _id++;
+
             try
             {
-                switch (jobType)
+                switch (args.JobType)
                 {
                     case JobType.GetResource:
-                        job = new GetResourceJob(requestor, _id++, resource, actUpdateUI, timeout, 
-                            _errorManager);
+                        job = new GetResourceJob(args);
                         break;
                     case JobType.SaveResource:
-                        job = new SaveResourceJob(requestor, _id++, resource, actUpdateUI, timeout,
-                            _errorManager);
+                        job = new SaveResourceJob(args);
                         break;
                     case JobType.CreateResource:
-                        job = new CreateResourceJob(requestor, _id++, resource, actUpdateUI, timeout,
-                            _errorManager);
+                        job = new CreateResourceJob(args);
                         break;
                     case JobType.Lock:
-                        job = new LockJob(requestor, _id++, resource,
-                            actUpdateUI, timeout, _errorManager, _fileSystem);
+                        job = new LockJob(args);
                         break;
                     case JobType.Unlock:
-                        job = new UnlockJob(requestor, _id++, resource,
-                            actUpdateUI, timeout, _errorManager);
+                        job = new UnlockJob(args);
                         break;
                     case JobType.CheckUpdateStatus:
-                        job = new CheckUpdateStatusJob(requestor, _id++, resource, actUpdateUI,
-                            timeout, _errorManager);
+                        job = new CheckUpdateStatusJob(args);
                         break;
                     default:
                         throw new Exception("Unknown job type");
