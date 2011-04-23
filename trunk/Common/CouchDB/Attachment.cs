@@ -286,7 +286,7 @@ namespace Common.CouchDB
             _clientFilepath = null;
             _contentType = contenttype;
             _length = length;
-            _revpos = 0;
+            _revpos = Convert.ToInt32(doc.Rev.Substring(0, doc.Rev.IndexOf('-')));
             _stream = null;
             _document = doc;
             ResetState();
@@ -352,7 +352,7 @@ namespace Common.CouchDB
             _clientFilepath = null;
             _contentType = contenttype;
             _length = length;
-            _revpos = 0;
+            _revpos = Convert.ToInt32(doc.Rev.Substring(0, doc.Rev.IndexOf('-')));
             _stream = stream;
             _document = doc;
             ResetState();
@@ -468,15 +468,42 @@ namespace Common.CouchDB
                 {
                     if (_stream.CanRead)
                     {
-                        if (_stream.CanWrite && _revpos > 0 && !string.IsNullOrEmpty(_document.Rev))
-                            _state = CAN_ALL;
-                        else if (!string.IsNullOrEmpty(_document.Rev))
-                            _state = CAN_DELETE | CAN_DOWNLOAD;
+                        if (_stream.CanWrite)
+                        {
+                            if (!string.IsNullOrEmpty(_document.Rev))
+                            {
+                                // Revision position is known - meaning I can write to CouchDB
+                                if (_revpos <= 0)
+                                    _revpos = Convert.ToInt32(_document.Rev.Substring(0, _document.Rev.IndexOf('-')));
+
+                                _state = CAN_ALL;
+                            }
+                            else
+                                _state = CAN_DOWNLOAD;
+                        }
                         else
-                            _state = CAN_DOWNLOAD;
+                        {
+                            if (!string.IsNullOrEmpty(_document.Rev))
+                            {
+                                // Revision position is known - meaning I can write to CouchDB
+                                if (_revpos <= 0)
+                                    _revpos = Convert.ToInt32(_document.Rev.Substring(0, _document.Rev.IndexOf('-')));
+
+                                _state = CAN_UPLOAD | CAN_DELETE;
+                            }
+                        }
                     }
-                    else if (_stream.CanWrite && _revpos > 0 && !string.IsNullOrEmpty(_document.Rev))
-                        _state = CAN_UPLOAD;
+                    else if (_stream.CanWrite)
+                    {
+                        if (!string.IsNullOrEmpty(_document.Rev))
+                        {
+                            // Revision position is known - meaning I can write to CouchDB
+                            if (_revpos <= 0)
+                                _revpos = Convert.ToInt32(_document.Rev.Substring(0, _document.Rev.IndexOf('-')));
+
+                            _state = CAN_UPLOAD | CAN_DELETE;
+                        }
+                    }
                 }
             }
         }

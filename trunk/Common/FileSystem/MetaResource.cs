@@ -32,5 +32,10 @@ namespace Common.FileSystem
             : base(guid, ResourceType.Meta, ".xml", fileSystem)
         {
         }
+
+        public MetaResource(Storage.MetaAsset ma, IO fileSystem)
+            : base(ma.Guid, ResourceType.Meta, ".xml", fileSystem)
+        {
+        }
     }
 }

@@ -501,6 +501,25 @@ namespace Common.CouchDB
             {
                 state.Response = (HttpWebResponse)httpWebRequest.GetResponse();
             }
+            catch (WebException e)
+            {
+                if (e.Status == WebExceptionStatus.ProtocolError &&
+                    e.Response != null)
+                {
+                    if (((HttpWebResponse)e.Response).StatusCode == HttpStatusCode.NotFound)
+                    {
+                        return new ServerResponse("Resource Not Found.", "The resource does not exist on the data server.", e);
+                    }
+                    else
+                    {
+                        throw new NetException("Unable to get the server response", e);
+                    }
+                }
+                else
+                {
+                    throw new NetException("Unable to get the server response", e);
+                }
+            }
             catch (Exception e)
             {
                 throw new NetException("Unable to get the server response", e);

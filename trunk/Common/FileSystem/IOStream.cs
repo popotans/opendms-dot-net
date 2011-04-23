@@ -110,8 +110,12 @@ namespace Common.FileSystem
             int bytesRead = 0;
             byte[] buffer = new byte[_state.BufferSize];
 
+            if (source.CanSeek) source.Position = 0;
+
             while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
                 Write(buffer, bytesRead);
+
+            _stream.Flush();
         }
 
         /// <summary>

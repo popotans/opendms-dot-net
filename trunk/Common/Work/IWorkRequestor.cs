@@ -23,11 +23,9 @@ namespace Common.Work
     public interface IWorkRequestor
     {
         /// <summary>
-        /// WorkReport accepts a UpdateUIDelegate and its associated arguments and should handle pumping this message to the UI
+        /// WorkReport accepts handles pumping this message to the UI
         /// </summary>
-        /// <param name="actUpdateUI">The act update UI.</param>
-        /// <param name="job">The job.</param>
-        /// <param name="resource">The resource.</param>
-        void WorkReport(JobBase.UpdateUIDelegate actUpdateUI, JobBase job, Storage.Resource resource);
+        /// <param name="result">The <see cref="JobResult"/>.</param>
+        void WorkReport(JobResult result);
     }
 }

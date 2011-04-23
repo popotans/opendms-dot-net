@@ -345,13 +345,19 @@ namespace WindowsClient
             _resourceStatusFlags = SetResourceStatusFlag(_resourceStatusFlags,
                 ResourceStatusType.LocalMatchesRemote, localMatchesRemote);
 
-            if (remoteExists.HasValue) _resourceStatusFlags |= ResourceStatusType.RemoteExistsIsKnown;
-            _resourceStatusFlags = SetResourceStatusFlag(_resourceStatusFlags,
-                ResourceStatusType.RemoteExists, remoteExists);
+            if (remoteExists.HasValue)
+            {
+                _resourceStatusFlags |= ResourceStatusType.RemoteExistsIsKnown;
+                _resourceStatusFlags = SetResourceStatusFlag(_resourceStatusFlags,
+                    ResourceStatusType.RemoteExists, remoteExists);
+            }
 
-            if (localExists.HasValue) _resourceStatusFlags |= ResourceStatusType.LocalExistsIsKnown;
-            _resourceStatusFlags = SetResourceStatusFlag(_resourceStatusFlags,
-                ResourceStatusType.LocalExists, localExists);
+            if (localExists.HasValue)
+            {
+                _resourceStatusFlags |= ResourceStatusType.LocalExistsIsKnown;
+                _resourceStatusFlags = SetResourceStatusFlag(_resourceStatusFlags,
+                    ResourceStatusType.LocalExists, localExists);
+            }
         }
 
         /// <summary>

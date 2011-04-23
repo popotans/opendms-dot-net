@@ -26,19 +26,12 @@ namespace Common.Work
         /// <summary>
         /// Initializes a new instance of the <see cref="UnlockJob"/> class.
         /// </summary>
-        /// <param name="requestor">The object that requested performance of this job.</param>
-        /// <param name="id">The id of this job.</param>
-        /// <param name="resource">A reference to a <see cref="Storage.Resource"/> for this job.</param>
-        /// <param name="actUpdateUI">The method to call to update the UI.</param>
-        /// <param name="timeout">The timeout duration.</param>
-        /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
-        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        public UnlockJob(IWorkRequestor requestor, ulong id, Storage.Resource resource,
-            UpdateUIDelegate actUpdateUI, uint timeout, ErrorManager errorManager)
-            : base(requestor, id, resource, actUpdateUI, timeout, ProgressMethodType.Determinate,
-            errorManager)
+        /// <param name="args">The <see cref="JobArgs"/>.</param>
+        public UnlockJob(JobArgs args)
+            : base(args)
         {
-            Logger.General.Debug("UnlockJob instantiated on job id " + id.ToString() + ".");
+            args.ProgressMethod = ProgressMethodType.Indeterminate;
+            Logger.General.Debug("UnlockJob instantiated on job id " + args.Id.ToString() + ".");
         }
 
         /// <summary>
@@ -70,7 +63,7 @@ namespace Common.Work
                     "Timeout failed to start on a UnlockJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -78,7 +71,7 @@ namespace Common.Work
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -101,7 +94,7 @@ namespace Common.Work
                     "Failed to unlock the resource for UnlockJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -122,7 +115,7 @@ namespace Common.Work
                    "Failed to unlock the resource for UnlockJob with id " + Id.ToString() + ".",
                    true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -130,7 +123,7 @@ namespace Common.Work
 
             if (IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -151,7 +144,7 @@ namespace Common.Work
                    "Failed to deserialize the server response for UnlockJob with id " + Id.ToString() + ".",
                    true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -166,14 +159,14 @@ namespace Common.Work
                    "Failed to unlock the asset on the server for UnlockJob with id " + Id.ToString() + ".",
                    true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
             Logger.General.Debug("Successfully completed unlocking of the resource for UnlockJob with id " + Id.ToString() + ".");
 
             _currentState = State.Active | State.Finished;
-            _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+            ReportWork(this);
             return this;
         }
     }

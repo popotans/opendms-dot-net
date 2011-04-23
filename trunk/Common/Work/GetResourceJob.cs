@@ -32,13 +32,15 @@ namespace Common.Work
         /// <param name="resource">A reference to a <see cref="Storage.Resource"/> for this job.</param>
         /// <param name="actUpdateUI">The method to call to update the UI.</param>
         /// <param name="timeout">The timeout duration.</param>
+        /// <param name="requestingUser">The user requesting the action.</param>
         /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
-        public GetResourceJob(IWorkRequestor requestor, ulong id, Storage.Resource resource,
-            UpdateUIDelegate actUpdateUI, uint timeout, ErrorManager errorManager)
-            : base(requestor, id, resource, actUpdateUI, timeout, ProgressMethodType.Determinate,
-            errorManager)
+        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
+        /// <param name="couchdb">A reference to the <see cref="CouchDB.Database"/>.</param>
+        public GetResourceJob(JobArgs args)
+            : base(args)
         {
-            Logger.General.Debug("GetResourceJob instantiated on job id " + id.ToString() + ".");
+            args.ProgressMethod = ProgressMethodType.Determinate;
+            Logger.General.Debug("GetResourceJob instantiated on job id " + args.Id.ToString() + ".");
         }
 
         /// <summary>
@@ -70,7 +72,7 @@ namespace Common.Work
                     "Timeout failed to start on a GetResourceJob with id " + Id.ToString() + ".",
                     true, true, e);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -88,7 +90,7 @@ namespace Common.Work
                     "Failed to download the asset's meta information for GetResourceJob with id " + Id.ToString() + ".",
                     true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -97,7 +99,7 @@ namespace Common.Work
             // Check for Error
             if (this.IsError || CheckForAbortAndUpdate())
             {
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -117,7 +119,7 @@ namespace Common.Work
                     "Failed to download the asset's data for GetResourceJob with id " + Id.ToString() + ".",
                     true, true);
                 _currentState = State.Error;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
@@ -129,13 +131,13 @@ namespace Common.Work
             if (this.IsError || CheckForAbortAndUpdate())
             {
                 _jobResource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
                 return this;
             }
 
             _currentState = State.Active | State.Finished;
             _jobResource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
-            _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+            ReportWork(this);
             return this;
         }
 
@@ -153,7 +155,7 @@ namespace Common.Work
 
             // Don't update the UI if finished, the final update is handled by the Run() method.
             if (sender.BytesComplete != sender.BytesTotal)
-                _requestor.WorkReport(_actUpdateUI, this, _jobResource);
+                ReportWork(this);
         }
     }
 }

@@ -131,16 +131,19 @@ namespace WindowsClient
                 win.ShowDialog();
             }
 
-            // File System must after settings
+            // File System must be set after settings
             FileSystem = new Common.FileSystem.IO(Settings.Instance.StorageLocation);
 
             Logger = new Common.Logger(Utilities.GetAppDataPath());
+
+            _couchdb = new Common.CouchDB.Database(Settings.Instance.CouchDatabaseName,
+                new Common.CouchDB.Server(Settings.Instance.CouchServerIp, Settings.Instance.CouchServerPort));
 
             Common.ErrorManager.UpdateUI actErrorUpdateUI = ErrorUpdateUI;
 
             ErrorManager = new Common.ErrorManager(actErrorUpdateUI);
             _statusBarItemGuid = Guid.Empty;
-            _workMaster = new Master(ErrorManager, FileSystem);
+            _workMaster = new Master(ErrorManager, FileSystem, _couchdb);
             _fsWatcher = new FileSystemWatcher(Settings.Instance.StorageLocation);
             _fsWatcher.IncludeSubdirectories = true;
             _fsWatcher.NotifyFilter = NotifyFilters.LastWrite;
@@ -271,7 +274,18 @@ namespace WindowsClient
                     if (ma.LoadFromLocal(null, ma.RelativePath, FileSystem))
                     {
                         resource = new Resource(ma, _couchdb);
-                        _workMaster.AddJob(this, Master.JobType.CheckUpdateStatus, resource, actUpdateUI, 100000);
+                        _workMaster.AddJob(new JobArgs()
+                        {
+                            CouchDB = _couchdb,
+                            ErrorManager = ErrorManager,
+                            FileSystem = FileSystem,
+                            JobType = Master.JobType.CheckUpdateStatus,
+                            RequestingUser = TEMP_USERNAME,
+                            Requestor = this,
+                            Resource = resource,
+                            Timeout = 100000,
+                            UpdateUICallback = actUpdateUI
+                        });
                     }
                     else
                     {
@@ -282,49 +296,39 @@ namespace WindowsClient
         }
 
         /// <summary>
-        /// Calls <see cref="M:CheckHeadStatus(GetHeadJob job, FullAsset fullAsset)"/>.
-        /// </summary>
-        /// <param name="job">The <see cref="JobBase"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void CheckUpdateStatus(JobBase job, Resource resource)
-        {
-            CheckUpdateStatus((CheckUpdateStatusJob)job, (Resource)resource);
-        }
-
-        /// <summary>
         /// Called when a <see cref="GetHeadJob"/> has terminated.
         /// </summary>
-        /// <param name="job">The <see cref="GetHeadJob"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void CheckUpdateStatus(CheckUpdateStatusJob job, Resource resource)
+        /// <param name="result">The <see cref="JobResult"/>.</param>
+        /// <remarks>
+        /// Runs on the UI thread.
+        /// </remarks>
+        void CheckUpdateStatus(JobResult result)
         {
             string localResourceMd5 = null;
             TVIState tviState;
-            TreeViewItem tvi = FindTreeViewItem(resource);
+            TreeViewItem tvi = FindTreeViewItem(result.Resource);
 
             if (tvi == null)
             {
                 // Being loaded without being present in the tree (loaded from application startup)
-                if (job.IsCancelled)
+                if (result.Job.IsCancelled)
                 {
-                    MessageBox.Show("Actions on resource " + job.Resource.Guid.ToString("N") + " were cancelled by the user.");
+                    MessageBox.Show("Actions on resource " + result.Resource.Guid.ToString("N") + " were cancelled by the user.");
                 }
-                else if (job.IsError)
+                else if (result.Job.IsError)
                 {
-                    MessageBox.Show("An error occurred while trying to check the status of the resource " + job.Resource.Guid.ToString("N") + ".");
+                    MessageBox.Show("An error occurred while trying to check the status of the resource " + result.Resource.Guid.ToString("N") + ".");
                 }
-                else if (job.IsFinished)
+                else if (result.Job.IsFinished)
                 {
-                    tvi = AddTreeResource(resource, false, true);
+                    tvi = AddTreeResource(result.Resource, false, true);
                     tviState = (TVIState)tvi.Tag;
                     TreeViewItemProps.SetPercentComplete(tvi, 100);
                     TreeViewItemProps.SetIsLoading(tvi, false);
-                    localResourceMd5 = new Common.FileSystem.MetaResource(resource.Guid, FileSystem).ComputeMd5();
+                    localResourceMd5 = new Common.FileSystem.MetaResource(result.Resource.Guid, FileSystem).ComputeMd5();
 
                     // If the local resource does not match the Md5 value of the remote resource, then...
-                    if (job.Resource.MetaAsset.Md5 != localResourceMd5)
+                    if (result.Resource.MetaAsset.Md5 != localResourceMd5)
                     {
                         // The local version is newer
                         tvi.Background = _needUpdatedBrush;
@@ -336,11 +340,11 @@ namespace WindowsClient
                         UpdateStatus(tvi, "Loaded");
                     }
                 }
-                else if (job.IsTimeout)
+                else if (result.Job.IsTimeout)
                 {
-                    MessageBox.Show("Actions on resource " + job.Resource.Guid.ToString("N") + " timed out.");
+                    MessageBox.Show("Actions on resource " + result.Resource.Guid.ToString("N") + " timed out.");
                 }
-                else if (job.IsError)
+                else if (result.Job.IsError)
                 {
 
                 }
@@ -354,21 +358,21 @@ namespace WindowsClient
                 tviState = (TVIState)tvi.Tag;
                 TreeViewItemProps.SetIsLoading(tvi, false);
 
-                if (job.IsCancelled)
+                if (result.Job.IsCancelled)
                 {
                     TreeViewItemProps.SetIsCanceled(tvi, true);
                     tviState.UpdateEvent(false, false, true, false, false);
                     UpdateStatus(tvi, "Action cancelled by user");
                 }
-                else if (job.IsFinished)
+                else if (result.Job.IsFinished)
                 {
                     tvi.Background = _normalBrush;
                     tviState.UpdateEvent(false, true, false, false, false);
                     TreeViewItemProps.SetPercentComplete(tvi, 100);
-                    localResourceMd5 = new Common.FileSystem.MetaResource(resource.Guid, FileSystem).ComputeMd5();
+                    localResourceMd5 = new Common.FileSystem.MetaResource(result.Resource.Guid, FileSystem).ComputeMd5();
 
                     // If the local resource does not match the Md5 value of the remote resource, then...
-                    if (job.Resource.MetaAsset.Md5 != localResourceMd5)
+                    if (result.Resource.MetaAsset.Md5 != localResourceMd5)
                     {
                         // The local version is newer
                         tvi.Background = _needUpdatedBrush;
@@ -380,13 +384,13 @@ namespace WindowsClient
                         UpdateStatus(tvi, "Loaded");
                     }
                 }
-                else if (job.IsTimeout)
+                else if (result.Job.IsTimeout)
                 {
                     tvi.Background = _errorBrush;
                     tviState.UpdateEvent(false, false, false, true, false);
                     UpdateStatus(tvi, "Error: Timeout");
                 }
-                else if (job.IsError)
+                else if (result.Job.IsError)
                 {
                     tviState.UpdateEvent(false, false, false, false, true);
                     UpdateStatus(tvi, "Error");
@@ -503,32 +507,33 @@ namespace WindowsClient
         {
             TVIState tviState = (TVIState)tvi.Tag;
             LockJob.UpdateUIDelegate actUpdateUI = ReleaseResourceCallback;
-            _workMaster.AddJob(this, Master.JobType.Unlock, tviState.Resource, actUpdateUI, 10000);
-        }
-
-        /// <summary>
-        /// Calls <see cref="M:ReleaseResourceCallback(UnlockJob, FullAsset)"/>.
-        /// </summary>
-        /// <param name="job">The <see cref="JobBase"/>.</param>
-        /// <param name="resource">The <see cref="Resource"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void ReleaseResourceCallback(JobBase job, Resource resource)
-        {
-            ReleaseResourceCallback((UnlockJob)job, resource);
+            _workMaster.AddJob(new JobArgs()
+            {
+                CouchDB = _couchdb,
+                ErrorManager = ErrorManager,
+                FileSystem = FileSystem,
+                JobType = Master.JobType.Unlock,
+                RequestingUser = TEMP_USERNAME,
+                Requestor = this,
+                Resource = tviState.Resource,
+                Timeout = 10000,
+                UpdateUICallback = actUpdateUI
+            });
         }
 
         /// <summary>
         /// Called when a job has terminated on a Resource.
         /// </summary>
-        /// <param name="job">The <see cref="UnlockJob"/>.</param>
-        /// <param name="resource">The <see cref="Resource"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void ReleaseResourceCallback(UnlockJob job, Resource resource)
+        /// <param name="result">The <see cref="JobResult"/>.</param>
+        /// <remarks>
+        /// Runs on the UI thread.
+        /// </remarks>
+        void ReleaseResourceCallback(JobResult result)
         {
             TVIState tviState;
             TreeViewItem tvi;
 
-            if ((tvi = FindTreeViewItem((Resource)resource)) == null)
+            if ((tvi = FindTreeViewItem(result.Resource)) == null)
             {
                 Common.Logger.General.Error("Unable to locate the resource in the GUI tree.");
                 MessageBox.Show("A request was received releasing a resource on the server, but I am unable to locate the resource.", "Resource not Found");
@@ -536,15 +541,15 @@ namespace WindowsClient
             }
 
             tviState = (TVIState)tvi.Tag;
-            tviState.Resource = job.Resource;
+            tviState.Resource = result.Resource;
 
-            if (job.IsFinished)
+            if (result.Job.IsFinished)
             {
                 if (ResourceTree.Items.Contains(tvi))
                     ResourceTree.Items.Remove(tvi);
 
-                FileSystem.Delete(job.Resource.MetaAsset.RelativePath);
-                FileSystem.Delete(job.Resource.DataAsset.RelativePath);
+                FileSystem.Delete(result.Resource.MetaAsset.RelativePath);
+                FileSystem.Delete(result.Resource.DataAsset.RelativePath);
             }
         }
 
@@ -642,22 +647,21 @@ namespace WindowsClient
                         TreeViewItemProps.SetStatus(tviOwner, "Starting reload...");
                         tviState.UpdateEvent(true, false, false, false, false);
                         tviOwner.Background = _normalBrush;
-                        _workMaster.AddJob(this, Master.JobType.CheckUpdateStatus, resource, actUpdateUI, 
-                            (uint)Settings.Instance.NetworkTimeout);
+                        _workMaster.AddJob(new JobArgs()
+                        {
+                            CouchDB = _couchdb,
+                            ErrorManager = ErrorManager,
+                            FileSystem = FileSystem,
+                            JobType = Master.JobType.CheckUpdateStatus,
+                            RequestingUser = TEMP_USERNAME,
+                            Requestor = this,
+                            Resource = resource,
+                            Timeout = (uint)Settings.Instance.NetworkTimeout,
+                            UpdateUICallback = actUpdateUI
+                        });
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Calls <see cref="M:LoadResourceCallback(LoadResourceJob, FullAsset)"/>.
-        /// </summary>
-        /// <param name="job">The <see cref="JobBase"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void GetResourceCallback(JobBase job, Resource resource)
-        {
-            GetResourceCallback((GetResourceJob)job, resource);
         }
 
         /// <summary>
@@ -666,26 +670,26 @@ namespace WindowsClient
         /// <param name="job">The <see cref="LoadResourceJob"/>.</param>
         /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
         /// <remarks>Runs on the UI thread.</remarks>
-        void GetResourceCallback(GetResourceJob job, Resource resource)
+        void GetResourceCallback(JobResult result)
         {
             TVIState tviState;
             TreeViewItem tvi;
 
-            if ((tvi = FindTreeViewItem(resource)) == null)
+            if ((tvi = FindTreeViewItem(result.Resource)) == null)
             {
-                tvi = AddTreeResource(resource, true, false);
+                tvi = AddTreeResource(result.Resource, true, false);
             }
 
             tviState = (TVIState)tvi.Tag;
             
-            if (job.IsCancelled)
+            if (result.Job.IsCancelled)
             {
                 tviState.UpdateEvent(false, false, true, false, false);
                 TreeViewItemProps.SetIsLoading(tvi, false);
                 TreeViewItemProps.SetIsCanceled(tvi, true);
                 UpdateStatus(tvi, "Download was canceled by user");
             }
-            else if (job.IsFinished)
+            else if (result.Job.IsFinished)
             {
                 // This could be used multiple times, depending on threading, should check a flag before making changes
                 if(!tviState.IsLoaded)
@@ -699,7 +703,7 @@ namespace WindowsClient
                     UpdateStatus(tvi, "Loaded");
                 }
             }
-            else if (job.IsTimeout)
+            else if (result.Job.IsTimeout)
             {
                 tvi.Background = _errorBrush;
                 tviState.UpdateEvent(false, false, false, true, false);
@@ -709,10 +713,10 @@ namespace WindowsClient
             }
             else
             {
-                TreeViewItemProps.SetPercentComplete(tvi, job.PercentComplete);
-                UpdateStatus(tvi, "Downloading resource is " + job.PercentComplete.ToString() + "% complete, " +
-                                Utilities.MakeBytesHumanReadable(job.BytesComplete) + " of " +
-                                Utilities.MakeBytesHumanReadable(job.BytesTotal) + " have been downloaded.");
+                TreeViewItemProps.SetPercentComplete(tvi, result.Job.PercentComplete);
+                UpdateStatus(tvi, "Downloading resource is " + result.Job.PercentComplete.ToString() + "% complete, " +
+                                Utilities.MakeBytesHumanReadable(result.Job.BytesComplete) + " of " +
+                                Utilities.MakeBytesHumanReadable(result.Job.BytesTotal) + " have been downloaded.");
             }
         }
 
@@ -746,34 +750,45 @@ namespace WindowsClient
                 TreeViewItemProps.SetIsCanceled(tvi, false);
                 TreeViewItemProps.SetIsLoading(tvi, true);
                 tvi.Background = _normalBrush;
-                _workMaster.AddJob(this, Master.JobType.GetResource, resource, actUpdateUI, 150000);
+                _workMaster.AddJob(new JobArgs()
+                {
+                    CouchDB = _couchdb,
+                    ErrorManager = ErrorManager,
+                    FileSystem = FileSystem,
+                    JobType = Master.JobType.GetResource,
+                    RequestingUser = TEMP_USERNAME,
+                    Requestor = this,
+                    Resource = resource,
+                    Timeout = 150000,
+                    UpdateUICallback = actUpdateUI
+                });
             }
-        }
-
-        /// <summary>
-        /// Calls <see cref="M:CreateResourceCallback(CreateResourceJob, FullAsset)"/>.
-        /// </summary>
-        /// <param name="job">The <see cref="JobBase"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void CreateResourceCallback(JobBase job, Resource resource)
-        {
-            CreateResourceCallback((CreateResourceJob)job, resource);
         }
 
         /// <summary>
         /// Called when the <see cref="CreateResourceJob"/> has terminated.
         /// </summary>
-        /// <param name="job">The <see cref="SaveResourceJob"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void CreateResourceCallback(CreateResourceJob job, Resource resource)
+        /// <param name="result">The <see cref="JobResult"/>.</param>
+        /// <remarks>
+        /// Runs on the UI thread.
+        /// </remarks>
+        void CreateResourceCallback(JobResult result)
         {
             TVIState tviState = null;
             TreeViewItem tvi, foundTvi;
+
+            // Check for the old guid
+            if ((tvi = FindTreeViewItem(result.InputArgs.Resource.Guid)) != null)
+            {
+                tviState = (TVIState)tvi.Tag;
+                tviState.Resource = result.Resource;
+                TreeViewItemProps.SetGuid(tvi, result.Resource.Guid.ToString("N"));
+                tvi.Header = result.Resource.Guid.ToString("N");
+                _statusBarItemGuid = result.Resource.Guid;
+            }
             
             // primary scan of all TVI's current guids
-            if ((tvi = FindTreeViewItem((Resource)resource)) == null)
+            if ((tvi = FindTreeViewItem(result.Resource)) == null)
             {
                 // Creation is weird on the client.  The client currently has the user add an existing 
                 // resource to the client's repository.  The client assigns a Guid.  This Guid is used 
@@ -788,13 +803,13 @@ namespace WindowsClient
                     foundTvi = (TreeViewItem)ResourceTree.Items[i];
                     if (foundTvi.Tag != null) // If null, then Tag has not been set, which means that LoadResource has not been called and thus, it cannot be the one we want
                     {
-                        if (((TVIState)foundTvi.Tag).Resource == resource)
+                        if (((TVIState)foundTvi.Tag).Resource == result.Resource)
                         {
                             tvi = foundTvi;
                             tviState = (TVIState)tvi.Tag;
-                            TreeViewItemProps.SetGuid(tvi, job.Resource.Guid.ToString("N"));
-                            tvi.Header = job.Resource.Guid.ToString("N");
-                            _statusBarItemGuid = job.Resource.Guid;
+                            TreeViewItemProps.SetGuid(tvi, result.Resource.Guid.ToString("N"));
+                            tvi.Header = result.Resource.Guid.ToString("N");
+                            _statusBarItemGuid = result.Resource.Guid;
                             break;
                         }
                     }
@@ -812,16 +827,16 @@ namespace WindowsClient
 
 
             // Update the tviState.FullAsset reference
-            tviState.Resource = job.Resource;
+            tviState.Resource = result.Resource;
 
-            if (job.IsCancelled)
+            if (result.Job.IsCancelled)
             {
                 tviState.UpdateEvent(false, true, true, false, false);
                 TreeViewItemProps.SetIsLoading(tvi, false);
                 TreeViewItemProps.SetIsCanceled(tvi, true);
                 UpdateStatus(tvi, "Upload was canceled by user");
             }
-            else if (job.IsFinished)
+            else if (result.Job.IsFinished)
             {
                 tvi.Background = _normalBrush;
                 tviState.UpdateEvent(false, true, false, false, false);
@@ -831,7 +846,7 @@ namespace WindowsClient
                 TreeViewItemProps.SetPercentComplete(tvi, 100);
                 UpdateStatus(tvi, "Loaded");
             }
-            else if (job.IsTimeout)
+            else if (result.Job.IsTimeout)
             {
                 tvi.Background = _errorBrush;
                 tviState.UpdateEvent(false, true, false, true, false);
@@ -841,53 +856,43 @@ namespace WindowsClient
             }
             else
             {
-                TreeViewItemProps.SetPercentComplete(tvi, job.PercentComplete);
-                UpdateStatus(tvi, "Uploading resource is " + job.PercentComplete.ToString() + "% complete, " +
-                                Utilities.MakeBytesHumanReadable(job.BytesComplete) + " of " +
-                                Utilities.MakeBytesHumanReadable(job.BytesTotal) + " have been uploaded.");
+                TreeViewItemProps.SetPercentComplete(tvi, result.Job.PercentComplete);
+                UpdateStatus(tvi, "Uploading resource is " + result.Job.PercentComplete.ToString() + "% complete, " +
+                                Utilities.MakeBytesHumanReadable(result.Job.BytesComplete) + " of " +
+                                Utilities.MakeBytesHumanReadable(result.Job.BytesTotal) + " have been uploaded.");
             }
-        }
-
-        /// <summary>
-        /// Calls <see cref="M:SaveResourceCallback(SaveResourceJob, FullAsset)"/>.
-        /// </summary>
-        /// <param name="job">The <see cref="JobBase"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void SaveResourceCallback(JobBase job, Resource resource)
-        {
-            SaveResourceCallback((SaveResourceJob)job, resource);
         }
 
         /// <summary>
         /// Called when the <see cref="SaveResourceJob"/> has terminated.
         /// </summary>
-        /// <param name="job">The <see cref="SaveResourceJob"/>.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/>.</param>
-        /// <remarks>Runs on the UI thread.</remarks>
-        void SaveResourceCallback(SaveResourceJob job, Resource resource)
+        /// <param name="result">The <see cref="JobResult"/>.</param>
+        /// <remarks>
+        /// Runs on the UI thread.
+        /// </remarks>
+        void SaveResourceCallback(JobResult result)
         {
             TVIState tviState;
             TreeViewItem tvi;
 
-            if ((tvi = FindTreeViewItem((Resource)resource)) == null)
+            if ((tvi = FindTreeViewItem(result.Resource)) == null)
             {
-                tvi = AddTreeResource((Resource)resource, true, false);
+                tvi = AddTreeResource(result.Resource, true, false);
             }
 
             tviState = (TVIState)tvi.Tag;
 
             // Update the tviState.FullAsset reference
-            tviState.Resource = job.Resource;
+            tviState.Resource = result.Resource;
 
-            if (job.IsCancelled)
+            if (result.Job.IsCancelled)
             {
                 tviState.UpdateEvent(false, true, true, false, false);
                 TreeViewItemProps.SetIsLoading(tvi, false);
                 TreeViewItemProps.SetIsCanceled(tvi, true);
                 UpdateStatus(tvi, "Upload was canceled by user");
             }
-            else if (job.IsFinished)
+            else if (result.Job.IsFinished)
             {
                 // This could be used multiple times, depending on threading, should check a flag before making changes
                 if (!tviState.IsLoaded)
@@ -901,7 +906,7 @@ namespace WindowsClient
                     UpdateStatus(tvi, "Loaded");
                 }
             }
-            else if (job.IsTimeout)
+            else if (result.Job.IsTimeout)
             {
                 tvi.Background = _errorBrush;
                 tviState.UpdateEvent(false, false, false, true, false);
@@ -911,10 +916,10 @@ namespace WindowsClient
             }
             else
             {
-                TreeViewItemProps.SetPercentComplete(tvi, job.PercentComplete);
-                UpdateStatus(tvi, "Uploading resource is " + job.PercentComplete.ToString() + "% complete, " +
-                                Utilities.MakeBytesHumanReadable(job.BytesComplete) + " of " +
-                                Utilities.MakeBytesHumanReadable(job.BytesTotal) + " have been uploaded.");
+                TreeViewItemProps.SetPercentComplete(tvi, result.Job.PercentComplete);
+                UpdateStatus(tvi, "Uploading resource is " + result.Job.PercentComplete.ToString() + "% complete, " +
+                                Utilities.MakeBytesHumanReadable(result.Job.BytesComplete) + " of " +
+                                Utilities.MakeBytesHumanReadable(result.Job.BytesTotal) + " have been uploaded.");
             }
         }
 
@@ -960,11 +965,31 @@ namespace WindowsClient
 
             // If this resource does not exist on the server then create, else update
             if (((TVIState)tvi.Tag).IsRemoteExistantKnown && !((TVIState)tvi.Tag).IsRemoteExistant)
-                _workMaster.AddJob(this, Master.JobType.CreateResource, ((TVIState)tvi.Tag).Resource, 
-                    CreateResourceCallback, 100000);
+                _workMaster.AddJob(new JobArgs()
+                {
+                    CouchDB = _couchdb,
+                    ErrorManager = ErrorManager,
+                    FileSystem = FileSystem,
+                    JobType = Master.JobType.CreateResource,
+                    RequestingUser = TEMP_USERNAME,
+                    Requestor = this,
+                    Resource = ((TVIState)tvi.Tag).Resource,
+                    Timeout = 100000,
+                    UpdateUICallback = CreateResourceCallback
+                });
             else
-                _workMaster.AddJob(this, Master.JobType.SaveResource, ((TVIState)tvi.Tag).Resource, 
-                    SaveResourceCallback, 100000);
+                _workMaster.AddJob(new JobArgs()
+                {
+                    CouchDB = _couchdb,
+                    ErrorManager = ErrorManager,
+                    FileSystem = FileSystem,
+                    JobType = Master.JobType.SaveResource,
+                    RequestingUser = TEMP_USERNAME,
+                    Requestor = this,
+                    Resource = ((TVIState)tvi.Tag).Resource,
+                    Timeout = 100000,
+                    UpdateUICallback = SaveResourceCallback
+                });
         }
 
         /// <summary>
@@ -1172,9 +1197,18 @@ namespace WindowsClient
             CheckUpdateStatusJob.UpdateUIDelegate actUpdateUI = CheckUpdateStatus;
             for (int i = 0; i < ResourceTree.Items.Count; i++)
             {
-                _workMaster.AddJob(this, Master.JobType.CheckUpdateStatus, 
-                    ((TVIState)((TreeViewItem)ResourceTree.Items[i]).Tag).Resource, 
-                    actUpdateUI, 1000);
+                _workMaster.AddJob(new JobArgs()
+                {
+                    CouchDB = _couchdb,
+                    ErrorManager = ErrorManager,
+                    FileSystem = FileSystem,
+                    JobType = Master.JobType.CheckUpdateStatus,
+                    RequestingUser = TEMP_USERNAME,
+                    Requestor = this,
+                    Resource = ((TVIState)((TreeViewItem)ResourceTree.Items[i]).Tag).Resource,
+                    Timeout = 1000,
+                    UpdateUICallback = actUpdateUI
+                });
             }
         }
 
@@ -1214,13 +1248,13 @@ namespace WindowsClient
         /// <summary>
         /// WorkReport accepts a UpdateUIDelegate and its associated arguments and should handle pumping this message to the UI
         /// </summary>
-        /// <param name="actUpdateUI">The method to update the UI.</param>
-        /// <param name="job">The job for the method updating the UI.</param>
-        /// <param name="fullAsset">The <see cref="FullAsset"/> for the method updating the UI.</param>
-        /// <remarks>Runs on the job's thread.</remarks>
-        public void WorkReport(JobBase.UpdateUIDelegate actUpdateUI, JobBase job, Resource resource)
+        /// <param name="result">The <see cref="JobResult"/>.</param>
+        /// <remarks>
+        /// Runs on the job's thread.
+        /// </remarks>
+        public void WorkReport(JobResult result)
         {
-            Dispatcher.BeginInvoke(actUpdateUI, job, resource);
+            Dispatcher.BeginInvoke(result.InputArgs.UpdateUICallback, result);
         }
 
         /// <summary>
@@ -1348,7 +1382,7 @@ namespace WindowsClient
             TreeViewItem tvi;
             TVIState tviState;
             Resource resource;
-            string metaRelPath, dataRelPath, dataExt, rootPath;
+            string dataExt;
             Guid guid = Guid.NewGuid();
             List<string> uprop = new List<string>();
             System.Windows.Forms.OpenFileDialog ofd;
@@ -1371,10 +1405,11 @@ namespace WindowsClient
                     }
                     
                     // Create Resource
-                    resource = new Resource(guid, _couchdb);
+                    resource = new Resource(guid, dataExt, _couchdb);
 
                     // Copy DataAsset
-                    File.Copy(ofd.FileName, resource.DataAsset.RelativePath);
+                    File.Copy(ofd.FileName, 
+                    FileSystem.RootPath + Common.FileSystem.Path.RelativeDataPath + guid.ToString("N") + dataExt);
 
                     // Fill out the MA info
                     resource.MetaAsset.Extension = dataExt;
@@ -1384,6 +1419,7 @@ namespace WindowsClient
                     resource.MetaAsset.Length = FileSystem.GetFileLength(resource.DataAsset.RelativePath);
                     resource.MetaAsset.LockedAt = DateTime.Now;
                     resource.MetaAsset.LockedBy = TEMP_USERNAME;
+                    resource.MetaAsset.Title = "Temporary Title";
                     resource.MetaAsset.Md5 = FileSystem.ComputeMd5(resource.DataAsset.RelativePath);
 
                     resource.MetaAsset.Tags.Add("Seperate tags");
@@ -1394,7 +1430,6 @@ namespace WindowsClient
                     resource.MetaAsset.UserProperties.Add("prop3", "string1");
 
                     resource.MetaAsset.SaveToLocal(null, FileSystem);
-                    resource.DataAsset.Save(new Common.FileSystem.MetaResource(guid, FileSystem), true);
 
                     tvi = AddTreeResource(resource, false, true);
                     tvi.Background = _needUpdatedBrush;

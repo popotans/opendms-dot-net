@@ -115,8 +115,8 @@ namespace Common.Storage
         /// </summary>
         public DateTime LastAccess
         {
-            get { return (DateTime)GetProperty("$created"); }
-            set { SetProperty("$created", value); }
+            get { return (DateTime)GetProperty("$lastaccess"); }
+            set { SetProperty("$lastaccess", value); }
         }
 
         /// <summary>
@@ -135,11 +135,23 @@ namespace Common.Storage
         {
             get
             {
+                object o = GetProperty("$tags");
                 System.Collections.Generic.List<string> tags = new System.Collections.Generic.List<string>();
-                string[] tagsAsStrings = (string[])GetProperty("$tags");
-                for (int i = 0; i < tagsAsStrings.Length; i++)
-                    tags.Add(tagsAsStrings[i]);
-                return tags;
+
+                if (o.GetType() == typeof(string[]))
+                {
+                    string[] tagsAsStrings = (string[])o;
+                    for (int i = 0; i < tagsAsStrings.Length; i++)
+                        tags.Add(tagsAsStrings[i]);
+
+                    return tags;
+                }
+                else if (o.GetType() == typeof(System.Collections.Generic.List<string>))
+                {
+                    return (System.Collections.Generic.List<string>)o;
+                }
+                else
+                    throw new InvalidCastException("Unsupported data type.");
             }
             set { SetProperty("$tags", value); }
         }
@@ -216,6 +228,7 @@ namespace Common.Storage
         private static System.Collections.Generic.List<string> InstantiateReservedProperties()
         {
             System.Collections.Generic.List<string> list = new System.Collections.Generic.List<string>();
+            list.Add("$guid");
             list.Add("$lockedby");
             list.Add("$lockedat");
             list.Add("$creator");
@@ -359,7 +372,8 @@ namespace Common.Storage
             if (this["$created"].GetType() != typeof(DateTime)) return "The required property '$created' must be of type DateTime.";
             if (this["$lastaccess"].GetType() != typeof(DateTime)) return "The required property '$lastaccess' must be of type DateTime.";
             if (this["$title"].GetType() != typeof(string)) return "The required property '$title' must be of type string.";
-            if (this["$tags"].GetType() != typeof(string[])) return "The required property '$tags' must be of type string[].";
+            if (this["$tags"].GetType() != typeof(string[]) && this["$tags"].GetType() != typeof(System.Collections.Generic.List<string>)) 
+                return "The required property '$tags' must be of type string[].";
 
             return null;
         }
@@ -373,6 +387,8 @@ namespace Common.Storage
         /// <returns><c>True</c> if successful; otherwise, <c>false</c>.</returns>
         public bool LoadFromLocal(Work.ResourceJobBase job, string relativeFilePath, FileSystem.IO fileSystem)
         {
+            string error;
+
             if (job != null && job.AbortAction) return false;
 
             // Read the file
@@ -391,9 +407,9 @@ namespace Common.Storage
             }
 
             // Verify valid meta asset
-            if(!string.IsNullOrEmpty(VerifyIntegrity()))
+            if(!string.IsNullOrEmpty(error = VerifyIntegrity()))
             {
-                Logger.General.Error("The file at relative path " + relativeFilePath + " is does not represent a valid meta asset.");
+                Logger.General.Error("The file at relative path " + relativeFilePath + " is does not represent a valid meta asset.  Integrity checking returned: " + error);
                 return false;
             }
 
@@ -415,12 +431,14 @@ namespace Common.Storage
         /// </returns>
         public bool SaveToLocal(Work.ResourceJobBase job, FileSystem.IO fileSystem)
         {
+            string error;
+
             if (job != null && job.AbortAction) return false;
 
             // Verify valid meta asset
-            if (!string.IsNullOrEmpty(VerifyIntegrity()))
+            if (!string.IsNullOrEmpty(error = VerifyIntegrity()))
             {
-                Logger.General.Error("The data in this meta asset instance is invalid for a meta asset.");
+                Logger.General.Error("The data in this meta asset instance is invalid for a meta asset.  Integrity checking returned: " + error);
                 return false;
             }
 
@@ -479,6 +497,14 @@ namespace Common.Storage
             return true;
         }
 
+        /// <summary>
+        /// Creates this MetaAsset on the remote host.
+        /// </summary>
+        /// <param name="job">The job.</param>
+        /// <param name="errorMessage">The error message.</param>
+        /// <returns>
+        ///   <c>True</c> if successful; otherwise, <c>False</c>.
+        /// </returns>
         public bool CreateOnRemote(Work.ResourceJobBase job, out string errorMessage)
         {
             Result result;

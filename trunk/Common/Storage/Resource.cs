@@ -33,9 +33,16 @@ namespace Common.Storage
             _dataAsset = new DataAsset(_metaAsset, cdb);
         }
 
+        public Resource(Guid guid, string dataExtension, Database cdb)
+        {
+            _metaAsset = new MetaAsset(guid, cdb);
+            _dataAsset = new DataAsset(guid, dataExtension, cdb);
+        }
+
         public Resource(MetaAsset ma, Database cdb)
         {
             _metaAsset = ma;
+            if (_metaAsset.Database == null) _metaAsset.Database = cdb;
             _dataAsset = new DataAsset(_metaAsset, cdb);
         }
 
@@ -124,7 +131,8 @@ namespace Common.Storage
 
         public static Resource DeepCopy(Resource resource)
         {
-            return new Resource(resource.MetaAsset.Copy(resource.Guid, null), null);
+            return new Resource(resource.MetaAsset.Copy(resource.Guid, 
+                resource.MetaAsset.Database), resource.MetaAsset.Database);
         }
     }
 }
