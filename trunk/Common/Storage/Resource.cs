@@ -22,6 +22,7 @@ namespace Common.Storage
     {
         private MetaAsset _metaAsset;
         private DataAsset _dataAsset;
+        private CouchDB.Database _couchdb;
 
         public MetaAsset MetaAsset { get { return _metaAsset; } }
         public DataAsset DataAsset { get { return _dataAsset; } }
@@ -29,18 +30,21 @@ namespace Common.Storage
 
         public Resource(Guid guid, Database cdb)
         {
+            _couchdb = cdb;
             _metaAsset = new MetaAsset(guid, cdb);
             _dataAsset = new DataAsset(_metaAsset, cdb);
         }
 
         public Resource(Guid guid, string dataExtension, Database cdb)
         {
+            _couchdb = cdb;
             _metaAsset = new MetaAsset(guid, cdb);
             _dataAsset = new DataAsset(guid, dataExtension, cdb);
         }
 
         public Resource(MetaAsset ma, Database cdb)
         {
+            _couchdb = cdb;
             _metaAsset = ma;
             if (_metaAsset.Database == null) _metaAsset.Database = cdb;
             _dataAsset = new DataAsset(_metaAsset, cdb);
@@ -63,6 +67,9 @@ namespace Common.Storage
 
             if (_metaAsset == null)
                 throw new InvalidOperationException("Meta Asset cannot be null.");
+
+            if (string.IsNullOrEmpty(_dataAsset.Extension))
+                _dataAsset = new DataAsset(_metaAsset, _couchdb);
 
             return _dataAsset.DownloadAndSaveLocally(job, _metaAsset, fileSystem, out errorMessage);
         }

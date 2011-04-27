@@ -15,6 +15,7 @@
 
 using System;
 using System.Data;
+using System.Collections.Generic;
 using Npgsql;
 
 namespace Common.Postgres
@@ -117,6 +118,46 @@ namespace Common.Postgres
             db.Close();
 
             return dt.Rows.Count == 0;
+        }
+
+        /// <summary>
+        /// Gets the current versions of those version guids passed in argument.  This is used when searching as an old file might match a search, but it has since changed.
+        /// We would not want to tell the user about the old file because it is old and should not be used.  Thus, we need to essentially ignore that version guid.  This
+        /// allows a summary to be stated that it checks the argument version guids to ensure they are the most recent, returning those that are the most recent version.
+        /// </summary>
+        /// <param name="versionGuids">The version guids to check.</param>
+        /// <returns></returns>
+        public static List<Version> GetCurrentVersionsFromVersionGuids(Guid[] versionGuids)
+        {
+            List<Version> versions = new List<Version>();
+            Database db;
+            NpgsqlCommand cmd;
+            DataTable dt;
+            string str = "";
+            System.Collections.Generic.Dictionary<Guid, Version> dict = new System.Collections.Generic.Dictionary<Guid, Version>();
+            System.Collections.Generic.Dictionary<Guid, Version>.Enumerator en;
+
+            // 1) Get version for all versions passed
+
+            if(versionGuids.Length == 0)
+                throw new ArgumentNullException("The argument versionGuids cannot be empty.");
+
+            db = new Database(SettingsBase.Instance.PostgresConnectionString);
+
+            for(int i=0; i<versionGuids.Length; i++)
+                str += "version_guid='" + versionGuids[i].ToString("D") + "' OR ";
+
+            str = str.Substring(0, str.Length - 4);
+
+            cmd = new NpgsqlCommand("SELECT * FROM tbl_version NATURAL JOIN (SELECT resource_id, MAX(version_number) AS version_number FROM tbl_version GROUP BY resource_id) AS foo WHERE " + str);
+            db.Open();
+            dt = db.GetTable(cmd);
+            db.Close();
+
+            for (int i = 0; i < dt.Rows.Count; i++)
+                versions.Add(new Version(dt.Rows[i]));
+
+            return versions;
         }
     }
 }

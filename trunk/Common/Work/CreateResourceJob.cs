@@ -94,12 +94,14 @@ namespace Common.Work
             mr = new FileSystem.MetaResource(_jobResource.MetaAsset, _fileSystem);
             dr = new FileSystem.DataResource(_jobResource.DataAsset, _fileSystem);
 
-            mr.Rename(pgVersion.VersionGuid);
+            mr.DeleteFromFilesystem();
             dr.Rename(pgVersion.VersionGuid);
 
             // Assign the GUID received from Postgres to our internal objects
             _jobResource.MetaAsset.Guid = _jobResource.DataAsset.Guid = pgVersion.VersionGuid;
 
+            // Save MA
+            _jobResource.MetaAsset.SaveToLocal(this, _fileSystem);
 
             _jobResource.DataAsset.OnProgress += new Storage.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
 

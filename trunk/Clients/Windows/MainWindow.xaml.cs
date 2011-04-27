@@ -120,6 +120,8 @@ namespace WindowsClient
         /// </summary>
         public MainWindow()
         {
+            // DO NOT REORDER variable instantiation unless you know what you are doing!!!
+
             InitializeComponent();
 
             // Settings should come first
@@ -134,8 +136,10 @@ namespace WindowsClient
             // File System must be set after settings
             FileSystem = new Common.FileSystem.IO(Settings.Instance.StorageLocation);
 
+            // Logger can be started after FileSystem
             Logger = new Common.Logger(Utilities.GetAppDataPath());
 
+            // CouchDB can be instantiated after both FileSystem and Logger
             _couchdb = new Common.CouchDB.Database(Settings.Instance.CouchDatabaseName,
                 new Common.CouchDB.Server(Settings.Instance.CouchServerIp, Settings.Instance.CouchServerPort));
 
@@ -325,7 +329,7 @@ namespace WindowsClient
                     tviState = (TVIState)tvi.Tag;
                     TreeViewItemProps.SetPercentComplete(tvi, 100);
                     TreeViewItemProps.SetIsLoading(tvi, false);
-                    localResourceMd5 = new Common.FileSystem.MetaResource(result.Resource.Guid, FileSystem).ComputeMd5();
+                    localResourceMd5 = new Common.FileSystem.DataResource(result.Resource.DataAsset, FileSystem).ComputeMd5();
 
                     // If the local resource does not match the Md5 value of the remote resource, then...
                     if (result.Resource.MetaAsset.Md5 != localResourceMd5)
@@ -337,6 +341,7 @@ namespace WindowsClient
                     }
                     else
                     {
+                        tviState.UpdateResourceStatus(false, false, true, true, true);
                         UpdateStatus(tvi, "Loaded");
                     }
                 }
@@ -369,7 +374,7 @@ namespace WindowsClient
                     tvi.Background = _normalBrush;
                     tviState.UpdateEvent(false, true, false, false, false);
                     TreeViewItemProps.SetPercentComplete(tvi, 100);
-                    localResourceMd5 = new Common.FileSystem.MetaResource(result.Resource.Guid, FileSystem).ComputeMd5();
+                    localResourceMd5 = new Common.FileSystem.DataResource(result.Resource.DataAsset, FileSystem).ComputeMd5();
 
                     // If the local resource does not match the Md5 value of the remote resource, then...
                     if (result.Resource.MetaAsset.Md5 != localResourceMd5)
@@ -381,6 +386,7 @@ namespace WindowsClient
                     }
                     else
                     {
+                        tviState.UpdateResourceStatus(false, false, true, true, true);
                         UpdateStatus(tvi, "Loaded");
                     }
                 }
@@ -1220,9 +1226,9 @@ namespace WindowsClient
         /// <remarks>Runs on the UI thread.</remarks>
         private void BtnSearch_Click(object sender, RoutedEventArgs e)
         {
-            //SearchWindow search = new SearchWindow();
-            //search.OnResultSelected += new SearchWindow.SearchResultHandler(search_OnResultSelected);
-            //search.Show();
+            SearchWindow search = new SearchWindow(_couchdb);
+            search.OnResultSelected += new SearchWindow.SearchResultHandler(search_OnResultSelected);
+            search.Show();
         }
 
         /// <summary>
@@ -1232,17 +1238,30 @@ namespace WindowsClient
         /// <remarks>Runs on the UI thread.</remarks>
         void search_OnResultSelected(Guid guid)
         {
-            //if (FindTreeViewItem(guid) != null)
-            //    return;
+            // If the tree already has it, then ignore this after telling the user
+            if (FindTreeViewItem(guid) != null)
+            {
+                MessageBox.Show("The selected item is already present.");
+                return;
+            }
 
-            //GetResourceJob.UpdateUIDelegate actUpdateUI = GetResourceCallback;
-            //MetaAsset ma = new MetaAsset(guid, FileSystem);
-            //if(ma.ResourceExistsOnFilesystem())
-            //    ma.Load();
-            //FullAsset fullAsset = new FullAsset(ma, new DataAsset(ma, FileSystem));
-            ////string datapath = resource.StorageLocation + new AssetType(AssetType.Data).VirtualPath + "\\";
+            GetResourceJob.UpdateUIDelegate actUpdateUI = GetResourceCallback;
+            MetaAsset ma = new MetaAsset(guid, _couchdb);
+            Resource resource = new Resource(ma, _couchdb);
 
-            //_workMaster.AddJob(this, Master.JobType.LoadResource, fullAsset, actUpdateUI, 150000);
+            _workMaster.AddJob(new JobArgs()
+            {
+                CouchDB = _couchdb,
+                ErrorManager = ErrorManager,
+                FileSystem = FileSystem,
+                JobType = Master.JobType.GetResource,
+                ProgressMethod = JobBase.ProgressMethodType.Determinate,
+                RequestingUser = TEMP_USERNAME,
+                Requestor = this,
+                Resource = resource,
+                Timeout = (uint)Settings.Instance.NetworkTimeout,
+                UpdateUICallback = actUpdateUI
+            });
         }
 
         /// <summary>
@@ -1322,32 +1341,6 @@ namespace WindowsClient
         }
 
         /// <summary>
-        /// Handles the Click event of the Btn1 control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
-        private void Btn1_Click(object sender, RoutedEventArgs e)
-        {
-            //if (ResourceTree.SelectedItem == null)
-            //{
-            //    MessageBox.Show("A resource must be selected.");
-            //    return;
-            //}
-
-            //TVIState tviState = (TVIState)((TreeViewItem)ResourceTree.SelectedItem).Tag;
-            //Common.Data.MetaAsset ma = tviState.FullAsset.MetaAsset;
-            //LoadResourceJob.UpdateUIDelegate actUpdateUI = CheckETagStatus;
-
-            //tviState.FullAsset.MetaAsset.UpdateByServer(ma.ETag.Increment(), ma.MetaVersion + 1, 
-            //    ma.DataVersion + 1, ma.LockedBy, ma.LockedAt, ma.Creator, ma.Length, ma.Md5, 
-            //    ma.Created, ma.Modified, ma.LastAccess);
-
-            //ma.Save();
-
-            //_workMaster.AddJob(this, Master.JobType.GetETag, tviState.FullAsset, actUpdateUI, (uint)Settings.Instance.NetworkTimeout);
-        }
-
-        /// <summary>
         /// Handles the Click event of the BtnSettings control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
@@ -1356,20 +1349,6 @@ namespace WindowsClient
         {
             SettingsWindow win = new SettingsWindow();
             win.ShowDialog();
-        }
-
-        /// <summary>
-        /// Handles the Click event of the Btn2 control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
-        private void Btn2_Click(object sender, RoutedEventArgs e)
-        {
-            //FullAsset fullAsset;
-            //LoadResourceJob.UpdateUIDelegate actUpdateUI = CheckETagStatus;
-
-            //fullAsset = GenerateFullAsset();
-            //_workMaster.AddJob(this, Master.JobType.GetETag, fullAsset, actUpdateUI, 100000);
         }
 
         /// <summary>

@@ -103,7 +103,29 @@ namespace Common.Work
                 return this;
             }
 
-            UpdateLastAction();
+            Logger.General.Debug("Saving meta asset to local filesystem.");
+
+            if (!_jobResource.MetaAsset.SaveToLocal(this, _fileSystem))
+            {
+                Logger.General.Error("Failed to save the meta asset to the filesystem.");
+                _errorManager.AddError(ErrorMessage.ErrorCode.DownloadMetaAssetFailed,
+                    "Downloading Asset Failed",
+                    "I failed to saved the meta information.  Please try again.",
+                    "Failed to save the asset's meta information for GetResourceJob with id " + Id.ToString() + ".",
+                    true, true);
+                _currentState = State.Error;
+                ReportWork(this);
+                return this;
+            }
+
+            Logger.General.Debug("Successfully completed the meta asset save for GetResourceJob with id " + Id.ToString() + ".");
+
+            // Check for Error
+            if (this.IsError || CheckForAbortAndUpdate())
+            {
+                ReportWork(this);
+                return this;
+            }
 
             _jobResource.DataAsset.OnProgress += new Storage.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
 

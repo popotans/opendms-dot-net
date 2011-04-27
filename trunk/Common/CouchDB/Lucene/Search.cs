@@ -168,6 +168,11 @@ namespace Common.CouchDB.Lucene
             _query = query;
         }
 
+        public Search(Server server, Database db, string designDoc, string indexName, QueryBuilder query) :
+            this(server, db, designDoc, indexName, query.QueryString)
+        {
+        }
+
         #endregion
 
         /// <summary>

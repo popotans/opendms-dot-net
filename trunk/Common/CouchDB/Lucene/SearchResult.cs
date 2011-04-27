@@ -29,6 +29,8 @@ namespace Common.CouchDB.Lucene
         /// The CouchDB Document _id
         /// </summary>
         private string _id;
+        private decimal _score;
+        private Dictionary<string, object> _fields;
 
         /// <summary>
         /// Gets the Document _id
@@ -38,13 +40,22 @@ namespace Common.CouchDB.Lucene
             get { return _id; }
         }
 
+        public decimal Score
+        {
+            get { return _score; }
+        }
+
+        public Dictionary<string, object> Fields { get { return _fields; } set { _fields = value; } }
+
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="id">The CouchDB Document _id</param>
-        public SearchResult(string id)
+        /// <param name="score">The score.</param>
+        public SearchResult(string id, decimal score)
         {
             _id = id;
+            _score = score;
             Logger.General.Debug("Common.CouchDB.Lucene.SearchResult instantiated.");
         }
 
@@ -55,10 +66,17 @@ namespace Common.CouchDB.Lucene
         /// <returns>A new CouchDB.Lucene.SearchResult instance</returns>
         public static SearchResult Instantiate(Dictionary<string, object> dictionary)
         {
+            Dictionary<string, object> fields;
+
             // Make sure the keys exist
             if (!dictionary.ContainsKey("id"))
             {
                 throw new ArgumentException("dictionary must contain valid keys for: id", "dictionary");
+            }
+            // Make sure the keys exist
+            if (!dictionary.ContainsKey("score"))
+            {
+                throw new ArgumentException("dictionary must contain valid keys for: score", "dictionary");
             }
 
             // Make sure their values exist and are strings
@@ -77,7 +95,15 @@ namespace Common.CouchDB.Lucene
             SearchResult sr;
 
             // Create the new SearchResult instance
-            sr = new SearchResult((string)dictionary["id"]);
+            sr = new SearchResult((string)dictionary["id"], (decimal)Convert.ToDecimal(dictionary["score"]));
+
+            // Now get the fields
+            if (dictionary.ContainsKey("fields"))
+            {
+                //fields = (Dictionary<string, object>)dictionary["fields"];
+                sr._fields = (Dictionary<string, object>)dictionary["fields"];
+            }
+
 
             return sr;
         }

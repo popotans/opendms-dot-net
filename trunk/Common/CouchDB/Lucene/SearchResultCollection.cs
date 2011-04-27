@@ -64,6 +64,22 @@ namespace Common.CouchDB.Lucene
             _results.Add(doc);
         }
 
+        public SearchResult Get(string id)
+        {
+            for (int i = 0; i < _results.Count; i++)
+            {
+                if (((SearchResult)_results[i]).Id == id)
+                    return (SearchResult)_results[i];
+            }
+
+            return null;
+        }
+
+        public SearchResult Get(Guid id)
+        {
+            return Get(id.ToString("N"));
+        }
+
         /// <summary>
         /// Converts the collection to an array of SearchResult
         /// </summary>
