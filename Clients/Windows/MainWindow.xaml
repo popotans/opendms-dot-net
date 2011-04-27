@@ -78,9 +78,7 @@
             <Button Content="Search" FontSize="13.333" x:Name="BtnSearch" ToolTip="Click to search for a resource." Margin="0,89,14,334" Panel.ZIndex="29" Grid.Column="1" Click="BtnSearch_Click" />
             <Button Content="Exit" FontSize="13.333" x:Name="BtnExit" ToolTip="Click to exit this application." Margin="0,415,14,8" Panel.ZIndex="29" Grid.Column="1" Click="BtnExit_Click" />
             <Button Content="Minimize" FontSize="13.333" x:Name="BtnMinimize" ToolTip="Click to send to the system tray." Margin="0,376,14,47" Panel.ZIndex="29" Grid.Column="1" />
-            <Button Content="1" Grid.Column="1" Height="23" HorizontalAlignment="Left" Margin="0,290,0,0" Name="Btn1" VerticalAlignment="Top" Width="26" ToolTip="TEST - Increment Local Version Info" Click="Btn1_Click" />
             <Button Content="Settings..." FontSize="13.333" Margin="0,336,14,88" Name="BtnSettings" Panel.ZIndex="1" ToolTip="Click to open the selected resource with its associated application." Grid.Column="1" Click="BtnSettings_Click" />
-            <Button Content="2" Height="23" HorizontalAlignment="Left" Margin="32,290,0,0" Name="Btn2" ToolTip="TEST - Generate a new resource." VerticalAlignment="Top" Width="26" Grid.Column="1" Click="Btn2_Click" />
             <Button Content="Add Resource" FontSize="13.333" Margin="0,48,14,375" Name="BtnAddResource" Panel.ZIndex="29" ToolTip="Click to download the selected resource." Grid.Column="1" Click="BtnAddResource_Click" />
         </Grid>
         <StatusBar Height="25" HorizontalAlignment="Left" Margin="0,462,0,0" x:Name="statusBar1" VerticalAlignment="Top" Grid.Row="1"  BorderBrush="#D0000000" BorderThickness="1" Width="500" d:LayoutOverrides="GridBox">

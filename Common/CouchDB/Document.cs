@@ -1263,13 +1263,7 @@ namespace Common.CouchDB
         public DateTime? GetPropertyAsDateTime(string key)
         {
             if (Contains(key))
-            {
-                DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0); // Set base
-                object o = this[key]; // Get ticks since 1/1/1970
-                Double d = Convert.ToDouble(o); // Convert to Double
-                dt = dt.AddMilliseconds(d); // Add ticks to 1/1/1970
-                return dt;
-            }
+                return DateTime.Parse(this[key].ToString());
 
             return null;
         }
@@ -1313,36 +1307,27 @@ namespace Common.CouchDB
         }
 
         /// <summary>
-        /// Sets the property to the specified DateTime - technically sets the value to the amount of ticks since 1/1/1970
+        /// Sets the property to the specified DateTime.
         /// </summary>
         /// <param name="key">The key of the property</param>
         /// <param name="value">The DateTime to set as the value</param>
-        /// <returns>An Int64 value that is set to the property</returns>
-        public Int64 SetProperty(string key, DateTime? value)
+        /// <returns>An DateTime value that is set to the property</returns>
+        public DateTime? SetProperty(string key, DateTime? value)
         {
-            Int64 val = -1;
-            DateTime dta;
+            DateTime dt;
 
             if (!value.HasValue)
-                return 0;
+                return null;
 
-            // Set the base date
-            dta = new DateTime(1970, 1, 1, 0, 0, 0);
+            dt = value.Value.ToUniversalTime();
+            string str = dt.ToString("o");
 
-            // Subtract the dta (base) from the value
-            val = value.Value.Subtract(dta).Ticks;
+            if (Contains(key))
+                _properties[key] = str;
+            else
+                AddProperty(key, str);
 
-            // Lock it up
-            lock (_properties)
-            {
-                // Update if exists, else add
-                if (Contains(key))
-                    _properties[key] = val;
-                else
-                    AddProperty(key, val);
-            }
-
-            return val;
+            return value.Value;
         }
 
         public string SetProperty(string key, string value)

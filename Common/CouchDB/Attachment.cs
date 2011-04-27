@@ -32,6 +32,7 @@ namespace Common.CouchDB
         private const int CAN_UPLOAD = 0x02;
         private const int CAN_DELETE = 0x04;
         private const int CAN_ALL = CAN_DOWNLOAD | CAN_UPLOAD | CAN_DELETE;
+        private const int CAN_GET_DOWNLOAD_STREAM = 0x08;
 
         /// <summary>
         /// The state of the instance, can be any combination of: RESET, CAN_DOWNLOAD, CAN_UPLOAD, CAN_DELETE, CAN_ALL
@@ -459,10 +460,10 @@ namespace Common.CouchDB
                         if (!string.IsNullOrEmpty(_document.Rev) && !string.IsNullOrEmpty(_contentType)) // Do we know where to go remotely for Delete and Upload?
                             _state = CAN_ALL;
                         else
-                            _state = CAN_DOWNLOAD;
+                            _state = CAN_DOWNLOAD | CAN_GET_DOWNLOAD_STREAM;
                     }
                     else
-                        _state = CAN_DOWNLOAD;
+                        _state = CAN_DOWNLOAD | CAN_GET_DOWNLOAD_STREAM;
                 }
                 else if (_stream != null)
                 {
@@ -476,10 +477,10 @@ namespace Common.CouchDB
                                 if (_revpos <= 0)
                                     _revpos = Convert.ToInt32(_document.Rev.Substring(0, _document.Rev.IndexOf('-')));
 
-                                _state = CAN_ALL;
+                                _state = CAN_ALL | CAN_GET_DOWNLOAD_STREAM;
                             }
                             else
-                                _state = CAN_DOWNLOAD;
+                                _state = CAN_DOWNLOAD | CAN_GET_DOWNLOAD_STREAM;
                         }
                         else
                         {
@@ -489,7 +490,7 @@ namespace Common.CouchDB
                                 if (_revpos <= 0)
                                     _revpos = Convert.ToInt32(_document.Rev.Substring(0, _document.Rev.IndexOf('-')));
 
-                                _state = CAN_UPLOAD | CAN_DELETE;
+                                _state = CAN_UPLOAD | CAN_DELETE | CAN_GET_DOWNLOAD_STREAM;
                             }
                         }
                     }
@@ -497,13 +498,15 @@ namespace Common.CouchDB
                     {
                         if (!string.IsNullOrEmpty(_document.Rev))
                         {
-                            // Revision position is known - meaning I can write to CouchDB
-                            if (_revpos <= 0)
-                                _revpos = Convert.ToInt32(_document.Rev.Substring(0, _document.Rev.IndexOf('-')));
+                            // I cannot read from the stream, thus I cannot send data, but I can receive it
 
-                            _state = CAN_UPLOAD | CAN_DELETE;
+                            _state = CAN_DOWNLOAD | CAN_DELETE | CAN_GET_DOWNLOAD_STREAM;
                         }
                     }
+                }
+                else if (!string.IsNullOrEmpty(_document.Rev))
+                {
+                    _state = CAN_GET_DOWNLOAD_STREAM;
                 }
             }
         }
@@ -514,6 +517,11 @@ namespace Common.CouchDB
         public bool CanDownload
         {
             get { return CheckState(CAN_DOWNLOAD); }
+        }
+
+        public bool CanGetDownloadStream
+        {
+            get { return CheckState(CAN_GET_DOWNLOAD_STREAM); }
         }
 
         /// <summary>
@@ -558,7 +566,7 @@ namespace Common.CouchDB
             bool use100Continue, bool useCompression)
         {
             // Check the _state
-            if (!CheckState(CAN_DOWNLOAD))
+            if (!CheckState(CAN_GET_DOWNLOAD_STREAM))
                 throw new NetException("Invalid state");
 
             Web web;

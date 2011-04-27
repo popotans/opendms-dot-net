@@ -45,7 +45,14 @@ namespace Common.Work
             _args = args;
             _inputResource = args.Resource;
             _couchdb = args.CouchDB;
-            _jobResource = Storage.Resource.DeepCopy(_inputResource);
+            if (this.GetType() == typeof(GetResourceJob))
+            {
+                // Here we just create a new resource, because we do not care what exists locally
+                // we will be overwriting it anyway.
+                _jobResource = new Storage.Resource(_inputResource.Guid, _couchdb);
+            }
+            else
+                _jobResource = Storage.Resource.DeepCopy(_inputResource);
         }
 
         protected void ReportWork(ResourceJobBase job)

@@ -121,7 +121,7 @@ namespace Common.Storage
             }
 
             // Ensure it can be downloaded
-            if (!doc.Attachments[0].CanDownload)
+            if (!doc.Attachments[0].CanGetDownloadStream)
             {
                 errorMessage = "The Attachment cannot be downloaded.";
                 return null;

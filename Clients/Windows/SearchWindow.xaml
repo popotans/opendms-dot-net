@@ -19,7 +19,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         mc:Ignorable="d" x:Class="WindowsClient.SearchWindow"
-        Title="SearchWindow" Height="500" Width="700" Loaded="Window_Loaded">
+        Title="SearchWindow" Height="500" Width="960" Loaded="Window_Loaded">
 	<Window.Resources>
 		<Storyboard x:Key="BeginLoadingSearchOptions" Name="BeginLoadingSearchOptions">
 			<ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="GridLoading">
@@ -55,8 +55,9 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Guid" Binding="{Binding Path=Guid}" Visibility="Hidden" />
                 <DataGridTextColumn Header="Title" Binding="{Binding Path=Title}" Width="*" />
-                <DataGridTextColumn Header="Ext" Binding="{Binding Path=Extension}" Width="Auto" />
-                <DataGridTextColumn Header="Locked By" Binding="{Binding Path=LockedBy}" Width="Auto" />
+                <DataGridTextColumn Header="Creator" Binding="{Binding Path=Creator}" Width="125" />
+                <DataGridTextColumn Header="Ext" Binding="{Binding Path=Extension}" Width="35" />
+                <DataGridTextColumn Header="Score" Binding="{Binding Path=Score}" Width="50" />
                 <DataGridTemplateColumn MinWidth="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

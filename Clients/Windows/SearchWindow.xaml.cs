@@ -35,10 +35,12 @@ namespace WindowsClient
     /// </summary>
     public partial class SearchWindow : Window
     {
+        private Common.CouchDB.Database _couchdb;
         /// <summary>
         /// Reference to the method that handles the update ui events.
         /// </summary>
         private delegate void UpdateUI();
+        public delegate void DisplayResultsDelegate(DataGrid grid, Common.CouchDB.Lucene.SearchResultCollection results);
         /// <summary>
         /// A reference to the method that handles search result selection events.
         /// </summary>
@@ -65,9 +67,10 @@ namespace WindowsClient
         /// <summary>
         /// Initializes a new instance of the <see cref="SearchWindow"/> class.
         /// </summary>
-        public SearchWindow()
+        public SearchWindow(Common.CouchDB.Database couchdb)
         {
             InitializeComponent();
+            _couchdb = couchdb;
             _searchForm = null;
             _boundProperties = new Dictionary<string, UIElement>();
         }
@@ -199,41 +202,92 @@ namespace WindowsClient
         {
             Common.Network.Message msg;
             Dictionary<string, UIElement>.Enumerator en = _boundProperties.GetEnumerator();
-            string queryString = "?q=";
-
+            Common.CouchDB.Lucene.QueryBuilder qb = new Common.CouchDB.Lucene.QueryBuilder();
+            string propertyName;
+            DateTime from, to;
 
             // TODO : this needs cleaned up
             while (en.MoveNext())
             {
                 if (en.Current.Value.GetType() == typeof(TextBox))
                 {
-                    //query.Add((string)((TextBox)en.Current.Value).Tag, );
-                    queryString += ((TextBox)en.Current.Value).Text.Trim() + " ";
+                    propertyName = (string)((TextBox)en.Current.Value).Tag;
+                    if(((TextBox)en.Current.Value).Text.Trim().Length > 0)
+                        qb.AddText(propertyName, ((TextBox)en.Current.Value).Text.Trim());
                 }
                 else if (en.Current.Value.GetType() == typeof(DatePicker))
                 {
-                    // TODO : This needs implemented
-                    //query.Add((string)((DatePicker)en.Current.Value).Tag, ((DatePicker)en.Current.Value).Text);
+                    propertyName = (string)((DatePicker)en.Current.Value).Tag;
+                    propertyName = propertyName.Replace("_from","");
+
+                    if (((DatePicker)en.Current.Value).SelectedDate.HasValue)
+                    {
+                        from = ((DatePicker)en.Current.Value).SelectedDate.Value;
+
+                        while (en.MoveNext())
+                        {
+                            if (en.Current.Value.GetType() != typeof(DatePicker))
+                                throw new InvalidOperationException("A UIElement of type DatePicker was expected.");
+                            else
+                                break;
+                        }
+
+                        if (!((DatePicker)en.Current.Value).SelectedDate.HasValue)
+                            to = DateTime.MaxValue;
+                        else
+                            to = ((DatePicker)en.Current.Value).SelectedDate.Value;
+
+                        qb.AddDate(propertyName, from, to);
+                    }
+                    else
+                    {
+                        from = DateTime.MinValue;
+
+                        while (en.MoveNext())
+                        {
+                            if (en.Current.Value.GetType() != typeof(DatePicker))
+                                throw new InvalidOperationException("A UIElement of type DatePicker was expected.");
+                            else
+                                break;
+                        }
+
+                        // Does to have a selected value?
+                        if (((DatePicker)en.Current.Value).SelectedDate.HasValue)
+                        {
+                            to = DateTime.MaxValue;
+                            qb.AddDate(propertyName, from, to);
+                        }
+                    }
                 }
                 else
                     throw new Exception("Unsupported UIElement");
             }
-
-            queryString = queryString.Trim();
-
-            msg = new Common.Network.Message(Settings.Instance.ServerIp, Settings.Instance.ServerPort,
-                "search", queryString, Common.Network.OperationType.GET, Common.Network.DataStreamMethod.Memory, null, 
-                null, null, null, false, false, false, false, Settings.Instance.NetworkBufferSize, 
-                Settings.Instance.NetworkTimeout);
-
-            // TODO : make this async with a searching frame
-            msg.Send();
-
             
-            //Common.NetworkPackage.SearchResult sr = new Common.NetworkPackage.SearchResult();
-            //sr.Deserialize(msg.State.Stream);
+            Common.CouchDB.Lucene.Search search = new Common.CouchDB.Lucene.Search(_couchdb.Server, _couchdb, "search", "by_all", qb);
+            search.OnComplete += new Common.CouchDB.Lucene.Search.CompleteEventHandler(search_OnComplete);
+            search.Get<Common.CouchDB.Lucene.SearchResultCollection>(false);
+        }
 
-            //DisplayResults(dgResults, sr);
+        void search_OnComplete(Common.CouchDB.Web.WebState state, Common.CouchDB.Lucene.Search sender, Common.CouchDB.Result result)
+        {
+            List<Guid> versionGuids = new List<Guid>();
+            List<Common.Postgres.Version> versions = new List<Common.Postgres.Version>();
+            Common.CouchDB.Lucene.SearchResultCollection newSRC = new Common.CouchDB.Lucene.SearchResultCollection();
+            DisplayResultsDelegate actDisplayResults = DisplayResults;
+
+            // Get list of all version guids returned
+            for(int i=0; i<sender.SearchResultCollection.Count; i++)
+                versionGuids.Add(Guid.Parse(sender.SearchResultCollection[i].Id));
+
+            // Get all current versions for resources
+            versions = Common.Postgres.Version.GetCurrentVersionsFromVersionGuids(versionGuids.ToArray());
+
+            for (int i = 0; i < versions.Count; i++)
+            {
+                newSRC.Add(sender.SearchResultCollection.Get(versions[i].VersionGuid));
+            }
+
+            Dispatcher.BeginInvoke(actDisplayResults, dgResults, newSRC);
         }
 
         /// <summary>
@@ -241,25 +295,22 @@ namespace WindowsClient
         /// </summary>
         /// <param name="grid">The grid.</param>
         /// <param name="result">The result.</param>
-        //private void DisplayResults(DataGrid grid, Common.NetworkPackage.SearchResult result)
-        //{
-        //    Common.Data.MetaAsset ma;
+        public void DisplayResults(DataGrid grid, Common.CouchDB.Lucene.SearchResultCollection results)
+        {
+            grid.Items.Clear();
 
-        //    grid.Items.Clear();
-
-        //    for(int i=0; i<result.Count; i++)
-        //    {
-        //        ma = new Common.Data.MetaAsset();
-        //        ma.ImportFromNetworkRepresentation(result[i]);
-
-        //        grid.Items.Add(new SearchWindowDataItem() { 
-        //            Guid = ma.GuidString, 
-        //            Title = ma.Title, 
-        //            Extension = ma.Extension, 
-        //            LockedBy = ma.LockedBy 
-        //        });
-        //    }
-        //}
+            for (int i = 0; i < results.Count; i++)
+            {
+                grid.Items.Add(new SearchWindowDataItem()
+                {
+                    Guid = results[i].Id,
+                    Score = results[i].Score.ToString(),
+                    Title = results[i].Fields["title"].ToString(),
+                    Extension = results[i].Fields["extension"].ToString(),
+                    Creator = results[i].Fields["creator"].ToString(),
+                });
+            }
+        }
 
         /// <summary>
         /// Creates controls supporting textual input and adds it to the control panel container.

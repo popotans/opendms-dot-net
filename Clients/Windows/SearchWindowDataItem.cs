@@ -23,7 +23,14 @@ namespace WindowsClient
     public class SearchWindowDataItem
     {
         /// <summary>
-        /// Gets or sets the <see cref="Guid"/> of the Asset.
+        /// Gets or sets the score.
+        /// </summary>
+        /// <value>
+        /// The score (0-1).
+        /// </value>
+        public string Score { get; set; }
+        /// <summary>
+        /// Gets or sets the <see cref="Guid"/>.
         /// </summary>
         /// <value>
         /// The <see cref="Guid"/>.
@@ -44,11 +51,11 @@ namespace WindowsClient
         /// </value>
         public string Extension { get; set; }
         /// <summary>
-        /// Gets or sets who the Asset is locked by.
+        /// Gets or sets the creator.
         /// </summary>
         /// <value>
-        /// The user.
+        /// The person responsible for version creation.
         /// </value>
-        public string LockedBy { get; set; }
+        public string Creator { get; set; }
     }
 }
