@@ -210,7 +210,7 @@ namespace HttpModule
         /// http://localhost/_unlock/[guid]
         /// </summary>
         /// <param name="app">The <see cref="HttpApplication"/></param>
-        [ServicePoint("/_checkin", ServicePointAttribute.VerbType.GET)]
+        [ServicePoint("/_unlock", ServicePointAttribute.VerbType.PUT)]
         public void Unlock(HttpApplication app)
         {
             ServerResponse resp;

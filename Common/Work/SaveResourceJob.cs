@@ -18,8 +18,7 @@ using System;
 namespace Common.Work
 {
     /// <summary>
-    /// An implementation of <see cref="ResourceJobBase"/> that uploads the asset to the host and then 
-    /// downloads the updated <see cref="Data.MetaAsset"/> saving it to disk.
+    /// An implementation of <see cref="ResourceJobBase"/> that uploads the asset to the host.
     /// </summary>
     public class SaveResourceJob 
         : ResourceJobBase
@@ -44,7 +43,7 @@ namespace Common.Work
         public override JobBase Run()
         {
             string errorMessage = null;
-
+            
             Logger.General.Debug("SaveResourceJob started on job id " + this.Id.ToString() + ".");
 
             _currentState = State.Active | State.Executing;
@@ -76,51 +75,54 @@ namespace Common.Work
                 return this;
             }
 
-            _jobResource.DataAsset.OnProgress += new Storage.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
+            _jobResource.DataAsset.OnUploadProgress += new Storage.DataAsset.ProgressHandler(DataAsset_OnUploadProgress);
+            _jobResource.DataAsset.OnTimeout += new Storage.DataAsset.EventHandler(DataAsset_OnTimeout);
+
+            UpdateLastAction();
 
             Logger.General.Debug("Begining saving of the resource on server for SaveResourceJob with id " + Id.ToString() + "."); 
 
-            if (!_jobResource.UpdateResourceOnRemote(this, _fileSystem, out errorMessage))
+            if (!_jobResource.UpdateResourceOnRemote(this, _fileSystem, SettingsBase.Instance.NetworkBufferSize, 
+                SettingsBase.Instance.NetworkBufferSize, out errorMessage))
             {
-                Logger.General.Error("Failed to create the resource for SaveResourceJob with id " +
-                    Id.ToString() + " with error message: " + errorMessage);
-                _errorManager.AddError(ErrorMessage.ErrorCode.CreateResourceOnServerFailed,
-                    "Saving of Resource Failed",
-                    "I failed to save the resource on the remote server, for additional details consult the logs.",
-                    "Failed to update the resource on the remote server for SaveResourceJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
-                    true, true);
-                _currentState = State.Error;
+                if (!_currentState.HasFlag(State.Timeout))
+                {
+                    Logger.General.Error("Failed to create the resource for SaveResourceJob with id " +
+                        Id.ToString() + " with error message: " + errorMessage);
+                    _errorManager.AddError(ErrorMessage.ErrorCode.CreateResourceOnServerFailed,
+                        "Saving of Resource Failed",
+                        "I failed to save the resource on the remote server, for additional details consult the logs.",
+                        "Failed to update the resource on the remote server for SaveResourceJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
+                        true, true);
+                    _currentState = State.Error;
+                }
+
                 ReportWork(this);
                 return this;
             }
+
+            UpdateLastAction();
 
             Logger.General.Debug("Completed saving the resource on server for SaveResourceJob with id " + Id.ToString() + ".");
 
             // No need to monitor this event anymore
-            _jobResource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
-
-            if (IsError || CheckForAbortAndUpdate())
-            {
-                ReportWork(this);
-                return this;
-            }
+            _jobResource.DataAsset.OnUploadProgress -= DataAsset_OnUploadProgress;
+            _jobResource.DataAsset.OnTimeout -= DataAsset_OnTimeout;
 
             _currentState = State.Active | State.Finished;
             ReportWork(this);
             return this;
         }
 
-        /// <summary>
-        /// Called when the <see cref="Storage.DataAsset"/> portion of the <see cref="Storage.FullAsset"/> 
-        /// makes progress uploading.
-        /// </summary>
-        /// <param name="sender">A reference to the <see cref="Storage.DataAsset"/> that made progress.</param>
-        /// <param name="percentComplete">The percent complete.</param>
-        void Run_DataAsset_OnProgress(Storage.DataAsset sender, int percentComplete)
+        void DataAsset_OnTimeout(Storage.DataAsset sender)
         {
-            Logger.General.Debug("SaveResourceJob with id " + Id.ToString() + " is now " + percentComplete.ToString() + "% complete.");
+            _currentState = State.Timeout;
+        }
 
+        void DataAsset_OnUploadProgress(Storage.DataAsset sender, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
+        {
             UpdateProgress((ulong)sender.BytesComplete, (ulong)sender.BytesTotal);
+            Logger.General.Debug("SaveResourceJob with id " + Id.ToString() + " is now " + PercentComplete.ToString() + "% complete.");
 
             // Don't update the UI if finished, the final update is handled by the Run() method.
             if (sender.BytesComplete != sender.BytesTotal)

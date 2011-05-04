@@ -36,5 +36,45 @@ namespace Common.CouchDB
                 mime = rk.GetValue("Content Type").ToString();
             return mime;
         }
+
+        public static Uri BuildUri(Server server)
+        {
+            return new Uri("http://" + server.Host + ":" + server.Port);
+        }
+
+        public static Uri BuildUriForView(Database db, string designDoc, string viewName, string query)
+        {
+            return new Uri("http://" + db.Server.Host + ":" + db.Server.Port + "/" + db.Name + "/_design/" + designDoc + "/_view/" + viewName + "?" + query);
+        }
+
+        public static Uri BuildUriForSearch(Database db, string designDoc, string indexName, string query)
+        {
+            return new Uri("http://" + db.Server.Host + ":" + db.Server.Port + "/" + db.Name + "/_fti/_design/" + designDoc + "/" + indexName + "?" + query);
+        }
+
+        public static Uri BuildUriForDoc(Database db, string resource)
+        {
+            return new Uri("http://" + db.Server.Host + ":" + db.Server.Port + "/" + db.Name + "/" + resource);
+        }
+
+        public static Uri BuildUriForDoc(Database db, string resource, string revision)
+        {
+            return new Uri("http://" + db.Server.Host + ":" + db.Server.Port + "/" + db.Name + "/" + resource + "?rev=" + revision);
+        }
+
+        public static Uri BuildUriForAttachment(Database db, string resource, string attachmentName)
+        {
+            return new Uri("http://" + db.Server.Host + ":" + db.Server.Port + "/" + db.Name + "/" + resource + "/" + attachmentName);
+        }
+
+        public static Uri BuildUriForAttachment(Database db, string resource, string attachmentName, string revision)
+        {
+            return new Uri("http://" + db.Server.Host + ":" + db.Server.Port + "/" + db.Name + "/" + resource + "/" + attachmentName + "?rev=" + revision);
+        }
+
+        public static Uri BuildUriForAttachment(Database db, string resource, string attachmentName, int revision)
+        {
+            return new Uri("http://" + db.Server.Host + ":" + db.Server.Port + "/" + db.Name + "/" + resource + "/" + attachmentName + "?rev=" + revision.ToString());
+        }
     }
 }

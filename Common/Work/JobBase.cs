@@ -181,6 +181,7 @@ namespace Common.Work
         /// Gets the timestamp indicating when the last action on this job happened.
         /// </summary>
         public DateTime LastAction { get { return _lastActionAt; } }
+        public uint Timeout { get { return _timeout; } }
 
         /// <summary>
         /// Gets a value indicating whether this instance is active.

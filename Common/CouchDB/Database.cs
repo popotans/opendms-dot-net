@@ -37,25 +37,43 @@ namespace Common.CouchDB
         /// <summary>
         /// Handle general events
         /// </summary>
-        /// <param name="state">The state.</param>
         /// <param name="sender">The sender.</param>
-        public delegate void EventHandler(Web.WebState state, Database sender);
+        /// <param name="httpClient">The <see cref="Http.Client"/> handling communications.</param>
+        public delegate void EventHandler(Database sender, Http.Client httpClient);
         /// <summary>
         /// Handles completion events
         /// </summary>
         /// <param name="state">The state.</param>
         /// <param name="sender">The sender.</param>
         /// <param name="result">The result.</param>
-        public delegate void CompleteEventHandler(Web.WebState state, Database sender, Result result);
+        public delegate void CompleteEventHandler(Database sender, Result result);
+        /// <summary>
+        /// Handles progress events
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="httpClient">The <see cref="Http.Client"/> handling communications.</param>
+        /// <param name="httpConnection">The <see cref="Http.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet.</param>
+        /// <param name="headersTotal">The total size headers in bytes.</param>
+        /// <param name="contentTotal">The total size of content in bytes.</param>
+        /// <param name="total">The total size of all data in bytes.</param>
+        public delegate void ProgressEventHandler(Database sender, Http.Client httpClient, Http.Network.HttpConnection httpConnection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total);
+        
 
         /// <summary>
         /// Fired when a timeout occurs - *NOTE* a timeout will prevent OnComplete from firing.
         /// </summary>
         public event EventHandler OnTimeout;
+
         /// <summary>
-        /// Fired to indicate that a web transaction is complete
+        /// Fired to indicate progress of an upload
         /// </summary>
-        public event CompleteEventHandler OnComplete;
+        public event ProgressEventHandler OnUploadProgress;
+
+        /// <summary>
+        /// Fired to indicate progress of a download
+        /// </summary>
+        public event ProgressEventHandler OnDownloadProgress;
 
         /// <summary>
         /// Gets the Database name
@@ -95,91 +113,157 @@ namespace Common.CouchDB
         /// <summary>
         /// Asynchronously creates a new Database
         /// </summary>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Create(bool keepAlive)
+        /// <param name="sendTimeout">The send timeout.</param>
+        /// <param name="receiveTimeout">The receive timeout.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <returns>
+        /// A CouchDB.Result representing the result of the request
+        /// </returns>
+        public Result Create(int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             if (string.IsNullOrEmpty(_name))
                 return new Result(false, "_name is not set", Result.INVALID_STATE);
             if (_server == null)
                 return new Result(false, "_server is not set", Result.INVALID_STATE);
 
-            Web web;
-            ServerResponse sr;
-            MemoryStream ms;
+            ServerResponse response;
+            Http.Client httpClient;
+            Http.Methods.HttpPut httpPut;
+            Http.Methods.HttpResponse httpResponse = null;
+            string json = null;
 
             // Setup
-            web = new Web();
-            ms = new MemoryStream();
+            httpClient = new Http.Client();
+            httpPut = new Http.Methods.HttpPut(Utilities.BuildUri(_server), "application/json"); 
 
             // Setup Event Handlers
-            web.OnComplete += new Web.MessageHandler(web_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
 
             Logger.General.Debug("Preparing to create database " + _name + ".");
 
             // Dispatch the message
-            sr = web.SendMessage(_server, this, null, null, Web.OperationType.PUT, Web.DataStreamMethod.LoadToMemory, null,
-                "application/json", keepAlive, false, false, false);
+            try
+            {
+                httpResponse = httpClient.Execute(httpPut, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+            }
+            catch (Http.Network.HttpNetworkTimeoutException e)
+            {
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return new Result(false, "Timeout");
+                }
+                else
+                    throw e;
+            }
+
+            if (httpResponse == null)
+                throw new Http.Network.HttpNetworkException("The response is null.");
 
             Logger.General.Debug("Database " + _name + " created.");
+            
+            json = httpResponse.Stream.ReadToEnd();
+            response = ConvertTo.JsonToServerResponse(json);
 
             // Verify dispatch was successful
-            return new Result(sr);
+            return new Result(response);
         }
 
         /// <summary>
-        /// Asynchronously deletes an existing Database
+        /// Synchronously deletes an existing Database
         /// </summary>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Delete(bool keepAlive)
+        /// <param name="sendTimeout">The send timeout.</param>
+        /// <param name="receiveTimeout">The receive timeout.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <returns>
+        /// A CouchDB.Result representing the result of the request
+        /// </returns>
+        public Result Delete(int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             if (string.IsNullOrEmpty(_name))
                 return new Result(false, "_name is not set", Result.INVALID_STATE);
             if (_server == null)
                 return new Result(false, "_server is not set", Result.INVALID_STATE);
 
-            Web web;
-            ServerResponse sr;
-            MemoryStream ms;
+            string json;
+            ServerResponse response;
+            Http.Client httpClient;
+            Http.Methods.HttpDelete httpDelete;
+            Http.Methods.HttpResponse httpResponse = null;
 
             // Setup
-            web = new Web();
-            ms = new MemoryStream();
+            httpClient = new Http.Client();
+            httpDelete = new Http.Methods.HttpDelete(Utilities.BuildUri(_server));
 
             // Setup Event Handlers
-            web.OnComplete += new Web.MessageHandler(web_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
 
             Logger.General.Debug("Preparing to delete database " + _name + ".");
 
             // Dispatch the message
-            sr = web.SendMessage(_server, this, null, null, Web.OperationType.DELETE, Web.DataStreamMethod.LoadToMemory, null,
-                "application/json", keepAlive, false, false, false);
+            try
+            {
+                httpResponse = httpClient.Execute(httpDelete, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+            }
+            catch (Http.Network.HttpNetworkTimeoutException e)
+            {
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return new Result(false, "Timeout");
+                }
+                else
+                    throw e;
+            }
 
-            Logger.General.Debug("Database " + _name + " delete.");
+            if (httpResponse == null)
+                throw new Http.Network.HttpNetworkException("The response is null.");
+
+            Logger.General.Debug("Database " + _name + " deleted.");
+
+            json = httpResponse.Stream.ReadToEnd();
+            response = ConvertTo.JsonToServerResponse(json);
 
             // Verify dispatch was successful
-            return new Result(sr);
+            return new Result(response);
+        }
+
+        #region Event Handling
+
+        /// <summary>
+        /// Called when a download needs to update its progress to any consumers.
+        /// </summary>
+        /// <param name="sender">The <see cref="Http.Client"/> that is updating.</param>
+        /// <param name="connection">The <see cref="Http.Network.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet just received.</param>
+        /// <param name="headersTotal">The size of all headers received.</param>
+        /// <param name="contentTotal">The size of all content received.</param>
+        /// <param name="total">The size of all data received.</param>
+        void httpClient_OnDataReceived(Http.Client sender, Http.Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
+        {
+            if (OnDownloadProgress != null)
+                OnDownloadProgress(this, sender, connection, packetSize, headersTotal, contentTotal, total);
         }
 
         /// <summary>
-        /// Called by Create or Delete if a timeout occurs to notify any consumers
+        /// Called when a upload needs to update its progress to any consumers.
         /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnTimeout(Web.WebState state)
+        /// <param name="sender">The <see cref="Http.Client"/> that is updating.</param>
+        /// <param name="connection">The <see cref="Http.Network.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet just sent.</param>
+        /// <param name="headersTotal">The size of all headers sent.</param>
+        /// <param name="contentTotal">The size of all content sent.</param>
+        /// <param name="total">The size of all data sent.</param>
+        void httpClient_OnDataSent(Http.Client sender, Http.Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
         {
-            if (OnTimeout != null) OnTimeout(state, this);
+            if (OnUploadProgress != null)
+                OnUploadProgress(this, sender, connection, packetSize, headersTotal, contentTotal, total);
         }
 
-        /// <summary>
-        /// Called by Create or Delete to notify any consumers upon completion
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnComplete(Web.WebState state)
-        {
-            if (OnComplete != null) OnComplete(state, this, new Result(true));
-        }
+        #endregion
     }
 }

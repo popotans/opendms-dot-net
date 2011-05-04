@@ -194,6 +194,7 @@ namespace WindowsClient
             if ((tvi = FindTreeViewItem(guid)) != null)
             {
                 ((TVIState)tvi.Tag).UpdateResourceStatus(true, false, false, null, true);
+                ((TVIState)tvi.Tag).UpdateEvent(false, true, false, false, false);
                 tvi.Background = _needUpdatedBrush;
                 UpdateStatus(tvi, "File needs saved to server");
             }
@@ -512,13 +513,13 @@ namespace WindowsClient
         private void ReleaseResource(TreeViewItem tvi)
         {
             TVIState tviState = (TVIState)tvi.Tag;
-            LockJob.UpdateUIDelegate actUpdateUI = ReleaseResourceCallback;
+            ReleaseResourceJob.UpdateUIDelegate actUpdateUI = ReleaseResourceCallback;
             _workMaster.AddJob(new JobArgs()
             {
                 CouchDB = _couchdb,
                 ErrorManager = ErrorManager,
                 FileSystem = FileSystem,
-                JobType = Master.JobType.Unlock,
+                JobType = Master.JobType.ReleaseResource,
                 RequestingUser = TEMP_USERNAME,
                 Requestor = this,
                 Resource = tviState.Resource,
@@ -627,6 +628,8 @@ namespace WindowsClient
                     }
                 }
             }
+
+            SetResourceTreeSelectedIndex(-1);
         }
 
         /// <summary>
@@ -668,6 +671,8 @@ namespace WindowsClient
                     }
                 }
             }
+
+            SetResourceTreeSelectedIndex(-1);
         }
 
         /// <summary>
@@ -769,6 +774,8 @@ namespace WindowsClient
                     UpdateUICallback = actUpdateUI
                 });
             }
+
+            SetResourceTreeSelectedIndex(-1);
         }
 
         /// <summary>
@@ -996,6 +1003,8 @@ namespace WindowsClient
                     Timeout = 100000,
                     UpdateUICallback = SaveResourceCallback
                 });
+
+            SetResourceTreeSelectedIndex(-1);
         }
 
         /// <summary>
@@ -1098,6 +1107,8 @@ namespace WindowsClient
                 actOpenResource.BeginInvoke(tvi, ((TVIState)tvi.Tag).Resource, 
                     OpenResource_AsyncCallback, actOpenResource);
             }
+
+            SetResourceTreeSelectedIndex(-1);
         }
 
         /// <summary>
@@ -1216,6 +1227,8 @@ namespace WindowsClient
                     UpdateUICallback = actUpdateUI
                 });
             }
+
+            SetResourceTreeSelectedIndex(-1);
         }
 
         /// <summary>
@@ -1229,6 +1242,8 @@ namespace WindowsClient
             SearchWindow search = new SearchWindow(_couchdb);
             search.OnResultSelected += new SearchWindow.SearchResultHandler(search_OnResultSelected);
             search.Show();
+
+            SetResourceTreeSelectedIndex(-1);
         }
 
         /// <summary>
@@ -1259,7 +1274,7 @@ namespace WindowsClient
                 RequestingUser = TEMP_USERNAME,
                 Requestor = this,
                 Resource = resource,
-                Timeout = (uint)Settings.Instance.NetworkTimeout,
+                Timeout = 100000,
                 UpdateUICallback = actUpdateUI
             });
         }
@@ -1282,14 +1297,33 @@ namespace WindowsClient
         /// <param name="index">The index.</param>
         public void SetResourceTreeSelectedIndex(int index)
         {
-            DependencyObject dObject = ResourceTree.ItemContainerGenerator.ContainerFromIndex(index);
+            DependencyObject dObject;
 
-            ((TreeViewItem)dObject).IsSelected = true;
+            if (index < 0)
+            {
+                if (ResourceTree.Items.Count >= 0)
+                {
+                    // If dObject can be set to the 0 index and selected then we know no other item can be selected
+                    // So, then we just set it to unselected and presto, nothing is selected.
+                    // If no items exist, then nothing can be selected anyway.
+                    dObject = ResourceTree.ItemContainerGenerator.ContainerFromIndex(0);
+                    if (dObject != null)
+                    {
+                        ((TreeViewItem)dObject).IsSelected = true;
+                        ((TreeViewItem)dObject).IsSelected = false;
+                    }
+                }
+            }
+            else
+            {
+                dObject = ResourceTree.ItemContainerGenerator.ContainerFromIndex(index);
+                ((TreeViewItem)dObject).IsSelected = true;
 
-            System.Reflection.MethodInfo selectMethod = typeof(TreeViewItem).GetMethod("Select", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                System.Reflection.MethodInfo selectMethod = typeof(TreeViewItem).GetMethod("Select",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-            selectMethod.Invoke(dObject, new object[] { true });
+                selectMethod.Invoke(dObject, new object[] { true });
+            }
         }
 
         /// <summary>
@@ -1419,6 +1453,8 @@ namespace WindowsClient
                     tviState.UpdateEvent(false, true, false, false, false);                    
                 }
             }
+
+            SetResourceTreeSelectedIndex(-1);
         }
     }
 }

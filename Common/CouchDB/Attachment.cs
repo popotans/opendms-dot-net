@@ -77,25 +77,20 @@ namespace Common.CouchDB
         /// <summary>
         /// Handles general events
         /// </summary>
-        /// <param name="state">The state.</param>
         /// <param name="sender">The sender.</param>
-        public delegate void EventHandler(Web.WebState state, Attachment sender);
+        /// <param name="httpClient">The <see cref="Http.Client"/> handling communications.</param>
+        public delegate void EventHandler(Attachment sender, Http.Client httpClient);
         /// <summary>
         /// Handles progress events
         /// </summary>
-        /// <param name="state">The state.</param>
         /// <param name="sender">The sender.</param>
-        /// <param name="percent">The percent.</param>
-        /// <param name="bytesSent">The bytes sent.</param>
-        /// <param name="bytesTotal">The bytes total.</param>
-        public delegate void ProgressEventHandler(Web.WebState state, Attachment sender, decimal percent, Int64 bytesSent, Int64 bytesTotal);
-        /// <summary>
-        /// Handles completion events
-        /// </summary>
-        /// <param name="state">The state.</param>
-        /// <param name="sender">The sender.</param>
-        /// <param name="result">The result.</param>
-        public delegate void CompleteEventHandler(Web.WebState state, Attachment sender, Result result);
+        /// <param name="httpClient">The <see cref="Http.Client"/> handling communications.</param>
+        /// <param name="httpConnection">The <see cref="Http.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet.</param>
+        /// <param name="headersTotal">The total size headers in bytes.</param>
+        /// <param name="contentTotal">The total size of content in bytes.</param>
+        /// <param name="total">The total size of all data in bytes.</param>
+        public delegate void ProgressEventHandler(Attachment sender, Http.Client httpClient, Http.Network.HttpConnection httpConnection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total);
         /// <summary>
         /// Handle file events
         /// </summary>
@@ -108,26 +103,6 @@ namespace Common.CouchDB
         /// <param name="owner">The owner.</param>
         public delegate void FileEventHandler(Stream stream, string path, FileMode mode, FileAccess access, FileShare share, FileOptions options, string owner);
 
-        /// <summary>
-        /// Fired before HTTP headers are locked
-        /// </summary>
-        public event EventHandler OnBeforeHeadersAreLocked;
-        /// <summary>
-        /// Fired before the request stream is read and sent
-        /// </summary>
-        public event EventHandler OnBeforeBeginGetRequestStream;
-        /// <summary>
-        /// Fired after reading and sending of the request stream is finished
-        /// </summary>
-        public event EventHandler OnAfterEndGetRequestStream;
-        /// <summary>
-        /// Fired before attempting to receive the server's response
-        /// </summary>
-        public event EventHandler OnBeforeBeginGetResponse;
-        /// <summary>
-        /// Fired after receiving the server's response
-        /// </summary>
-        public event EventHandler OnAfterEndGetResponse;
         /// <summary>
         /// Fired when a timeout occurs - *NOTE* a timeout will prevent OnComplete from firing.
         /// </summary>
@@ -142,11 +117,6 @@ namespace Common.CouchDB
         /// Fired to indicate progress of a download
         /// </summary>
         public event ProgressEventHandler OnDownloadProgress;
-
-        /// <summary>
-        /// Fired to indicate that a web transaction is complete
-        /// </summary>
-        public event CompleteEventHandler OnComplete;
 
         /// <summary>
         /// Fired when a FileStream is opened
@@ -519,6 +489,12 @@ namespace Common.CouchDB
             get { return CheckState(CAN_DOWNLOAD); }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether this instance can get a download stream.
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this instance can get a download stream; otherwise, <c>false</c>.
+        /// </value>
         public bool CanGetDownloadStream
         {
             get { return CheckState(CAN_GET_DOWNLOAD_STREAM); }
@@ -555,189 +531,94 @@ namespace Common.CouchDB
         /// <summary>
         /// Synchronously accesses the CouchDB server and gets a Stream that can access the network data being received from the CouchDB server
         /// </summary>
-        /// <param name="server">The Server housing the Database</param>
         /// <param name="db">The Database housing the Document which houses the Attachment</param>
-        /// <param name="dataStreamMethod">A Web.DataStreamMethod which is used to download the Attachment</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <param name="use100Continue">Per RFC-2616 "causes the client to wait for a response, this is done to allow the server time to interpret the headers and determine if it will accept the request before sending the data"</param>
-        /// <param name="useCompression">Set to true to request data using gzip/deflate when supported by CouchDB</param>
-        /// <returns>A CouchDB.Result representing the result of the request or null if the request failed.</returns>
-        public Stream GetDownloadStreamSync(Server server, Database db, Web.DataStreamMethod dataStreamMethod, bool keepAlive,
-            bool use100Continue, bool useCompression)
+        /// <param name="sendTimeout">The send timeout.</param>
+        /// <param name="receiveTimeout">The receive timeout.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <returns>
+        /// A <see cref="Http.Network.HttpNetworkStream"/> for the content.
+        /// </returns>
+        public Http.Network.HttpNetworkStream GetDownloadStream(Database db, int sendTimeout, 
+            int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             // Check the _state
             if (!CheckState(CAN_GET_DOWNLOAD_STREAM))
                 throw new NetException("Invalid state");
 
-            Web web;
-            Web.WebState state;
-            ServerResponse sr;
+            Http.Client httpClient;
+            Http.Methods.HttpGet httpGet;
+            Http.Methods.HttpResponse httpResponse = null;
 
             // Setup
-            web = new Web();
+            httpClient = new Http.Client();
+            httpGet = new Http.Methods.HttpGet(Utilities.BuildUriForAttachment(db, _document.Id, _filename));
 
             // Setup Event Handlers
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnUploadProgress += new Web.MessageProgressHandler(web_OnUploadProgress);
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
 
             Logger.General.Debug("Preparing to establish a synchronous download stream for attachment.");
 
             // Dispatch the message
-            sr = web.SendMessageSync(server, db, _document.Id + "/" + _filename, null, Web.OperationType.GET, dataStreamMethod,
-                null, _contentType, keepAlive, use100Continue, useCompression, useCompression, out state);
+            try
+            {
+                httpResponse = httpClient.Execute(httpGet, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+            }
+            catch (Http.Network.HttpNetworkTimeoutException e)
+            {
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return null;
+                }
+                else
+                    throw e;
+            }
 
-            Logger.General.Debug("Sychronous download stream for attachment established.");
-
-            if (sr.Ok.HasValue && sr.Ok.Value)
-                return state.Stream;
+            if (httpResponse != null && httpResponse.ResponseCode == 200)
+            {
+                Logger.General.Debug("Sychronous download stream for attachment established.");
+                _length = (long)Http.Utilities.GetContentLength(httpGet.Headers);
+                return httpResponse.Stream;
+            }
             else
+            {
+                Logger.General.Debug("Failed to get a download stream for the attachment.");
                 return null;
-        }
-
-        /// <summary>
-        /// Synchronously downloads an Attachment from the Server to the local system
-        /// </summary>
-        /// <param name="server">The Server housing the Database</param>
-        /// <param name="db">The Database housing the Document which houses the Attachment</param>
-        /// <param name="dataStreamMethod">A Web.DataStreamMethod which is used to download the Attachment</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <param name="use100Continue">Per RFC-2616 "causes the client to wait for a response, this is done to allow the server time to interpret the headers and determine if it will accept the request before sending the data"</param>
-        /// <param name="useCompression">Set to true to request data using gzip/deflate when supported by CouchDB</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result DownloadSync(Server server, Database db, Web.DataStreamMethod dataStreamMethod, bool keepAlive,
-            bool use100Continue, bool useCompression)
-        {
-            // Check the _state
-            if (!CheckState(CAN_DOWNLOAD))
-                return new Result(false, "Invalid state", Result.INVALID_STATE);
-
-            Web web;
-            Web.WebState state;
-            ServerResponse sr;
-            BinaryReader br;
-            BinaryWriter bw;
-            int bytesRead;
-            long totalBytesRead = 0;
-            byte[] buffer;
-
-            // Setup
-            web = new Web();
-
-            // Setup Event Handlers
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnUploadProgress += new Web.MessageProgressHandler(web_OnUploadProgress);
-
-            Logger.General.Debug("Preparing to synchronously download attachment.");
-
-            // Dispatch the message
-            sr = web.SendMessageSync(server, db, _document.Id + "/" + _filename, null, Web.OperationType.GET, dataStreamMethod,
-                null, _contentType, keepAlive, use100Continue, useCompression, useCompression, out state);
-
-            // Setup
-            if (_stream == null)
-            {
-                _stream = new FileStream(_clientFilepath, FileMode.Create, FileAccess.Write, FileShare.None);
-                // Notify consumers
-                if (OnFileStreamOpen != null) OnFileStreamOpen(_stream, _clientFilepath, FileMode.Create, FileAccess.Write, FileShare.None, FileOptions.None, "CouchDB.Attachment.Download_OnComplete()");
             }
-
-            bw = new BinaryWriter(_stream);
-            br = new BinaryReader(state.Stream);
-
-            buffer = new byte[state.BufferSize];
-            while ((bytesRead = br.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                totalBytesRead += bytesRead;
-                bw.Write(buffer, 0, bytesRead);
-                //if (OnDownloadProgress != null) OnDownloadProgress(state, this, ((decimal)totalBytesRead / (decimal)state.Stream.Length), totalBytesRead, state.Stream.Length);
-                // Above line wont work as cannot seek, must use the attachment's length
-                if (OnDownloadProgress != null) OnDownloadProgress(state, this, ((decimal)totalBytesRead / (decimal)this.Length), totalBytesRead, this.Length);
-            }
-
-            br.Close();
-            bw.Close();
-            _stream.Close();
-
-            Logger.General.Debug("Sychronous download of attachment completed.");
-
-            if (OnFileStreamClosed != null) OnFileStreamClosed(_stream, _clientFilepath, FileMode.Create, FileAccess.Write, FileShare.None, FileOptions.None, "CouchDB.Attachment.Download_OnComplete()");
-
-            return new Result(sr);
         }
-
-        /// <summary>
-        /// Asynchronously downloads an Attachment from the Server to the local system
-        /// </summary>
-        /// <param name="server">The Server housing the Database</param>
-        /// <param name="db">The Database housing the Document which houses the Attachment</param>
-        /// <param name="dataStreamMethod">A Web.DataStreamMethod which is used to download the Attachment</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <param name="use100Continue">Per RFC-2616 "causes the client to wait for a response, this is done to allow the server time to interpret the headers and determine if it will accept the request before sending the data"</param>
-        /// <param name="useCompression">Set to true to request data using gzip/deflate when supported by CouchDB</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Download(Server server, Database db, Web.DataStreamMethod dataStreamMethod, bool keepAlive,
-            bool use100Continue, bool useCompression)
-        {
-            // Check the _state
-            if (!CheckState(CAN_DOWNLOAD))
-                return new Result(false, "Invalid state", Result.INVALID_STATE);
-
-            Web web;
-            ServerResponse sr;
-
-            // Setup
-            web = new Web();
-
-            // Setup Event Handlers
-            web.OnAfterEndGetRequestStream += new Web.MessageHandler(web_OnAfterEndGetRequestStream);
-            web.OnAfterEndGetResponse += new Web.MessageHandler(web_OnAfterEndGetResponse);
-            web.OnBeforeBeginGetRequestStream += new Web.MessageHandler(web_OnBeforeBeginGetRequestStream);
-            web.OnBeforeBeginGetResponse += new Web.MessageHandler(web_OnBeforeBeginGetResponse);
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnComplete += new Web.MessageHandler(Download_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
-            web.OnUploadProgress += new Web.MessageProgressHandler(web_OnUploadProgress);
-            
-            Logger.General.Debug("Preparing to asynchronously download attachment.");
-
-            // Dispatch the message
-            sr = web.SendMessage(server, db, _document.Id + "/" + _filename, null, Web.OperationType.GET, dataStreamMethod,
-                null, _contentType, keepAlive, use100Continue, useCompression, useCompression);
-
-            Logger.General.Debug("Asychronous download of attachment completed.");
-
-            // Verify dispatch was successful
-            return new Result(sr);
-        }
-
+        
         /// <summary>
         /// Synchronously uploads an Attachment to a Server from the local system
         /// </summary>
-        /// <param name="server">The Server housing the Database</param>
         /// <param name="db">The Database housing the Document which houses the Attachment</param>
-        /// <param name="dataStreamMethod">A Web.DataStreamMethod which is used to download the Attachment</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <param name="use100Continue">Per RFC-2616 "causes the client to wait for a response, this is done to allow the server time to interpret the headers and determine if it will accept the request before sending the data"</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result UploadSync(Server server, Database db, Web.DataStreamMethod dataStreamMethod, bool keepAlive,
-            bool use100Continue)
+        /// <param name="sendTimeout">The send timeout.</param>
+        /// <param name="receiveTimeout">The receive timeout.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <returns>
+        /// A CouchDB.Result representing the result of the request
+        /// </returns>
+        public Result Upload(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             // Check the _state
             if (!CheckState(CAN_UPLOAD))
                 return new Result(false, "Invalid state", Result.INVALID_STATE);
 
-            Web web;
-            Web.WebState state;
             string json;
             ServerResponse response;
-            StreamReader sr;
+            Http.Client httpClient;
+            Http.Methods.HttpPut httpPut;
+            Http.Methods.HttpResponse httpResponse = null;
 
             // Setup
-            web = new Web();
+            httpClient = new Http.Client();
+            httpPut = new Http.Methods.HttpPut(Utilities.BuildUriForAttachment(db, _document.Id, _filename, _revpos), _contentType);
 
             // Setup Event Handlers
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnUploadProgress += new Web.MessageProgressHandler(web_OnUploadProgress);
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
 
             // Check to see if the _stream is null - stream takes priority
             if (_stream == null)
@@ -755,17 +636,29 @@ namespace Common.CouchDB
 
             Logger.General.Debug("Preparing to synchronously upload attachment.");
 
-            // Dispatch the message - AFAIK CouchDB does not support compression in PUT
-            response = web.SendMessageSync(server, db, _document.Id + "/" + _filename, "rev=" + _document.Rev, Web.OperationType.PUT, dataStreamMethod,
-                _stream, _contentType, keepAlive, use100Continue, false, false, out state);
+            // Dispatch the message
+            try
+            {
+                httpResponse = httpClient.Execute(httpPut, _stream, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+            }
+            catch (Http.Network.HttpNetworkTimeoutException e)
+            {
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return new Result(false, "Timeout");
+                }
+                else
+                    throw e;
+            }
+
+            if (httpResponse == null)
+                throw new Http.Network.HttpNetworkException("The response is null.");
 
             Logger.General.Debug("Sychronous upload of attachment completed.");
             
-            // Setup
-            sr = new StreamReader(state.Stream);
-
             // Get the response and deserialize it
-            json = sr.ReadToEnd();
+            json = httpResponse.Stream.ReadToEnd();
             response = ConvertTo.JsonToServerResponse(json);
 
             // Update the housing Document
@@ -776,104 +669,64 @@ namespace Common.CouchDB
 
             // Verify dispatch was successful
             return new Result(response);
-        }
-
-        /// <summary>
-        /// Asynchronously uploads an Attachment to a Server from the local system
-        /// </summary>
-        /// <param name="server">The Server housing the Database</param>
-        /// <param name="db">The Database housing the Document which houses the Attachment</param>
-        /// <param name="dataStreamMethod">A Web.DataStreamMethod which is used to download the Attachment</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <param name="use100Continue">Per RFC-2616 "causes the client to wait for a response, this is done to allow the server time to interpret the headers and determine if it will accept the request before sending the data"</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Upload(Server server, Database db, Web.DataStreamMethod dataStreamMethod, bool keepAlive,
-            bool use100Continue)
-        {
-            // Check the _state
-            if (!CheckState(CAN_UPLOAD))
-                return new Result(false, "Invalid state", Result.INVALID_STATE);
-
-            Web web;
-            ServerResponse sr;
-
-            // Setup
-            web = new Web();
-
-            // Setup Event Handlers
-            web.OnAfterEndGetRequestStream += new Web.MessageHandler(web_OnAfterEndGetRequestStream);
-            web.OnAfterEndGetResponse += new Web.MessageHandler(web_OnAfterEndGetResponse);
-            web.OnBeforeBeginGetRequestStream += new Web.MessageHandler(web_OnBeforeBeginGetRequestStream);
-            web.OnBeforeBeginGetResponse += new Web.MessageHandler(web_OnBeforeBeginGetResponse);
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnComplete += new Web.MessageHandler(Upload_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
-            web.OnUploadProgress += new Web.MessageProgressHandler(web_OnUploadProgress);
-
-            // Check to see if the _stream is null - stream takes priority
-            if (_stream == null)
-            {
-                // _stream is null so see if _clientFilepath exists
-                if (!File.Exists(_clientFilepath))
-                    return new Result(false, "Invalid state - neither _stream nor _clientFilepath are correctly set", Result.INVALID_STATE);
-
-                // Create a new FileStream based on the _clientFilepath
-                _stream = new FileStream(_clientFilepath, FileMode.Open, FileAccess.Read, FileShare.Read);
-
-                // Send to event handler if a consumer exists
-                if (OnFileStreamOpen != null) OnFileStreamOpen(_stream, _clientFilepath, FileMode.Open, FileAccess.Read, FileShare.Read, FileOptions.None, "CouchDB.Attachment.Upload()");
-            }
-
-            Logger.General.Debug("Preparing to asynchronously upload attachment.");
-
-            // Dispatch the message - AFAIK CouchDB does not support compression in PUT
-            sr = web.SendMessage(server, db, _document.Id + "/" + _filename, "rev=" + _document.Rev, Web.OperationType.PUT, dataStreamMethod,
-                _stream, _contentType, keepAlive, use100Continue, false, false);
-
-            Logger.General.Debug("Asychronous upload of attachment completed.");
-
-            // Verify dispatch was successful
-            return new Result(sr);
         }
 
         /// <summary>
         /// Synchronously deletes an Attachment on the Server
         /// </summary>
-        /// <param name="server">The Server housing the Database</param>
         /// <param name="db">The Database housing the Document which houses the Attachment</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result DeleteSync(Server server, Database db, bool keepAlive)
+        /// <param name="sendTimeout">The send timeout.</param>
+        /// <param name="receiveTimeout">The receive timeout.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <returns>
+        /// A CouchDB.Result representing the result of the request
+        /// </returns>
+        public Result Delete(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             // Check the _state
             if (!CheckState(CAN_DELETE))
                 return new Result(false, "Invalid state", Result.INVALID_STATE);
 
-            Web web;
-            Web.WebState state;
             string json;
             ServerResponse response;
-            StreamReader sr;
+            Http.Client httpClient;
+            Http.Methods.HttpDelete httpDelete;
+            Http.Methods.HttpResponse httpResponse = null;
 
             // Setup
-            web = new Web();
+            httpClient = new Http.Client();
+            httpDelete = new Http.Methods.HttpDelete(Utilities.BuildUriForAttachment(db, _document.Id, _filename, _revpos));
 
             // Setup Event Handlers
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnUploadProgress += new Web.MessageProgressHandler(web_OnUploadProgress);
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
 
             Logger.General.Debug("Preparing to synchronously delete attachment.");
 
-            // Dispatch the message - AFAIK CouchDB does not support compression in PUT
-            response = web.SendMessageSync(server, db, _document.Id + "/" + _filename, "rev=" + _document.Rev, Web.OperationType.DELETE, Web.DataStreamMethod.LoadToMemory,
-                null, _contentType, keepAlive, false, false, false, out state);
+            // Dispatch the message
+            try
+            {
+                httpResponse = httpClient.Execute(httpDelete, _stream, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+            }
+            catch (Http.Network.HttpNetworkTimeoutException e)
+            {
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return new Result(false, "Timeout");
+                }
+                else
+                    throw e;
+            }
+
+            if (httpResponse == null)
+                throw new Http.Network.HttpNetworkException("The response is null.");
 
             Logger.General.Debug("Sychronous delete of attachment completed.");
-            
-            // Setup
-            sr = new StreamReader(state.Stream);
 
-            json = sr.ReadToEnd();
+            // Read and convert the JSON to a Document
+            json = httpResponse.Stream.ReadToEnd();
             response = ConvertTo.JsonToServerResponse(json);
 
             _document.Rev = response.Rev;
@@ -881,203 +734,37 @@ namespace Common.CouchDB
             // Verify dispatch was successful
             return new Result(response);
         }
-
-        /// <summary>
-        /// Asynchronously deletes an Attachment on the Server
-        /// </summary>
-        /// <param name="server">The Server housing the Database</param>
-        /// <param name="db">The Database housing the Document which houses the Attachment</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Delete(Server server, Database db, bool keepAlive)
-        {
-            // Check the _state
-            if (!CheckState(CAN_DELETE))
-                return new Result(false, "Invalid state", Result.INVALID_STATE);
-
-            Web web;
-            ServerResponse sr;
-
-            // Setup
-            web = new Web();
-
-            // Setup Event Handlers
-            web.OnAfterEndGetRequestStream += new Web.MessageHandler(web_OnAfterEndGetRequestStream);
-            web.OnAfterEndGetResponse += new Web.MessageHandler(web_OnAfterEndGetResponse);
-            web.OnBeforeBeginGetRequestStream += new Web.MessageHandler(web_OnBeforeBeginGetRequestStream);
-            web.OnBeforeBeginGetResponse += new Web.MessageHandler(web_OnBeforeBeginGetResponse);
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnComplete += new Web.MessageHandler(Delete_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
-            web.OnUploadProgress += new Web.MessageProgressHandler(web_OnUploadProgress);
-
-            Logger.General.Debug("Preparing to asynchronously delete attachment.");
-
-            // Dispatch the message - AFAIK CouchDB does not support compression in PUT
-            sr = web.SendMessage(server, db, _document.Id + "/" + _filename, "rev=" + _document.Rev, Web.OperationType.DELETE, Web.DataStreamMethod.LoadToMemory,
-                null, _contentType, keepAlive, false, false, false);
-
-            Logger.General.Debug("Asychronous delete of attachment completed.");
-
-            // Verify dispatch was successful
-            return new Result(sr);
-        }
-
+        
         #region Event Handling
 
         /// <summary>
-        /// Called when Upload needs to update its progress to any consumers
+        /// Called when a download needs to update its progress to any consumers.
         /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        /// <param name="percent">The percentage of the file transfered to the server</param>
-        /// <param name="bytesSent">The bytes sent</param>
-        /// <param name="bytesTotal">The total amount of bytes to be sent</param>
-        void web_OnUploadProgress(Web.WebState state, decimal percent, Int64 bytesSent, Int64 bytesTotal)
+        /// <param name="sender">The <see cref="Http.Client"/> that is updating.</param>
+        /// <param name="connection">The <see cref="Http.Network.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet just received.</param>
+        /// <param name="headersTotal">The size of all headers received.</param>
+        /// <param name="contentTotal">The size of all content received.</param>
+        /// <param name="total">The size of all data received.</param>
+        void httpClient_OnDataReceived(Http.Client sender, Http.Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
         {
-            if (OnUploadProgress != null) OnUploadProgress(state, this, percent, bytesSent, bytesTotal);
+            if (OnDownloadProgress != null)
+                OnDownloadProgress(this, sender, connection, packetSize, headersTotal, contentTotal, total);
         }
 
         /// <summary>
-        /// Called by Download, Upload or Delete if a timeout occurs to notify any consumers
+        /// Called when a upload needs to update its progress to any consumers.
         /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnTimeout(Web.WebState state)
+        /// <param name="sender">The <see cref="Http.Client"/> that is updating.</param>
+        /// <param name="connection">The <see cref="Http.Network.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet just sent.</param>
+        /// <param name="headersTotal">The size of all headers sent.</param>
+        /// <param name="contentTotal">The size of all content sent.</param>
+        /// <param name="total">The size of all data sent.</param>
+        void httpClient_OnDataSent(Http.Client sender, Http.Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
         {
-            if (OnTimeout != null) OnTimeout(state, this);
-        }
-
-        /// <summary>
-        /// Called by Download to write the file to the local system and notify any consumers upon completion of writing the file
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void Download_OnComplete(Web.WebState state)
-        {
-            BinaryReader br;
-            BinaryWriter bw;
-            int bytesRead;
-            long totalBytesRead = 0;
-            byte[] buffer;
-
-            // Setup
-            if (_stream == null)
-            {
-                _stream = new FileStream(_clientFilepath, FileMode.Create, FileAccess.Write, FileShare.None);
-                // Notify consumers
-                if (OnFileStreamOpen != null) OnFileStreamOpen(_stream, _clientFilepath, FileMode.Create, FileAccess.Write, FileShare.None, FileOptions.None, "CouchDB.Attachment.Download_OnComplete()");
-            }
-
-            bw = new BinaryWriter(_stream);
-            br = new BinaryReader(state.Stream);
-
-            buffer = new byte[state.BufferSize];
-            while ((bytesRead = br.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                totalBytesRead += bytesRead;
-                bw.Write(buffer, 0, bytesRead);
-                //if (OnDownloadProgress != null) OnDownloadProgress(state, this, ((decimal)totalBytesRead / (decimal)state.Stream.Length), totalBytesRead, state.Stream.Length);
-                // Above line wont work as cannot seek, must use the attachment's length
-                if (OnDownloadProgress != null) OnDownloadProgress(state, this, ((decimal)totalBytesRead / (decimal)this.Length), totalBytesRead, this.Length);
-            }
-
-            br.Close();
-            bw.Close();
-            _stream.Close();
-            if (OnFileStreamClosed != null) OnFileStreamClosed(_stream, _clientFilepath, FileMode.Create, FileAccess.Write, FileShare.None, FileOptions.None, "CouchDB.Attachment.Download_OnComplete()");
-
-            if (OnComplete != null) OnComplete(state, this, new Result(true));
-        }
-
-        /// <summary>
-        /// Called by Upload to notify any consumers upon completion of uploading the file
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void Upload_OnComplete(Web.WebState state)
-        {
-            string json;
-            ServerResponse response;
-            StreamReader sr;
-
-            // Setup
-            sr = new StreamReader(state.Stream);
-
-            // Get the response and deserialize it
-            json = sr.ReadToEnd();
-            response = ConvertTo.JsonToServerResponse(json);
-
-            // Update the housing Document
-            _document.Rev = response.Rev;
-
-            // Update the revision position
-            _revpos = Convert.ToInt32(response.Rev.Substring(0, response.Rev.IndexOf('-')));
-            
-            
-            // Notify any consumers
-            if (OnComplete != null) OnComplete(state, this, new Result(response));
-        }
-
-        /// <summary>
-        /// Called by Delete to notify any consumers upon completion of deleting the attachment
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void Delete_OnComplete(Web.WebState state)
-        {
-            string json;
-            ServerResponse response;
-            StreamReader sr;
-
-            // Setup
-            sr = new StreamReader(state.Stream);
-
-            json = sr.ReadToEnd();
-            response = ConvertTo.JsonToServerResponse(json);
-
-            _document.Rev = response.Rev;
-            if (OnComplete != null) OnComplete(state, this, new Result(response));
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that the HTTP headers are about to be locked
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnBeforeHeadersAreLocked(Web.WebState state)
-        {
-            if (OnBeforeHeadersAreLocked != null) OnBeforeHeadersAreLocked(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that receiving of the server's response is about to begin
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnBeforeBeginGetResponse(Web.WebState state)
-        {
-            if (OnBeforeBeginGetResponse != null) OnBeforeBeginGetResponse(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that the request stream is about to be read and sent
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnBeforeBeginGetRequestStream(Web.WebState state)
-        {
-            if (OnBeforeBeginGetRequestStream != null) OnBeforeBeginGetRequestStream(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that the server's response has been received
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnAfterEndGetResponse(Web.WebState state)
-        {
-            if (OnAfterEndGetResponse != null) OnAfterEndGetResponse(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that reading and sending of the request stream are finished
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnAfterEndGetRequestStream(Web.WebState state)
-        {
-            if (OnAfterEndGetRequestStream != null) OnAfterEndGetRequestStream(state, this);
+            if (OnUploadProgress != null)
+                OnUploadProgress(this, sender, connection, packetSize, headersTotal, contentTotal, total);
         }
 
         #endregion

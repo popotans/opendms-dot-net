@@ -25,6 +25,36 @@ namespace Common.Storage
     public sealed class MetaAsset
         : AssetBase
     {
+        /// <summary>
+        /// Represents the method that handles an event.
+        /// </summary>
+        /// <param name="sender">The <see cref="DataAsset"/> that triggered the event.</param>
+        public delegate void EventHandler(MetaAsset sender);
+        /// <summary>
+        /// Represents the method that handles a progress event.
+        /// </summary>
+        /// <param name="sender">The <see cref="DataAsset"/> that triggered the event.</param>
+        /// <param name="packetSize">Size of the packet.</param>
+        /// <param name="headersTotal">The headers total.</param>
+        /// <param name="contentTotal">The content total.</param>
+        /// <param name="total">The total.</param>
+        public delegate void ProgressHandler(MetaAsset sender, int packetSize, ulong headersTotal, ulong contentTotal, ulong total);
+
+        /// <summary>
+        /// Fired to indicate a timeout
+        /// </summary>
+        public event EventHandler OnTimeout;
+
+        /// <summary>
+        /// Fired to indicate progress of an upload
+        /// </summary>
+        public event ProgressHandler OnUploadProgress;
+
+        /// <summary>
+        /// Fired to indicate progress of a download
+        /// </summary>
+        public event ProgressHandler OnDownloadProgress;
+
         private static System.Collections.Generic.List<string> ReservedPropertyNames = InstantiateReservedProperties();
 
         private Document _doc;
@@ -460,7 +490,15 @@ namespace Common.Storage
             return true;
         }
 
-        public bool GetFromRemote(Work.ResourceJobBase job, out string errorMessage)
+        /// <summary>
+        /// Gets from remote.
+        /// </summary>
+        /// <param name="job">The <see cref="Work.ResourceJobBase"/>.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <param name="errorMessage">The error message.</param>
+        /// <returns></returns>
+        public bool GetFromRemote(Work.ResourceJobBase job, int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             Result result;
 
@@ -475,7 +513,10 @@ namespace Common.Storage
 
             Logger.General.Debug("Starting download of resource " + GuidString + " for job id " + job.Id.ToString());
 
-            result = _doc.DownloadSync(Database.Server, Database, false);
+            _doc.OnDownloadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnDownloadProgress);
+            _doc.OnUploadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnUploadProgress);
+            _doc.OnTimeout += new CouchDB.Document.EventHandler(Document_OnTimeout);
+            result = _doc.Download(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize);
 
             Logger.General.Debug("Finished download of resource " + GuidString + " for job id " + job.Id.ToString());
 
@@ -500,12 +541,14 @@ namespace Common.Storage
         /// <summary>
         /// Creates this MetaAsset on the remote host.
         /// </summary>
-        /// <param name="job">The job.</param>
+        /// <param name="job">The <see cref="Work.ResourceJobBase"/>.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
         /// <param name="errorMessage">The error message.</param>
         /// <returns>
         ///   <c>True</c> if successful; otherwise, <c>False</c>.
         /// </returns>
-        public bool CreateOnRemote(Work.ResourceJobBase job, out string errorMessage)
+        public bool CreateOnRemote(Work.ResourceJobBase job, int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             Result result;
 
@@ -523,7 +566,10 @@ namespace Common.Storage
             if (!_doc.CanCreate)
                 throw new InvalidOperationException("The underlying Document's state will not allow creation.");
 
-            result = _doc.CreateSync(Database.Server, Database, false);
+            _doc.OnDownloadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnDownloadProgress);
+            _doc.OnUploadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnUploadProgress);
+            _doc.OnTimeout += new CouchDB.Document.EventHandler(Document_OnTimeout);
+            result = _doc.Create(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize);
 
             if (!result.IsPass)
             {
@@ -534,7 +580,7 @@ namespace Common.Storage
             return true;
         }
 
-        public bool UpdateOnRemote(Work.ResourceJobBase job, out string errorMessage)
+        public bool UpdateOnRemote(Work.ResourceJobBase job, int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             CouchDB.Result result;
             errorMessage = null;
@@ -550,7 +596,10 @@ namespace Common.Storage
             if (!_doc.CanUpdate)
                 throw new InvalidOperationException("The underlying Document's state will not allow updating.");
 
-            result = _doc.CreateSync(Database.Server, Database, false);
+            _doc.OnDownloadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnDownloadProgress);
+            _doc.OnUploadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnUploadProgress);
+            _doc.OnTimeout += new CouchDB.Document.EventHandler(Document_OnTimeout);
+            result = _doc.Create(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize);
 
             if (!result.IsPass)
             {
@@ -647,6 +696,23 @@ namespace Common.Storage
                 return null;
 
             return ma;
+        }
+
+        void Document_OnTimeout(Document sender, Http.Client httpClient)
+        {
+            if (OnTimeout != null) OnTimeout(this);
+        }
+
+        void Document_OnUploadProgress(Document sender, Http.Client httpClient, Http.Network.HttpConnection httpConnection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
+        {
+            if (OnUploadProgress != null)
+                OnUploadProgress(this, packetSize, headersTotal, contentTotal, total);
+        }
+
+        void Document_OnDownloadProgress(Document sender, Http.Client httpClient, Http.Network.HttpConnection httpConnection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
+        {
+            if (OnDownloadProgress != null)
+                OnDownloadProgress(this, packetSize, headersTotal, contentTotal, total);
         }
     }
 }

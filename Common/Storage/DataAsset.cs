@@ -33,16 +33,26 @@ namespace Common.Storage
         /// Represents the method that handles a progress event.
         /// </summary>
         /// <param name="sender">The <see cref="DataAsset"/> that triggered the event.</param>
-        /// <param name="percentComplete">An integer value representing the percentage of progress.</param>
-        public delegate void ProgressHandler(DataAsset sender, int percentComplete);
+        /// <param name="packetSize">Size of the packet.</param>
+        /// <param name="headersTotal">The headers total.</param>
+        /// <param name="contentTotal">The content total.</param>
+        /// <param name="total">The total.</param>
+        public delegate void ProgressHandler(DataAsset sender, int packetSize, ulong headersTotal, ulong contentTotal, ulong total);
+
         /// <summary>
-        /// Occurs when progress is made in a long running action.
+        /// Fired to indicate a timeout
         /// </summary>
-        public event ProgressHandler OnProgress;
+        public event EventHandler OnTimeout;
+
         /// <summary>
-        /// Occurs when a long running action is completed.
+        /// Fired to indicate progress of an upload
         /// </summary>
-        public event EventHandler OnComplete;
+        public event ProgressHandler OnUploadProgress;
+
+        /// <summary>
+        /// Fired to indicate progress of a download
+        /// </summary>
+        public event ProgressHandler OnDownloadProgress;
 
         private string _extension = null;
         public string Extension { get { return _extension; } }
@@ -102,7 +112,8 @@ namespace Common.Storage
             _state = new AssetState() { State = AssetState.Flags.CanTransfer };
         }
 
-        public System.IO.Stream GetDownloadStream(Work.ResourceJobBase job, Document doc, out string errorMessage)
+        public Http.Network.HttpNetworkStream GetDownloadStream(Work.ResourceJobBase job, Document doc, 
+            int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             errorMessage = null;
 
@@ -127,31 +138,33 @@ namespace Common.Storage
                 return null;
             }
 
-            return doc.Attachments[0].GetDownloadStreamSync(Database.Server, Database,
-                Web.DataStreamMethod.Stream, false, false, true);
+            doc.Attachments[0].OnDownloadProgress += new Attachment.ProgressEventHandler(DataAsset_OnDownloadProgress);
+            doc.Attachments[0].OnUploadProgress += new Attachment.ProgressEventHandler(DataAsset_OnUploadProgress);
+            doc.Attachments[0].OnTimeout += new Attachment.EventHandler(DataAsset_OnTimeout);
+            return doc.Attachments[0].GetDownloadStream(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize);
         }
 
-        public bool DownloadAndSaveLocally(Work.ResourceJobBase job, MetaAsset ma,
-            FileSystem.IO fileSystem, out string errorMessage)
+        public bool DownloadAndSaveLocally(Work.ResourceJobBase job, MetaAsset ma, FileSystem.IO fileSystem,
+            int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             if (ma.Document == null)
                 ma.Document = new Document(ma.GuidString);
 
-            return DownloadAndSaveLocally(job, ma.Document, 
-                fileSystem, out errorMessage);
+            return DownloadAndSaveLocally(job, ma.Document, fileSystem, sendBufferSize, 
+                receiveBufferSize, out errorMessage);
         }
 
-        public bool DownloadAndSaveLocally(Work.ResourceJobBase job, Document doc,
-            FileSystem.IO fileSystem, out string errorMessage)
+        public bool DownloadAndSaveLocally(Work.ResourceJobBase job, Document doc, FileSystem.IO fileSystem, 
+            int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             FileSystem.IOStream iostream;
-            System.IO.Stream stream;
+            Http.Network.HttpNetworkStream stream;
             errorMessage = null;
 
             if (job != null && job.AbortAction) return false;
 
             // Get the download stream
-            if ((stream = GetDownloadStream(job, doc, out errorMessage)) == null)
+            if ((stream = GetDownloadStream(job, doc, sendBufferSize, receiveBufferSize, out errorMessage)) == null)
                 return false;
 
             // Open the local stream
@@ -182,7 +195,6 @@ namespace Common.Storage
 
             // Close the network stream
             stream.Close();
-            stream.Dispose();
 
             // Close the filestream
             fileSystem.Close(iostream);
@@ -190,8 +202,8 @@ namespace Common.Storage
             return true;
         }
 
-        public bool CreateOnRemote(Work.ResourceJobBase job, MetaAsset ma,
-            FileSystem.IO fileSystem, out string errorMessage)
+        public bool CreateOnRemote(Work.ResourceJobBase job, MetaAsset ma, FileSystem.IO fileSystem, 
+            int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             if (ma.Document == null)
             {
@@ -199,12 +211,12 @@ namespace Common.Storage
                 return false;
             }
 
-            return CreateOnRemote(job, ma.Document,
-                fileSystem, out errorMessage);
+            return CreateOnRemote(job, ma.Document, fileSystem, sendBufferSize, receiveBufferSize, 
+                out errorMessage);
         }
 
-        public bool CreateOnRemote(Work.ResourceJobBase job, Document doc,
-            FileSystem.IO fileSystem, out string errorMessage)
+        public bool CreateOnRemote(Work.ResourceJobBase job, Document doc, FileSystem.IO fileSystem, 
+            int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             CouchDB.Result result;
             FileSystem.IOStream iostream;
@@ -249,8 +261,10 @@ namespace Common.Storage
 
             doc.Attachments.Add(att);
 
-            result = doc.Attachments[0].UploadSync(Database.Server, Database, 
-                Web.DataStreamMethod.Stream, false, true);
+            doc.Attachments[0].OnUploadProgress += new Attachment.ProgressEventHandler(DataAsset_OnUploadProgress);
+            doc.Attachments[0].OnDownloadProgress += new Attachment.ProgressEventHandler(DataAsset_OnDownloadProgress);
+            doc.Attachments[0].OnTimeout += new Attachment.EventHandler(DataAsset_OnTimeout);
+            result = doc.Attachments[0].Upload(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize);
 
             if (!result.IsPass)
             {
@@ -263,18 +277,18 @@ namespace Common.Storage
             return true;
         }
 
-        public bool UpdateOnRemote(Work.ResourceJobBase job, MetaAsset ma,
-            FileSystem.IO fileSystem, out string errorMessage)
+        public bool UpdateOnRemote(Work.ResourceJobBase job, MetaAsset ma, FileSystem.IO fileSystem, 
+            int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             if (ma.Document == null)
                 ma.Document = new Document(ma.GuidString);
 
-            return UpdateOnRemote(job, ma.Document,
-                fileSystem, out errorMessage);
+            return UpdateOnRemote(job, ma.Document, fileSystem, sendBufferSize, receiveBufferSize, 
+                out errorMessage);
         }
 
-        public bool UpdateOnRemote(Work.ResourceJobBase job, Document doc,
-            FileSystem.IO fileSystem, out string errorMessage)
+        public bool UpdateOnRemote(Work.ResourceJobBase job, Document doc, FileSystem.IO fileSystem, 
+            int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             // The way our code works, on an update the MetaAsset actually issues an update
             // which creates a new version on the couchdb server and this must be done
@@ -282,7 +296,33 @@ namespace Common.Storage
             // command as the create because it is just simply added to the current
             // CouchDB version.  Essentially, we can just use the CreateOnRemote method!
             // This we piggy-back it.
-            return CreateOnRemote(job, doc, fileSystem, out errorMessage);
+            return CreateOnRemote(job, doc, fileSystem, sendBufferSize, receiveBufferSize, 
+                out errorMessage);
+        }
+
+        void DataAsset_OnTimeout(Attachment sender, Http.Client httpClient)
+        {
+            if (OnTimeout != null) OnTimeout(this);
+        }
+
+        void DataAsset_OnUploadProgress(Attachment sender, Http.Client httpClient, 
+            Http.Network.HttpConnection httpConnection, int packetSize, ulong headersTotal, 
+            ulong contentTotal, ulong total)
+        {
+            BytesComplete = contentTotal;
+            BytesTotal = (ulong)sender.Length;
+            if (OnUploadProgress != null)
+                OnUploadProgress(this, packetSize, headersTotal, contentTotal, total);
+        }
+
+        void DataAsset_OnDownloadProgress(Attachment sender, Http.Client httpClient,
+            Http.Network.HttpConnection httpConnection, int packetSize, ulong headersTotal, 
+            ulong contentTotal, ulong total)
+        {
+            BytesComplete = contentTotal;
+            BytesTotal = (ulong)sender.Length;
+            if (OnDownloadProgress != null)
+                OnDownloadProgress(this, packetSize, headersTotal, contentTotal, total);
         }
     }
 }

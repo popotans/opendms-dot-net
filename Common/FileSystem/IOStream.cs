@@ -119,6 +119,21 @@ namespace Common.FileSystem
         }
 
         /// <summary>
+        /// Copies all data from the source stream to the underlying stream.
+        /// </summary>
+        /// <param name="source">The source stream.</param>
+        public void CopyFrom(Http.Network.HttpNetworkStream source)
+        {
+            int bytesRead = 0;
+            byte[] buffer = new byte[_state.BufferSize];
+
+            while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
+                Write(buffer, bytesRead);
+
+            _stream.Flush();
+        }
+
+        /// <summary>
         /// Copies the underlying stream to the destination stream.
         /// </summary>
         /// <param name="destination">The destination stream.</param>
