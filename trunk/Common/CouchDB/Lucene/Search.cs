@@ -59,44 +59,34 @@ namespace Common.CouchDB.Lucene
         /// </summary>
         /// <param name="state">The state.</param>
         /// <param name="sender">The sender.</param>
-        public delegate void EventHandler(Web.WebState state, Search sender);
+        public delegate void EventHandler(Search sender, Http.Client httpClient);
         /// <summary>
-        /// Handles completion events
+        /// Handles progress events
         /// </summary>
-        /// <param name="state">The state.</param>
         /// <param name="sender">The sender.</param>
-        /// <param name="result">The result.</param>
-        public delegate void CompleteEventHandler(Web.WebState state, Search sender, Result result);
+        /// <param name="httpClient">The <see cref="Http.Client"/> handling communications.</param>
+        /// <param name="httpConnection">The <see cref="Http.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet.</param>
+        /// <param name="headersTotal">The total size headers in bytes.</param>
+        /// <param name="contentTotal">The total size of content in bytes.</param>
+        /// <param name="total">The total size of all data in bytes.</param>
+        public delegate void ProgressEventHandler(Search sender, Http.Client httpClient, Http.Network.HttpConnection httpConnection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total);
 
-        /// <summary>
-        /// Fired before HTTP headers are locked
-        /// </summary>
-        public event EventHandler OnBeforeHeadersAreLocked;
-        /// <summary>
-        /// Fired before the request stream is read and sent
-        /// </summary>
-        public event EventHandler OnBeforeBeginGetRequestStream;
-        /// <summary>
-        /// Fired after reading and sending of the request stream is finished
-        /// </summary>
-        public event EventHandler OnAfterEndGetRequestStream;
-        /// <summary>
-        /// Fired before attempting to receive the server's response
-        /// </summary>
-        public event EventHandler OnBeforeBeginGetResponse;
-        /// <summary>
-        /// Fired after receiving the server's response
-        /// </summary>
-        public event EventHandler OnAfterEndGetResponse;
         /// <summary>
         /// Fired when a timeout occurs - *NOTE* a timeout will prevent OnComplete from firing.
         /// </summary>
         public event EventHandler OnTimeout;
 
         /// <summary>
-        /// Fired to indicate that a web transaction is complete
+        /// Fired to indicate progress of an upload
         /// </summary>
-        public event CompleteEventHandler OnComplete;
+        public event ProgressEventHandler OnUploadProgress;
+
+        /// <summary>
+        /// Fired to indicate progress of a download
+        /// </summary>
+        public event ProgressEventHandler OnDownloadProgress;
+
 
         #region Properties
 
@@ -181,22 +171,14 @@ namespace Common.CouchDB.Lucene
         /// <typeparam name="T">Must be SearchResultCollection</typeparam>
         /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
         /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Get<T>(bool keepAlive) where T : SearchResultCollection
+        public Result Get<T>(int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize) 
+            where T : SearchResultCollection
         {
-            ServerResponse sr;
-
-            // Setup
-            Web web = new Web();
             string utf8 = null;
-
-            // Setup Event Handlers
-            web.OnAfterEndGetRequestStream += new Web.MessageHandler(web_OnAfterEndGetRequestStream);
-            web.OnAfterEndGetResponse += new Web.MessageHandler(web_OnAfterEndGetResponse);
-            web.OnBeforeBeginGetRequestStream += new Web.MessageHandler(web_OnBeforeBeginGetRequestStream);
-            web.OnBeforeBeginGetResponse += new Web.MessageHandler(web_OnBeforeBeginGetResponse);
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnComplete += new Web.MessageHandler(web_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
+            string json;
+            Http.Client httpClient;
+            Http.Methods.HttpGet httpGet;
+            Http.Methods.HttpResponse httpResponse = null;
 
             // Convert query to UTF8
             try
@@ -209,47 +191,36 @@ namespace Common.CouchDB.Lucene
                 throw new Exception("Failed to encode to UTF-8.", e);
             }
 
+            // Setup
+            httpClient = new Http.Client();
+            httpGet = new Http.Methods.HttpGet(Utilities.BuildUriForSearch(_db, _designDoc, _indexName, utf8));
+
+            // Setup Event Handlers
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
+
             // Dispatch the web request
             try
             {
-                sr = web.SendMessage(_server, _db, "_fti/_design/" + _designDoc + "/" + _indexName, utf8, Web.OperationType.GET,
-                    Web.DataStreamMethod.LoadToMemory, null, "application/json", keepAlive, false, false, false);
+                httpResponse = httpClient.Execute(httpGet, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
             }
-            catch (Exception e)
+            catch (Http.Network.HttpNetworkTimeoutException e)
             {
-                return new Result(false, "Unable to get the search results", e);
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return new Result(false, "Timeout");
+                }
+                else
+                    throw e;
             }
+
+            if (httpResponse != null && httpResponse.ResponseCode != 200)
+                return new Result(false, "Resource does not exist.");
 
             Logger.General.Debug("Search executed on " + _designDoc + "/" + _indexName + "?" + utf8);
 
-            return new Result(sr);
-        }
-
-
-        #region Event Handling
-
-        /// <summary>
-        /// Called to notify any consumers of a timeout
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnTimeout(Web.WebState state)
-        {
-            if (OnTimeout != null) OnTimeout(state, this);
-        }
-
-        /// <summary>
-        /// Called when the web transaction is complete to notify consumers
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnComplete(Web.WebState state)
-        {
-            StreamReader sr;
-            string json;
-
-            // Read and close
-            sr = new StreamReader(state.Stream);
-            json = sr.ReadToEnd();
-            sr.Close();
+            json = httpResponse.Stream.ReadToEnd();
 
             try
             {
@@ -260,52 +231,40 @@ namespace Common.CouchDB.Lucene
                 throw new Exception("Failed to deserialize the JSON.", e);
             }
 
-            if (OnComplete != null) OnComplete(state, this, new Result(true));
+            return new Result(true);
+        }
+
+
+        #region Event Handling
+
+        /// <summary>
+        /// Called when a download needs to update its progress to any consumers.
+        /// </summary>
+        /// <param name="sender">The <see cref="Http.Client"/> that is updating.</param>
+        /// <param name="connection">The <see cref="Http.Network.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet just received.</param>
+        /// <param name="headersTotal">The size of all headers received.</param>
+        /// <param name="contentTotal">The size of all content received.</param>
+        /// <param name="total">The size of all data received.</param>
+        void httpClient_OnDataReceived(Http.Client sender, Http.Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
+        {
+            if (OnDownloadProgress != null)
+                OnDownloadProgress(this, sender, connection, packetSize, headersTotal, contentTotal, total);
         }
 
         /// <summary>
-        /// Called by any network method to notify consumers that the HTTP headers are about to be locked
+        /// Called when a upload needs to update its progress to any consumers.
         /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnBeforeHeadersAreLocked(Web.WebState state)
+        /// <param name="sender">The <see cref="Http.Client"/> that is updating.</param>
+        /// <param name="connection">The <see cref="Http.Network.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet just sent.</param>
+        /// <param name="headersTotal">The size of all headers sent.</param>
+        /// <param name="contentTotal">The size of all content sent.</param>
+        /// <param name="total">The size of all data sent.</param>
+        void httpClient_OnDataSent(Http.Client sender, Http.Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
         {
-            if (OnBeforeHeadersAreLocked != null) OnBeforeHeadersAreLocked(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that receiving of the server's response is about to begin
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnBeforeBeginGetResponse(Web.WebState state)
-        {
-            if (OnBeforeBeginGetResponse != null) OnBeforeBeginGetResponse(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that the request stream is about to be read and sent
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnBeforeBeginGetRequestStream(Web.WebState state)
-        {
-            if (OnBeforeBeginGetRequestStream != null) OnBeforeBeginGetRequestStream(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that the server's response has been received
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnAfterEndGetResponse(Web.WebState state)
-        {
-            if (OnAfterEndGetResponse != null) OnAfterEndGetResponse(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that reading and sending of the request stream are finished
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnAfterEndGetRequestStream(Web.WebState state)
-        {
-            if (OnAfterEndGetRequestStream != null) OnAfterEndGetRequestStream(state, this);
+            if (OnUploadProgress != null)
+                OnUploadProgress(this, sender, connection, packetSize, headersTotal, contentTotal, total);
         }
 
         #endregion

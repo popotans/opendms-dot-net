@@ -69,44 +69,33 @@ namespace Common.CouchDB
         /// </summary>
         /// <param name="state">The state.</param>
         /// <param name="sender">The sender.</param>
-        public delegate void EventHandler(Web.WebState state, Document sender);
+        public delegate void EventHandler(Document sender, Http.Client httpClient);
         /// <summary>
-        /// Handles completion events
+        /// Handles progress events
         /// </summary>
-        /// <param name="state">The state.</param>
         /// <param name="sender">The sender.</param>
-        /// <param name="result">The result.</param>
-        public delegate void CompleteEventHandler(Web.WebState state, Document sender, Result result);
-
-        /// <summary>
-        /// Fired before HTTP headers are locked
-        /// </summary>
-        public event EventHandler OnBeforeHeadersAreLocked;
-        /// <summary>
-        /// Fired before the request stream is read and sent
-        /// </summary>
-        public event EventHandler OnBeforeBeginGetRequestStream;
-        /// <summary>
-        /// Fired after reading and sending of the request stream is finished
-        /// </summary>
-        public event EventHandler OnAfterEndGetRequestStream;
-        /// <summary>
-        /// Fired before attempting to receive the server's response
-        /// </summary>
-        public event EventHandler OnBeforeBeginGetResponse;
-        /// <summary>
-        /// Fired after receiving the server's response
-        /// </summary>
-        public event EventHandler OnAfterEndGetResponse;
+        /// <param name="httpClient">The <see cref="Http.Client"/> handling communications.</param>
+        /// <param name="httpConnection">The <see cref="Http.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet.</param>
+        /// <param name="headersTotal">The total size headers in bytes.</param>
+        /// <param name="contentTotal">The total size of content in bytes.</param>
+        /// <param name="total">The total size of all data in bytes.</param>
+        public delegate void ProgressEventHandler(Document sender, Http.Client httpClient, Http.Network.HttpConnection httpConnection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total);
+        
         /// <summary>
         /// Fired when a timeout occurs - *NOTE* a timeout will prevent OnComplete from firing.
         /// </summary>
         public event EventHandler OnTimeout;
 
         /// <summary>
-        /// Fired to indicate that a web transaction is complete
+        /// Fired to indicate progress of an upload
         /// </summary>
-        public event CompleteEventHandler OnComplete;
+        public event ProgressEventHandler OnUploadProgress;
+
+        /// <summary>
+        /// Fired to indicate progress of a download
+        /// </summary>
+        public event ProgressEventHandler OnDownloadProgress;
 
         #region Properties
 
@@ -613,46 +602,61 @@ namespace Common.CouchDB
         /// <summary>
         /// Synchronously downloads a Document from the Server to the local system
         /// </summary>
-        /// <param name="server">The Server housing the Database</param>
         /// <param name="db">The Database housing the Document</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result DownloadSync(Server server, Database db, bool keepAlive)
+        /// <param name="sendTimeout">The send timeout.</param>
+        /// <param name="receiveTimeout">The receive timeout.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <returns>
+        /// A CouchDB.Result representing the result of the request
+        /// </returns>
+        public Result Download(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             // Check the _state
             if (!CheckState(CAN_DOWNLOAD))
                 return new Result(false, "Invalid state", Result.INVALID_STATE);
 
-            Web web;
-            Web.WebState state;
+
+            Http.Client httpClient;
+            Http.Methods.HttpGet httpGet;
+            Http.Methods.HttpResponse httpResponse = null;
             string json;
-            ServerResponse response;
-            StreamReader sr;
             List<string> stringList;
             ArrayList al;
             Document doc;
             Dictionary<string, object>.Enumerator ienum;
 
             // Setup
-            web = new Web();
+            httpClient = new Http.Client();
+            httpGet = new Http.Methods.HttpGet(Utilities.BuildUriForDoc(db, _id));
 
             // Setup Event Handlers
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
 
             Logger.General.Debug("Preparing to synchronously download document.");
-            
+
             // Dispatch the message
-            response = web.SendMessageSync(server, db, _id, null, Web.OperationType.GET, Web.DataStreamMethod.LoadToMemory,
-                null, "application/json", keepAlive, false, true, true, out state);
+            try
+            {
+                httpResponse = httpClient.Execute(httpGet, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+            }
+            catch (Http.Network.HttpNetworkTimeoutException e)
+            {
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return new Result(false, "Timeout");
+                }
+                else
+                    throw e;
+            }
 
-            if (response.Ok.HasValue && response.Ok.Value == false)
-                return new Result(false, "Resource does not exist.", response.Exception);
-
-            // Setup reading
-            sr = new StreamReader(state.Stream);
+            if (httpResponse != null && httpResponse.ResponseCode != 200)
+                return new Result(false, "Resource does not exist.");
 
             // Read and convert the JSON to a Document
-            json = sr.ReadToEnd();
+            json = httpResponse.Stream.ReadToEnd();
             doc = ConvertTo.JsonToDocument(json, new DocumentConverter.Get());
 
             // Assign primary properties
@@ -685,88 +689,67 @@ namespace Common.CouchDB
         }
 
         /// <summary>
-        /// Asynchronously downloads a Document from the Server to the local system
-        /// </summary>
-        /// <param name="server">The Server housing the Database</param>
-        /// <param name="db">The Database housing the Document</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Download(Server server, Database db, bool keepAlive)
-        {
-            // Check the _state
-            if (!CheckState(CAN_DOWNLOAD))
-                return new Result(false, "Invalid state", Result.INVALID_STATE);
-
-            Web web;
-            ServerResponse sr;
-
-            // Setup
-            web = new Web();
-
-            // Setup Event Handlers
-            web.OnAfterEndGetRequestStream += new Web.MessageHandler(web_OnAfterEndGetRequestStream);
-            web.OnAfterEndGetResponse += new Web.MessageHandler(web_OnAfterEndGetResponse);
-            web.OnBeforeBeginGetRequestStream += new Web.MessageHandler(web_OnBeforeBeginGetRequestStream);
-            web.OnBeforeBeginGetResponse += new Web.MessageHandler(web_OnBeforeBeginGetResponse);
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnComplete += new Web.MessageHandler(web_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
-
-            Logger.General.Debug("Preparing to asynchronously download document.");
-
-            // Dispatch the message
-            sr = web.SendMessage(server, db, _id, null, Web.OperationType.GET, Web.DataStreamMethod.LoadToMemory,
-                null, "application/json", keepAlive, false, true, true);
-
-            Logger.General.Debug("Asychronous download of document completed.");
-
-            // Verify dispatch was successful
-            return new Result(sr);
-        }
-
-        /// <summary>
         /// Synchronously updates a Document on the Server
         /// </summary>
-        /// <param name="server">The Server housing the Database</param>
         /// <param name="db">The Database housing the Document</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result UpdateSync(Server server, Database db, bool keepAlive)
+        /// <param name="sendTimeout">The send timeout.</param>
+        /// <param name="receiveTimeout">The receive timeout.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <returns>
+        /// A CouchDB.Result representing the result of the request
+        /// </returns>
+        public Result Update(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             // Check the _state
             if (!CheckState(CAN_UPDATE))
                 return new Result(false, "Invalid state", Result.INVALID_STATE);
 
-            Web web;
-            Web.WebState state;
-            ServerResponse response;
-            MemoryStream ms;
-            StreamReader sr;
-            byte[] buffer;
             string json;
+            ServerResponse response;
+            Http.Client httpClient;
+            Http.Methods.HttpPut httpPut;
+            Http.Methods.HttpResponse httpResponse = null;
+            byte[] buffer;
+            MemoryStream ms = null;
 
             // Setup
-            web = new Web();
+            httpClient = new Http.Client();
+            httpPut = new Http.Methods.HttpPut(Utilities.BuildUriForDoc(db, _id), "application/json");
             ms = new MemoryStream();
 
             // Setup Event Handlers
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
 
             // Make a MemoryStream that contains all the serialized data that represents this Document
             buffer = System.Text.Encoding.UTF8.GetBytes(ConvertTo.AsciiToUtf8(ConvertTo.DocumentToJson(this, new DocumentConverter.Put())));
             ms.Write(buffer, 0, buffer.Length);
+            ms.Position = 0;
 
             Logger.General.Debug("Preparing to synchronously update document.");
 
-            // Dispatch the message - AFAIK CouchDB does not support compression in PUT
-            response = web.SendMessageSync(server, db, _id, null, Web.OperationType.PUT, Web.DataStreamMethod.LoadToMemory,
-                ms, "application/json", keepAlive, false, false, false, out state);
-                        
-            // Setup
-            sr = new StreamReader(state.Stream);
+            // Dispatch the message
+            try
+            {
+                httpResponse = httpClient.Execute(httpPut, ms, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+            }
+            catch (Http.Network.HttpNetworkTimeoutException e)
+            {
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return new Result(false, "Timeout");
+                }
+                else
+                    throw e;
+            }
+
+            if (httpResponse == null)
+                throw new Http.Network.HttpNetworkException("The response is null.");
 
             // Read and convert the JSON to a Document
-            json = sr.ReadToEnd();
+            json = httpResponse.Stream.ReadToEnd();
             response = ConvertTo.JsonToServerResponse(json);
 
             // Assign primary properties
@@ -780,99 +763,67 @@ namespace Common.CouchDB
         }
 
         /// <summary>
-        /// Asynchronously updates a Document on the Server
-        /// </summary>
-        /// <param name="server">The Server housing the Database</param>
-        /// <param name="db">The Database housing the Document</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Update(Server server, Database db, bool keepAlive)
-        {
-            // Check the _state
-            if (!CheckState(CAN_UPDATE))
-                return new Result(false, "Invalid state", Result.INVALID_STATE);
-
-            Web web;
-            ServerResponse sr;
-            MemoryStream ms;
-            byte[] buffer;
-
-            // Setup
-            web = new Web();
-            ms = new MemoryStream();
-
-            // Setup Event Handlers
-            web.OnAfterEndGetRequestStream += new Web.MessageHandler(web_OnAfterEndGetRequestStream);
-            web.OnAfterEndGetResponse += new Web.MessageHandler(web_OnAfterEndGetResponse);
-            web.OnBeforeBeginGetRequestStream += new Web.MessageHandler(web_OnBeforeBeginGetRequestStream);
-            web.OnBeforeBeginGetResponse += new Web.MessageHandler(web_OnBeforeBeginGetResponse);
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnComplete += new Web.MessageHandler(web_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
-
-            // Make a MemoryStream that contains all the serialized data that represents this Document
-            buffer = System.Text.Encoding.UTF8.GetBytes(ConvertTo.AsciiToUtf8(ConvertTo.DocumentToJson(this, new DocumentConverter.Put())));
-            ms.Write(buffer, 0, buffer.Length);
-
-            Logger.General.Debug("Preparing to asynchronously update document.");
-
-            // Dispatch the message - AFAIK CouchDB does not support compression in PUT
-            sr = web.SendMessage(server, db, _id, null, Web.OperationType.PUT, Web.DataStreamMethod.LoadToMemory,
-                ms, "application/json", keepAlive, false, false, false);
-
-            Logger.General.Debug("Asychronous update of document completed.");
-
-            // Verify dispatch was successful
-            return new Result(sr);
-        }
-
-        /// <summary>
         /// Synchronously creates a Document on the Server
         /// </summary>
-        /// <param name="server">The Server housing the Database</param>
         /// <param name="db">The Database housing the Document</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result CreateSync(Server server, Database db, bool keepAlive)
+        /// <param name="sendTimeout">The send timeout.</param>
+        /// <param name="receiveTimeout">The receive timeout.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <returns>
+        /// A CouchDB.Result representing the result of the request
+        /// </returns>
+        public Result Create(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             // Check the _state
             if (!CheckState(CAN_CREATE))
                 return new Result(false, "Invalid state", Result.INVALID_STATE);
 
-            Web web;
-            Web.WebState state;
-            ServerResponse response;
-            MemoryStream ms;
-            byte[] buffer;
-            StreamReader sr;
             string json;
+            ServerResponse response;
+            Http.Client httpClient;
+            Http.Methods.HttpPut httpPut;
+            Http.Methods.HttpResponse httpResponse = null;
+            byte[] buffer;
+            MemoryStream ms = null;
+
 
             // Setup
-            web = new Web();
+            httpClient = new Http.Client();
+            httpPut = new Http.Methods.HttpPut(Utilities.BuildUriForDoc(db, _id), "application/json");
             ms = new MemoryStream();
 
             // Setup Event Handlers
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
 
             // Make a MemoryStream that contains all the serialized data that represents this Document
-            buffer = System.Text.Encoding.UTF8.GetBytes(ConvertTo.AsciiToUtf8(ConvertTo.DocumentToJson(this, new DocumentConverter.Post())));
+            buffer = System.Text.Encoding.UTF8.GetBytes(ConvertTo.AsciiToUtf8(ConvertTo.DocumentToJson(this, new DocumentConverter.Put())));
             ms.Write(buffer, 0, buffer.Length);
-
-            ms.Position = 0;
-            string test = Common.Utilities.StreamToUtf8String(ms);
-            ms.Position = 0;
 
             Logger.General.Debug("Preparing to synchronously create document.");
 
-            // Dispatch the message - AFAIK CouchDB does not support compression in PUT
-            response = web.SendMessageSync(server, db, _id, null, Web.OperationType.PUT, Web.DataStreamMethod.LoadToMemory, ms,
-                "application/json", keepAlive, false, false, false, out state);
+            // Dispatch the message
+            try
+            {
+                httpResponse = httpClient.Execute(httpPut, ms, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+            }
+            catch (Http.Network.HttpNetworkTimeoutException e)
+            {
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return new Result(false, "Timeout");
+                }
+                else
+                    throw e;
+            }
 
-            // Setup
-            sr = new StreamReader(state.Stream);
+            if (httpResponse == null)
+                throw new Http.Network.HttpNetworkException("The response is null.");
 
             // Read and convert the JSON to a Document
-            json = sr.ReadToEnd();
+            json = httpResponse.Stream.ReadToEnd();
             response = ConvertTo.JsonToServerResponse(json);
 
             // Assign primary properties
@@ -886,88 +837,59 @@ namespace Common.CouchDB
         }
 
         /// <summary>
-        /// Asynchronously creates a Document on the Server
-        /// </summary>
-        /// <param name="server">The Server housing the Database</param>
-        /// <param name="db">The Database housing the Document</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Create(Server server, Database db, bool keepAlive)
-        {
-            // Check the _state
-            if (!CheckState(CAN_CREATE))
-                return new Result(false, "Invalid state", Result.INVALID_STATE);
-
-            Web web;
-            ServerResponse sr;
-            MemoryStream ms;
-            byte[] buffer;
-
-            // Setup
-            web = new Web();
-            ms = new MemoryStream();
-
-            // Setup Event Handlers
-            web.OnAfterEndGetRequestStream += new Web.MessageHandler(web_OnAfterEndGetRequestStream);
-            web.OnAfterEndGetResponse += new Web.MessageHandler(web_OnAfterEndGetResponse);
-            web.OnBeforeBeginGetRequestStream += new Web.MessageHandler(web_OnBeforeBeginGetRequestStream);
-            web.OnBeforeBeginGetResponse += new Web.MessageHandler(web_OnBeforeBeginGetResponse);
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnComplete += new Web.MessageHandler(web_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
-
-            // Make a MemoryStream that contains all the serialized data that represents this Document
-            buffer = System.Text.Encoding.UTF8.GetBytes(ConvertTo.AsciiToUtf8(ConvertTo.DocumentToJson(this, new DocumentConverter.Post())));
-            ms.Write(buffer, 0, buffer.Length);
-
-            Logger.General.Debug("Preparing to asynchronously create document.");
-
-            // Dispatch the message - AFAIK CouchDB does not support compression in POST
-            sr = web.SendMessage(server, db, _id, null, Web.OperationType.POST, Web.DataStreamMethod.LoadToMemory, ms,
-                "application/json", keepAlive, false, false, false);
-
-            Logger.General.Debug("Asychronous creation of document completed.");
-
-            // Verify dispatch was successful
-            return new Result(sr);
-        }
-
-        /// <summary>
         /// Synchronously deletes a Document on the Server
         /// </summary>
-        /// <param name="server">The Server housing the Database</param>
         /// <param name="db">The Database housing the Document</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result DeleteSync(Server server, Database db, bool keepAlive)
+        /// <param name="sendTimeout">The send timeout.</param>
+        /// <param name="receiveTimeout">The receive timeout.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <returns>
+        /// A CouchDB.Result representing the result of the request
+        /// </returns>
+        public Result Delete(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             // Check the _state
             if (!CheckState(CAN_DELETE))
                 return new Result(false, "Invalid state", Result.INVALID_STATE);
 
-            Web web;
-            Web.WebState state;
-            ServerResponse response;
-            StreamReader sr;
             string json;
+            ServerResponse response;
+            Http.Client httpClient;
+            Http.Methods.HttpDelete httpDelete;
+            Http.Methods.HttpResponse httpResponse = null;
 
             // Setup
-            web = new Web();
+            httpClient = new Http.Client();
+            httpDelete = new Http.Methods.HttpDelete(Utilities.BuildUriForDoc(db, _id, _rev));
 
             // Setup Event Handlers
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
 
             Logger.General.Debug("Preparing to synchronously delete document.");
 
             // Dispatch the message
-            response = web.SendMessageSync(server, db, _id, "rev=" + _rev, Web.OperationType.DELETE, Web.DataStreamMethod.LoadToMemory,
-                null, "application/json", keepAlive, false, false, false, out state);
+            try
+            {
+                httpResponse = httpClient.Execute(httpDelete, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+            }
+            catch (Http.Network.HttpNetworkTimeoutException e)
+            {
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return new Result(false, "Timeout");
+                }
+                else
+                    throw e;
+            }
 
-            // Setup
-            sr = new StreamReader(state.Stream);
+            if (httpResponse == null)
+                throw new Http.Network.HttpNetworkException("The response is null.");
 
             // Read and convert the JSON to a Document
-            json = sr.ReadToEnd();
+            json = httpResponse.Stream.ReadToEnd();
             response = ConvertTo.JsonToServerResponse(json);
 
             // Assign primary properties
@@ -980,219 +902,36 @@ namespace Common.CouchDB
             return new Result(response);
         }
 
-        /// <summary>
-        /// Synchronously deletes a Document on the Server
-        /// </summary>
-        /// <param name="server">The Server housing the Database</param>
-        /// <param name="db">The Database housing the Document</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Delete(Server server, Database db, bool keepAlive)
-        {
-            // Check the _state
-            if (!CheckState(CAN_DELETE))
-                return new Result(false, "Invalid state", Result.INVALID_STATE);
-
-            Web web;
-            ServerResponse sr;
-
-            // Setup
-            web = new Web();
-
-            // Setup Event Handlers
-            web.OnAfterEndGetRequestStream += new Web.MessageHandler(web_OnAfterEndGetRequestStream);
-            web.OnAfterEndGetResponse += new Web.MessageHandler(web_OnAfterEndGetResponse);
-            web.OnBeforeBeginGetRequestStream += new Web.MessageHandler(web_OnBeforeBeginGetRequestStream);
-            web.OnBeforeBeginGetResponse += new Web.MessageHandler(web_OnBeforeBeginGetResponse);
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnComplete += new Web.MessageHandler(web_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
-
-            Logger.General.Debug("Preparing to asynchronously delete document.");
-
-            // Dispatch the message
-            sr = web.SendMessage(server, db, _id, "rev=" + _rev, Web.OperationType.DELETE, Web.DataStreamMethod.LoadToMemory,
-                null, "application/json", keepAlive, false, false, false);
-
-            Logger.General.Debug("Asychronous deletion of document completed.");
-
-            // Verify dispatch was successful
-            return new Result(sr);
-        }
-
-        /// <summary>
-        /// Asynchronously copies a Document to a new Document on the Server
-        /// </summary>
-        /// <param name="server">The Server housing the Database</param>
-        /// <param name="db">The Database housing the Document</param>
-        /// <param name="destination">The destination Document on the Server</param>
-        /// <param name="keepAlive">True if the connection should be kept alive for further requests</param>
-        /// <returns>A CouchDB.Result representing the result of the request</returns>
-        public Result Copy(Server server, Database db, Document destination, bool keepAlive)
-        {
-            if (destination == null)
-                throw new ArgumentException("destination cannot be null", "destination");
-            if (string.IsNullOrEmpty(destination.Id))
-                throw new ArgumentException("destionation.Id cannot be null or empty", "destination");
-
-            if (!CheckState(CAN_COPY))
-                return new Result(false, "Invalid state", Result.INVALID_STATE);
-
-            Web web;
-            ServerResponse sr;
-
-            // Setup
-            web = new Web();
-            _destinationForCopy = destination;
-
-            web.OnAfterEndGetRequestStream += new Web.MessageHandler(web_OnAfterEndGetRequestStream);
-            web.OnAfterEndGetResponse += new Web.MessageHandler(web_OnAfterEndGetResponse);
-            web.OnBeforeBeginGetRequestStream += new Web.MessageHandler(web_OnBeforeBeginGetRequestStream);
-            web.OnBeforeBeginGetResponse += new Web.MessageHandler(web_OnBeforeBeginGetResponse);
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnComplete += new Web.MessageHandler(web_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
-
-            Logger.General.Debug("Preparing to asynchronously copy document.");
-
-            // Dispatch the message
-            sr = web.SendMessage(server, db, _id, null, Web.OperationType.COPY, Web.DataStreamMethod.LoadToMemory,
-                null, "application/json", keepAlive, false, false, false);
-
-            Logger.General.Debug("Asychronous copy of document completed.");
-
-            // Verify dispatch was successful
-            return new Result(sr);
-        }
-
-
         #region Event Handling
 
         /// <summary>
-        /// Called by Download, Update, Create, Delete and/or Copy when a timeout occurs
+        /// Called when a download needs to update its progress to any consumers.
         /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnTimeout(Web.WebState state)
+        /// <param name="sender">The <see cref="Http.Client"/> that is updating.</param>
+        /// <param name="connection">The <see cref="Http.Network.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet just received.</param>
+        /// <param name="headersTotal">The size of all headers received.</param>
+        /// <param name="contentTotal">The size of all content received.</param>
+        /// <param name="total">The size of all data received.</param>
+        void httpClient_OnDataReceived(Http.Client sender, Http.Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
         {
-            if (OnTimeout != null) OnTimeout(state, this);
+            if (OnDownloadProgress != null)
+                OnDownloadProgress(this, sender, connection, packetSize, headersTotal, contentTotal, total);
         }
 
         /// <summary>
-        /// Called by Download, Update, Create, Delete and/or Copy when the web transaction is complete
+        /// Called when a upload needs to update its progress to any consumers.
         /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnComplete(Web.WebState state)
+        /// <param name="sender">The <see cref="Http.Client"/> that is updating.</param>
+        /// <param name="connection">The <see cref="Http.Network.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet just sent.</param>
+        /// <param name="headersTotal">The size of all headers sent.</param>
+        /// <param name="contentTotal">The size of all content sent.</param>
+        /// <param name="total">The size of all data sent.</param>
+        void httpClient_OnDataSent(Http.Client sender, Http.Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
         {
-            string json;
-            ServerResponse response;
-            StreamReader sr;
-            List<string> stringList;
-            ArrayList al;
-
-            if (state.Operation == Web.OperationType.GET)
-            {
-                Document doc;
-                Dictionary<string, object>.Enumerator ienum;
-
-                // Setup
-                sr = new StreamReader(state.Stream);
-
-                // Read and convert the JSON to a Document
-                json = sr.ReadToEnd();
-                doc = ConvertTo.JsonToDocument(json, new DocumentConverter.Get());
-
-                // Assign primary properties
-                this._attachments = doc._attachments;
-                this._id = doc._id;
-                this._rev = doc.Rev;
-                this._state = doc.State;
-
-                // Assign user properties
-                ienum = doc.GetPropertyEnumerator();
-                while (ienum.MoveNext())
-                {
-                    if (ienum.Current.Value.GetType() == typeof(ArrayList))
-                    { // If it is an ArrayList then it must be handled differently (e.g., ["Tag1", "Tag2"])
-                        stringList = new List<string>();
-                        al = (ArrayList)ienum.Current.Value;
-                        for(int i=0; i<al.Count; i++)
-                        {
-                            stringList.Add(al[i].ToString());
-                        }
-                        _properties.Add(ienum.Current.Key, stringList);
-                    }
-                    else
-                        _properties.Add(ienum.Current.Key, ienum.Current.Value);
-                }
-
-                // Notify any consumers
-                if (OnComplete != null) OnComplete(state, this, new Result(true));
-            }
-            else
-            {
-                // Setup
-                sr = new StreamReader(state.Stream);
-
-                // Read and convert the JSON to a Document
-                json = sr.ReadToEnd();
-                response = ConvertTo.JsonToServerResponse(json);
-
-                // Assign primary properties
-                _id = response.Id;
-                _rev = response.Rev;
-
-                if (OnComplete != null) OnComplete(state, this, new Result(response));
-            }
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that the HTTP headers are about to be locked
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnBeforeHeadersAreLocked(Web.WebState state)
-        {
-            if (state.Operation == Web.OperationType.COPY)
-            {
-                state.Request.Headers.Add("Destination", _destinationForCopy.Id);
-            }
-
-            if (OnBeforeHeadersAreLocked != null) OnBeforeHeadersAreLocked(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that receiving of the server's response is about to begin
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnBeforeBeginGetResponse(Web.WebState state)
-        {
-            if (OnBeforeBeginGetResponse != null) OnBeforeBeginGetResponse(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that the request stream is about to be read and sent
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnBeforeBeginGetRequestStream(Web.WebState state)
-        {
-            if (OnBeforeBeginGetRequestStream != null) OnBeforeBeginGetRequestStream(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that the server's response has been received
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnAfterEndGetResponse(Web.WebState state)
-        {
-            if (OnAfterEndGetResponse != null) OnAfterEndGetResponse(state, this);
-        }
-
-        /// <summary>
-        /// Called by any network method to notify consumers that reading and sending of the request stream are finished
-        /// </summary>
-        /// <param name="state">The Web.WebState instance</param>
-        void web_OnAfterEndGetRequestStream(Web.WebState state)
-        {
-            if (OnAfterEndGetRequestStream != null) OnAfterEndGetRequestStream(state, this);
+            if (OnUploadProgress != null)
+                OnUploadProgress(this, sender, connection, packetSize, headersTotal, contentTotal, total);
         }
 
         #endregion

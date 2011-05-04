@@ -54,43 +54,33 @@ namespace Common.CouchDB
         /// </summary>
         /// <param name="state">The state.</param>
         /// <param name="sender">The sender.</param>
-        public delegate void EventHandler(Web.WebState state, View sender);
+        public delegate void EventHandler(View sender, Http.Client httpClient);
         /// <summary>
-        /// Handles completion events
+        /// Handles progress events
         /// </summary>
-        /// <param name="state">The state.</param>
         /// <param name="sender">The sender.</param>
-        /// <param name="result">The result.</param>
-        public delegate void CompleteEventHandler(Web.WebState state, View sender, Result result);
-
-        /// <summary>
-        /// Occurs before headers are locked.
-        /// </summary>
-        public event EventHandler OnBeforeHeadersAreLocked;
-        /// <summary>
-        /// Occurs before BeginGetRequestStream is called.
-        /// </summary>
-        public event EventHandler OnBeforeBeginGetRequestStream;
-        /// <summary>
-        /// Occurs after EndGetRequestStream is called.
-        /// </summary>
-        public event EventHandler OnAfterEndGetRequestStream;
-        /// <summary>
-        /// Occurs before BeginGetResponse is called.
-        /// </summary>
-        public event EventHandler OnBeforeBeginGetResponse;
-        /// <summary>
-        /// Occurs after EndGetResponse is called.
-        /// </summary>
-        public event EventHandler OnAfterEndGetResponse;
+        /// <param name="httpClient">The <see cref="Http.Client"/> handling communications.</param>
+        /// <param name="httpConnection">The <see cref="Http.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet.</param>
+        /// <param name="headersTotal">The total size headers in bytes.</param>
+        /// <param name="contentTotal">The total size of content in bytes.</param>
+        /// <param name="total">The total size of all data in bytes.</param>
+        public delegate void ProgressEventHandler(View sender, Http.Client httpClient, Http.Network.HttpConnection httpConnection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total);
+        
         /// <summary>
         /// Occurs when a timeout event occurs.
         /// </summary>
         public event EventHandler OnTimeout;
+
         /// <summary>
-        /// Occurs when a completion event occurs.
+        /// Fired to indicate progress of an upload
         /// </summary>
-        public event CompleteEventHandler OnComplete;
+        public event ProgressEventHandler OnUploadProgress;
+
+        /// <summary>
+        /// Fired to indicate progress of a download
+        /// </summary>
+        public event ProgressEventHandler OnDownloadProgress;
 
         #region Properties
 
@@ -171,19 +161,18 @@ namespace Common.CouchDB
         /// <typeparam name="T">Must be set to <see cref="DocumentCollection"/></typeparam>
         /// <param name="keepAlive">if set to <c>true</c> keep alive; otherwise, drop the connection when done.</param>
         /// <returns></returns>
-        public Result Get<T>(bool keepAlive) where T : DocumentCollection
+        public Result Get<T>(int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize) 
+            where T : DocumentCollection
         {
             ServerResponse sr;
-            Web web = new Web();
+            Http.Client httpClient = new Http.Client();
+            Http.Methods.HttpGet httpGet = null;
+            Http.Methods.HttpResponse httpResponse = null;
             string utf8 = null;
 
-            web.OnAfterEndGetRequestStream += new Web.MessageHandler(web_OnAfterEndGetRequestStream);
-            web.OnAfterEndGetResponse += new Web.MessageHandler(web_OnAfterEndGetResponse);
-            web.OnBeforeBeginGetRequestStream += new Web.MessageHandler(web_OnBeforeBeginGetRequestStream);
-            web.OnBeforeBeginGetResponse += new Web.MessageHandler(web_OnBeforeBeginGetResponse);
-            web.OnBeforeHeadersAreLocked += new Web.MessageHandler(web_OnBeforeHeadersAreLocked);
-            web.OnComplete += new Web.MessageHandler(web_OnComplete);
-            web.OnTimeout += new Web.MessageHandler(web_OnTimeout);
+            // Setup Event Handlers
+            httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
+            httpClient.OnDataSent += new Http.Client.DataSentDelegate(httpClient_OnDataSent);
 
             try
             {
@@ -195,100 +184,58 @@ namespace Common.CouchDB
                 throw new Exception("Failed to encode to UTF-8.", e);
             }
 
+            httpGet = new Http.Methods.HttpGet(Utilities.BuildUriForView(_db, _designDoc, _viewName, utf8));
+
             try
             {
-                sr = web.SendMessage(_server, _db, "_design/" + _designDoc + "/_view/" + _viewName, utf8, Web.OperationType.GET,
-                    Web.DataStreamMethod.LoadToMemory, null, "application/json", keepAlive, false, false, false);
+                httpResponse = httpClient.Execute(httpGet, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
             }
-            catch(Exception e)
+            catch (Http.Network.HttpNetworkTimeoutException e)
             {
-                return new Result(false, "Unable to get the view results", e);
+                if (OnTimeout != null)
+                {
+                    OnTimeout(this, httpClient);
+                    return new Result(false, "Timeout");
+                }
+                else
+                    throw e;
             }
 
             Logger.General.Debug("View " + _designDoc + "/" + _viewName + "?" + utf8 + " received.");
 
-            return new Result(sr);
+            return new Result(true);
         }
-
 
         #region Event Handling
 
         /// <summary>
-        /// Called when a timeout occurrs
+        /// Called when a download needs to update its progress to any consumers.
         /// </summary>
-        /// <param name="state">The state.</param>
-        void web_OnTimeout(Web.WebState state)
+        /// <param name="sender">The <see cref="Http.Client"/> that is updating.</param>
+        /// <param name="connection">The <see cref="Http.Network.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet just received.</param>
+        /// <param name="headersTotal">The size of all headers received.</param>
+        /// <param name="contentTotal">The size of all content received.</param>
+        /// <param name="total">The size of all data received.</param>
+        void httpClient_OnDataReceived(Http.Client sender, Http.Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
         {
-            if (OnTimeout != null) OnTimeout(state, this);
+            if (OnDownloadProgress != null)
+                OnDownloadProgress(this, sender, connection, packetSize, headersTotal, contentTotal, total);
         }
 
         /// <summary>
-        /// Called when the results are received
+        /// Called when a upload needs to update its progress to any consumers.
         /// </summary>
-        /// <param name="state">The state.</param>
-        void web_OnComplete(Web.WebState state)
+        /// <param name="sender">The <see cref="Http.Client"/> that is updating.</param>
+        /// <param name="connection">The <see cref="Http.Network.HttpConnection"/> handling communications.</param>
+        /// <param name="packetSize">Size of the packet just sent.</param>
+        /// <param name="headersTotal">The size of all headers sent.</param>
+        /// <param name="contentTotal">The size of all content sent.</param>
+        /// <param name="total">The size of all data sent.</param>
+        void httpClient_OnDataSent(Http.Client sender, Http.Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
         {
-            StreamReader sr;
-            string json;
-
-            sr = new StreamReader(state.Stream);
-            json = sr.ReadToEnd();
-
-            try
-            {
-                _documentCollection = Deserialize<DocumentCollection>(json);
-            }
-            catch(Exception e)
-            {
-                throw new Exception("Failed to deserialize the JSON.", e);
-            }
-
-            if (OnComplete != null) OnComplete(state, this, new Result(true));
-        }
-
-        /// <summary>
-        /// Calls OnBeforeHeadersAreLocked
-        /// </summary>
-        /// <param name="state">The state.</param>
-        void web_OnBeforeHeadersAreLocked(Web.WebState state)
-        {
-            if (OnBeforeHeadersAreLocked != null) OnBeforeHeadersAreLocked(state, this);
-        }
-
-        /// <summary>
-        /// Calls OnBeforeBeginGetResponse
-        /// </summary>
-        /// <param name="state">The state.</param>
-        void web_OnBeforeBeginGetResponse(Web.WebState state)
-        {
-            if (OnBeforeBeginGetResponse != null) OnBeforeBeginGetResponse(state, this);
-        }
-
-        /// <summary>
-        /// Calls OnBeforeBeginGetRequestStream
-        /// </summary>
-        /// <param name="state">The state.</param>
-        void web_OnBeforeBeginGetRequestStream(Web.WebState state)
-        {
-            if (OnBeforeBeginGetRequestStream != null) OnBeforeBeginGetRequestStream(state, this);
-        }
-
-        /// <summary>
-        /// Calls OnAfterEndGetResponse
-        /// </summary>
-        /// <param name="state">The state.</param>
-        void web_OnAfterEndGetResponse(Web.WebState state)
-        {
-            if (OnAfterEndGetResponse != null) OnAfterEndGetResponse(state, this);
-        }
-
-        /// <summary>
-        /// Calls OnAfterEndGetRequestStream
-        /// </summary>
-        /// <param name="state">The state.</param>
-        void web_OnAfterEndGetRequestStream(Web.WebState state)
-        {
-            if (OnAfterEndGetRequestStream != null) OnAfterEndGetRequestStream(state, this);
+            if (OnUploadProgress != null)
+                OnUploadProgress(this, sender, connection, packetSize, headersTotal, contentTotal, total);
         }
 
         #endregion

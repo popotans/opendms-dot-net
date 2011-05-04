@@ -27,15 +27,7 @@ namespace Common.Work
         /// <summary>
         /// Initializes a new instance of the <see cref="GetResourceJob"/> class.
         /// </summary>
-        /// <param name="requestor">The object that requested performance of this job.</param>
-        /// <param name="id">The id of this job.</param>
-        /// <param name="resource">A reference to a <see cref="Storage.Resource"/> for this job.</param>
-        /// <param name="actUpdateUI">The method to call to update the UI.</param>
-        /// <param name="timeout">The timeout duration.</param>
-        /// <param name="requestingUser">The user requesting the action.</param>
-        /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
-        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        /// <param name="couchdb">A reference to the <see cref="CouchDB.Database"/>.</param>
+        /// <param name="args">The <see cref="JobArgs"/>.</param>
         public GetResourceJob(JobArgs args)
             : base(args)
         {
@@ -78,32 +70,49 @@ namespace Common.Work
 
             Logger.General.Debug("GetResourceJob timeout has started on job id " + Id.ToString() + ".");
 
+            if (IsError || CheckForAbortAndUpdate())
+            {
+                ReportWork(this);
+                return this;
+            }
+
+            UpdateLastAction();
+
             Logger.General.Debug("Begining meta asset download for GetResourceJob with id " + Id.ToString() + ".");
 
-            if (!_jobResource.GetMetaAssetFromRemote(this, out errorMessage))
+            if (!_jobResource.GetMetaAssetFromRemote(this, SettingsBase.Instance.NetworkBufferSize,
+                SettingsBase.Instance.NetworkBufferSize, out errorMessage))
             {
-                Logger.General.Error("Failed to download the asset's meta information for GetResourceJob with id " + 
-                    Id.ToString() + " with error message: " + errorMessage);
-                _errorManager.AddError(ErrorMessage.ErrorCode.DownloadMetaAssetFailed,
-                    "Downloading Asset Failed",
-                    "I failed to download the meta information.  Please try again.",
-                    "Failed to download the asset's meta information for GetResourceJob with id " + Id.ToString() + ".",
-                    true, true);
-                _currentState = State.Error;
+                if (!_currentState.HasFlag(State.Timeout))
+                {
+                    Logger.General.Error("Failed to download the asset's meta information for GetResourceJob with id " +
+                        Id.ToString() + " with error message: " + errorMessage);
+                    _errorManager.AddError(ErrorMessage.ErrorCode.DownloadMetaAssetFailed,
+                        "Downloading Asset Failed",
+                        "I failed to download the meta information.  Please try again.",
+                        "Failed to download the asset's meta information for GetResourceJob with id " + Id.ToString() + ".",
+                        true, true);
+                    _currentState = State.Error;
+                }
+
                 ReportWork(this);
                 return this;
             }
 
             Logger.General.Debug("Successfully completed the meta asset download for GetResourceJob with id " + Id.ToString() + ".");
 
+            UpdateLastAction();
+
             // Check for Error
-            if (this.IsError || CheckForAbortAndUpdate())
+            if (IsError || CheckForAbortAndUpdate())
             {
                 ReportWork(this);
                 return this;
             }
 
             Logger.General.Debug("Saving meta asset to local filesystem.");
+
+            UpdateLastAction();
 
             if (!_jobResource.MetaAsset.SaveToLocal(this, _fileSystem))
             {
@@ -127,53 +136,52 @@ namespace Common.Work
                 return this;
             }
 
-            _jobResource.DataAsset.OnProgress += new Storage.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
+            _jobResource.DataAsset.OnDownloadProgress += new Storage.DataAsset.ProgressHandler(DataAsset_OnDownloadProgress);
+            _jobResource.DataAsset.OnTimeout += new Storage.DataAsset.EventHandler(DataAsset_OnTimeout);
 
             Logger.General.Debug("Begining data asset download for GetResourceJob with id " + Id.ToString() + ".");
-
-            if (!_jobResource.DownloadDataAssetAndSaveLocally(this, _fileSystem, out errorMessage))
+            
+            if (!_jobResource.DownloadDataAssetAndSaveLocally(this, _fileSystem, SettingsBase.Instance.NetworkBufferSize, 
+                SettingsBase.Instance.NetworkBufferSize, out errorMessage))
             {
-                Logger.General.Error("Failed to download the asset's data information for GetResourceJob with id " +
-                    Id.ToString() + " with error message: " + errorMessage);
-                _errorManager.AddError(ErrorMessage.ErrorCode.DownloadDataAssetFailed,
-                    "Downloading Asset Failed",
-                    "I failed to download the data asset.  Please try again.",
-                    "Failed to download the asset's data for GetResourceJob with id " + Id.ToString() + ".",
-                    true, true);
-                _currentState = State.Error;
+                if (!_currentState.HasFlag(State.Timeout))
+                {
+                    Logger.General.Error("Failed to download the asset's data information for GetResourceJob with id " +
+                        Id.ToString() + " with error message: " + errorMessage);
+                    _errorManager.AddError(ErrorMessage.ErrorCode.DownloadDataAssetFailed,
+                        "Downloading Asset Failed",
+                        "I failed to download the data asset.  Please try again.",
+                        "Failed to download the asset's data for GetResourceJob with id " + Id.ToString() + ".",
+                        true, true);
+                    _currentState = State.Error;
+                }
+
                 ReportWork(this);
                 return this;
             }
-
-            Logger.General.Debug("Successfully completed the data asset download for GetResourceJob with id " + Id.ToString() + ".");
 
             UpdateLastAction();
 
-            // Check for Error
-            if (this.IsError || CheckForAbortAndUpdate())
-            {
-                _jobResource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
-                ReportWork(this);
-                return this;
-            }
+            Logger.General.Debug("Successfully completed the data asset download for GetResourceJob with id " + Id.ToString() + ".");
+            
+            // No need to monitor this event anymore
+            _jobResource.DataAsset.OnDownloadProgress -= DataAsset_OnDownloadProgress;
+            _jobResource.DataAsset.OnTimeout -= DataAsset_OnTimeout;
 
             _currentState = State.Active | State.Finished;
-            _jobResource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
             ReportWork(this);
             return this;
         }
 
-        /// <summary>
-        /// Called when the <see cref="Data.DataAsset"/> portion of the <see cref="Data.FullAsset"/> 
-        /// makes progress downloading.
-        /// </summary>
-        /// <param name="sender">A reference to the <see cref="Data.DataAsset"/> that made progress.</param>
-        /// <param name="percentComplete">The percent complete.</param>
-        void Run_DataAsset_OnProgress(Storage.DataAsset sender, int percentComplete)
+        void DataAsset_OnTimeout(Storage.DataAsset sender)
         {
-            Logger.General.Debug("GetResourceJob with id " + Id.ToString() + " is now " + percentComplete.ToString() + "% complete.");
+            _currentState = State.Timeout;
+        }
 
+        void DataAsset_OnDownloadProgress(Storage.DataAsset sender, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
+        {
             UpdateProgress((ulong)sender.BytesComplete, (ulong)sender.BytesTotal);
+            Logger.General.Debug("SaveResourceJob with id " + Id.ToString() + " is now " + PercentComplete.ToString() + "% complete.");
 
             // Don't update the UI if finished, the final update is handled by the Run() method.
             if (sender.BytesComplete != sender.BytesTotal)

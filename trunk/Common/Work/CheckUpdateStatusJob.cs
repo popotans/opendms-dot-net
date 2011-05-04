@@ -66,18 +66,31 @@ namespace Common.Work
 
             Logger.General.Debug("CheckUpdateStatusJob timeout has started on job id " + Id.ToString() + ".");
 
-            Logger.General.Debug("Begining meta asset download for CheckUpdateStatusJob with id " + Id.ToString() + ".");
-
-            if (!_jobResource.GetMetaAssetFromRemote(this, out errorMessage))
+            if (IsError || CheckForAbortAndUpdate())
             {
-                Logger.General.Error("Failed to download the asset's meta information for CheckUpdateStatusJob with id " +
-                    Id.ToString() + " with error message: " + errorMessage);
-                _errorManager.AddError(ErrorMessage.ErrorCode.DownloadMetaAssetFailed,
-                    "Downloading Asset Failed",
-                    "I failed to download the meta information.  Please try again.",
-                    "Failed to download the asset's meta information for CheckUpdateStatusJob with id " + Id.ToString() + ".",
-                    true, true);
-                _currentState = State.Error;
+                ReportWork(this);
+                return this;
+            }
+
+            UpdateLastAction();
+
+            Logger.General.Debug("Begining meta asset download for CheckUpdateStatusJob with id " + Id.ToString() + ".");
+            
+            if (!_jobResource.GetMetaAssetFromRemote(this, SettingsBase.Instance.NetworkBufferSize,
+                SettingsBase.Instance.NetworkBufferSize, out errorMessage))
+            {
+                if (!_currentState.HasFlag(State.Timeout))
+                {
+                    Logger.General.Error("Failed to download the asset's meta information for CheckUpdateStatusJob with id " +
+                        Id.ToString() + " with error message: " + errorMessage);
+                    _errorManager.AddError(ErrorMessage.ErrorCode.DownloadMetaAssetFailed,
+                        "Downloading Asset Failed",
+                        "I failed to download the meta information.  Please try again.",
+                        "Failed to download the asset's meta information for CheckUpdateStatusJob with id " + Id.ToString() + ".",
+                        true, true);
+                    _currentState = State.Error;
+                }
+
                 ReportWork(this);
                 return this;
             }
@@ -85,13 +98,6 @@ namespace Common.Work
             Logger.General.Debug("Successfully completed the meta asset download for CheckUpdateStatusJob with id " + Id.ToString() + ".");
 
             UpdateLastAction();
-
-            // Check for Error
-            if (this.IsError || CheckForAbortAndUpdate())
-            {
-                ReportWork(this);
-                return this;
-            }
 
             _currentState = State.Active | State.Finished;
             ReportWork(this);

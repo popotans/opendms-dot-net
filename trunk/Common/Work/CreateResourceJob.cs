@@ -28,14 +28,7 @@ namespace Common.Work
         /// <summary>
         /// Initializes a new instance of the <see cref="CreateResourceJob"/> class.
         /// </summary>
-        /// <param name="requestor">The object that requested performance of this job.</param>
-        /// <param name="id">The id of this job.</param>
-        /// <param name="resource">A reference to a <see cref="Storage.Resource"/> for this job.</param>
-        /// <param name="actUpdateUI">The method to call to update the UI.</param>
-        /// <param name="timeout">The timeout duration.</param>
-        /// <param name="errorManager">A reference to the <see cref="ErrorManager"/>.</param>
-        /// <param name="fileSystem">A reference to the <see cref="FileSystem.IO"/>.</param>
-        /// <param name="couchdb">A reference to the <see cref="CouchDB.Database"/>.</param>
+        /// <param name="args">The <see cref="JobArgs"/>.</param>
         public CreateResourceJob(JobArgs args)
             : base(args)
         {
@@ -87,6 +80,8 @@ namespace Common.Work
                 return this;
             }
 
+            UpdateLastAction();
+
             // Postgres work
             Postgres.Resource.CreateNewResource(RequestingUser, out pgVersion);
 
@@ -103,35 +98,44 @@ namespace Common.Work
             // Save MA
             _jobResource.MetaAsset.SaveToLocal(this, _fileSystem);
 
-            _jobResource.DataAsset.OnProgress += new Storage.DataAsset.ProgressHandler(Run_DataAsset_OnProgress);
+            _jobResource.DataAsset.OnUploadProgress += new Storage.DataAsset.ProgressHandler(DataAsset_OnUploadProgress);
+            _jobResource.DataAsset.OnTimeout += new Storage.DataAsset.EventHandler(DataAsset_OnTimeout);
 
-            Logger.General.Debug("Begining full asset creation on server for CreateResourceJob with id " + Id.ToString() + "."); 
-
-            // Creates MA on server, deletes old MA, renames DA
-            if (!_jobResource.CreateResourceOnRemote(this, _fileSystem, out errorMessage))
-            {
-                Logger.General.Error("Failed to create the resource for CreateResourceJob with id " +
-                    Id.ToString() + " with error message: " + errorMessage);
-                _errorManager.AddError(ErrorMessage.ErrorCode.CreateResourceOnServerFailed,
-                    "Resource Creation Failed", 
-                    "I failed to create the resource on the remote server, for additional details consult the logs.",
-                    "Failed to create the resource on the remote server for CreateResourceJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
-                    true, true);
-                _currentState = State.Error;
-                ReportWork(this);
-                return this;
-            }
-
-            Logger.General.Debug("Completed full asset creation on server for CreateResourceJob with id " + Id.ToString() + ".");
-
-            // No need to monitor this event anymore
-            _jobResource.DataAsset.OnProgress -= Run_DataAsset_OnProgress;
+            Logger.General.Debug("Begining full asset creation on server for CreateResourceJob with id " + Id.ToString() + ".");
 
             if (IsError || CheckForAbortAndUpdate())
             {
                 ReportWork(this);
                 return this;
             }
+
+            // Creates MA on server, deletes old MA, renames DA
+            if (!_jobResource.CreateResourceOnRemote(this, _fileSystem, SettingsBase.Instance.NetworkBufferSize, 
+                SettingsBase.Instance.NetworkBufferSize, out errorMessage))
+            {
+                if (!_currentState.HasFlag(State.Timeout))
+                {
+                    Logger.General.Error("Failed to create the resource for CreateResourceJob with id " +
+                        Id.ToString() + " with error message: " + errorMessage);
+                    _errorManager.AddError(ErrorMessage.ErrorCode.CreateResourceOnServerFailed,
+                        "Resource Creation Failed",
+                        "I failed to create the resource on the remote server, for additional details consult the logs.",
+                        "Failed to create the resource on the remote server for CreateResourceJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
+                        true, true);
+                    _currentState = State.Error;
+                }
+
+                ReportWork(this);
+                return this;
+            }
+
+            UpdateLastAction();
+
+            Logger.General.Debug("Completed full asset creation on server for CreateResourceJob with id " + Id.ToString() + ".");
+
+            // No need to monitor this event anymore
+            _jobResource.DataAsset.OnUploadProgress -= DataAsset_OnUploadProgress;
+            _jobResource.DataAsset.OnTimeout -= DataAsset_OnTimeout;
 
             Logger.General.Debug("Updating the local meta asset for CreateResourceJob with id " + Id.ToString() + ".");
 
@@ -140,17 +144,15 @@ namespace Common.Work
             return this;
         }
 
-        /// <summary>
-        /// Called when the <see cref="Data.DataAsset"/> portion of the <see cref="Data.FullAsset"/> 
-        /// makes progress uploading.
-        /// </summary>
-        /// <param name="sender">A reference to the <see cref="Storage.DataAsset"/> that made progress.</param>
-        /// <param name="percentComplete">The percent complete.</param>
-        void Run_DataAsset_OnProgress(Storage.DataAsset sender, int percentComplete)
+        void DataAsset_OnTimeout(Storage.DataAsset sender)
         {
-            Logger.General.Debug("CreateResourceJob with id " + Id.ToString() + " is now " + percentComplete.ToString() + "% complete.");
+            _currentState = State.Timeout;
+        }
 
+        void DataAsset_OnUploadProgress(Storage.DataAsset sender, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
+        {
             UpdateProgress((ulong)sender.BytesComplete, (ulong)sender.BytesTotal);
+            Logger.General.Debug("CreateResourceJob with id " + Id.ToString() + " is now " + PercentComplete.ToString() + "% complete.");
 
             // Don't update the UI if finished, the final update is handled by the Run() method.
             if (sender.BytesComplete != sender.BytesTotal)

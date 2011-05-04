@@ -90,8 +90,20 @@
     <Compile Include="CouchDB\ServerResponse.cs" />
     <Compile Include="CouchDB\Utilities.cs" />
     <Compile Include="CouchDB\View.cs" />
-    <Compile Include="CouchDB\Web.cs" />
     <Compile Include="FileSystem\Path.cs" />
+    <Compile Include="Http\Client.cs" />
+    <Compile Include="Http\Methods\HttpDelete.cs" />
+    <Compile Include="Http\Methods\HttpGet.cs" />
+    <Compile Include="Http\Methods\HttpMessageBase.cs" />
+    <Compile Include="Http\Methods\HttpPut.cs" />
+    <Compile Include="Http\Methods\HttpRequest.cs" />
+    <Compile Include="Http\Methods\HttpResponse.cs" />
+    <Compile Include="Http\Network\HttpConnection.cs" />
+    <Compile Include="Http\Network\HttpConnectionFactory.cs" />
+    <Compile Include="Http\Network\HttpNetworkException.cs" />
+    <Compile Include="Http\Network\HttpNetworkTimeoutException.cs" />
+    <Compile Include="Http\Utilities.cs" />
+    <Compile Include="Http\Network\HttpNetworkStream.cs" />
     <Compile Include="Postgres\Database.cs" />
     <Compile Include="Postgres\Resource.cs" />
     <Compile Include="ErrorMessage.cs" />
@@ -138,12 +150,11 @@
     <Compile Include="Work\JobArgs.cs" />
     <Compile Include="Work\JobBase.cs" />
     <Compile Include="Work\JobResult.cs" />
+    <Compile Include="Work\ReleaseResourceJob.cs" />
     <Compile Include="Work\ResourceJobBase.cs" />
     <Compile Include="Work\JobException.cs" />
-    <Compile Include="Work\LockJob.cs" />
     <Compile Include="Work\Master.cs" />
     <Compile Include="Work\SaveResourceJob.cs" />
-    <Compile Include="Work\UnlockJob.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Changelog.txt" />
@@ -187,7 +198,7 @@
       <Properties InternalTargetFrameworkVersion="3.5" />
     </MonoDevelop>
     <VisualStudio>
-      <UserProperties BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" />
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>

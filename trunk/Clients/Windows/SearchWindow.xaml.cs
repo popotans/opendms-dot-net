@@ -201,6 +201,7 @@ namespace WindowsClient
         void btnSearch_Click(object sender, RoutedEventArgs e)
         {
             Common.Network.Message msg;
+            
             Dictionary<string, UIElement>.Enumerator en = _boundProperties.GetEnumerator();
             Common.CouchDB.Lucene.QueryBuilder qb = new Common.CouchDB.Lucene.QueryBuilder();
             string propertyName;
@@ -264,27 +265,25 @@ namespace WindowsClient
             }
             
             Common.CouchDB.Lucene.Search search = new Common.CouchDB.Lucene.Search(_couchdb.Server, _couchdb, "search", "by_all", qb);
-            search.OnComplete += new Common.CouchDB.Lucene.Search.CompleteEventHandler(search_OnComplete);
-            search.Get<Common.CouchDB.Lucene.SearchResultCollection>(false);
-        }
+            Common.CouchDB.Result result = search.Get<Common.CouchDB.Lucene.SearchResultCollection>(
+                60000, 60000, 
+                Settings.Instance.NetworkBufferSize, Settings.Instance.NetworkBufferSize);
 
-        void search_OnComplete(Common.CouchDB.Web.WebState state, Common.CouchDB.Lucene.Search sender, Common.CouchDB.Result result)
-        {
             List<Guid> versionGuids = new List<Guid>();
             List<Common.Postgres.Version> versions = new List<Common.Postgres.Version>();
             Common.CouchDB.Lucene.SearchResultCollection newSRC = new Common.CouchDB.Lucene.SearchResultCollection();
             DisplayResultsDelegate actDisplayResults = DisplayResults;
 
             // Get list of all version guids returned
-            for(int i=0; i<sender.SearchResultCollection.Count; i++)
-                versionGuids.Add(Guid.Parse(sender.SearchResultCollection[i].Id));
+            for (int i = 0; i < search.SearchResultCollection.Count; i++)
+                versionGuids.Add(Guid.Parse(search.SearchResultCollection[i].Id));
 
             // Get all current versions for resources
             versions = Common.Postgres.Version.GetCurrentVersionsFromVersionGuids(versionGuids.ToArray());
 
             for (int i = 0; i < versions.Count; i++)
             {
-                newSRC.Add(sender.SearchResultCollection.Get(versions[i].VersionGuid));
+                newSRC.Add(search.SearchResultCollection.Get(versions[i].VersionGuid));
             }
 
             Dispatcher.BeginInvoke(actDisplayResults, dgResults, newSRC);

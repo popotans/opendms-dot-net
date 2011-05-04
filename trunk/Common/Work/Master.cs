@@ -46,17 +46,13 @@ namespace Common.Work
             /// </summary>
             CreateResource,
             /// <summary>
-            /// Applies a lock
-            /// </summary>
-            Lock,
-            /// <summary>
-            /// Releases the lock
-            /// </summary>
-            Unlock,
-            /// <summary>
             /// Checks whether the client and server files match
             /// </summary>
-            CheckUpdateStatus
+            CheckUpdateStatus,
+            /// <summary>
+            /// Releases the resource on the remote host
+            /// </summary>
+            ReleaseResource
         }
 
         /// <summary>
@@ -139,14 +135,11 @@ namespace Common.Work
                     case JobType.CreateResource:
                         job = new CreateResourceJob(args);
                         break;
-                    case JobType.Lock:
-                        job = new LockJob(args);
-                        break;
-                    case JobType.Unlock:
-                        job = new UnlockJob(args);
-                        break;
                     case JobType.CheckUpdateStatus:
                         job = new CheckUpdateStatusJob(args);
+                        break;
+                    case JobType.ReleaseResource:
+                        job = new ReleaseResourceJob(args);
                         break;
                     default:
                         throw new Exception("Unknown job type");
