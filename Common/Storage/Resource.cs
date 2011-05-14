@@ -145,6 +145,46 @@ namespace Common.Storage
             return true;
         }
 
+        public bool CheckoutResource(Work.ResourceJobBase job, FileSystem.IO fileSystem,
+            int sendBufferSize, int receiveBufferSize, out string errorMessage)
+        {
+            NetworkPackage.ServerResponse response;
+            System.IO.MemoryStream ms = new System.IO.MemoryStream();
+            Http.Client httpClient;
+            Http.Methods.HttpGet httpGet;
+            Http.Methods.HttpResponse httpResponse;
+
+            errorMessage = null;
+            httpClient = new Http.Client();
+            httpGet = new Http.Methods.HttpGet(new Uri("http://" + SettingsBase.Instance.ServerIp +
+                ":" + SettingsBase.Instance.ServerPort.ToString() + "/_checkoutV/" +
+                Guid.ToString("N")));
+
+            Logger.General.Debug("Sending a checkout resource request to the server for resource " + Guid.ToString("N"));
+
+            job.UpdateLastAction();
+
+            httpResponse = httpClient.Execute(httpGet, null, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
+
+            httpResponse.Stream.CopyTo(ms);
+
+            // Test code
+            ms.Position = 0;
+            string str = Utilities.StreamToUtf8String(ms);
+
+            response = new NetworkPackage.ServerResponse();
+            response.Deserialize(ms);
+
+            if ((bool)response["Pass"])
+            {
+                Logger.General.Debug("Resource " + Guid.ToString() + " successfully checked-out.");
+                return true;
+            }
+
+            errorMessage = response["Message"].ToString();
+            return false;
+        }
+
         public bool ReleaseResource(Work.ResourceJobBase job, FileSystem.IO fileSystem,
             int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
@@ -162,7 +202,7 @@ namespace Common.Storage
 
             job.UpdateLastAction();
 
-            httpResponse = httpClient.Execute(httpPut, null);
+            httpResponse = httpClient.Execute(httpPut, null, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
 
             if (httpResponse.ResponseCode == 200)
             {

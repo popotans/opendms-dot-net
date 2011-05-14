@@ -17,8 +17,8 @@
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:WindowsClient"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="WindowsClient.MainWindow"
+    xmlns:local="clr-namespace:WindowsClient"
     Title="OpenDMS.NET WindowsClient" Height="525" Width="515" x:Name="Window">
     <Grid 
 		Width="500" HorizontalAlignment="Left" Height="487" VerticalAlignment="Top">
@@ -32,54 +32,18 @@
             	<ColumnDefinition Width="384" />
             	<ColumnDefinition Width="116" />
             </Grid.ColumnDefinitions>
-            <TreeView x:Name="ResourceTree" Width="375" VerticalContentAlignment="Stretch" Height="458" 
-    		    VerticalAlignment="Top" HorizontalAlignment="Left" BorderThickness="2" FontSize="13.333">
-    		    <TreeView.Resources>
-    		    	<Style TargetType="{x:Type TreeViewItem}">
-    		    		<Setter Property="HeaderTemplate">
-    		    			<Setter.Value>
-    		    				<DataTemplate DataType="ContentPresenter">
-    		    					<Grid>
-    		    						<StackPanel x:Name="spImg" Orientation="Horizontal">
-    		    							<TextBlock Text="{Binding}" Margin="0,0" VerticalAlignment="Center" />
-    		    							<Button x:Name="btnReload" 
-    		    								Visibility="{Binding (local:TreeViewItemProps.IsCanceled), Converter={x:Static local:vc_BoolToVisibility.Instance}, RelativeSource={RelativeSource AncestorType={x:Type TreeViewItem}, Mode=FindAncestor}}"
-    		    								Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeViewItem}, Mode=FindAncestor}}"
-    		    								Click="btnReload_Click" Height="14" VerticalAlignment="Center" Margin="10,0,0,0">
-    		    								<TextBlock FontSize="9" Text="Reload..." TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center" />
-    		    							</Button>
-    		    							<StackPanel x:Name="spLoading" Orientation="Horizontal"
-    		    								Visibility="{Binding (local:TreeViewItemProps.IsLoading), Converter={x:Static local:vc_BoolToVisibility.Instance}, RelativeSource={RelativeSource AncestorType={x:Type TreeViewItem}, Mode=FindAncestor}}">
-    		    								<Grid Height="13"  MinWidth="50" MaxWidth="75" Margin="5,0" >
-    		    									<ProgressBar x:Name="pbLoading" Height="13"  MinWidth="50" MaxWidth="75" HorizontalAlignment="Center" 
-    		    										VerticalAlignment="Center" Value="{Binding (local:TreeViewItemProps.PercentComplete), RelativeSource={RelativeSource AncestorType={x:Type TreeViewItem}, Mode=FindAncestor}}" />
-    		    									<TextBlock x:Name="txtLoading" Text="Loading..." FontSize="8.6" Margin="5,0" HorizontalAlignment="Center" 
-    		    										VerticalAlignment="Center" />
-    		    								</Grid>
-    		    								<Button x:Name="btnCancelLoad" IsEnabled="{Binding (local:TreeViewItemProps.IsCanceled), Converter={x:Static local:vc_FlipBool.Instance}, RelativeSource={RelativeSource AncestorType={x:Type TreeViewItem}, Mode=FindAncestor}}"
-    		    									Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type TreeViewItem}, Mode=FindAncestor}}"
-    		    									Height="14" Click="btnCancelLoad_Click" VerticalAlignment="Center" >
-    		    									<TextBlock FontSize="9" Text="Cancel" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center" />
-    		    								</Button>
-    		    							</StackPanel>
-    		    						</StackPanel>                                    
-    		    					</Grid>
-    		    				</DataTemplate>
-    		    			</Setter.Value>
-    		    		</Setter>
-    		    	</Style>
-    		    </TreeView.Resources>
-    	    </TreeView>
+            <local:ResourceTreeView x:Name="ResourceTree" />
             <CheckBox Height="21" Margin="1,138,5,299" FontSize="13.333" Content="Read-Only" Grid.Column="1" x:Name="CbReadOnly" ToolTip="When selected a copy of the resource will be downloaded from the server, however, it cannot be saved back to the server." Panel.ZIndex="1" />
-            <Button Content="Open Selected" FontSize="13.333" Margin="0,242,14,182" x:Name="BtnOpenSelected" ToolTip="Click to open the selected resource with its associated application." Grid.Column="1" Click="BtnOpenSelected_Click" Panel.ZIndex="1" />
-            <Button Content="Get Selected" FontSize="13.333" x:Name="BtnGetSelected" ToolTip="Click to download the selected resource." Click="BtnGetSelected_Click" Margin="0,162,14,261" Panel.ZIndex="29" Grid.Column="1" />
-            <Button Content="Refresh" FontSize="13.333" Margin="0,8,14,416" x:Name="BtnRefreshETagStatus" ToolTip="Click to check the status of all resources in the list." Grid.Column="1" Panel.ZIndex="1" Click="BtnRefreshETagStatus_Click" />
-            <Button Content="Save Selected" FontSize="13.333" x:Name="BtnSaveSelected" ToolTip="Click to upload and save the selected resource." Margin="0,203,14,220" Panel.ZIndex="29" Grid.Column="1" d:LayoutOverrides="VerticalAlignment" Click="BtnSaveSelected_Click" />
-            <Button Content="Search" FontSize="13.333" x:Name="BtnSearch" ToolTip="Click to search for a resource." Margin="0,89,14,334" Panel.ZIndex="29" Grid.Column="1" Click="BtnSearch_Click" />
-            <Button Content="Exit" FontSize="13.333" x:Name="BtnExit" ToolTip="Click to exit this application." Margin="0,415,14,8" Panel.ZIndex="29" Grid.Column="1" Click="BtnExit_Click" />
-            <Button Content="Minimize" FontSize="13.333" x:Name="BtnMinimize" ToolTip="Click to send to the system tray." Margin="0,376,14,47" Panel.ZIndex="29" Grid.Column="1" />
-            <Button Content="Settings..." FontSize="13.333" Margin="0,336,14,88" Name="BtnSettings" Panel.ZIndex="1" ToolTip="Click to open the selected resource with its associated application." Grid.Column="1" Click="BtnSettings_Click" />
-            <Button Content="Add Resource" FontSize="13.333" Margin="0,48,14,375" Name="BtnAddResource" Panel.ZIndex="29" ToolTip="Click to download the selected resource." Grid.Column="1" Click="BtnAddResource_Click" />
+            <Button Content="Open Selected" FontSize="13.333" Margin="0,284,7,140" x:Name="BtnOpenSelected" ToolTip="Click to open the selected resource with its associated application." Grid.Column="1" Click="BtnOpenSelected_Click" Panel.ZIndex="1" />
+            <Button Content="Get Selected" FontSize="13.333" x:Name="BtnGetSelected" ToolTip="Click to download the selected resource." Click="BtnGetSelected_Click" Margin="0,162,7,261" Panel.ZIndex="29" Grid.Column="1" />
+            <Button Content="Refresh" FontSize="13.333" Margin="0,8,7,416" x:Name="BtnRefreshETagStatus" ToolTip="Click to check the status of all resources in the list." Grid.Column="1" Panel.ZIndex="1" Click="BtnRefreshETagStatus_Click" />
+            <Button Content="Save Selected" FontSize="13.333" x:Name="BtnSaveSelected" ToolTip="Click to upload and save the selected resource." Margin="0,203,7,220" Panel.ZIndex="29" Grid.Column="1" d:LayoutOverrides="VerticalAlignment" Click="BtnSaveSelected_Click" />
+            <Button Content="Search" FontSize="13.333" x:Name="BtnSearch" ToolTip="Click to search for a resource." Margin="0,89,7,334" Panel.ZIndex="29" Grid.Column="1" Click="BtnSearch_Click" />
+            <Button Content="Exit" FontSize="13.333" x:Name="BtnExit" ToolTip="Click to exit this application." Margin="0,415,7,8" Panel.ZIndex="29" Grid.Column="1" Click="BtnExit_Click" />
+            <Button Content="Minimize" FontSize="13.333" x:Name="BtnMinimize" ToolTip="Click to send to the system tray." Margin="0,376,7,47" Panel.ZIndex="29" Grid.Column="1" />
+            <Button Content="Settings..." FontSize="13.333" Margin="0,336,7,88" Name="BtnSettings" Panel.ZIndex="1" ToolTip="Click to open the selected resource with its associated application." Grid.Column="1" Click="BtnSettings_Click" />
+            <Button Content="Add Resource" FontSize="13.333" Margin="0,48,7,375" Name="BtnAddResource" Panel.ZIndex="29" ToolTip="Click to download the selected resource." Grid.Column="1" Click="BtnAddResource_Click" />
+            <Button Content="Checkin Selected" FontSize="13.333" Margin="0,244,7,180" Name="BtnCheckinSelected" Panel.ZIndex="1" ToolTip="Click to open the selected resource with its associated application." Grid.Column="1" />
         </Grid>
         <StatusBar Height="25" HorizontalAlignment="Left" Margin="0,462,0,0" x:Name="statusBar1" VerticalAlignment="Top" Grid.Row="1"  BorderBrush="#D0000000" BorderThickness="1" Width="500" d:LayoutOverrides="GridBox">
             <StatusBarItem x:Name="SBItem" />

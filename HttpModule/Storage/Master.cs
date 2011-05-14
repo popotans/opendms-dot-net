@@ -58,6 +58,15 @@ namespace HttpModule.Storage
             return resource.GetVersion(versionNumber);
         }
 
+        public Common.NetworkPackage.ServerResponse CheckoutResourceCurrentVersionByAnyVersion(Guid versionId, string requestingUser)
+        {
+            Common.Postgres.Resource pgResource;
+
+            pgResource = Common.Postgres.Resource.GetResourceFromVersionId(versionId);
+
+            return CheckoutResource(pgResource.Id, requestingUser);
+        }
+
         public Common.NetworkPackage.ServerResponse CheckoutResource(Guid resourceId, string requestingUser)
         {
             Common.Postgres.Resource pgResource;

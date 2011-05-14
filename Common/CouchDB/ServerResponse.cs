@@ -205,7 +205,7 @@ namespace Common.CouchDB
             { // Error
                 e = r = null;
 
-                if (dictionary.ContainsKey("error") && string.IsNullOrEmpty((string)dictionary["error"]))
+                if (dictionary.ContainsKey("error") && !string.IsNullOrEmpty((string)dictionary["error"]))
                     e = (string)dictionary["error"];
                 else
                     throw new FormatException("The dictionary must contain a string value for error");

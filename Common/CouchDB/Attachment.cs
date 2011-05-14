@@ -536,11 +536,12 @@ namespace Common.CouchDB
         /// <param name="receiveTimeout">The receive timeout.</param>
         /// <param name="sendBufferSize">Size of the send buffer.</param>
         /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <param name="job">The <see cref="Work.JobBase"/>.</param>
         /// <returns>
         /// A <see cref="Http.Network.HttpNetworkStream"/> for the content.
         /// </returns>
         public Http.Network.HttpNetworkStream GetDownloadStream(Database db, int sendTimeout, 
-            int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            int receiveTimeout, int sendBufferSize, int receiveBufferSize, Work.JobBase job)
         {
             // Check the _state
             if (!CheckState(CAN_GET_DOWNLOAD_STREAM))
@@ -563,7 +564,7 @@ namespace Common.CouchDB
             // Dispatch the message
             try
             {
-                httpResponse = httpClient.Execute(httpGet, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+                httpResponse = httpClient.Execute(httpGet, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize, job);
             }
             catch (Http.Network.HttpNetworkTimeoutException e)
             {
@@ -588,7 +589,7 @@ namespace Common.CouchDB
                 return null;
             }
         }
-        
+
         /// <summary>
         /// Synchronously uploads an Attachment to a Server from the local system
         /// </summary>
@@ -597,10 +598,11 @@ namespace Common.CouchDB
         /// <param name="receiveTimeout">The receive timeout.</param>
         /// <param name="sendBufferSize">Size of the send buffer.</param>
         /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <param name="job">The <see cref="Work.JobBase"/>.</param>
         /// <returns>
         /// A CouchDB.Result representing the result of the request
         /// </returns>
-        public Result Upload(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+        public Result Upload(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize, Work.JobBase job)
         {
             // Check the _state
             if (!CheckState(CAN_UPLOAD))
@@ -614,7 +616,7 @@ namespace Common.CouchDB
 
             // Setup
             httpClient = new Http.Client();
-            httpPut = new Http.Methods.HttpPut(Utilities.BuildUriForAttachment(db, _document.Id, _filename, _revpos), _contentType);
+            httpPut = new Http.Methods.HttpPut(Utilities.BuildUriForAttachment(db, _document.Id, _filename, _document.Rev), _contentType);
 
             // Setup Event Handlers
             httpClient.OnDataReceived += new Http.Client.DataReceivedDelegate(httpClient_OnDataReceived);
@@ -639,7 +641,7 @@ namespace Common.CouchDB
             // Dispatch the message
             try
             {
-                httpResponse = httpClient.Execute(httpPut, _stream, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+                httpResponse = httpClient.Execute(httpPut, _stream, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize, job);
             }
             catch (Http.Network.HttpNetworkTimeoutException e)
             {
@@ -653,7 +655,12 @@ namespace Common.CouchDB
             }
 
             if (httpResponse == null)
-                throw new Http.Network.HttpNetworkException("The response is null.");
+            {
+                if (job.IsCancelled)
+                    return new Result(false, "Canceled by user.");
+                else
+                    throw new Http.Network.HttpNetworkException("The response is null.");
+            }
 
             Logger.General.Debug("Sychronous upload of attachment completed.");
             
@@ -679,10 +686,11 @@ namespace Common.CouchDB
         /// <param name="receiveTimeout">The receive timeout.</param>
         /// <param name="sendBufferSize">Size of the send buffer.</param>
         /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <param name="job">The <see cref="Work.JobBase"/>.</param>
         /// <returns>
         /// A CouchDB.Result representing the result of the request
         /// </returns>
-        public Result Delete(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+        public Result Delete(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize, Work.JobBase job)
         {
             // Check the _state
             if (!CheckState(CAN_DELETE))
@@ -707,7 +715,7 @@ namespace Common.CouchDB
             // Dispatch the message
             try
             {
-                httpResponse = httpClient.Execute(httpDelete, _stream, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+                httpResponse = httpClient.Execute(httpDelete, _stream, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize, job);
             }
             catch (Http.Network.HttpNetworkTimeoutException e)
             {

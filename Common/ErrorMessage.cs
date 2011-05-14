@@ -44,6 +44,10 @@ namespace Common
             /// </summary>
             DownloadDataAssetFailed,
             /// <summary>
+            /// Checking out of the resource failed.
+            /// </summary>
+            CheckoutResourceFailed,
+            /// <summary>
             /// An invalid state was encountered for the requested action.
             /// </summary>
             InvalidState,
