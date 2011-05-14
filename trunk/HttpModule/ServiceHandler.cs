@@ -176,6 +176,26 @@ namespace HttpModule
         }
 
         /// <summary>
+        /// Responds to a checkout request by returning the most current version when the guid is that 
+        /// of any version of the resource for the requesting user.
+        /// </summary>
+        /// <param name="app">The <see cref="HttpApplication"/></param>
+        /// <remarks>Note that this does not get the specific version requested, it gets the most
+        /// current version of the resource that contains the version requested.</remarks>
+        [ServicePoint("/_checkoutV", ServicePointAttribute.VerbType.GET)]
+        public void CheckoutResourceCurrentVersionByAnyVersion(HttpApplication app)
+        {
+            ServerResponse resp;
+            Guid guid = ParseGuid(app.Request.Path);
+            Dictionary<string, string> userInfo = ParseUserInfo(app);
+
+            resp = _storage.CheckoutResourceCurrentVersionByAnyVersion(guid, userInfo["username"]);
+            resp.Serialize().WriteTo(app.Response.OutputStream);
+            app.CompleteRequest();
+            return;
+        }
+
+        /// <summary>
         /// Responds to a checkin request releasing the lock on the resource.
         /// http://localhost/_checkin/[guid]
         /// </summary>

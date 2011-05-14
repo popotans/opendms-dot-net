@@ -516,7 +516,7 @@ namespace Common.Storage
             _doc.OnDownloadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnDownloadProgress);
             _doc.OnUploadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnUploadProgress);
             _doc.OnTimeout += new CouchDB.Document.EventHandler(Document_OnTimeout);
-            result = _doc.Download(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize);
+            result = _doc.Download(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
 
             Logger.General.Debug("Finished download of resource " + GuidString + " for job id " + job.Id.ToString());
 
@@ -569,7 +569,7 @@ namespace Common.Storage
             _doc.OnDownloadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnDownloadProgress);
             _doc.OnUploadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnUploadProgress);
             _doc.OnTimeout += new CouchDB.Document.EventHandler(Document_OnTimeout);
-            result = _doc.Create(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize);
+            result = _doc.Create(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
 
             if (!result.IsPass)
             {
@@ -599,7 +599,7 @@ namespace Common.Storage
             _doc.OnDownloadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnDownloadProgress);
             _doc.OnUploadProgress += new CouchDB.Document.ProgressEventHandler(Document_OnUploadProgress);
             _doc.OnTimeout += new CouchDB.Document.EventHandler(Document_OnTimeout);
-            result = _doc.Create(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize);
+            result = _doc.Create(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
 
             if (!result.IsPass)
             {

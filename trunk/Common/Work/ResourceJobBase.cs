@@ -33,7 +33,11 @@ namespace Common.Work
         /// <summary>
         /// Gets a reference to the <see cref="Storage.Resource"/> which was passed to this job.
         /// </summary>
-        public Storage.Resource Resource { get { return _inputResource; } }
+        public Storage.Resource InputResource { get { return _inputResource; } }
+        /// <summary>
+        /// Gets a reference to the <see cref="Storage.Resource"/> which was produced by this job.
+        /// </summary>
+        public Storage.Resource ResultResource { get { return _jobResource; } }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ResourceJobBase"/> class.
@@ -45,7 +49,8 @@ namespace Common.Work
             _args = args;
             _inputResource = args.Resource;
             _couchdb = args.CouchDB;
-            if (this.GetType() == typeof(GetResourceJob))
+            if (this.GetType() == typeof(GetResourceJob) ||
+                this.GetType() == typeof(CheckoutJob))
             {
                 // Here we just create a new resource, because we do not care what exists locally
                 // we will be overwriting it anyway.

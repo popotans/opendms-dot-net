@@ -27,5 +27,11 @@ namespace Common.Work
         /// </summary>
         /// <param name="result">The <see cref="JobResult"/>.</param>
         void WorkReport(JobResult result);
+
+        /// <summary>
+        /// ServerTranslation accepts handles pumping this message to the UI
+        /// </summary>
+        /// <param name="result">The <see cref="JobResult"/>.</param>
+        void ServerTranslation(ResourceJobBase job, Guid oldGuid, Guid newGuid);
     }
 }

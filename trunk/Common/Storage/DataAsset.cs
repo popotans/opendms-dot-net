@@ -141,7 +141,7 @@ namespace Common.Storage
             doc.Attachments[0].OnDownloadProgress += new Attachment.ProgressEventHandler(DataAsset_OnDownloadProgress);
             doc.Attachments[0].OnUploadProgress += new Attachment.ProgressEventHandler(DataAsset_OnUploadProgress);
             doc.Attachments[0].OnTimeout += new Attachment.EventHandler(DataAsset_OnTimeout);
-            return doc.Attachments[0].GetDownloadStream(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize);
+            return doc.Attachments[0].GetDownloadStream(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
         }
 
         public bool DownloadAndSaveLocally(Work.ResourceJobBase job, MetaAsset ma, FileSystem.IO fileSystem,
@@ -264,7 +264,9 @@ namespace Common.Storage
             doc.Attachments[0].OnUploadProgress += new Attachment.ProgressEventHandler(DataAsset_OnUploadProgress);
             doc.Attachments[0].OnDownloadProgress += new Attachment.ProgressEventHandler(DataAsset_OnDownloadProgress);
             doc.Attachments[0].OnTimeout += new Attachment.EventHandler(DataAsset_OnTimeout);
-            result = doc.Attachments[0].Upload(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize);
+            result = doc.Attachments[0].Upload(Database, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
+
+            fileSystem.Close(iostream);
 
             if (!result.IsPass)
             {

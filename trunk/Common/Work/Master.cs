@@ -52,7 +52,11 @@ namespace Common.Work
             /// <summary>
             /// Releases the resource on the remote host
             /// </summary>
-            ReleaseResource
+            ReleaseResource,
+            /// <summary>
+            /// Gets a lock and downloads the remote resource.
+            /// </summary>
+            CheckoutJob
         }
 
         /// <summary>
@@ -141,6 +145,9 @@ namespace Common.Work
                     case JobType.ReleaseResource:
                         job = new ReleaseResourceJob(args);
                         break;
+                    case JobType.CheckoutJob:
+                        job = new CheckoutJob(args);
+                        break;
                     default:
                         throw new Exception("Unknown job type");
                 }
@@ -199,7 +206,7 @@ namespace Common.Work
                     while (pos < _jobQueue.Count)
                     {
                         // Run through the queue looking for jobs that can be performed
-                        if (!AssetIsLocked(_jobQueue[pos].Resource))
+                        if (!AssetIsLocked(_jobQueue[pos].InputResource))
                         {
                             lock (_jobQueue)
                             {
@@ -265,7 +272,7 @@ namespace Common.Work
             {
                 lock (_lockedResourceIDs)
                 {
-                    _lockedResourceIDs.Add(job.Resource.Guid);
+                    _lockedResourceIDs.Add(job.InputResource.Guid);
                 }
                 _executingJobs.Add(job);
             }
@@ -282,8 +289,8 @@ namespace Common.Work
                 {
                     lock (_lockedResourceIDs)
                     {
-                        if (_lockedResourceIDs.Contains(job.Resource.Guid))
-                            _lockedResourceIDs.Remove(job.Resource.Guid);
+                        if (_lockedResourceIDs.Contains(job.InputResource.Guid))
+                            _lockedResourceIDs.Remove(job.InputResource.Guid);
                     }
                     if(_executingJobs.Contains(job)) _executingJobs.Remove(job);
                 }
@@ -312,7 +319,7 @@ namespace Common.Work
             ResourceJobBase job = (ResourceJobBase)obj;
             lock (job)
             {
-                lock (job.Resource)
+                lock (job.InputResource)
                 {
                     try
                     {
@@ -324,8 +331,8 @@ namespace Common.Work
                         {
                             lock (_lockedResourceIDs)
                             {
-                                if (_lockedResourceIDs.Contains(job.Resource.Guid))
-                                    _lockedResourceIDs.Remove(job.Resource.Guid);
+                                if (_lockedResourceIDs.Contains(job.InputResource.Guid))
+                                    _lockedResourceIDs.Remove(job.InputResource.Guid);
                             }
                             if (_executingJobs.Contains(job)) _executingJobs.Remove(job);
                         }
@@ -342,7 +349,7 @@ namespace Common.Work
                 {
                     lock (_lockedResourceIDs)
                     {
-                        _lockedResourceIDs.Remove(job.Resource.Guid);
+                        _lockedResourceIDs.Remove(job.InputResource.Guid);
                     }
                     _executingJobs.Remove(job);
                 }
@@ -361,7 +368,8 @@ namespace Common.Work
             {
                 for (int i = 0; i < _executingJobs.Count; i++)
                 {
-                    if (_executingJobs[i].Resource == resource)
+                    if (_executingJobs[i].InputResource == resource ||
+                        _executingJobs[i].ResultResource == resource)
                     {
                         _executingJobs[i].Cancel();
                         Logger.General.Debug("Job with id " + _executingJobs[i].Id.ToString() + " has been canceled.");
@@ -381,7 +389,8 @@ namespace Common.Work
             {
                 for (int i = 0; i < _executingJobs.Count; i++)
                 {
-                    if (_executingJobs[i].Resource == resource)
+                    if (_executingJobs[i].InputResource == resource ||
+                        _executingJobs[i].ResultResource == resource)
                     {
                         return _executingJobs[i];
                     }

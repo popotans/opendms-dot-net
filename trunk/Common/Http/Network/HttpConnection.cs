@@ -108,12 +108,11 @@ namespace Common.Http.Network
             Logger.Network.Debug("Request headers have been sent and received by the server.");
         }
 
-
         public void SendRequestHeaderAndStream(Methods.HttpRequest request, System.IO.Stream stream)
         {
             if (!IsConnected)
                 throw new HttpNetworkException("Socket is closed or not ready");
-            
+
             byte[] buffer = new byte[_sendBufferSize];
             int bytesRead = 0;
             int bytesSent = 0;
@@ -165,6 +164,72 @@ namespace Common.Http.Network
                 bytesSent = Send(buffer, 0, bytesRead, _sendTimeout);
                 _bytesSentContentOnly += (ulong)bytesSent;
                 _bytesSentTotal += (ulong)bytesSent;
+                if (OnDataSent != null) OnDataSent(this, bytesSent, _bytesSentHeadersOnly, _bytesSentContentOnly, _bytesSentTotal);
+            }
+        }
+
+        public void SendRequestHeaderAndStream(Methods.HttpRequest request, System.IO.Stream stream, Work.JobBase job)
+        {
+            if (!IsConnected)
+                throw new HttpNetworkException("Socket is closed or not ready");
+
+            byte[] buffer = new byte[_sendBufferSize];
+            int bytesRead = 0;
+            int bytesSent = 0;
+
+            if (stream != null)
+            {
+                Logger.Network.Debug("Found data to send, configuring use of 100-Continue.");
+                request.Headers.Add("Expect", "100-Continue");
+            }
+
+            byte[] header = System.Text.Encoding.ASCII.GetBytes(GetRequestHeader(request).ToString());
+
+            // Send headers
+            Logger.Network.Debug("Sending request headers...");
+            bytesSent = Send(header, 0, header.Length, _sendTimeout);
+
+            _bytesSentHeadersOnly += (ulong)bytesSent;
+            _bytesSentTotal += (ulong)bytesSent;
+            if (OnDataSent != null) OnDataSent(this, bytesSent, _bytesSentHeadersOnly, _bytesSentContentOnly, _bytesSentTotal);
+
+            if (job.IsCancelled) return;
+
+            // Do we need to wait for a 100-Continue response?
+            if (!string.IsNullOrEmpty(request.Headers.Get("Expect")) &&
+                request.Headers.Get("Expect") == "100-Continue")
+            {
+                Logger.Network.Debug("Waiting on the 100-Continue message...");
+                WaitForDataToArriveAtSocket(_receiveTimeout);
+                if (_socket.Available > 0)
+                {
+                    // Read the 100-Continue response
+                    Methods.HttpResponse response = ReceiveResponseHeaders();
+                    if (response.ResponseCode != 100)
+                    {
+                        Logger.Network.Error("100-Continue server response was not received.");
+                        throw new HttpNetworkException("Reponse returned before data was sent, but it is not 100-continue.");
+                    }
+                }
+                else
+                {
+                    Logger.Network.Error("The expected 100-Continue response was not received from the server within the " + _receiveTimeout.ToString() + "ms timeout period.");
+                    throw new HttpNetworkTimeoutException("A timeout occurred while waiting on the 100-Continue response.");
+                }
+            }
+
+            Logger.Network.Debug("100-Continue server response was received, preparing to send data...");
+
+            if (job.IsCancelled) return;
+
+            // Send payload
+            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                bytesSent = Send(buffer, 0, bytesRead, _sendTimeout);
+                _bytesSentContentOnly += (ulong)bytesSent;
+                _bytesSentTotal += (ulong)bytesSent;
+                if (OnDataSent != null) OnDataSent(this, bytesSent, _bytesSentHeadersOnly, _bytesSentContentOnly, _bytesSentTotal);
+                if (job.IsCancelled) return;
             }
         }
 

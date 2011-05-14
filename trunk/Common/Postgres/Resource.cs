@@ -262,6 +262,41 @@ namespace Common.Postgres
             return true;
         }
 
+        public static Resource GetResourceFromVersionId(Guid versionId)
+        {
+            Database db;
+            NpgsqlCommand cmd;
+            DataTable dt;
+            Resource r;
+
+            db = new Database(SettingsBase.Instance.PostgresConnectionString);
+            cmd = new NpgsqlCommand("SELECT * FROM tbl_resource WHERE id IN (SELECT resource_id FROM tbl_version WHERE version_guid=:versionid)");
+            cmd.Parameters.Add(new NpgsqlParameter("versionid", NpgsqlTypes.NpgsqlDbType.Uuid));
+            cmd.Parameters[0].Value = versionId;
+
+            db.Open();
+            dt = db.GetTable(cmd);
+            db.Close();
+
+            if (dt.Rows.Count <= 0)
+            {
+                Logger.General.Error("Could not find a resource match for version id " + versionId.ToString("N"));
+                return null;
+            }
+
+            try
+            {
+                r = new Resource(dt.Rows[0]);
+            }
+            catch
+            {
+                Logger.General.Error("Could not parse the resource match for version id " + versionId.ToString("N"));
+                return null;
+            }
+
+            return r;
+        }
+
         public static Resource CreateNewResource(string lockedBy, out Version newVersion)
         {
             Guid temp = Guid.Empty;

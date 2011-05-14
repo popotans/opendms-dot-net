@@ -607,10 +607,11 @@ namespace Common.CouchDB
         /// <param name="receiveTimeout">The receive timeout.</param>
         /// <param name="sendBufferSize">Size of the send buffer.</param>
         /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <param name="job">The <see cref="Work.JobBase"/>.</param>
         /// <returns>
         /// A CouchDB.Result representing the result of the request
         /// </returns>
-        public Result Download(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+        public Result Download(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize, Work.JobBase job)
         {
             // Check the _state
             if (!CheckState(CAN_DOWNLOAD))
@@ -639,7 +640,7 @@ namespace Common.CouchDB
             // Dispatch the message
             try
             {
-                httpResponse = httpClient.Execute(httpGet, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+                httpResponse = httpClient.Execute(httpGet, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize, job);
             }
             catch (Http.Network.HttpNetworkTimeoutException e)
             {
@@ -696,10 +697,11 @@ namespace Common.CouchDB
         /// <param name="receiveTimeout">The receive timeout.</param>
         /// <param name="sendBufferSize">Size of the send buffer.</param>
         /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <param name="job">The <see cref="Work.JobBase"/>.</param>
         /// <returns>
         /// A CouchDB.Result representing the result of the request
         /// </returns>
-        public Result Update(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+        public Result Update(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize, Work.JobBase job)
         {
             // Check the _state
             if (!CheckState(CAN_UPDATE))
@@ -732,7 +734,7 @@ namespace Common.CouchDB
             // Dispatch the message
             try
             {
-                httpResponse = httpClient.Execute(httpPut, ms, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+                httpResponse = httpClient.Execute(httpPut, ms, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize, job);
             }
             catch (Http.Network.HttpNetworkTimeoutException e)
             {
@@ -770,10 +772,11 @@ namespace Common.CouchDB
         /// <param name="receiveTimeout">The receive timeout.</param>
         /// <param name="sendBufferSize">Size of the send buffer.</param>
         /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <param name="job">The <see cref="Work.JobBase"/>.</param>
         /// <returns>
         /// A CouchDB.Result representing the result of the request
         /// </returns>
-        public Result Create(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+        public Result Create(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize, Work.JobBase job)
         {
             // Check the _state
             if (!CheckState(CAN_CREATE))
@@ -844,10 +847,11 @@ namespace Common.CouchDB
         /// <param name="receiveTimeout">The receive timeout.</param>
         /// <param name="sendBufferSize">Size of the send buffer.</param>
         /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <param name="job">The <see cref="Work.JobBase"/>.</param>
         /// <returns>
         /// A CouchDB.Result representing the result of the request
         /// </returns>
-        public Result Delete(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+        public Result Delete(Database db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize, Work.JobBase job)
         {
             // Check the _state
             if (!CheckState(CAN_DELETE))
@@ -872,7 +876,7 @@ namespace Common.CouchDB
             // Dispatch the message
             try
             {
-                httpResponse = httpClient.Execute(httpDelete, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+                httpResponse = httpClient.Execute(httpDelete, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize, job);
             }
             catch (Http.Network.HttpNetworkTimeoutException e)
             {

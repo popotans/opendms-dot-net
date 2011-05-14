@@ -33,7 +33,20 @@ namespace Common.Http
             return Execute(request, connection, stream);
         }
 
-        private Methods.HttpResponse Execute(Methods.HttpRequest request, Network.HttpConnection connection, 
+        public Methods.HttpResponse Execute(Methods.HttpRequest request, System.IO.Stream stream,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize, Work.JobBase job)
+        {
+            Network.HttpConnectionFactory connFactory = null;
+            Network.HttpConnection connection = null;
+
+            connFactory = new Network.HttpConnectionFactory();
+            connection = connFactory.GetConnection(request.Uri, sendTimeout, receiveTimeout,
+                sendBufferSize, receiveBufferSize);
+
+            return Execute(request, connection, stream, job);
+        }
+
+        private Methods.HttpResponse Execute(Methods.HttpRequest request, Network.HttpConnection connection,
             System.IO.Stream stream)
         {
             Methods.HttpResponse response = null;
@@ -53,6 +66,43 @@ namespace Common.Http
                 request.ContentLength = "0";
                 connection.SendRequestHeaderOnly(request);
             }
+
+            response = connection.ReceiveResponseHeaders();
+
+            if (Utilities.GetContentLength(response.Headers) > 0)
+                connection.ReceiveResponseBody(response);
+
+            // If 100 then we are about to get another body
+            if (response.ResponseCode == 100)
+            {
+                connection.ReceiveResponseBody(response);
+            }
+
+            return response;
+        }
+
+        private Methods.HttpResponse Execute(Methods.HttpRequest request, Network.HttpConnection connection,
+            System.IO.Stream stream, Work.JobBase job)
+        {
+            Methods.HttpResponse response = null;
+
+            // Subscribe to events
+            connection.OnDataReceived += new Network.HttpConnection.DataReceivedDelegate(Connection_OnDataReceived);
+            connection.OnDataSent += new Network.HttpConnection.DataSentDelegate(Connection_OnDataSent);
+
+            if (stream != null)
+            {
+                if (stream.CanSeek) stream.Position = 0;
+                request.ContentLength = stream.Length.ToString();
+                connection.SendRequestHeaderAndStream(request, stream, job);
+            }
+            else
+            {
+                request.ContentLength = "0";
+                connection.SendRequestHeaderOnly(request);
+            }
+
+            if (job.IsCancelled) return null;
 
             response = connection.ReceiveResponseHeaders();
 

@@ -93,6 +93,8 @@ namespace Common.Work
             dr.Rename(pgVersion.VersionGuid);
 
             // Assign the GUID received from Postgres to our internal objects
+            Logger.General.Debug("Translating guid of " + _jobResource.MetaAsset.Guid.ToString("N") + " to " + pgVersion.VersionGuid.ToString("N"));
+            _requestor.ServerTranslation(this, _jobResource.MetaAsset.Guid, pgVersion.VersionGuid);
             _jobResource.MetaAsset.Guid = _jobResource.DataAsset.Guid = pgVersion.VersionGuid;
 
             // Save MA
@@ -116,13 +118,16 @@ namespace Common.Work
                 if (!_currentState.HasFlag(State.Timeout))
                 {
                     Logger.General.Error("Failed to create the resource for CreateResourceJob with id " +
-                        Id.ToString() + " with error message: " + errorMessage);
-                    _errorManager.AddError(ErrorMessage.ErrorCode.CreateResourceOnServerFailed,
-                        "Resource Creation Failed",
-                        "I failed to create the resource on the remote server, for additional details consult the logs.",
-                        "Failed to create the resource on the remote server for CreateResourceJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
-                        true, true);
-                    _currentState = State.Error;
+                           Id.ToString() + " with error message: " + errorMessage);
+                    if (!IsCancelled)
+                    {
+                        _errorManager.AddError(ErrorMessage.ErrorCode.CreateResourceOnServerFailed,
+                            "Resource Creation Failed",
+                            "I failed to create the resource on the remote server, for additional details consult the logs.",
+                            "Failed to create the resource on the remote server for CreateResourceJob with id " + Id.ToString() + ", for additional details consult earlier log entries and log entries on the server.",
+                            true, true);
+                        _currentState = State.Error;
+                    }
                 }
 
                 ReportWork(this);
