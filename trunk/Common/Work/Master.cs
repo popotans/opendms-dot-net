@@ -245,7 +245,7 @@ namespace Common.Work
         /// </summary>
         /// <param name="resource">The resource.</param>
         /// <returns><c>True</c> if locked; otherwise, <c>false</c>.</returns>
-        private bool AssetIsLocked(Storage.Resource resource)
+        private bool AssetIsLocked(Storage.Version resource)
         {
             lock (_lockedResourceIDs)
             {
@@ -362,7 +362,7 @@ namespace Common.Work
         /// Cancels the currently executing job for a resource.
         /// </summary>
         /// <param name="resource">The resource.</param>
-        public void CancelJobForResource(Storage.Resource resource)
+        public void CancelJobForResource(Storage.Version resource)
         {
             lock (_executingJobs)
             {
@@ -383,7 +383,7 @@ namespace Common.Work
         /// </summary>
         /// <param name="resource">The resource.</param>
         /// <returns>The <see cref="ResourceJobBase"/> if found; otherwise, <c>null</c>.</returns>
-        public ResourceJobBase FindExecutingJobForResource(Storage.Resource resource)
+        public ResourceJobBase FindExecutingJobForResource(Storage.Version resource)
         {
             lock (_executingJobs)
             {

@@ -6,7 +6,7 @@ namespace Common.Work
     {
         public IWorkRequestor Requestor { get; set; }
         public ulong Id { get; set; }
-        public Storage.Resource Resource { get; set; }
+        public Storage.Version Resource { get; set; }
         public JobBase.UpdateUIDelegate UpdateUICallback { get; set; }
         public uint Timeout { get; set; }
         public string RequestingUser { get; set; }

@@ -150,6 +150,8 @@ namespace Common.Work
         /// </summary>
         public string RequestingUser { get { return _requestingUser; } }
 
+        public IWorkRequestor Requestor { get { return _requestor; } }
+
         /// <summary>
         /// Gets the id of the job.
         /// </summary>
@@ -301,9 +303,14 @@ namespace Common.Work
         /// <summary>
         /// Sets the error flag.
         /// </summary>
-        public void SetErrorFlag()
+        public void ActivateErrorFlag()
         {
             _currentState |= State.Error;
+        }
+
+        public void ActivateTimeoutFlag()
+        {
+            _currentState |= State.Timeout;
         }
 
         /// <summary>

@@ -262,6 +262,54 @@ namespace Common.Postgres
             return true;
         }
 
+        public System.Collections.Generic.List<Version> GetAllVersions()
+        {
+            Database db;
+            DataTable dt;
+            NpgsqlCommand cmd;
+            System.Collections.Generic.List<Version> versions = new System.Collections.Generic.List<Version>();
+
+            db = new Database(SettingsBase.Instance.PostgresConnectionString);
+
+            cmd = new NpgsqlCommand("SELECT * FROM tbl_version WHERE resource_id=:resourceid");
+            cmd.Parameters.Add(new NpgsqlParameter("resourceid", NpgsqlTypes.NpgsqlDbType.Uuid));
+            cmd.Parameters[0].Value = Id;
+
+            db.Open();
+            dt = db.GetTable(cmd);
+            db.Close();
+
+            for(int i=0; i<dt.Rows.Count; i++)
+            {
+                versions.Add(new Version(dt.Rows[i]));
+            }
+
+            return versions;
+        }
+
+        public bool Delete()
+        {
+            Database db;
+            NpgsqlCommand cmd1, cmd2;
+
+            db = new Database(SettingsBase.Instance.PostgresConnectionString);
+
+            cmd1 = new NpgsqlCommand("DELETE FROM tbl_version WHERE resource_id=:resourceid");
+            cmd1.Parameters.Add(new NpgsqlParameter("resourceid", NpgsqlTypes.NpgsqlDbType.Uuid));
+            cmd1.Parameters[0].Value = Id;
+
+            cmd2 = new NpgsqlCommand("DELETE FROM tbl_resource WHERE id=:resourceid");
+            cmd2.Parameters.Add(new NpgsqlParameter("resourceid", NpgsqlTypes.NpgsqlDbType.Uuid));
+            cmd2.Parameters[0].Value = Id;
+
+            db.Open();
+            db.DBExec(cmd1);
+            db.DBExec(cmd2);
+            db.Close();
+            
+            return true;
+        }
+
         public static Resource GetResourceFromVersionId(Guid versionId)
         {
             Database db;

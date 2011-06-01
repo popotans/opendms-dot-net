@@ -244,6 +244,19 @@ namespace HttpModule
             return;
         }
 
+        [ServicePoint("/_delete", ServicePointAttribute.VerbType.DELETE)]
+        public void Delete(HttpApplication app)
+        {
+            ServerResponse resp;
+            Guid guid = ParseGuid(app.Request.Path);
+            Dictionary<string, string> userInfo = ParseUserInfo(app);
+            Dictionary<string, string> queryString = ParseQueryString(app);
+
+
+            // Delete receives a version guid
+            _storage.DeleteResource(guid
+        }
+
         /// <summary>
         /// Parses the user information from the HTTP request headers.
         /// </summary>

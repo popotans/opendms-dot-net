@@ -24,20 +24,20 @@ namespace Common.Work
     {
         protected JobArgs _args;
         protected CouchDB.Database _couchdb;
-        protected Storage.Resource _jobResource;
+        protected Storage.Version _jobResource;
 
         /// <summary>
-        /// A reference to a <see cref="Storage.Resource"/> which was passed to this job.
+        /// A reference to a <see cref="Storage.Version"/> which was passed to this job.
         /// </summary>
-        protected Storage.Resource _inputResource;
+        protected Storage.Version _inputResource;
         /// <summary>
-        /// Gets a reference to the <see cref="Storage.Resource"/> which was passed to this job.
+        /// Gets a reference to the <see cref="Storage.Version"/> which was passed to this job.
         /// </summary>
-        public Storage.Resource InputResource { get { return _inputResource; } }
+        public Storage.Version InputResource { get { return _inputResource; } }
         /// <summary>
-        /// Gets a reference to the <see cref="Storage.Resource"/> which was produced by this job.
+        /// Gets a reference to the <see cref="Storage.Version"/> which was produced by this job.
         /// </summary>
-        public Storage.Resource ResultResource { get { return _jobResource; } }
+        public Storage.Version ResultResource { get { return _jobResource; } }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ResourceJobBase"/> class.
@@ -54,13 +54,13 @@ namespace Common.Work
             {
                 // Here we just create a new resource, because we do not care what exists locally
                 // we will be overwriting it anyway.
-                _jobResource = new Storage.Resource(_inputResource.Guid, _couchdb);
+                _jobResource = new Storage.Version(_inputResource.Guid, _couchdb);
             }
             else
-                _jobResource = Storage.Resource.DeepCopy(_inputResource);
+                _jobResource = Storage.Version.DeepCopy(_inputResource);
         }
 
-        protected void ReportWork(ResourceJobBase job)
+        public void ReportWork(ResourceJobBase job)
         {
             _requestor.WorkReport(new JobResult() { Resource = _jobResource, 
                                                     Job = job, 

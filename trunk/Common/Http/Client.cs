@@ -4,130 +4,100 @@ namespace Common.Http
 {
     public class Client
     {
-        public delegate void DataSentDelegate(Client sender, Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total);
-        public delegate void DataReceivedDelegate(Client sender, Network.HttpConnection connection, int packetSize, ulong headersTotal, ulong contentTotal, ulong total);
-        public event DataSentDelegate OnDataSent;
-        public event DataReceivedDelegate OnDataReceived;
+        public delegate void ProgressDelegate(Client sender, Network.HttpConnection connection, Network.DirectionType direction, int packetSize);
+        public event ProgressDelegate OnProgress;
+        public delegate void TimeoutDelegate(Client sender, Network.HttpConnection connection);
+        public event TimeoutDelegate OnTimeout;
+        public delegate void CompletionDelegate(Client sender, Network.HttpConnection connection, Methods.HttpResponse response);
+        public event CompletionDelegate OnComplete;
+        public delegate void ErrorDelegate(Client sender, string message, Exception exception);
+        public event ErrorDelegate OnError;
 
-        public Methods.HttpResponse Execute(Methods.HttpRequest request, System.IO.Stream stream)
+        private Methods.HttpRequest _request;
+        private System.IO.Stream _stream;
+
+        public void Execute(Methods.HttpRequest request, int sendTimeout, int receiveTimeout,
+            int sendBufferSize, int receiveBufferSize)
         {
-            Network.HttpConnectionFactory connFactory = null;
-            Network.HttpConnection connection = null;
-
-            connFactory = new Network.HttpConnectionFactory();
-            connection = connFactory.GetConnection(request.Uri);
-
-            return Execute(request, connection, stream);
+            Execute(request, null, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
         }
 
-        public Methods.HttpResponse Execute(Methods.HttpRequest request, System.IO.Stream stream,
+        public void Execute(Methods.HttpRequest request, System.IO.Stream stream,
             int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             Network.HttpConnectionFactory connFactory = null;
             Network.HttpConnection connection = null;
 
             connFactory = new Network.HttpConnectionFactory();
+            connFactory.OnConnected += new Network.HttpConnectionFactory.ConnectedDelegate(ConnFactory_OnConnected);
+            connFactory.OnError += new Network.HttpConnection.ErrorDelegate(ConnFactory_OnError);
             connection = connFactory.GetConnection(request.Uri, sendTimeout, receiveTimeout,
                 sendBufferSize, receiveBufferSize);
-
-            return Execute(request, connection, stream);
         }
 
-        public Methods.HttpResponse Execute(Methods.HttpRequest request, System.IO.Stream stream,
-            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize, Work.JobBase job)
+        private void ConnFactory_OnError(Network.HttpConnection sender, string message, Exception exception)
         {
-            Network.HttpConnectionFactory connFactory = null;
-            Network.HttpConnection connection = null;
-
-            connFactory = new Network.HttpConnectionFactory();
-            connection = connFactory.GetConnection(request.Uri, sendTimeout, receiveTimeout,
-                sendBufferSize, receiveBufferSize);
-
-            return Execute(request, connection, stream, job);
+            Logger.Network.Error("Http.Client received an error from Http.Network.HttpConnectionFactory. Message: " + message, exception);
+            if (OnError != null) OnError(this, message, exception);
+            else throw new ErrorNotImplementedException("No subscription to OnError.");
         }
 
-        private Methods.HttpResponse Execute(Methods.HttpRequest request, Network.HttpConnection connection,
-            System.IO.Stream stream)
+        private void ConnFactory_OnConnected(Network.HttpConnection sender)
         {
-            Methods.HttpResponse response = null;
+            sender.OnProgress += new Network.HttpConnection.ProgressDelegate(Connection_OnProgress);
+            sender.OnComplete += new Network.HttpConnection.CompletionEvent(Connection_OnComplete);
+            sender.OnTimeout += new Network.HttpConnection.ConnectionDelegate(Connection_OnTimeout);
+            sender.OnError += new Network.HttpConnection.ErrorDelegate(Connection_OnError);
+            sender.OnDisconnect += new Network.HttpConnection.ConnectionDelegate(Connection_OnDisconnect);
 
-            // Subscribe to events
-            connection.OnDataReceived += new Network.HttpConnection.DataReceivedDelegate(Connection_OnDataReceived);
-            connection.OnDataSent += new Network.HttpConnection.DataSentDelegate(Connection_OnDataSent);
-
-            if (stream != null)
+            try
             {
-                if (stream.CanSeek) stream.Position = 0;
-                request.ContentLength = stream.Length.ToString();
-                connection.SendRequestHeaderAndStream(request, stream);
+                sender.SendRequest(_request, _stream);
             }
-            else
+            catch (Exception e)
             {
-                request.ContentLength = "0";
-                connection.SendRequestHeaderOnly(request);
+                sender.OnProgress -= Connection_OnProgress;
+                sender.OnComplete -= Connection_OnComplete;
+                sender.OnTimeout -= Connection_OnTimeout;
+                sender.OnError -= Connection_OnError;
+                sender.OnDisconnect -= Connection_OnDisconnect;
+
+                Logger.Network.Error("An exception occurred while sending the request.", e);
+                if (OnError != null) OnError(this, "Exception while sending the request.", e);
+                else throw;
             }
-
-            response = connection.ReceiveResponseHeaders();
-
-            if (Utilities.GetContentLength(response.Headers) > 0)
-                connection.ReceiveResponseBody(response);
-
-            // If 100 then we are about to get another body
-            if (response.ResponseCode == 100)
-            {
-                connection.ReceiveResponseBody(response);
-            }
-
-            return response;
         }
 
-        private Methods.HttpResponse Execute(Methods.HttpRequest request, Network.HttpConnection connection,
-            System.IO.Stream stream, Work.JobBase job)
+        private void Connection_OnError(Network.HttpConnection sender, string message, Exception exception)
         {
-            Methods.HttpResponse response = null;
-
-            // Subscribe to events
-            connection.OnDataReceived += new Network.HttpConnection.DataReceivedDelegate(Connection_OnDataReceived);
-            connection.OnDataSent += new Network.HttpConnection.DataSentDelegate(Connection_OnDataSent);
-
-            if (stream != null)
-            {
-                if (stream.CanSeek) stream.Position = 0;
-                request.ContentLength = stream.Length.ToString();
-                connection.SendRequestHeaderAndStream(request, stream, job);
-            }
-            else
-            {
-                request.ContentLength = "0";
-                connection.SendRequestHeaderOnly(request);
-            }
-
-            if (job.IsCancelled) return null;
-
-            response = connection.ReceiveResponseHeaders();
-
-            if (Utilities.GetContentLength(response.Headers) > 0)
-                connection.ReceiveResponseBody(response);
-
-            // If 100 then we are about to get another body
-            if (response.ResponseCode == 100)
-            {
-                connection.ReceiveResponseBody(response);
-            }
-
-            return response;
+            Logger.Network.Error("Http.Client received an error from Http.Network.HttpConnection. Message: " + message, exception);
+            if (OnError != null) OnError(this, message, exception);
+            else throw new ErrorNotImplementedException("No subscription to OnError.");
         }
 
-        void Connection_OnDataSent(Network.HttpConnection sender, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
+        private void Connection_OnDisconnect(Network.HttpConnection sender)
         {
-            if (OnDataSent != null)
-                OnDataSent(this, sender, packetSize, headersTotal, contentTotal, total);
+            // Nothing to do really.
         }
 
-        void Connection_OnDataReceived(Network.HttpConnection sender, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
+        private void Connection_OnTimeout(Network.HttpConnection sender)
         {
-            if (OnDataReceived != null)
-                OnDataReceived(this, sender, packetSize, headersTotal, contentTotal, total);
+            Logger.Network.Error("Http.Client received an timeout from Http.Network.HttpConnection.");
+            if (OnTimeout != null) OnTimeout(this, sender);
+            else throw new ErrorNotImplementedException("No subscription to OnTimeout.");
+        }
+
+        private void Connection_OnComplete(Network.HttpConnection sender, Methods.HttpResponse response)
+        {
+            Logger.Network.Info("Http.Client received a completion event from Http.Network.HttpConnection.");
+            if (OnComplete != null) OnComplete(this, sender, response);
+            else throw new CompleteNotImplementedException("No subscription to OnComplete.");
+        }
+
+        private void Connection_OnProgress(Network.HttpConnection sender, Network.DirectionType direction, int packetSize)
+        {
+            // Not logged, way to verbose
+            if (OnProgress != null) OnProgress(this, sender, direction, packetSize);
         }
     }
 }

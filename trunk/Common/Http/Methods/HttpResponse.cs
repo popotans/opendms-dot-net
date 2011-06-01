@@ -10,6 +10,5 @@ namespace Common.Http.Methods
         public HttpResponse()
         {
         }
-
     }
 }
