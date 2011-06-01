@@ -18,8 +18,12 @@ using Common.CouchDB;
 
 namespace Common.Storage
 {
-    public sealed class Resource
+    public sealed class Version
     {
+        public delegate void EventDelegate(Version sender);
+        public delegate void ProgressDelegate(Version sender, int packetSize, ulong headersTotal
+        public event VersionEvent OnTimeout;
+
         private MetaAsset _metaAsset;
         private DataAsset _dataAsset;
         private CouchDB.Database _couchdb;
@@ -28,21 +32,21 @@ namespace Common.Storage
         public DataAsset DataAsset { get { return _dataAsset; } }
         public Guid Guid { get { return _metaAsset.Guid; } }
 
-        public Resource(Guid guid, Database cdb)
+        public Version(Guid guid, Database cdb)
         {
             _couchdb = cdb;
             _metaAsset = new MetaAsset(guid, cdb);
             _dataAsset = new DataAsset(_metaAsset, cdb);
         }
 
-        public Resource(Guid guid, string dataExtension, Database cdb)
+        public Version(Guid guid, string dataExtension, Database cdb)
         {
             _couchdb = cdb;
             _metaAsset = new MetaAsset(guid, cdb);
             _dataAsset = new DataAsset(guid, dataExtension, cdb);
         }
 
-        public Resource(MetaAsset ma, Database cdb)
+        public Version(MetaAsset ma, Database cdb)
         {
             _couchdb = cdb;
             _metaAsset = ma;
@@ -58,7 +62,20 @@ namespace Common.Storage
             if (_metaAsset == null)
                 throw new InvalidOperationException("Meta Asset cannot be null.");
 
+            _metaAsset.OnDownloadProgress += new Storage.MetaAsset.ProgressHandler(MetaAsset_OnDownloadProgress);
+            _metaAsset.OnTimeout += new Storage.MetaAsset.EventHandler(MetaAsset_OnTimeout);
+
             return _metaAsset.GetFromRemote(job, sendBufferSize, receiveBufferSize, out errorMessage);
+        }
+
+        void MetaAsset_OnTimeout(MetaAsset sender)
+        {
+            throw new NotImplementedException();
+        }
+
+        void MetaAsset_OnDownloadProgress(MetaAsset sender, int packetSize, ulong headersTotal, ulong contentTotal, ulong total)
+        {
+            throw new NotImplementedException();
         }
 
         public bool DownloadDataAssetAndSaveLocally(Work.ResourceJobBase job, FileSystem.IO fileSystem, 
@@ -189,20 +206,20 @@ namespace Common.Storage
             int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
             Http.Client httpClient;
-            Http.Methods.HttpPut httpPut;
+            Http.Methods.HttpDelete httpDelete;
             Http.Methods.HttpResponse httpResponse;
 
             errorMessage = null;
             httpClient = new Http.Client();
-            httpPut = new Http.Methods.HttpPut(new Uri("http://" + SettingsBase.Instance.ServerIp +
-                ":" + SettingsBase.Instance.ServerPort.ToString() + "/_unlock/" +
-                Guid.ToString("N")), "application/json");
+            httpDelete = new Http.Methods.HttpDelete(new Uri("http://" + SettingsBase.Instance.ServerIp +
+                ":" + SettingsBase.Instance.ServerPort.ToString() + "/_delete/" +
+                Guid.ToString("N")));
 
             Logger.General.Debug("Sending a release resource request to the server for resource " + Guid.ToString("N"));
 
             job.UpdateLastAction();
 
-            httpResponse = httpClient.Execute(httpPut, null, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
+            httpResponse = httpClient.Execute(httpDelete, null, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
 
             if (httpResponse.ResponseCode == 200)
             {
@@ -213,9 +230,111 @@ namespace Common.Storage
             return false;
         }
 
-        public static Resource DeepCopy(Resource resource)
+        /// <summary>
+        /// Deletes the resource from remote host (should be used by a client).
+        /// </summary>
+        /// <param name="job">The job.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <param name="errorMessage">The error message.</param>
+        /// <returns></returns>
+        public bool DeleteResourceFromRemote(Work.ResourceJobBase job,
+            int sendBufferSize, int receiveBufferSize, out string errorMessage)
         {
-            return new Resource(resource.MetaAsset.Copy(resource.Guid, 
+            Http.Client httpClient;
+            Http.Methods.HttpDelete httpDelete;
+            Http.Methods.HttpResponse httpResponse;
+
+            errorMessage = null;
+            httpClient = new Http.Client();
+            httpDelete = new Http.Methods.HttpDelete(new Uri("http://" + SettingsBase.Instance.ServerIp +
+                ":" + SettingsBase.Instance.ServerPort.ToString() + "/_delete/" +
+                Guid.ToString("N")));
+
+            Logger.General.Debug("Sending a delete resource request to the server for resource " + Guid.ToString("N"));
+
+            job.UpdateLastAction();
+
+            httpResponse = httpClient.Execute(httpDelete, null, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
+
+            if (httpResponse.ResponseCode == 200)
+            {
+                Logger.General.Debug("Resource " + Guid.ToString() + " successfully deleted.");
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Deletes the resource from the couch DB server ONLY (should be used by the HttpModule).
+        /// </summary>
+        /// <param name="job">The job.</param>
+        /// <param name="sendBufferSize">Size of the send buffer.</param>
+        /// <param name="receiveBufferSize">Size of the receive buffer.</param>
+        /// <param name="errorMessage">The error message.</param>
+        /// <param name="resourceDeleted">The resource deleted.</param>
+        /// <param name="versionsDeleted">The versions deleted.</param>
+        /// <returns></returns>
+        public bool DeleteResourceFromCouchDB(Work.RecreateResourceJob job,
+            int sendBufferSize, int receiveBufferSize, out string errorMessage,
+            out Common.Postgres.Resource resourceDeleted,
+            out System.Collections.Generic.List<Common.Postgres.Version> versionsDeleted)
+        {
+            int retry = 2;
+            Result result;
+            CouchDB.Document doc;
+            System.Collections.Generic.Dictionary<string, string> idRevCollection =
+                new System.Collections.Generic.Dictionary<string, string>();
+
+            resourceDeleted = Postgres.Resource.GetResourceFromVersionId(job.InputResource.Guid);
+            versionsDeleted = resourceDeleted.GetAllVersions();
+
+            // Get a collection of id/rev for deletion
+            for (int i = 0; i < versionsDeleted.Count; i++)
+            {
+                doc = new Document(versionsDeleted[i].VersionGuid.ToString("N"));
+                result = doc.Download(_couchdb, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
+                while (!result.IsPass & retry > 0)
+                {
+                    retry--;
+                    result = doc.Download(_couchdb, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
+                }
+                if (!result.IsPass)
+                {
+                    errorMessage = "Failed to download the resource information.";
+                    return false;
+                }
+                idRevCollection.Add(doc.Id, doc.Rev);
+            }
+
+            System.Collections.Generic.Dictionary<string, string>.Enumerator en =
+                idRevCollection.GetEnumerator();
+
+            // Delete
+            while(en.MoveNext())
+            {
+                doc = new Document(en.Current.Key, en.Current.Value);
+                result = doc.Delete(_couchdb, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
+                while (!result.IsPass & retry > 0)
+                {
+                    retry--;
+                    result = doc.Download(_couchdb, (int)job.Timeout, (int)job.Timeout, sendBufferSize, receiveBufferSize, job);
+                }
+                if (!result.IsPass)
+                {
+                    errorMessage = "Failed to delete the resource.";
+                    return false;
+                }
+            }
+
+            errorMessage = null;
+            return true;
+        }
+
+        public static Version DeepCopy(Version resource)
+        {
+            return new Version(resource.MetaAsset.Copy(resource.Guid, 
                 resource.MetaAsset.Database), resource.MetaAsset.Database);
         }
     }

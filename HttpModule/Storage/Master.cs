@@ -206,6 +206,43 @@ namespace HttpModule.Storage
                 Common.NetworkPackage.ServerResponse.ErrorCode.None);
         }
 
+        public Common.NetworkPackage.ServerResponse DeleteResource(Guid resourceId, string requestingUser)
+        {
+            Common.Postgres.Resource pgResource;
+
+            // Get the current Resource from pgsql
+            if ((pgResource = Common.Postgres.Resource.Get(resourceId)) == null)
+            {
+                return new Common.NetworkPackage.ServerResponse(false,
+                    Common.NetworkPackage.ServerResponse.ErrorCode.ResourceDoesNotExist,
+                    "The requested resource does not exist.");
+            }
+
+            // Now we need to do some lock checking.
+            // First, we need to check to see if a lock exists (not null)
+            // Second, we need to ensure that the lock is owned by this user
+            if (!string.IsNullOrEmpty(pgResource.LockedBy))
+            {
+                if (pgResource.LockedBy != requestingUser)
+                {
+                    return new Common.NetworkPackage.ServerResponse(false,
+                        Common.NetworkPackage.ServerResponse.ErrorCode.ResourceIsLocked,
+                        "The requested resource is locked by another user.");
+                }
+            }
+            else
+            {
+                return new Common.NetworkPackage.ServerResponse(false,
+                    Common.NetworkPackage.ServerResponse.ErrorCode.ResourceNotCheckedOut,
+                    "The requested resource cannot be unlocked because it has not been checked out.");
+            }
+
+
+
+            // Delete the database records for the resource
+            pgResource.Delete();
+        }
+
         /// <summary>
         /// Gets the meta form from the file system.
         /// </summary>

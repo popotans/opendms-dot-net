@@ -6,7 +6,7 @@ namespace Common.Work
     {
         public JobBase Job { get; set; }
         public JobArgs InputArgs { get; set; }
-        public Storage.Resource Resource { get; set; }
+        public Storage.Version Resource { get; set; }
 
         public bool GuidChanged
         {

@@ -53,7 +53,7 @@ namespace WindowsClient
         /// Represents the method that handles a resource event.
         /// </summary>
         /// <param name="resource">The resource.</param>
-        delegate void ResourceDelegate(Resource resource);
+        delegate void ResourceDelegate(Version resource);
         /// <summary>
         /// A reference to the <see cref="Master"/>.
         /// </summary>
@@ -168,6 +168,7 @@ namespace WindowsClient
                     actUpdateUI = CheckUpdateStatus;
                     break;
                 case Master.JobType.CreateResource:
+                    // TODO
                     // This needs to delete the resource from CouchDB and then
                     // create the resource on CouchDB again.
                     throw new NotImplementedException();
@@ -244,7 +245,7 @@ namespace WindowsClient
 
         void ResourceTree_OnCancel(ResourceTreeView.State state)
         {
-            Common.Storage.Resource resource = null;
+            Common.Storage.Version resource = null;
             
             // If the resource of the state exists then cancel it
             // This happens when a translation is not required - non CreateResourceJob
@@ -389,7 +390,7 @@ namespace WindowsClient
         void LoadLocalResources()
         {
             MetaAsset ma;
-            Resource resource = null;
+            Version resource = null;
             Guid guid = Guid.Empty;
             string temp;
 
@@ -413,7 +414,7 @@ namespace WindowsClient
 
                     if (ma.LoadFromLocal(null, ma.RelativePath, FileSystem))
                     {
-                        resource = new Resource(ma, _couchdb);
+                        resource = new Version(ma, _couchdb);
                         _workMaster.AddJob(new JobArgs()
                         {
                             CouchDB = _couchdb,
@@ -633,9 +634,9 @@ namespace WindowsClient
         /// Opens the resource.
         /// </summary>
         /// <param name="tvi">The <see cref="TreeViewItem"/> containing the resource.</param>
-        /// <param name="resource">The <see cref="Resource"/>.</param>
+        /// <param name="resource">The <see cref="Version"/>.</param>
         /// <remarks>Runs on a background thread.</remarks>
-        private void OpenResource(Resource resource)
+        private void OpenResource(Version resource)
         {
             string errorMessage;
             ResourceDelegate actCloseResource = CloseResource;
@@ -649,12 +650,12 @@ namespace WindowsClient
         /// <summary>
         /// Called when a resource is released.
         /// </summary>
-        /// <param name="resource">The <see cref="Resource"/>.</param>
+        /// <param name="resource">The <see cref="Version"/>.</param>
         /// <remarks>
         /// Runs on the UI thread.
         /// Can be called at any point after opening, depending on how the application handles file access.
         /// </remarks>
-        private void CloseResource(Resource resource)
+        private void CloseResource(Version resource)
         {
             //tvi.Background = Brushes.Transparent;
         }
@@ -756,7 +757,7 @@ namespace WindowsClient
 
             GetResourceJob.UpdateUIDelegate actUpdateUI = GetResourceCallback;
             MetaAsset ma = new MetaAsset(guid, _couchdb);
-            Resource resource = new Resource(ma, _couchdb);
+            Version resource = new Version(ma, _couchdb);
 
             ResourceTree.StartDownload(resource, Master.JobType.CheckoutJob);
 
@@ -805,13 +806,13 @@ namespace WindowsClient
         /// data assets to disk and returning the instantiated FullAsset object.
         /// </summary>
         /// <returns></returns>
-        private Common.Storage.Resource GenerateResource()
+        private Common.Storage.Version GenerateResource()
         {
             Common.FileSystem.IOStream iostream;
             byte[] buffer;
             Common.Storage.MetaAsset ma;
             Common.Storage.DataAsset da;
-            Resource resource;
+            Version resource;
             List<string> tags = new List<string>();
             Dictionary<string, object> dict1 = new Dictionary<string,object>();
             
@@ -826,7 +827,7 @@ namespace WindowsClient
             ma = Common.Storage.MetaAsset.Instantiate(Guid.NewGuid(), "lucas", DateTime.Now, 
                 "Lucas", 0, null, ".txt", DateTime.Now, DateTime.Now, "Test", tags, 
                 dict1, _couchdb);
-            resource = new Resource(ma, _couchdb);
+            resource = new Version(ma, _couchdb);
             da = resource.DataAsset;
 
             // Open the stream to create the new data asset
@@ -866,7 +867,7 @@ namespace WindowsClient
         /// <param name="e">The <see cref="System.Windows.RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnAddResource_Click(object sender, RoutedEventArgs e)
         {
-            Resource resource;
+            Version resource;
             string dataExt;
             Guid guid = Guid.NewGuid();
             List<string> uprop = new List<string>();
@@ -890,7 +891,7 @@ namespace WindowsClient
                     }
                     
                     // Create Resource
-                    resource = new Resource(guid, dataExt, _couchdb);
+                    resource = new Version(guid, dataExt, _couchdb);
 
                     // Copy DataAsset
                     File.Copy(ofd.FileName, 

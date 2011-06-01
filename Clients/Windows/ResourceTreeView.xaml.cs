@@ -94,10 +94,10 @@ namespace WindowsClient
 
             private EventFlagType _eventFlags;
             private StatusType _status;
-            private Common.Storage.Resource _resource;
+            private Common.Storage.Version _resource;
             private DirectionType _direction;
 
-            public Common.Storage.Resource Resource { get { return _resource; } set { _resource = value; } }
+            public Common.Storage.Version Resource { get { return _resource; } set { _resource = value; } }
 
 
             /// <summary>
@@ -231,8 +231,8 @@ namespace WindowsClient
             /// <summary>
             /// Initializes a new instance of the <see cref="TVIState"/> class.
             /// </summary>
-            /// <param name="resource">The <see cref="Common.Storage.Resource"/>.</param>
-            public State(Common.Storage.Resource resource)
+            /// <param name="resource">The <see cref="Common.Storage.Version"/>.</param>
+            public State(Common.Storage.Version resource)
             {
                 _eventFlags = EventFlagType.None;
                 _status = StatusType.None;
@@ -511,7 +511,7 @@ namespace WindowsClient
 
         System.Windows.Controls.Primitives.StatusBarItem _sbItem;
 
-        public Resource Selected
+        public Version Selected
         {
             get
             {
@@ -542,7 +542,7 @@ namespace WindowsClient
             return (FindTreeViewItem(guid) != null);
         }
 
-        public bool ResourceExistsInTree(Resource resource)
+        public bool ResourceExistsInTree(Version resource)
         {
             return (FindTreeViewItem(resource) != null);
         }
@@ -563,7 +563,7 @@ namespace WindowsClient
             LocalResourceChanged(tvi);
         }
 
-        public void LocalResourceChanged(Resource resource)
+        public void LocalResourceChanged(Version resource)
         {
             TreeViewItem tvi;
 
@@ -590,7 +590,7 @@ namespace WindowsClient
             tvi.Background = _needUpdatedBrush;
         }
 
-        public void StartStatusCheck(Resource resource)
+        public void StartStatusCheck(Version resource)
         {
             TreeViewItem tvi;
             State state;
@@ -733,7 +733,7 @@ namespace WindowsClient
             SetResourceTreeSelectedIndex(-1);
         }
 
-        public void StartDownload(Resource resource, Common.Work.Master.JobType jobType)
+        public void StartDownload(Version resource, Common.Work.Master.JobType jobType)
         {
             if (FindTreeViewItem(resource) != null)
                 throw new ArgumentException("The resource already exists.");
@@ -868,7 +868,7 @@ namespace WindowsClient
         /// Adds a resource that exists on the local filesystem as a new node on the tree.
         /// </summary>
         /// <param name="resource">The resource.</param>
-        public void AddNewExistingLocalResource(Resource resource)
+        public void AddNewExistingLocalResource(Version resource)
         {
             if (FindTreeViewItem(resource) != null)
                 throw new ArgumentException("The resource already exists.");
@@ -907,7 +907,7 @@ namespace WindowsClient
             SetResourceTreeSelectedIndex(-1);
         }
 
-        public State StartSaveToRemote(Resource resource)
+        public State StartSaveToRemote(Version resource)
         {
             TreeViewItem tvi;
             State state;
@@ -1042,7 +1042,7 @@ namespace WindowsClient
             }
         }
         
-        public void RemoveLocalResource(Resource resource)
+        public void RemoveLocalResource(Version resource)
         {
             State state;
             TreeViewItem tvi;
@@ -1061,7 +1061,7 @@ namespace WindowsClient
                 ResourceTree.Items.Remove(tvi);
         }
 
-        public Resource GetResourceFromTree(Guid guid)
+        public Version GetResourceFromTree(Guid guid)
         {
             TreeViewItem tvi = FindTreeViewItem(guid);
 
@@ -1222,11 +1222,11 @@ namespace WindowsClient
         }
                 
         /// <summary>
-        /// Finds the index of the <see cref="Resource"/>.
+        /// Finds the index of the <see cref="Version"/>.
         /// </summary>
-        /// <param name="resource">The <see cref="Resource"/>.</param>
+        /// <param name="resource">The <see cref="Version"/>.</param>
         /// <returns>An integer value of the index if found; otherwise, -1.</returns>
-        private int FindTreeViewItemIndex(Resource resource)
+        private int FindTreeViewItemIndex(Version resource)
         {
             TreeViewItem tvi;
 
@@ -1246,14 +1246,14 @@ namespace WindowsClient
         /// <summary>
         /// Finds the specified <see cref="FullAsset"/> in the tree.
         /// </summary>
-        /// <param name="resource">The <see cref="Resource"/>.</param>
+        /// <param name="resource">The <see cref="Version"/>.</param>
         /// <returns>
         /// A <see cref="TreeViewItem"/> if located; otherwise, <c>null</c>.
         /// </returns>
         /// <remarks>
         /// Runs on the UI thread.
         /// </remarks>
-        private TreeViewItem FindTreeViewItem(Resource resource)
+        private TreeViewItem FindTreeViewItem(Version resource)
         {
             TreeViewItem tvi;
 

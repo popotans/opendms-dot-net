@@ -4,34 +4,33 @@ namespace Common.Http.Network
 {
     public class HttpConnectionFactory
     {
-        public HttpConnection GetConnection(Uri uri)
-        {
-            HttpConnection conn = new HttpConnection(this, uri);
-            conn.IsBusy = true;
-            conn.Connect();
-            return conn;
-        }
-
+        public delegate void ConnectedDelegate(HttpConnection sender);
+        public event ConnectedDelegate OnConnected;
+        public event HttpConnection.ErrorDelegate OnError;
+        
         public HttpConnection GetConnection(Uri uri, int sendTimeout, int receiveTimeout,
             int sendBufferSize, int receiveBufferSize)
         {
             HttpConnection conn = new HttpConnection(this, uri, sendTimeout, 
                 receiveTimeout, sendBufferSize, receiveBufferSize);
             conn.IsBusy = true;
-            conn.Connect();
+            conn.OnConnect += new HttpConnection.ConnectionDelegate(Connection_OnConnect);
+            conn.OnError += new HttpConnection.ErrorDelegate(Connection_OnError);
+            conn.ConnectAsync();
             return conn;
         }
 
-        public HttpConnection GetConnection(Uri uri, HttpConnection liveConnection)
+        private void Connection_OnError(HttpConnection sender, string message, Exception exception)
         {
-            if (liveConnection != null && liveConnection.IsConnected &&
-                liveConnection.Uri.Host.ToLower() == uri.Host.ToLower())
-                return liveConnection;
-            else
-            {
-                liveConnection.Close();
-                return GetConnection(uri);
-            }
+            sender.OnConnect -= Connection_OnConnect;
+            Logger.Network.Error("An exception occurred while attempting to create a new connection.", exception);
+            if (OnError != null) OnError(sender, message, exception);
+        }
+
+        private void Connection_OnConnect(HttpConnection sender)
+        {
+            sender.OnConnect -= Connection_OnConnect;
+            if (OnConnected != null) OnConnected(sender);
         }
     }
 }
