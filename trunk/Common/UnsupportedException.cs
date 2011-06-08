@@ -3,7 +3,7 @@
 namespace Common.Data.Providers.CouchDB
 {
     public class UnsupportedException : Exception
-    {        
+    {
         public UnsupportedException(string message)
             : base(message)
         {

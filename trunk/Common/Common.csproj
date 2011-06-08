@@ -94,38 +94,27 @@
     <Compile Include="CouchDB\ServerResponse.cs" />
     <Compile Include="CouchDB\Utilities.cs" />
     <Compile Include="CouchDB\View.cs" />
-    <Compile Include="Data\Providers\CouchDB\BaseStorageObject.cs" />
+    <Compile Include="Data\Objects\Resource.cs" />
+    <Compile Include="Data\Objects\Version.cs" />
     <Compile Include="Data\Providers\CouchDB\Commands\Base.cs" />
     <Compile Include="Data\Providers\CouchDB\Commands\Create.cs" />
     <Compile Include="Data\Providers\CouchDB\Commands\Delete.cs" />
     <Compile Include="Data\Providers\CouchDB\Commands\Get.cs" />
+    <Compile Include="Data\Providers\CouchDB\Model\Attachment.cs" />
     <Compile Include="Data\Providers\CouchDB\Commands\List.cs" />
-    <Compile Include="Data\Providers\CouchDB\Commands\Result.cs" />
+    <Compile Include="Data\Providers\CouchDB\Json\JsonParseException.cs" />
+    <Compile Include="Data\Providers\CouchDB\Model\BaseStorageObject.cs" />
+    <Compile Include="Data\Providers\CouchDB\Model\Database.cs" />
+    <Compile Include="Data\Providers\CouchDB\Model\Result.cs" />
     <Compile Include="Data\Providers\CouchDB\Commands\Update.cs" />
     <Compile Include="Data\Providers\CouchDB\Database.cs" />
+    <Compile Include="Data\Providers\CouchDB\Model\Document.cs" />
     <Compile Include="Data\Providers\CouchDB\Engine.cs" />
-    <Compile Include="Data\Providers\CouchDB\IStorageObject.cs" />
     <Compile Include="Data\Providers\CouchDB\Server.cs" />
+    <Compile Include="Data\Providers\IProvider.cs" />
     <Compile Include="UnsupportedException.cs" />
     <Compile Include="FileSystem\Path.cs" />
     <Compile Include="Globals.cs" />
-    <Compile Include="Http\Client.cs" />
-    <Compile Include="Http\CompleteNotImplementedException.cs" />
-    <Compile Include="Http\ErrorNotImplementedException.cs" />
-    <Compile Include="Http\Methods\HttpDelete.cs" />
-    <Compile Include="Http\Methods\HttpGet.cs" />
-    <Compile Include="Http\Methods\HttpMessageBase.cs" />
-    <Compile Include="Http\Methods\HttpPut.cs" />
-    <Compile Include="Http\Methods\HttpRequest.cs" />
-    <Compile Include="Http\Methods\HttpResponse.cs" />
-    <Compile Include="Http\Network\AsyncUserToken.cs" />
-    <Compile Include="Http\Network\DirectionType.cs" />
-    <Compile Include="Http\Network\HttpConnection.cs" />
-    <Compile Include="Http\Network\HttpConnectionFactory.cs" />
-    <Compile Include="Http\Network\HttpNetworkException.cs" />
-    <Compile Include="Http\Network\HttpNetworkTimeoutException.cs" />
-    <Compile Include="Http\Network\Timeout.cs" />
-    <Compile Include="Http\Network\HttpNetworkStream.cs" />
     <Compile Include="Postgres\Database.cs" />
     <Compile Include="Postgres\Resource.cs" />
     <Compile Include="ErrorMessage.cs" />
@@ -217,9 +206,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Data\Objects\" />
-    <Folder Include="Data\Providers\CouchDB\Http\" />
-    <Folder Include="Data\Providers\CouchDB\Json\" />
     <Folder Include="Data\Providers\CouchDB\Serialization\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -235,7 +221,7 @@
       <Properties InternalTargetFrameworkVersion="3.5" />
     </MonoDevelop>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" />
+      <UserProperties BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>
