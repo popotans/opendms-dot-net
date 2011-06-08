@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csp
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "WindowsClientSetup", "Installers\WindowsClientSetup\WindowsClientSetup.vdproj", "{24771D88-8676-4366-889D-0F985063C44F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storage", "Storage\Storage.csproj", "{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking", "Networking\Networking.csproj", "{CE1050E0-0723-4169-BDE3-6E07519F177E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,15 +47,35 @@ Global
 		{24771D88-8676-4366-889D-0F985063C44F}.Release|Any CPU.ActiveCfg = Release
 		{24771D88-8676-4366-889D-0F985063C44F}.Release|Mixed Platforms.ActiveCfg = Release
 		{24771D88-8676-4366-889D-0F985063C44F}.Release|x86.ActiveCfg = Release
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Release|x86.ActiveCfg = Release|Any CPU
+		{CE1050E0-0723-4169-BDE3-6E07519F177E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE1050E0-0723-4169-BDE3-6E07519F177E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE1050E0-0723-4169-BDE3-6E07519F177E}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{CE1050E0-0723-4169-BDE3-6E07519F177E}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{CE1050E0-0723-4169-BDE3-6E07519F177E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CE1050E0-0723-4169-BDE3-6E07519F177E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE1050E0-0723-4169-BDE3-6E07519F177E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE1050E0-0723-4169-BDE3-6E07519F177E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{CE1050E0-0723-4169-BDE3-6E07519F177E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{CE1050E0-0723-4169-BDE3-6E07519F177E}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UpdateAssemblyVersion = False
-		BuildVersion_UpdateFileVersion = False
-		BuildVersion_BuildVersioningStyle = None.None.None.None
-		BuildVersion_StartDate = 2011/2/17
 		BuildVersion_UseGlobalSettings = False
+		BuildVersion_StartDate = 2011/2/17
+		BuildVersion_BuildVersioningStyle = None.None.None.None
+		BuildVersion_UpdateFileVersion = False
+		BuildVersion_UpdateAssemblyVersion = False
 	EndGlobalSection
 EndGlobal

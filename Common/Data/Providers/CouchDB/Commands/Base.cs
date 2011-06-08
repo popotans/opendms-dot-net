@@ -5,7 +5,7 @@ using Common.Http.Network;
 
 namespace Common.Data.Providers.CouchDB.Commands
 {
-    protected abstract class Base
+    public abstract class Base
     {
         public delegate void TimeoutDelegate(Base sender, Client client, HttpConnection connection);
         public event TimeoutDelegate OnTimeout;
