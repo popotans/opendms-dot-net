@@ -6,24 +6,24 @@ namespace OpenDMS.Networking.Http
 {
     public class HttpNetworkStream
     {
-        private class Buffer
-        {
-            public byte[] BufferBytes { get; set; }
-            public int Offset { get; set; }
-            public int Length { get; set; }
-            public Timeout Timeout { get; set; }
-            public int BytesReadFromPrepend { get; set; }
-        }
+        //private class Buffer
+        //{
+        //    public byte[] BufferBytes { get; set; }
+        //    public int Offset { get; set; }
+        //    public int Length { get; set; }
+        //    public Timeout Timeout { get; set; }
+        //    public int BytesReadFromPrepend { get; set; }
+        //}
 
-        private class BufferWithString : Buffer
-        {
-            public string String { get; set; }
-        }
+        //private class BufferWithString : Buffer
+        //{
+        //    public string String { get; set; }
+        //}
 
-        private class BufferWithStream : Buffer
-        {
-            public System.IO.Stream Stream { get; set; }
-        }
+        //private class BufferWithStream : Buffer
+        //{
+        //    public System.IO.Stream Stream { get; set; }
+        //}
 
         public delegate void ProgressDelegate(HttpNetworkStream sender, DirectionType direction, int packetSize);
         public event ProgressDelegate OnProgress;
@@ -340,6 +340,10 @@ namespace OpenDMS.Networking.Http
             args.UserToken = new Tuple<Timeout, string>(timeout, "");
             args.SetBuffer(new byte[_socket.ReceiveBufferSize], 0, _socket.ReceiveBufferSize);
 
+            if (!TryStartTimeout(_socket.ReceiveTimeout, out timeout,
+                new Timeout.TimeoutEvent(ReadToEndAsync_OnTimeout)))
+                return;
+
             try
             {
                 _stream.ReadAsync(args);
@@ -373,10 +377,13 @@ namespace OpenDMS.Networking.Http
             Tuple<Timeout, string> userToken = (Tuple<Timeout, string>)e.UserToken;
             string str = userToken.Item2;
 
-            _bytesReceived += (ulong)e.Count;
-
             if (!TryStopTimeout(userToken.Item1))
                 return;
+
+            _bytesReceived += (ulong)e.Count;
+            
+            if (_bytesReceived > _contentLength)
+                throw new ContentLengthExceededException("Content received was longer than the Content Length specified.");
 
             try
             {
@@ -405,9 +412,7 @@ namespace OpenDMS.Networking.Http
             }
             
             // End?
-            if (_bytesReceived > _contentLength)
-                throw new ContentLengthExceededException("Content received was longer than the Content Length specified.");
-            else if (_bytesReceived == _contentLength)
+            if (_bytesReceived == _contentLength)
             {
                 try
                 {
@@ -436,8 +441,8 @@ namespace OpenDMS.Networking.Http
                 }
                 catch (Exception ex)
                 {
-                    Logger.Network.Error("An exception occurred while calling ReadToEndAsync.", ex);
-                    if (OnError != null) OnError(this, "Exception calling ReadToEndAsync", ex);
+                    Logger.Network.Error("An exception occurred while calling ReadAsync.", ex);
+                    if (OnError != null) OnError(this, "Exception calling ReadAsync", ex);
                     else throw;
                 }
             }
@@ -469,24 +474,19 @@ namespace OpenDMS.Networking.Http
         public void CopyToAsync(System.IO.Stream stream)
         {
             Timeout timeout = null;
-            byte[] buffer = new byte[_socket.ReceiveBufferSize];
+            StreamAsyncEventArgs args = new StreamAsyncEventArgs();
+
+            args.Complete = CopyToAsync_Callback;
+            args.UserToken = new Tuple<Timeout, System.IO.Stream>(timeout, stream);
+            args.SetBuffer(new byte[_socket.ReceiveBufferSize], 0, _socket.ReceiveBufferSize);
 
             if (!TryStartTimeout(_socket.ReceiveTimeout, out timeout,
                 new Timeout.TimeoutEvent(CopyToAsync_OnTimeout)))
                 return;
-            
+
             try
             {
-                _stream.BeginRead(buffer, 0, buffer.Length,
-                    new AsyncCallback(CopyToAsync_Callback),
-                    new BufferWithStream()
-                    {
-                        BufferBytes = buffer,
-                        Offset = 0,
-                        Length = buffer.Length,
-                        Stream = stream,
-                        Timeout = timeout
-                    });
+                _stream.ReadAsync(args);
             }
             catch (Exception e)
             {
@@ -511,96 +511,79 @@ namespace OpenDMS.Networking.Http
             }
         }
 
-        private void CopyToAsync_Callback(IAsyncResult result)
+        private void CopyToAsync_Callback(StreamAsyncEventArgs e)
         {
             Timeout timeout = null;
-            BufferWithStream buffer = null;
-            int bytesRead = 0;
+            Tuple<Timeout, System.IO.Stream> userToken = (Tuple<Timeout, System.IO.Stream>)e.UserToken;
+
+            if (!TryStopTimeout(userToken.Item1))
+                return;
+
+            _bytesReceived += (ulong)e.Count;
+
+            if (_bytesReceived > _contentLength)
+                throw new ContentLengthExceededException("Received more bytes than the content length specified.");
 
             try
             {
-                buffer = (BufferWithStream)result.AsyncState;
-
-                if (!TryStopTimeout(buffer.Timeout))
-                    return;
-
-                bytesRead = _stream.EndRead(result);
+                userToken.Item2.Write(e.Buffer, e.Offset, e.Count);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.Network.Error("An exception occurred while calling _stream.EndRead.", e);
+                Logger.Network.Error("An exception occurred while writing to the argument stream.", ex);
                 if (OnError != null)
                 {
-                    OnError(this, "Exception calling _stream.EndRead", e);
+                    OnError(this, "Exception writing to stream.", ex);
                     return;
                 }
                 else throw;
             }
 
-            _bytesReceived += (ulong)bytesRead;
-
+            // Progress Event
             try
             {
-                buffer.Stream.Write(buffer.BufferBytes, buffer.Offset, buffer.Length);
+                if (OnProgress != null)
+                    OnProgress(this, DirectionType.Download, e.Count);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.Network.Error("An exception occurred while writing a block from the IO.Stream to this HttpNetworkStream.", e);
-                if (OnError != null)
-                {
-                    OnError(this, "Exception while writing a block from the IO.Stream to this NetworkStream.", e);
-                    return;
-                }
+                // Ignore it, its the higher level's job to deal with it.
+                Logger.Network.Error("An unhandled exception was caught by HttpNetworkStream.CopyToAsync_Callback in the OnProgress event.", ex);
             }
 
-            if (bytesRead > 0)
-            {
-                try
-                {
-                    if (OnProgress != null)
-                        OnProgress(this, DirectionType.Download, bytesRead);
-                }
-                catch (Exception e)
-                {
-                    // Ignore it, its the higher level's job to deal with it.
-                    Logger.Network.Error("An unhandled exception was caught by HttpNetworkStream.CopyToAsync_Callback in the OnProgress event.", e);
-                }
-
-                if (!TryStartTimeout(_socket.ReceiveTimeout, out timeout,
-                    new Timeout.TimeoutEvent(CopyToAsync_OnTimeout)))
-                    return;
-
-                try
-                {
-                    _stream.BeginRead(buffer.BufferBytes, 0, buffer.Length,
-                        new AsyncCallback(CopyToAsync_Callback),
-                        new BufferWithStream()
-                        {
-                            BufferBytes = buffer.BufferBytes,
-                            Offset = 0,
-                            Length = buffer.Length,
-                            Stream = buffer.Stream,
-                            Timeout = timeout
-                        });
-                }
-                catch (Exception e)
-                {
-                    Logger.Network.Error("An exception occurred while calling _stream.BeginRead.", e);
-                    if (OnError != null) OnError(this, "Exception calling _stream.BeginRead", e);
-                    else throw;
-                }
-            }
-            else
+            // End?
+            if (_bytesReceived == _contentLength)
             {
                 try
                 {
                     if (OnStreamOperationComplete != null)
-                        OnStreamOperationComplete(this, buffer.Stream);
+                        OnStreamOperationComplete(this, userToken.Item2);
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
                     // Ignore it, its the higher level's job to deal with it.
-                    Logger.Network.Error("An unhandled exception was caught by HttpNetworkStream.CopyToAsync_Callback in the OnBufferOperationComplete event.", e);
+                    Logger.Network.Error("An unhandled exception was caught by HttpNetworkStream.CopyToAsync_Callback in the OnStreamOperationComplete event.", ex);
+                }
+            }
+            else
+            {
+                // content left to stream
+                if (!TryStartTimeout(_socket.ReceiveTimeout, out timeout,
+                    new Timeout.TimeoutEvent(ReadToEndAsync_OnTimeout)))
+                    return;
+
+                e.UserToken = new Tuple<Timeout, System.IO.Stream>(timeout, userToken.Item2);
+                e.SetBuffer(e.Buffer, 0, _socket.ReceiveBufferSize);
+
+                try
+                {
+                    _stream.ReadAsync(e);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Network.Error("An exception occurred while calling ReadAsync.", ex);
+                    if (OnError != null) OnError(this, "Exception calling ReadAsync", ex);
+                    else throw;
                 }
             }
         }
@@ -614,6 +597,7 @@ namespace OpenDMS.Networking.Http
 
             while ((bytesRead = Read(buffer, 0, buffer.Length)) > 0)
             {
+                _bytesReceived += (ulong)bytesRead;
                 stream.Write(buffer, 0, bytesRead);
 
                 try
