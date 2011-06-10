@@ -1,18 +1,16 @@
 ﻿using System;
-using Common.Http.Methods;
+using OpenDMS.Networking.Http.Methods;
 
-namespace Common.Data.Providers.CouchDB.Commands
+namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public class Delete : Base
     {
-        private override HttpDelete _httpRequest = null;
-
         public Delete(Uri uri)
-            : base(new HttpDelete(uri))
+            : base(new OpenDMS.Networking.Http.Methods.Delete(uri))
         {
         }
 
-        public Delete(HttpRequest delete)
+        public Delete(Request delete)
             : base(delete)
         {
         }

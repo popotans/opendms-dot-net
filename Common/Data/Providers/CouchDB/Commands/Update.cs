@@ -1,18 +1,16 @@
 ﻿using System;
-using Common.Http.Methods;
+using OpenDMS.Networking.Http.Methods;
 
-namespace Common.Data.Providers.CouchDB.Commands
+namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public class Update : Base
     {
-        private override HttpPut _httpRequest = null;
-        
         public Update(Uri uri)
-            : base(new HttpPut(uri, "application/json"))
+            : base(new Put(uri, "application/json"))
         {
         }
 
-        public Update(HttpRequest put)
+        public Update(Request put)
             : base(put)
         {
         }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Common.Data.Providers.CouchDB
+namespace OpenDMS.Storage.Providers.CouchDB
 {
     public class Server
     {
@@ -35,7 +35,7 @@ namespace Common.Data.Providers.CouchDB
         /// Gets the URI.
         /// </summary>
         public Uri Uri { get { return new Uri(string.Format("{0}://{1}:{2}/", _protocol, _host, _port.ToString())); } }
-        
+
         /// <summary>
         /// Constructor - Assigns values from arguments
         /// </summary>
@@ -72,7 +72,7 @@ namespace Common.Data.Providers.CouchDB
         /// <returns></returns>
         public Database GetDatabase(string name)
         {
-            return new Database(name, this);
+            return new Database(this, name);
         }
     }
 }

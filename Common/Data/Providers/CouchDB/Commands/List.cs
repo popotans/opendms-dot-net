@@ -1,18 +1,16 @@
 ﻿using System;
-using Common.Http.Methods;
+using OpenDMS.Networking.Http.Methods;
 
-namespace Common.Data.Providers.CouchDB.Commands
+namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public class List : Base
     {
-        private override HttpGet _httpRequest = null;
-
         public List(Uri uri)
-            : base(new HttpGet(uri))
+            : base(new OpenDMS.Networking.Http.Methods.Get(uri))
         {
         }
 
-        public List(HttpRequest get)
+        public List(Request get)
             : base(get)
         {
         }
