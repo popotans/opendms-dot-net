@@ -442,7 +442,6 @@ namespace OpenDMS.Networking.Http
                 // bytes that are not header
                 byte[] remainingBytes;
                 // Push the remaining bytes into a stream
-                System.IO.MemoryStream ms; 
                 Methods.Response response = new Methods.Response();
                 System.Text.RegularExpressions.MatchCollection matches;
                 string transferEncoding = null;
@@ -450,7 +449,6 @@ namespace OpenDMS.Networking.Http
                 
                 headers += newpacket.Substring(0, index);
                 remainingBytes = System.Text.Encoding.ASCII.GetBytes(newpacket.Substring(index + 8));
-                ms = new System.IO.MemoryStream(remainingBytes);
 
                 // Grab the headers from the response
                 matches = new System.Text.RegularExpressions.Regex("[^\r\n]+").Matches(headers.TrimEnd('\r', '\n'));
@@ -498,7 +496,7 @@ namespace OpenDMS.Networking.Http
                 {
                     if ((contentLength = Utilities.GetContentLength(response.Headers)) > 0)
                     {
-                        response.Stream = new HttpNetworkStream(contentLength, _socket, System.IO.FileAccess.Read, false);
+                        response.Stream = new HttpNetworkStream(contentLength, remainingBytes, _socket, System.IO.FileAccess.Read, false);
                         response.Stream.OnProgress += new HttpNetworkStream.ProgressDelegate(Stream_OnProgress);
                         Logger.Network.Debug("A network stream has been successfully attached to the response body.");
                     }
@@ -568,15 +566,15 @@ namespace OpenDMS.Networking.Http
 
             _args.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
 
-            if (!TryCreateUserTokenAndTimeout(System.Text.Encoding.ASCII.GetBytes(GetRequestHeader(request)), 
+            if (!TryCreateUserTokenAndTimeout(new NetworkBuffer(System.Text.Encoding.ASCII.GetBytes(GetRequestHeader(request))), 
                 stream, _sendTimeout, out userToken, new Timeout.TimeoutEvent(SendRequest_Timeout)))
                 return;            
 
             _args.UserToken = userToken;
-            if (((byte[])userToken.Token.Token1).Length > _sendBufferSize)
+            if (userToken.NetworkBuffer.Length > _sendBufferSize)
             {
                 byte[] newBuffer = new byte[_sendBufferSize];
-                Buffer.BlockCopy((byte[])userToken.Token1, 0, newBuffer, 0, _sendBufferSize);
+                userToken.NetworkBuffer.CopyTo(newBuffer, 0, _sendBufferSize);
                 _args.SetBuffer(newBuffer, 0, _sendBufferSize);
             }
 
@@ -602,7 +600,7 @@ namespace OpenDMS.Networking.Http
         private void SendRequest_Completed(object sender, SocketAsyncEventArgs e)
         {
             AsyncUserToken userToken = null;
-            _args.Completed -= SendRequest_Completed;
+            e.Completed -= SendRequest_Completed;
 
             if (!TryStopTimeout(_args.UserToken))
                 return;
@@ -620,23 +618,23 @@ namespace OpenDMS.Networking.Http
                 throw;
             }
 
-            if (userToken.Token1 != null)
+            if (userToken.NetworkBuffer != null)
             {
                 // Process Headers
                 _bytesSentHeadersOnly += (ulong)e.BytesTransferred;
                 _bytesSentTotal += (ulong)e.BytesTransferred;
 
                 // If we are not done, we need to do it again
-                if (e.BytesTransferred < ((byte[])e.UserToken).Length)
+                if (e.BytesTransferred < userToken.NetworkBuffer.Length)
                 {
                     // Make a new buffer for the remaining bytes of the Token1
-                    byte[] newUserTokenBuffer = new byte[((byte[])userToken.Token1).Length - e.BytesTransferred];
+                    byte[] newUserTokenBuffer = new byte[userToken.NetworkBuffer.Length - e.BytesTransferred];
 
                     _args.SetBuffer(e.BytesTransferred, e.Buffer.Length - e.BytesTransferred);
 
                     try
                     {
-                        ((AsyncUserToken)_args.UserToken).StartTimeout(_sendTimeout,
+                        userToken.StartTimeout(_sendTimeout,
                             new Timeout.TimeoutEvent(SendRequest_Timeout));
                     }
                     catch (Exception ex)
@@ -655,26 +653,26 @@ namespace OpenDMS.Networking.Http
                     Logger.Network.Debug("Request headers were sent.");
                     Logger.Network.Debug("Sending request body.");
 
-                    _args.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
-                    _args.SetBuffer(0, _args.Buffer.Length); // Frees up the entire buffer
+                    e.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
+                    e.SetBuffer(0, _args.Buffer.Length); // Frees up the entire buffer
 
-                    if (!TryCreateUserTokenAndTimeout(null, ((AsyncUserToken)_args.UserToken).Token2,
+                    if (!TryCreateUserTokenAndTimeout(null, userToken.Token,
                         _sendTimeout, out userToken, new Timeout.TimeoutEvent(SendRequest_Timeout)))
                         return;
 
-                    _args.UserToken = userToken;
+                    e.UserToken = userToken;
                 }
             }
-            else if (((AsyncUserToken)_args.UserToken).Token2 != null)
+            else if (((AsyncUserToken)_args.UserToken).Token != null)
             { 
                 // Flow falls here when the Token2 (stream) is not null
-                System.IO.Stream stream = (System.IO.Stream)((AsyncUserToken)_args.UserToken).Token2;
-                byte[] buffer = _args.Buffer;
+                //System.IO.Stream stream = (System.IO.Stream)((AsyncUserToken)_args.UserToken).Token2;
+                //byte[] buffer = _args.Buffer;
                 int bytesRead = 0;
                 _bytesSentContentOnly += (ulong)e.BytesTransferred;
                 _bytesSentTotal += (ulong)e.BytesTransferred;
 
-                if (stream.Position == stream.Length)
+                if (((System.IO.Stream)userToken.Token).Position == ((System.IO.Stream)userToken.Token).Length)
                 {
                     ReceiveResponseAsync();
                     return;
