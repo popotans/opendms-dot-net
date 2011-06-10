@@ -6,7 +6,7 @@ namespace OpenDMS.Networking.Http.Methods
     public abstract class Request : MessageBase
     {
         private Uri _uri = null;
-        private string _method = null;
+        //private string _method = null;
 
         public abstract string Method { get; }
         
