@@ -1,8 +1,9 @@
-﻿using Newtonsoft.Json.Linq;
+using System;
+using Newtonsoft.Json.Linq;
 
-namespace Common.Data.Providers.CouchDB.Model
+namespace OpenDMS.Storage.Providers.CouchDB.Model
 {
-    internal abstract class BaseStorageObject : JObject
+    public abstract class BaseStorageObject : JObject
     {
         public BaseStorageObject()
         {

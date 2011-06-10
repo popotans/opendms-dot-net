@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
-namespace Common.Data.Providers.CouchDB.Model
+namespace OpenDMS.Storage.Providers.CouchDB.Model
 {
-    public class Document : JObject
+    public class Document : BaseStorageObject
     {
         private bool _attachmentsAreDirty = true;
         private Dictionary<string, Attachment> _attachments = null;
@@ -48,6 +49,7 @@ namespace Common.Data.Providers.CouchDB.Model
                     _attachments.Add(((JProperty)en.Current).Name, new Attachment(en.Current));
                 }
 
+                _attachmentsAreDirty = false;
                 return _attachments;
             }
             set { _attachments = value; }
@@ -58,9 +60,15 @@ namespace Common.Data.Providers.CouchDB.Model
             get { return this["_attachments"] != null; }
         }
 
+        public void AddAttachment(string name, Attachment attachment)
+        {
+            _attachments.Add(name, attachment);
+        }
+
         public Document()
         {
             _attachmentsAreDirty = true;
+            _attachments = new Dictionary<string, Attachment>();
         }
 
         public Document(string json)
@@ -74,8 +82,10 @@ namespace Common.Data.Providers.CouchDB.Model
         }
 
         public Document(JObject jobj)
-            : this()
+            : base()
         {
+            _attachmentsAreDirty = true;
+            _attachments = new Dictionary<string, Attachment>();
         }
     }
 }

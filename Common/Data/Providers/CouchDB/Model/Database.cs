@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace Common.Data.Providers.CouchDB.Model
+namespace OpenDMS.Storage.Providers.CouchDB.Model
 {
     public class Database : BaseStorageObject
     {
@@ -63,23 +63,23 @@ namespace Common.Data.Providers.CouchDB.Model
             get { return this["purge_seq"].Value<long>(); }
             set { this["purge_seq"] = value; }
         }
-        
+
         public Database()
         {
         }
 
         public Database(string json)
-            : this(Parse(json))
+            : base(Parse(json))
         {
         }
 
         public Database(JToken token)
-            : this((JObject)token)
+            : base((JObject)token)
         {
         }
 
         public Database(JObject jobj)
-            : this()
+            : base()
         {
         }
     }

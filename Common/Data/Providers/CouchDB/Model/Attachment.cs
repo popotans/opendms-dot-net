@@ -1,13 +1,15 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace Common.Data.Providers.CouchDB.Model
+namespace OpenDMS.Storage.Providers.CouchDB.Model
 {
-    public class Attachment : JObject
+    public class Attachment : BaseStorageObject
     {
-        public bool Stub
+        private bool? _stub = null;
+
+        public bool? Stub
         {
-            get { return this["stub"].Value<bool>(); }
-            set { this["stub"] = value; }
+            get { return _stub; }
+            set { _stub = value; }
         }
 
         public string ContentType
@@ -23,22 +25,34 @@ namespace Common.Data.Providers.CouchDB.Model
         }
 
         public Attachment()
+            : base()
         {
+            _stub = null;
         }
 
         public Attachment(string json)
-            : this(Parse(json))
+            : base(Parse(json))
         {
+            _stub = GetStub();
         }
 
         public Attachment(JToken token)
-            : this((JObject)token)
+            : base((JObject)token)
         {
+            _stub = GetStub();
         }
 
         public Attachment(JObject jobj)
-            : this()
+            : base()
         {
+            _stub = GetStub();
+        }
+
+        private bool? GetStub()
+        {
+            if(this["stub"] != null)
+                return this["stub"].Value<bool>();
+            return null;
         }
     }
 }
