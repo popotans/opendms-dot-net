@@ -31,6 +31,7 @@ namespace OpenDMS.Networking.Http
             connMgr = new ConnectionManager();
 
             _request = request;
+            _stream = stream;
 
             connMgr.OnConnected += new ConnectionManager.ConnectedDelegate(ConnectionManager_OnConnected);
             connMgr.OnError += new Connection.ErrorDelegate(ConnectionManager_OnError);

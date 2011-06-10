@@ -630,7 +630,7 @@ namespace OpenDMS.Networking.Http
                     // Make a new buffer for the remaining bytes of the Token1
                     byte[] newUserTokenBuffer = new byte[userToken.NetworkBuffer.Length - e.BytesTransferred];
 
-                    _args.SetBuffer(e.BytesTransferred, e.Buffer.Length - e.BytesTransferred);
+                    e.SetBuffer(e.BytesTransferred, e.Buffer.Length - e.BytesTransferred);
 
                     try
                     {
@@ -663,11 +663,11 @@ namespace OpenDMS.Networking.Http
                     e.UserToken = userToken;
                 }
             }
-            else if (((AsyncUserToken)_args.UserToken).Token != null)
+            else if (userToken.Token != null)
             { 
                 // Flow falls here when the Token2 (stream) is not null
                 //System.IO.Stream stream = (System.IO.Stream)((AsyncUserToken)_args.UserToken).Token2;
-                //byte[] buffer = _args.Buffer;
+                byte[] buffer = userToken.NetworkBuffer.Buffer;
                 int bytesRead = 0;
                 _bytesSentContentOnly += (ulong)e.BytesTransferred;
                 _bytesSentTotal += (ulong)e.BytesTransferred;
@@ -679,13 +679,13 @@ namespace OpenDMS.Networking.Http
                 }
                 else
                 {
-                    bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    _args.SetBuffer(buffer, 0, bytesRead);
-                    _args.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
+                    bytesRead = ((System.IO.Stream)userToken.Token).Read(buffer, 0, buffer.Length);
+                    e.SetBuffer(buffer, 0, bytesRead);
+                    e.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
 
                     try
                     {
-                        ((AsyncUserToken)_args.UserToken).StartTimeout(_sendTimeout,
+                        userToken.StartTimeout(_sendTimeout,
                             new Timeout.TimeoutEvent(SendRequest_Timeout));
                     }
                     catch (Exception ex)
@@ -710,10 +710,10 @@ namespace OpenDMS.Networking.Http
             {
                 try
                 {
-                    if (!_socket.SendAsync(_args))
+                    if (!_socket.SendAsync(e))
                     {
                         Logger.Network.Debug("SendAsync completed synchronously.");
-                        SendRequest_Completed(null, _args);
+                        SendRequest_Completed(null, e);
                     }
                 }
                 catch (Exception ex)
