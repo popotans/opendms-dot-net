@@ -1,10 +1,8 @@
 ﻿using System;
-using Common.Http.Methods;
-using Common.Data.Providers.CouchDB.Commands;
 
-namespace Common.Data.Providers.CouchDB
+namespace OpenDMS.Storage.Providers.CouchDB
 {
-    public class Database : BaseStorageObject
+    public class Database : Model.BaseStorageObject
     {
         /// <summary>
         /// The Database name
@@ -15,24 +13,15 @@ namespace Common.Data.Providers.CouchDB
         /// </summary>
         private Server _server;
 
-        public override Uri Uri
+        public Uri Uri
         {
             get { return new Uri(string.Format("{0}{1}", _server.Uri, _name)); }
         }
 
-        public override List List
+        public Database(Server server, string dbName)
         {
-            get {   return new Commands.List(
-                        new Http.Methods.HttpGet(
-                            new Uri(string.Format("{0}{1}", _server.Uri, "_all_dbs"))
-                        )
-                    );
-            }
+            _server = server;
+            _name = dbName;
         }
-
-        public override Update Update
-        {
-            get { throw new UnsupportedException("CouchDB does not support updating of a database"); }
-        }
-    } 
+    }
 }
