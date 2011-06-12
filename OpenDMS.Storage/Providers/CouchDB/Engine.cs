@@ -1,27 +1,56 @@
 ﻿using System;
 using OpenDMS.Networking.Http;
 using OpenDMS.Networking.Http.Methods;
+using OpenDMS.Storage.Data;
 
 namespace OpenDMS.Storage.Providers.CouchDB
 {
     public class Engine
     {
-        public delegate void TimeoutDelegate(Engine sender, Commands.Base command, Client client, Connection connection);
-        public event TimeoutDelegate OnTimeout;
-        public delegate void ProgressDelegate(Engine sender, Commands.Base command, Client client, Connection connection, DirectionType direction, int packetSize);
-        public event ProgressDelegate OnProgress;
-        public delegate void ErrorDelegate(Engine sender, Commands.Base command, Client client, string message, Exception exception);
-        public event ErrorDelegate OnError;
-        public delegate void CompletionDlegate(Engine sender, Commands.Base command, Client client, Connection connection, Response response);
-        public event CompletionDlegate OnComplete;
-
         public Engine()
         {
         }
 
-        //public void ExecuteCommand(Commands.Base cmd)
-        //{
-        //    cmd.Execute();
-        //}
+        #region Resource Actions
+
+        public void CreateNewResource(Metadata metadata, Content content)
+        {
+            // Get a unique resource id
+            // Build version
+            // Translate version
+            // PutDocument
+            // PutAttachment
+        }
+
+        public void GetCurrentVersion(Data.ResourceId id)
+        {
+        }
+
+        public void GetResource(Data.ResourceId id)
+        {
+        }
+
+        public void DeleteResource(Data.ResourceId id)
+        {
+        }
+
+        public void Revert(Data.VersionId id)
+        {
+        }
+
+        #endregion
+
+        #region Version Actions
+
+        public void CreateNewVersion(Data.Version version)
+        {
+        }
+
+        public void GetCurrentVersion(Data.VersionId id)
+        {
+            GetCurrentVersion(id.ResourceId);
+        }
+
+        #endregion
     }
 }

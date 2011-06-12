@@ -2,17 +2,16 @@
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
-    public class CreateDatabaseReply : ReplyBase
+    public class GetDocumentReply : ReplyBase
     {
-        private const string _201 = "Database created successfully.";
-        private const string _400 = "Invalid database name.";
-        private const string _412 = "Database already exists.";
-        private const string _att_201 = "Attachment has been accepted.";
+        private const string _200 = "Success.";
+        private const string _400 = "The format of the request or revision was invalid";
+        private const string _404 = "The requested document or revision could not be found or has been deleted.";
 
-        public bool Ok { get; set; }
-        public string ResponseMessage { get; private set; }
+        public bool Ok { get; private set; }
+        public Model.Document Document { get; private set; }
 
-        public CreateDatabaseReply(Response response)
+        public GetDocumentReply(Response response)
             : base(response)
         {
         }
@@ -21,24 +20,23 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
         {
             switch (_response.ResponseCode)
             {
-                case 201:
-                    ResponseMessage = _201;
+                case 200:
+                    ResponseMessage = _200;
+                    Document = new Model.Document(StringifyResponseStream());
                     Ok = true;
                     break;
                 case 400:
                     ResponseMessage = _400;
                     Ok = false;
                     break;
-                case 412:
-                    ResponseMessage = _412;
+                case 404:
+                    ResponseMessage = _404;
                     Ok = false;
                     break;
                 default:
                     Ok = false;
                     throw new UnsupportedException("The response code " + _response.ResponseCode.ToString() + " is not supported.");
             }
-
-            ReportReplyCreated(this);
         }
     }
 }

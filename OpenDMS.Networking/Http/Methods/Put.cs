@@ -11,7 +11,14 @@ namespace OpenDMS.Networking.Http.Methods
         public Put(Uri uri, string contentType)
             : base(uri)
         {
-            Headers.Add("Content-Type", contentType);
+            ContentType = ContentType;
+        }
+
+        public Put(Uri uri, string contentType, ulong contentLength)
+            : base(uri)
+        {
+            ContentType = ContentType;
+            ContentLength = contentLength.ToString();
         }
     }
 }

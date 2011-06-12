@@ -56,9 +56,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 
         public List<Exception> AddMetadata(string key, object value, Model.Document doc)
         {
-            JObject jobj;
             JProperty jprop;
-            string str = null;
             JsonSerializerSettings settings = new JsonSerializerSettings();
 
             settings.Error += delegate(object sender, ErrorEventArgs args)
@@ -66,8 +64,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 if (args.CurrentObject == args.ErrorContext.OriginalObject)
                     _errors.Add(args.ErrorContext.Error);
             };
-
-            //str = JsonConvert.SerializeObject(value);
 
             if (_errors.Count > 0)
             {
@@ -77,10 +73,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 return retVal;
             }
 
-            //jobj = JObject.Parse(str);
             jprop = new JProperty(key, value);
             doc.Add(jprop);
-            //doc.Add(key, (JToken)jobj);
 
             return null;
         }

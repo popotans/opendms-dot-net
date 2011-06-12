@@ -13,7 +13,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
         public event ProgressDelegate OnProgress;
         public delegate void ErrorDelegate(Base sender, Client client, string message, Exception exception);
         public event ErrorDelegate OnError;
-        public delegate void CompletionDlegate(Base sender, Client client, Connection connection, Response response);
+        public delegate void CompletionDlegate(Base sender, Client client, Connection connection, ReplyBase reply);
         public event CompletionDlegate OnComplete;
 
         protected Request _httpRequest;
@@ -62,8 +62,10 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
 
         protected virtual void Client_OnComplete(Client sender, Connection connection, Response response)
         {
-            if (OnComplete != null) OnComplete(this, sender, connection, response);
+            if (OnComplete != null) OnComplete(this, sender, connection, MakeReply(response));
             else throw new UnsupportedException("OnComplete is not supported");
         }
+
+        public abstract ReplyBase MakeReply(Response response);
     }
 }

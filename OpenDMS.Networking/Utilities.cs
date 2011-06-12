@@ -2,7 +2,7 @@
 
 namespace OpenDMS.Networking
 {
-    class Utilities
+    public class Utilities
     {
         /// <summary>
         /// Converts a <see cref="System.IO.Stream"/> to a UTF-8 formatted string.
