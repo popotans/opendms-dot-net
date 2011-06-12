@@ -73,6 +73,7 @@
     <Compile Include="Http\HttpNetworkStream.cs" />
     <Compile Include="Http\Methods\Delete.cs" />
     <Compile Include="Http\Methods\Get.cs" />
+    <Compile Include="Http\Methods\Head.cs" />
     <Compile Include="Http\Methods\MessageBase.cs" />
     <Compile Include="Http\Methods\Put.cs" />
     <Compile Include="Http\Methods\Request.cs" />

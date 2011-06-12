@@ -39,6 +39,10 @@ namespace OpenDMS.Networking.Http
         private ulong _bytesReceivedTotal = 0;
         private ulong _bytesReceivedHeadersOnly = 0;
         private ulong _bytesReceivedContentOnly = 0;
+        private ulong _headersLengthTx = 0;
+        private ulong _contentLengthTx = 0;
+        private ulong _headersLengthRx = 0;
+        private ulong _contentLengthRx = 0;
 
         private SocketAsyncEventArgs _args = null;
 
@@ -48,6 +52,11 @@ namespace OpenDMS.Networking.Http
         public ulong BytesReceivedTotal { get { return _bytesReceivedTotal; } }
         public ulong BytesReceivedHeadersOnly { get { return _bytesReceivedHeadersOnly; } }
         public ulong BytesReceivedContentOnly { get { return _bytesReceivedContentOnly; } }
+        public ulong HeadersLength { get { return _headersLengthTx; } }
+        public ulong ContentLength { get { return _contentLengthTx; } }
+        public decimal SendPercentComplete { get { return ((decimal)_bytesSentTotal / (decimal)(_headersLengthTx + _contentLengthTx)) * (decimal)100; } }
+        public decimal ReceivePercentComplete { get { return ((decimal)_bytesReceivedTotal / (decimal)(_headersLengthRx + _contentLengthRx)) * (decimal)100; } }
+
 
         public Connection(ConnectionManager factory, Uri uri) 
         {
@@ -399,17 +408,6 @@ namespace OpenDMS.Networking.Http
                 else throw;
             }
 
-            try
-            {
-                if (OnProgress != null) OnProgress(this, DirectionType.Download, e.BytesTransferred);
-            }
-            catch (Exception ex)
-            {
-                // Ignore it, its the higher level's job to deal with it.
-                Logger.Network.Error("An unhandled exception was caught by Connection.ReceiveResponse_Completed in the OnProgress event.", ex);
-                throw;
-            }
-
             if ((index = newpacket.IndexOf("\r\n\r\n")) < 0)
             {
                 // End sequence \r\n\r\n is not found, we need to do this receiving again
@@ -445,10 +443,12 @@ namespace OpenDMS.Networking.Http
                 Methods.Response response = new Methods.Response();
                 System.Text.RegularExpressions.MatchCollection matches;
                 string transferEncoding = null;
-                ulong contentLength = 0;
+                //ulong contentLength = 0;
                 
                 headers += newpacket.Substring(0, index);
                 remainingBytes = System.Text.Encoding.ASCII.GetBytes(newpacket.Substring(index + 8));
+
+                _headersLengthRx = (ulong)headers.Length;
 
                 // Grab the headers from the response
                 matches = new System.Text.RegularExpressions.Regex("[^\r\n]+").Matches(headers.TrimEnd('\r', '\n'));
@@ -494,12 +494,24 @@ namespace OpenDMS.Networking.Http
                 }
                 else
                 {
-                    if ((contentLength = Utilities.GetContentLength(response.Headers)) > 0)
+                    if ((_contentLengthRx = Utilities.GetContentLength(response.Headers)) > 0)
                     {
-                        response.Stream = new HttpNetworkStream(contentLength, remainingBytes, _socket, System.IO.FileAccess.Read, false);
+                        response.Stream = new HttpNetworkStream(_contentLengthRx, remainingBytes, _socket, System.IO.FileAccess.Read, false);
                         response.Stream.OnProgress += new HttpNetworkStream.ProgressDelegate(Stream_OnProgress);
                         Logger.Network.Debug("A network stream has been successfully attached to the response body.");
                     }
+                }
+
+                try
+                {
+                    if (OnProgress != null && e.BytesTransferred > 0)
+                        OnProgress(this, DirectionType.Download, e.BytesTransferred);
+                }
+                catch (Exception ex)
+                {
+                    // Ignore it, its the higher level's job to deal with it.
+                    Logger.Network.Error("An unhandled exception was caught by Connection.ReceiveResponse_Completed in the OnProgress event.", ex);
+                    throw;
                 }
 
                 Logger.Network.Debug("Received response.");
@@ -547,6 +559,7 @@ namespace OpenDMS.Networking.Http
                 throw new HttpNetworkException("Socket is closed or not ready");
 
             AsyncUserToken userToken = null;
+            byte[] headers = null;
             Logger.Network.Debug("Sending request headers...");
 
             // Reset the stream position if we can
@@ -557,8 +570,8 @@ namespace OpenDMS.Networking.Http
                     stream.Position = 0;
                     request.ContentLength = stream.Length.ToString();
                 }
-                else if (Utilities.GetContentLength(request.Headers) <= 0)
-                    throw new HttpNetworkException("A stream was provide and the content length was not set.");
+                else if ((_contentLengthTx = Utilities.GetContentLength(request.Headers)) <= 0)
+                    throw new HttpNetworkException("A stream was provided and the content length was not set.");
                 else if (!stream.CanRead)
                     throw new ArgumentException("The stream cannot be read.");
             }
@@ -566,7 +579,11 @@ namespace OpenDMS.Networking.Http
 
             _args.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
 
-            if (!TryCreateUserTokenAndTimeout(new NetworkBuffer(System.Text.Encoding.ASCII.GetBytes(GetRequestHeader(request))), 
+            headers = System.Text.Encoding.ASCII.GetBytes(GetRequestHeader(request));
+
+            _headersLengthTx = (ulong)headers.LongLength;
+
+            if (!TryCreateUserTokenAndTimeout(new NetworkBuffer(headers), 
                 stream, _sendTimeout, out userToken, new Timeout.TimeoutEvent(SendRequest_Timeout)))
                 return;            
 
@@ -576,6 +593,10 @@ namespace OpenDMS.Networking.Http
                 byte[] newBuffer = new byte[_sendBufferSize];
                 userToken.NetworkBuffer.CopyTo(newBuffer, 0, _sendBufferSize);
                 _args.SetBuffer(newBuffer, 0, _sendBufferSize);
+            }
+            else
+            {
+                _args.SetBuffer(userToken.NetworkBuffer.Buffer, 0, userToken.NetworkBuffer.Length);
             }
 
             lock (_socket)
@@ -606,7 +627,7 @@ namespace OpenDMS.Networking.Http
                 return;
 
             userToken = (AsyncUserToken)e.UserToken;
-
+            
             try
             {
                 if (OnProgress != null) OnProgress(this, DirectionType.Upload, e.BytesTransferred);

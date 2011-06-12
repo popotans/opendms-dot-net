@@ -73,15 +73,30 @@
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\CouchDB\Commands\Base.cs" />
-    <Compile Include="Providers\CouchDB\Commands\Create.cs" />
-    <Compile Include="Providers\CouchDB\Commands\CreateDatabaseReply.cs" />
-    <Compile Include="Providers\CouchDB\Commands\CreateDocumentReply.cs" />
-    <Compile Include="Providers\CouchDB\Commands\Delete.cs" />
+    <Compile Include="Providers\CouchDB\Commands\DeleteAttachment.cs" />
+    <Compile Include="Providers\CouchDB\Commands\DeleteAttachmentReply.cs" />
+    <Compile Include="Providers\CouchDB\Commands\HeadAttachment.cs" />
+    <Compile Include="Providers\CouchDB\Commands\HeadAttachmentReply.cs" />
+    <Compile Include="Providers\CouchDB\Commands\PutAttachment.cs" />
+    <Compile Include="Providers\CouchDB\Commands\PutAttachmentReply.cs" />
+    <Compile Include="Providers\CouchDB\Commands\PutDatabase.cs" />
+    <Compile Include="Providers\CouchDB\Commands\PutDatabaseReply.cs" />
+    <Compile Include="Providers\CouchDB\Commands\PutDocument.cs" />
+    <Compile Include="Providers\CouchDB\Commands\PutDocumentReply.cs" />
+    <Compile Include="Providers\CouchDB\Commands\DeleteDatabase.cs" />
+    <Compile Include="Providers\CouchDB\Commands\DeleteDatabaseReply.cs" />
+    <Compile Include="Providers\CouchDB\Commands\DeleteDocument.cs" />
+    <Compile Include="Providers\CouchDB\Commands\DeleteDocumentReply.cs" />
     <Compile Include="Providers\CouchDB\Commands\Error.cs" />
-    <Compile Include="Providers\CouchDB\Commands\Get.cs" />
-    <Compile Include="Providers\CouchDB\Commands\List.cs" />
+    <Compile Include="Providers\CouchDB\Commands\GetAttachment.cs" />
+    <Compile Include="Providers\CouchDB\Commands\GetAttachmentReply.cs" />
+    <Compile Include="Providers\CouchDB\Commands\GetDatabase.cs" />
+    <Compile Include="Providers\CouchDB\Commands\GetDatabaseReply.cs" />
+    <Compile Include="Providers\CouchDB\Commands\GetDocument.cs" />
+    <Compile Include="Providers\CouchDB\Commands\GetDocumentReply.cs" />
+    <Compile Include="Providers\CouchDB\Commands\HeadDocument.cs" />
+    <Compile Include="Providers\CouchDB\Commands\HeadDocumentReply.cs" />
     <Compile Include="Providers\CouchDB\Commands\ReplyBase.cs" />
-    <Compile Include="Providers\CouchDB\Commands\Update.cs" />
     <Compile Include="Providers\CouchDB\Database.cs" />
     <Compile Include="Providers\CouchDB\Engine.cs" />
     <Compile Include="Providers\CouchDB\Json\JsonParseException.cs" />
@@ -128,7 +143,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
+      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

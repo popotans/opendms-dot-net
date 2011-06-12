@@ -8,17 +8,20 @@ namespace OpenDMS.Storage.Data
         public string Revision { get; private set; }
         public List<VersionId> VersionIds { get; private set; }
         public VersionId CurrentVersionId { get; private set; }
+        public Metadata Metadata { get; protected set; }
 
         public Resource()
         {
         }
 
-        public Resource(ResourceId resourceId, string revision, List<VersionId> versionIds, VersionId currentVersionId)
+        public Resource(ResourceId resourceId, string revision, List<VersionId> versionIds, 
+            VersionId currentVersionId, Metadata metadata)
         {
             ResourceId = resourceId;
             Revision = revision;
             VersionIds = versionIds;
             CurrentVersionId = currentVersionId;
+            Metadata = metadata;
         }
     }
 }
