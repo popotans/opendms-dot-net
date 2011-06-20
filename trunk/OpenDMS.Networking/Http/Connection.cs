@@ -12,7 +12,7 @@ namespace OpenDMS.Networking.Http
         public event ConnectionDelegate OnTimeout;
         public delegate void ErrorDelegate(Connection sender, string message, Exception exception);
         public event ErrorDelegate OnError;
-        public delegate void ProgressDelegate(Connection sender, DirectionType direction, int packetSize);
+        public delegate void ProgressDelegate(Connection sender, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public event ProgressDelegate OnProgress;
         public delegate void CompletionEvent(Connection sender, Methods.Response response);
         public event CompletionEvent OnComplete;
@@ -54,8 +54,24 @@ namespace OpenDMS.Networking.Http
         public ulong BytesReceivedContentOnly { get { return _bytesReceivedContentOnly; } }
         public ulong HeadersLength { get { return _headersLengthTx; } }
         public ulong ContentLength { get { return _contentLengthTx; } }
-        public decimal SendPercentComplete { get { return ((decimal)_bytesSentTotal / (decimal)(_headersLengthTx + _contentLengthTx)) * (decimal)100; } }
-        public decimal ReceivePercentComplete { get { return ((decimal)_bytesReceivedTotal / (decimal)(_headersLengthRx + _contentLengthRx)) * (decimal)100; } }
+        public decimal SendPercentComplete 
+        { 
+            get 
+            {
+                if ((_headersLengthTx + _contentLengthTx) == 0)
+                    return 0;
+                return ((decimal)_bytesSentTotal / (decimal)(_headersLengthTx + _contentLengthTx)) * (decimal)100; 
+            } 
+        }
+        public decimal ReceivePercentComplete 
+        { 
+            get
+            {
+                if ((_headersLengthRx + _contentLengthRx) == 0)
+                    return 0;
+                return ((decimal)_bytesReceivedTotal / (decimal)(_headersLengthRx + _contentLengthRx)) * (decimal)100; 
+            } 
+        }
 
 
         public Connection(ConnectionManager factory, Uri uri) 
@@ -326,6 +342,7 @@ namespace OpenDMS.Networking.Http
                 try
                 {
                     _socket.Close();
+                    _socket.Dispose();
                 }
                 catch (Exception ex)
                 {
@@ -350,6 +367,7 @@ namespace OpenDMS.Networking.Http
 
             AsyncUserToken userToken = null;
             string headers = "";
+            byte[] buffer = new byte[_receiveBufferSize];
 
             Logger.Network.Debug("Receiving response headers...");
 
@@ -359,6 +377,7 @@ namespace OpenDMS.Networking.Http
 
             _args.UserToken = userToken;
             _args.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_Completed);
+            _args.SetBuffer(buffer, 0, buffer.Length);
             
             lock (_socket)
             {
@@ -381,7 +400,7 @@ namespace OpenDMS.Networking.Http
 
         private void ReceiveResponse_Completed(object sender, SocketAsyncEventArgs e)
         {
-            _args.Completed -= ReceiveResponse_Completed;
+            e.Completed -= ReceiveResponse_Completed;
 
             if (!TryStopTimeout(_args.UserToken))
                 return;
@@ -412,20 +431,21 @@ namespace OpenDMS.Networking.Http
             {
                 // End sequence \r\n\r\n is not found, we need to do this receiving again
                 headers += newpacket;
-                _args.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_Completed);
+                e.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_Completed);
 
                 if (!TryCreateUserTokenAndTimeout(headers, _receiveTimeout, out userToken,
                     new Timeout.TimeoutEvent(ReceiveResponse_Timeout)))
                     return;
 
-                _args.UserToken = userToken;
+                e.UserToken = userToken;
 
                 try
                 {
-                    if (!_socket.ReceiveAsync(_args))
+                    if (!_socket.ReceiveAsync(e))
                     {
                         Logger.Network.Debug("ReceiveAsync completed synchronously.");
-                        ReceiveResponse_Completed(null, _args);
+                        ReceiveResponse_Completed(null, e);
+                        return;
                     }
                 }
                 catch (Exception ex)
@@ -446,9 +466,12 @@ namespace OpenDMS.Networking.Http
                 //ulong contentLength = 0;
                 
                 headers += newpacket.Substring(0, index);
-                remainingBytes = System.Text.Encoding.ASCII.GetBytes(newpacket.Substring(index + 8));
+                remainingBytes = System.Text.Encoding.ASCII.GetBytes(newpacket.Substring(index + 4));
 
                 _headersLengthRx = (ulong)headers.Length;
+                // We do it here
+                _bytesReceivedHeadersOnly = _headersLengthRx;
+                _bytesReceivedTotal = _headersLengthRx;
 
                 // Grab the headers from the response
                 matches = new System.Text.RegularExpressions.Regex("[^\r\n]+").Matches(headers.TrimEnd('\r', '\n'));
@@ -505,7 +528,7 @@ namespace OpenDMS.Networking.Http
                 try
                 {
                     if (OnProgress != null && e.BytesTransferred > 0)
-                        OnProgress(this, DirectionType.Download, e.BytesTransferred);
+                        OnProgress(this, DirectionType.Download, e.BytesTransferred, SendPercentComplete, ReceivePercentComplete);
                 }
                 catch (Exception ex)
                 {
@@ -536,7 +559,8 @@ namespace OpenDMS.Networking.Http
 
             try
             {
-                if (OnProgress != null) OnProgress(this, DirectionType.Download, packetSize);
+                if (OnProgress != null) 
+                    OnProgress(this, DirectionType.Download, packetSize, SendPercentComplete, ReceivePercentComplete);
             }
             catch (Exception ex)
             {
@@ -568,7 +592,8 @@ namespace OpenDMS.Networking.Http
                 if (stream.CanSeek)
                 {
                     stream.Position = 0;
-                    request.ContentLength = stream.Length.ToString();
+                    _contentLengthTx = (ulong)stream.Length;
+                    request.ContentLength = _contentLengthTx.ToString();
                 }
                 else if ((_contentLengthTx = Utilities.GetContentLength(request.Headers)) <= 0)
                     throw new HttpNetworkException("A stream was provided and the content length was not set.");
@@ -623,14 +648,15 @@ namespace OpenDMS.Networking.Http
             AsyncUserToken userToken = null;
             e.Completed -= SendRequest_Completed;
 
-            if (!TryStopTimeout(_args.UserToken))
-                return;
-
             userToken = (AsyncUserToken)e.UserToken;
+
+            if (!TryStopTimeout(userToken))
+                return;
             
             try
             {
-                if (OnProgress != null) OnProgress(this, DirectionType.Upload, e.BytesTransferred);
+                if (OnProgress != null) 
+                    OnProgress(this, DirectionType.Upload, e.BytesTransferred, SendPercentComplete, ReceivePercentComplete);
             }
             catch (Exception ex)
             {
@@ -650,7 +676,7 @@ namespace OpenDMS.Networking.Http
                 {
                     // Make a new buffer for the remaining bytes of the Token1
                     byte[] newUserTokenBuffer = new byte[userToken.NetworkBuffer.Length - e.BytesTransferred];
-
+                    e.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
                     e.SetBuffer(e.BytesTransferred, e.Buffer.Length - e.BytesTransferred);
 
                     try
@@ -673,10 +699,13 @@ namespace OpenDMS.Networking.Http
                 {
                     Logger.Network.Debug("Request headers were sent.");
                     Logger.Network.Debug("Sending request body.");
+                    byte[] buffer = new byte[_sendBufferSize];
+                    int bytesRead = 0;
 
+                    bytesRead = ((System.IO.Stream)userToken.Token).Read(buffer, 0, buffer.Length);
+                    e.SetBuffer(buffer, 0, bytesRead);
                     e.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
-                    e.SetBuffer(0, _args.Buffer.Length); // Frees up the entire buffer
-
+                    
                     if (!TryCreateUserTokenAndTimeout(null, userToken.Token,
                         _sendTimeout, out userToken, new Timeout.TimeoutEvent(SendRequest_Timeout)))
                         return;
@@ -688,7 +717,7 @@ namespace OpenDMS.Networking.Http
             { 
                 // Flow falls here when the Token2 (stream) is not null
                 //System.IO.Stream stream = (System.IO.Stream)((AsyncUserToken)_args.UserToken).Token2;
-                byte[] buffer = userToken.NetworkBuffer.Buffer;
+                byte[] buffer = new byte[_sendBufferSize];
                 int bytesRead = 0;
                 _bytesSentContentOnly += (ulong)e.BytesTransferred;
                 _bytesSentTotal += (ulong)e.BytesTransferred;
@@ -702,7 +731,7 @@ namespace OpenDMS.Networking.Http
                 {
                     bytesRead = ((System.IO.Stream)userToken.Token).Read(buffer, 0, buffer.Length);
                     e.SetBuffer(buffer, 0, bytesRead);
-                    e.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
+                    //e.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
 
                     try
                     {

@@ -2,7 +2,7 @@
 
 namespace OpenDMS.Storage.Providers.CouchDB
 {
-    public class Server
+    public class Server : IServer
     {
         private string _protocol = "http";
         private string _host = "localhost";
@@ -70,7 +70,7 @@ namespace OpenDMS.Storage.Providers.CouchDB
         /// </summary>
         /// <param name="name">Name of the database</param>
         /// <returns></returns>
-        public Database GetDatabase(string name)
+        IDatabase IServer.GetDatabase(string name)
         {
             return new Database(this, name);
         }
