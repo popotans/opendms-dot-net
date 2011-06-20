@@ -71,7 +71,8 @@ namespace OpenDMS.Networking.Http
             int bytesRead = 0;
 
             // is our position within the _buffer?
-            if (_bufferToPrependPosition < _bufferToPrepend.Length)
+            if (_bufferToPrepend != null && 
+                _bufferToPrependPosition < _bufferToPrepend.Length)
             {
                 // Close frame to remaining bytes of _buffer if < count
                 bytesRead = _bufferToPrepend.Length - (int)_bufferToPrependPosition;

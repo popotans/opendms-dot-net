@@ -99,18 +99,42 @@
     <Compile Include="Providers\CouchDB\Commands\ReplyBase.cs" />
     <Compile Include="Providers\CouchDB\Database.cs" />
     <Compile Include="Providers\CouchDB\Engine.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\Base.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\CreateNewResource.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\CreateNewVersion.cs" />
     <Compile Include="Providers\CouchDB\Json\JsonParseException.cs" />
+    <Compile Include="Providers\CouchDB\Json\ValueParser.cs" />
     <Compile Include="Providers\CouchDB\Model\Attachment.cs" />
     <Compile Include="Providers\CouchDB\Model\BaseStorageObject.cs" />
     <Compile Include="Providers\CouchDB\Model\Database.cs" />
     <Compile Include="Providers\CouchDB\Model\Document.cs" />
+    <Compile Include="Providers\ICommandReply.cs" />
+    <Compile Include="Providers\IEngine.cs" />
+    <Compile Include="Security\PermissionType.cs" />
+    <Compile Include="Security\Session.cs" />
+    <Compile Include="Security\SessionManager.cs" />
+    <Compile Include="Security\UsageRight.cs" />
     <Compile Include="Providers\CouchDB\Server.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Manager.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Stage.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Transaction.cs" />
+    <Compile Include="Providers\CouchDB\Transitions\Group.cs" />
+    <Compile Include="Providers\CouchDB\Transitions\Resource.cs" />
+    <Compile Include="Providers\CouchDB\Transitions\User.cs" />
     <Compile Include="Providers\CouchDB\Transitions\Version.cs" />
+    <Compile Include="Providers\CouchDB\UriBuilder.cs" />
+    <Compile Include="Providers\EngineActionType.cs" />
+    <Compile Include="Providers\IDatabase.cs" />
+    <Compile Include="Providers\IServer.cs" />
+    <Compile Include="Security\EntityBase.cs" />
+    <Compile Include="Security\Group.cs" />
+    <Compile Include="Security\User.cs" />
     <Compile Include="UnsupportedException.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="libs\log4net.dll" />
     <Content Include="libs\Newtonsoft.Json.dll" />
+    <Content Include="Providers\CouchDB\Transactions\Problem.txt" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -135,15 +159,20 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\OpenDMS.IO\OpenDMS.IO.csproj">
+      <Project>{72987F10-B4F8-4594-9D36-D366A4ECC121}</Project>
+      <Name>OpenDMS.IO</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OpenDMS.Networking\OpenDMS.Networking.csproj">
       <Project>{F925FB04-0062-47B5-A4F9-E862C2F1509A}</Project>
       <Name>OpenDMS.Networking</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

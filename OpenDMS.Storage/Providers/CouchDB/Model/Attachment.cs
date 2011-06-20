@@ -9,19 +9,19 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
         public bool? Stub
         {
             get { return _stub; }
-            set { _stub = value; }
+            set { _stub = value; ResetLength(); }
         }
 
         public string ContentType
         {
             get { return this["content_type"].Value<string>(); }
-            set { this["content_type"] = value; }
+            set { this["content_type"] = value; ResetLength(); }
         }
 
-        public long Length
+        public long AttachmentLength
         {
             get { return this["length"].Value<long>(); }
-            set { this["length"] = value; }
+            set { this["length"] = value; ResetLength(); }
         }
 
         public Attachment()

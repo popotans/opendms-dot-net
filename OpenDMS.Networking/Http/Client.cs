@@ -4,7 +4,7 @@ namespace OpenDMS.Networking.Http
 {
     public class Client
     {
-        public delegate void ProgressDelegate(Client sender, Connection connection, DirectionType direction, int packetSize);
+        public delegate void ProgressDelegate(Client sender, Connection connection, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public event ProgressDelegate OnProgress;
         public delegate void TimeoutDelegate(Client sender, Connection connection);
         public event TimeoutDelegate OnTimeout;
@@ -12,9 +12,12 @@ namespace OpenDMS.Networking.Http
         public event CompletionDelegate OnComplete;
         public delegate void ErrorDelegate(Client sender, string message, Exception exception);
         public event ErrorDelegate OnError;
+        public delegate void CloseDelegate(Client sender, Connection connection);
+        public event CloseDelegate OnClose;
 
         private Methods.Request _request;
         private System.IO.Stream _stream;
+        private Connection _connection;
 
         public void Execute(Methods.Request request, int sendTimeout, int receiveTimeout,
             int sendBufferSize, int receiveBufferSize)
@@ -26,7 +29,6 @@ namespace OpenDMS.Networking.Http
             int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
             ConnectionManager connMgr = null;
-            Connection connection = null;
 
             connMgr = new ConnectionManager();
 
@@ -35,8 +37,14 @@ namespace OpenDMS.Networking.Http
 
             connMgr.OnConnected += new ConnectionManager.ConnectedDelegate(ConnectionManager_OnConnected);
             connMgr.OnError += new Connection.ErrorDelegate(ConnectionManager_OnError);
-            connection = connMgr.GetConnection(request.Uri, sendTimeout, receiveTimeout,
+            _connection = connMgr.GetConnection(request.Uri, sendTimeout, receiveTimeout,
                 sendBufferSize, receiveBufferSize);
+        }
+
+        public void Close()
+        {
+            if (_connection != null && _connection.IsConnected)
+                _connection.CloseAsync();
         }
 
         private void ConnectionManager_OnError(Connection sender, string message, Exception exception)
@@ -81,7 +89,8 @@ namespace OpenDMS.Networking.Http
 
         private void Connection_OnDisconnect(Connection sender)
         {
-            // Nothing to do really.
+            Logger.Network.Debug("Http.Client received a close event from Http.Network.HttpConnection.");
+            if (OnClose != null) OnClose(this, sender);
         }
 
         private void Connection_OnTimeout(Connection sender)
@@ -98,10 +107,10 @@ namespace OpenDMS.Networking.Http
             else throw new CompleteNotImplementedException("No subscription to OnComplete.");
         }
 
-        private void Connection_OnProgress(Connection sender, DirectionType direction, int packetSize)
+        private void Connection_OnProgress(Connection sender, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
             // Not logged, way to verbose
-            if (OnProgress != null) OnProgress(this, sender, direction, packetSize);
+            if (OnProgress != null) OnProgress(this, sender, direction, packetSize, sendPercentComplete, receivePercentComplete);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
         public string Id
         {
             get { return this["_id"].Value<string>(); }
-            set { this["_id"] = value; }
+            set { this["_id"] = value; ResetLength(); }
         }
 
         public string Rev
@@ -24,7 +24,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
                     return rev.Value<string>();
                 return null;
             }
-            set { this["_rev"] = value; }
+            set { this["_rev"] = value; ResetLength(); }
         }
 
         public Dictionary<string, Attachment> Attachments
@@ -52,7 +52,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
                 _attachmentsAreDirty = false;
                 return _attachments;
             }
-            set { _attachments = value; }
+            set { _attachments = value; ResetLength(); }
         }
 
         public bool HasAttachment
@@ -63,6 +63,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
         public void AddAttachment(string name, Attachment attachment)
         {
             _attachments.Add(name, attachment);
+            ResetLength();
         }
 
         public Document()

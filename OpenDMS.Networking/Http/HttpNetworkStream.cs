@@ -6,25 +6,6 @@ namespace OpenDMS.Networking.Http
 {
     public class HttpNetworkStream
     {
-        //private class Buffer
-        //{
-        //    public byte[] BufferBytes { get; set; }
-        //    public int Offset { get; set; }
-        //    public int Length { get; set; }
-        //    public Timeout Timeout { get; set; }
-        //    public int BytesReadFromPrepend { get; set; }
-        //}
-
-        //private class BufferWithString : Buffer
-        //{
-        //    public string String { get; set; }
-        //}
-
-        //private class BufferWithStream : Buffer
-        //{
-        //    public System.IO.Stream Stream { get; set; }
-        //}
-
         public delegate void ProgressDelegate(HttpNetworkStream sender, DirectionType direction, int packetSize);
         public event ProgressDelegate OnProgress;
         public delegate void TimeoutDelegate(HttpNetworkStream sender);

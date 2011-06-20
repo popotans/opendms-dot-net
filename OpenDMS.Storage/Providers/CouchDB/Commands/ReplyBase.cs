@@ -3,7 +3,7 @@ using OpenDMS.Networking.Http.Methods;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
-    public abstract class ReplyBase
+    public abstract class ReplyBase : ICommandReply
     {
         protected Response _response = null;
 
@@ -24,6 +24,20 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
         protected string StringifyResponseStream()
         {
             return _response.Stream.ReadToEnd();
+        }
+
+        public bool IsError
+        {
+            get { return Error != null; }
+        }
+
+        public string ErrorMessage
+        {
+            get 
+            { 
+                if (Error != null) return Error.Reason;
+                return null;
+            }
         }
     }
 }

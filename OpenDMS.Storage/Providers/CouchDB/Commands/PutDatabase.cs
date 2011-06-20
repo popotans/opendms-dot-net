@@ -5,14 +5,10 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public class PutDatabase : Base
     {
-        public PutDatabase(Uri uri)
-            : base(new Put(uri, "application/json"))
+        public PutDatabase(IDatabase db)
+            : base(new Put(UriBuilder.Build(db), "application/json", 0))
         {
-        }
-
-        public PutDatabase(Put put)
-            : base(put)
-        {
+            _stream = null;
         }
 
         public override ReplyBase MakeReply(Response response)
