@@ -11,8 +11,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
             _fileSystem = fileSystem;
         }
 
-        public bool Begin(Data.Version version)
-        {
-        }
+        //public bool Begin(Data.Version version)
+        //{
+        //}
     }
 }

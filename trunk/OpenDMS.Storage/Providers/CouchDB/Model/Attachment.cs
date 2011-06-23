@@ -31,21 +31,18 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
         }
 
         public Attachment(string json)
-            : base(Parse(json))
+            : this(Parse(json))
         {
-            _stub = GetStub();
         }
 
         public Attachment(JToken token)
-            : base((JObject)token)
+            : this((JObject)token)
         {
-            _stub = GetStub();
         }
 
         public Attachment(JObject jobj)
-            : base()
+            : base(jobj)
         {
-            _stub = GetStub();
         }
 
         private bool? GetStub()

@@ -6,15 +6,10 @@ using OpenDMS.Storage.Data;
 
 namespace OpenDMS.Storage.Providers.CouchDB
 {
-    public class Engine : IEngine
+    public class Engine : EngineBase
     {
-        public delegate void ActionDelegate(EngineActionType actionType, bool willSendProgress);
-        public delegate void ProgressDelegate(DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
-        public delegate void CompletionDelegate(ICommandReply reply);
-        public delegate void TimeoutDelegate();
-        public delegate void ErrorDelegate(string message, Exception exception);
-
         public Engine()
+            : base()
         {
         }
 
@@ -84,6 +79,16 @@ namespace OpenDMS.Storage.Providers.CouchDB
         public HttpNetworkStream GetContentStream(Data.VersionId id)
         {
             return null;
+        }
+
+        #endregion
+
+        #region Groups
+
+        public override void GetAllGroups(EngineRequest request, IDatabase db)
+        {
+            EngineMethods.GetAllGroups act = new EngineMethods.GetAllGroups(db, request.OnActionChanged, request.OnProgress, request.OnComplete, request.OnTimeout, request.OnError);
+            act.Execute();
         }
 
         #endregion

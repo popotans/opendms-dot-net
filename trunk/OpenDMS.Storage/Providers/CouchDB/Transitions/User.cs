@@ -39,6 +39,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 
             doc.Id = user.Id;
             doc.Rev = user.Rev;
+            doc["Type"] = "user";
             doc["Password"] = user.Password;
             doc["FirstName"] = user.FirstName;
             doc["MiddleName"] = user.MiddleName;

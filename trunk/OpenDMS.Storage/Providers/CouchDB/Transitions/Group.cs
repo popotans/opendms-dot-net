@@ -48,6 +48,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 
             doc.Id = group.Id;
             doc.Rev = group.Rev;
+            doc["Type"] = "group";
 
             for (int i = 0; i < group.Groups.Count; i++)
                 groupsJray.Add(group.Groups[i]);

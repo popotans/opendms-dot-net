@@ -33,7 +33,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
         }
 
         public BaseStorageObject(JObject jobj)
-            : this()
+            : base(jobj)
         {
         }
 

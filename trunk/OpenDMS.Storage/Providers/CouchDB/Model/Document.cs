@@ -46,7 +46,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
                     if (en.Current.Type != JTokenType.Property)
                         throw new Json.JsonParseException("Property was expected.");
                     
-                    _attachments.Add(((JProperty)en.Current).Name, new Attachment(en.Current));
+                    _attachments.Add(((JProperty)en.Current).Name, (Attachment)en.Current);
                 }
 
                 _attachmentsAreDirty = false;
@@ -83,10 +83,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
         }
 
         public Document(JObject jobj)
-            : base()
+            : base(jobj)
         {
-            _attachmentsAreDirty = true;
-            _attachments = new Dictionary<string, Attachment>();
         }
     }
 }

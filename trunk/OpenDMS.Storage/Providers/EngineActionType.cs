@@ -4,6 +4,7 @@ namespace OpenDMS.Storage.Providers
     public enum EngineActionType
     {
         Preparing,
+        GettingGroups,
         CreatingNewResource,
         CreatingNewVersion,
         UpdatingResource,

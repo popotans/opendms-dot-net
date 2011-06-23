@@ -18,6 +18,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 
             id = new Data.VersionId(document.Id);
             rev = document.Rev;
+            document["Type"] = "version";
 
             if (document["UsageRights"] != null)
             {
@@ -35,7 +36,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             }
 
             document.Remove("_id");
-            document.Remove("_rev");
+            if (document["_rev"] != null)
+                document.Remove("_rev");
+            document.Remove("Type");
 
             remainder = document;
             return new Data.Version(id, rev, usageRights);

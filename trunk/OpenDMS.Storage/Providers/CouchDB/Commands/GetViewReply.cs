@@ -1,17 +1,17 @@
-﻿using OpenDMS.Networking.Http.Methods;
+﻿using System.Collections.Generic;
+using OpenDMS.Networking.Http.Methods;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
-    public class GetDocumentReply : ReplyBase
+    public class GetViewReply : ReplyBase
     {
         private const string _200 = "Success.";
-        private const string _400 = "The format of the request or revision was invalid";
-        private const string _404 = "The requested document or revision could not be found or has been deleted.";
+        private const string _404 = "The requested view could not be found or has been deleted.";
 
         public bool Ok { get; private set; }
-        public Model.Document Document { get; private set; }
+        public Model.View View { get; private set; }
 
-        public GetDocumentReply(Response response)
+        public GetViewReply(Response response)
             : base(response)
         {
         }
@@ -22,14 +22,10 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
             {
                 case 200:
                     ResponseMessage = _200;
-                    Document = (Model.Document)Newtonsoft.Json.Linq.JObject.Parse(StringifyResponseStream());
+                    View = new Model.View(StringifyResponseStream());
                     Ok = true;
                     break;
                 case 400:
-                    ResponseMessage = _400;
-                    Ok = false;
-                    break;
-                case 404:
                     ResponseMessage = _404;
                     Ok = false;
                     break;

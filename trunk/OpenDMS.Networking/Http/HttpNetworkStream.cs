@@ -49,7 +49,9 @@ namespace OpenDMS.Networking.Http
         public HttpNetworkStream(ulong contentLength, byte[] prependToStream, Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket)
             : this(contentLength, socket, fileAccess, ownsSocket)
         {
-            _prependBuffer = new NetworkBuffer(prependToStream);
+            _contentLength = contentLength;
+            _socket = socket;
+            _stream = new PrependableNetworkStream(socket, fileAccess, ownsSocket, prependToStream);
         }
 
         public void Close()
