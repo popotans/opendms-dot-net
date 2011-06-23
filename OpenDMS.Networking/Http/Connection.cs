@@ -402,7 +402,7 @@ namespace OpenDMS.Networking.Http
         {
             e.Completed -= ReceiveResponse_Completed;
 
-            if (!TryStopTimeout(_args.UserToken))
+            if (!TryStopTimeout(e.UserToken))
                 return;
 
             int index = -1;
@@ -410,7 +410,7 @@ namespace OpenDMS.Networking.Http
             string newpacket;
             AsyncUserToken userToken = null;
             
-            headers = (string)((AsyncUserToken)_args.UserToken).Token;
+            headers = (string)((AsyncUserToken)e.UserToken).Token;
 
             try
             {
@@ -512,8 +512,8 @@ namespace OpenDMS.Networking.Http
                 if (transferEncoding != null &&
                     transferEncoding.ToLower() == "chunked")
                 {
-                    // Currently, chunked encoding is not supported, tell the programmer.
-                    throw new NotImplementedException("Receiving of chunked data is not supported, implement it because the server wants to use it.");
+                    ReceiveResponse_ChunkedData(remainingBytes, _socket, response);
+                    return;
                 }
                 else
                 {
@@ -547,9 +547,125 @@ namespace OpenDMS.Networking.Http
                 {
                     // Ignore it, its the higher level's job to deal with it.
                     Logger.Network.Error("An unhandled exception was caught by Connection.ReceiveResponse_Completed in the OnComplete event.", ex);
-                    throw;
+                    if (OnError != null) OnError(this, ex.Message, ex);
                 }
             }
+        }
+
+        private void ReceiveResponse_ChunkedData(byte[] remainingBytes, Socket socket, Methods.Response response)
+        {
+            Tuple<string, Methods.Response> token;
+            string responseBody = "";
+
+            if (remainingBytes != null && remainingBytes.Length > 0)
+            {
+                responseBody += System.Text.Encoding.UTF8.GetString(remainingBytes);
+                if (OnProgress != null) OnProgress(this, DirectionType.Download, remainingBytes.Length, 100, -1);
+            }
+
+            AsyncUserToken userToken;
+            NetworkBuffer networkBuffer = new NetworkBuffer(new byte[_receiveBufferSize]);
+
+            token = new Tuple<string, Methods.Response>(responseBody, response);
+            if (!TryCreateUserTokenAndTimeout(networkBuffer, token, _receiveTimeout, out userToken, 
+                new Timeout.TimeoutEvent(ReceiveResponse_ChunkedData_Timeout)))
+                return;
+
+            _args = new SocketAsyncEventArgs();
+            _args.UserToken = userToken;
+            _args.SetBuffer(networkBuffer.Buffer, 0, networkBuffer.Length);
+            _args.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_ChunkedData_Completed);
+
+            try
+            {
+                if (!socket.ReceiveAsync(_args))
+                {
+                    Logger.Network.Debug("ReceiveAsync completed synchronously.");
+                    ReceiveResponse_ChunkedData_Completed(null, _args);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Network.Error("An exception occurred while receiving from the socket.", e);
+                if (OnError != null) OnError(this, "Exception receiving from socket.", e);
+                else throw;
+            }
+        }
+
+        private void ReceiveResponse_ChunkedData_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            e.Completed -= ReceiveResponse_ChunkedData_Completed;
+
+            if (!TryStopTimeout(e.UserToken))
+                return;
+
+            AsyncUserToken userToken;
+            string newpacket;
+            Methods.Response response;
+            Tuple<string, Methods.Response> token;
+            string responseBody;
+            int chunkLength = 0;
+            int packetSize = 0;
+            int index;
+
+            try
+            {
+                newpacket = System.Text.Encoding.UTF8.GetString(e.Buffer, e.Offset, e.BytesTransferred);
+            }
+            catch (Exception ex)
+            {
+                Logger.Network.Error("An exception occurred while getting a string from the buffer.", ex);
+                if (OnError != null)
+                {
+                    OnError(this, "Exception while getting a string from the buffer.", ex);
+                    return;
+                }
+                else throw;
+            }
+
+            userToken = (AsyncUserToken)e.UserToken;
+            token = (Tuple<string, Methods.Response>)userToken.Token;
+            responseBody = token.Item1;
+            response = token.Item2;
+            
+            while ((index = newpacket.IndexOf("\r\n")) > 0)
+            {
+                chunkLength = Utilities.ConvertHexToInt(newpacket.Substring(0, index));
+                newpacket = newpacket.Substring(index + 2);
+                if (chunkLength == 0)
+                    break;
+                packetSize += chunkLength;
+                responseBody += newpacket.Substring(0, chunkLength);
+                newpacket = newpacket.Substring(chunkLength + 2);
+            }
+
+            _contentLengthRx += (ulong)packetSize;
+            if (OnProgress != null) OnProgress(this, DirectionType.Download, packetSize, 100, -1);
+
+            if (chunkLength > 0)
+            {
+                token = new Tuple<string, Methods.Response>(responseBody, response);
+                if (!TryCreateUserTokenAndTimeout(userToken.NetworkBuffer, token, _receiveTimeout, out userToken,
+                    new Timeout.TimeoutEvent(ReceiveResponse_ChunkedData_Timeout)))
+                    return;
+
+                e.SetBuffer(userToken.NetworkBuffer.Buffer, 0, userToken.NetworkBuffer.Length);
+                e.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_ChunkedData_Completed);
+            }
+            else
+            {
+                response.Stream = new HttpNetworkStream(_contentLengthRx,
+                    System.Text.Encoding.UTF8.GetBytes(responseBody),
+                    _socket, System.IO.FileAccess.Read, false);
+                if (OnComplete != null) OnComplete(this, response);
+            }
+        }
+
+        private void ReceiveResponse_ChunkedData_Timeout()
+        {
+            _args.Completed -= ReceiveResponse_ChunkedData_Completed;
+            Logger.Network.Error("Timeout during receiving chunked response.");
+            CloseSocketAndTimeout();
         }
 
         private void Stream_OnProgress(HttpNetworkStream sender, DirectionType direction, int packetSize)
@@ -698,19 +814,28 @@ namespace OpenDMS.Networking.Http
                 else
                 {
                     Logger.Network.Debug("Request headers were sent.");
-                    Logger.Network.Debug("Sending request body.");
-                    byte[] buffer = new byte[_sendBufferSize];
-                    int bytesRead = 0;
 
-                    bytesRead = ((System.IO.Stream)userToken.Token).Read(buffer, 0, buffer.Length);
-                    e.SetBuffer(buffer, 0, bytesRead);
-                    e.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
-                    
-                    if (!TryCreateUserTokenAndTimeout(null, userToken.Token,
-                        _sendTimeout, out userToken, new Timeout.TimeoutEvent(SendRequest_Timeout)))
+                    if (userToken.Token != null)
+                    {
+                        Logger.Network.Debug("Sending request body.");
+                        byte[] buffer = new byte[_sendBufferSize];
+                        int bytesRead = 0;
+
+                        bytesRead = ((System.IO.Stream)userToken.Token).Read(buffer, 0, buffer.Length);
+                        e.SetBuffer(buffer, 0, bytesRead);
+                        e.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
+
+                        if (!TryCreateUserTokenAndTimeout(null, userToken.Token,
+                            _sendTimeout, out userToken, new Timeout.TimeoutEvent(SendRequest_Timeout)))
+                            return;
+
+                        e.UserToken = userToken;
+                    }
+                    else
+                    {
+                        ReceiveResponseAsync();
                         return;
-
-                    e.UserToken = userToken;
+                    }
                 }
             }
             else if (userToken.Token != null)

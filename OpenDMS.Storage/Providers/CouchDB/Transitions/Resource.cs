@@ -62,6 +62,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             document.Remove("_id");
             if (document["_rev"] != null)
                 document.Remove("_rev");
+            document.Remove("Type");
 
             remainder = document;
             return new Data.Resource(id, rev, versionIds, currentVersionId, null, usageRights);
@@ -76,6 +77,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 
             if (!string.IsNullOrEmpty(resource.Revision))
                 document.Rev = resource.Revision;
+
+            document["Type"] = "resource";
 
             if (resource.CurrentVersionId != null)
                 document.Add("CurrentVersionId", resource.CurrentVersionId.ToString());

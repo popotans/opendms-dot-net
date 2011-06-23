@@ -13,17 +13,7 @@ namespace OpenDMS.Storage.Security
         public string FirstName { get; private set; }
         public string MiddleName { get; private set; }
         public string LastName { get; private set; }
-        public override string Id
-        {
-            get { return _id.Substring(5); }
-            protected set
-            {
-                if (value.StartsWith("user-"))
-                    _id = value;
-                else
-                    _id = "user-" + value;
-            }
-        }
+        public override string Id { get; protected set; }
         public string Password
         {
             get { return _password; }

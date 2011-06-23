@@ -69,17 +69,17 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
         }
 
         public Database(string json)
-            : base(Parse(json))
+            : this(Parse(json))
         {
         }
 
         public Database(JToken token)
-            : base((JObject)token)
+            : this((JObject)token)
         {
         }
 
         public Database(JObject jobj)
-            : base()
+            : base(jobj)
         {
         }
     }
