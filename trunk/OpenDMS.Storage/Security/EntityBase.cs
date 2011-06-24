@@ -4,7 +4,7 @@ namespace OpenDMS.Storage.Security
 {
     public abstract class EntityBase
     {
-        public abstract string Id { get; protected set; }
+        public string Id { get; protected set; }
         public string Rev { get; protected set; }
         public List<string> Groups { get; private set; }
 

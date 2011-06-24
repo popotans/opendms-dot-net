@@ -8,6 +8,17 @@ namespace OpenDMS.IO
         {
         }
 
+        public File(Directory directory, string filename)
+            : base(directory.ToString())
+        {
+            if (_path.EndsWith(System.IO.Path.DirectorySeparatorChar))
+                _path += filename;
+            else if (_path.EndsWith(System.IO.Path.AltDirectorySeparatorChar))
+                _path += filename;
+            else
+                _path += System.IO.Path.DirectorySeparatorChar.ToString() + filename;
+        }
+
         public FileStream GetStream(System.IO.FileMode mode, System.IO.FileAccess access, System.IO.FileShare share, System.IO.FileOptions options, int bufferSize, object creator)
         {
             return new FileStream(this, mode, access, share, options, bufferSize, creator);
@@ -21,6 +32,11 @@ namespace OpenDMS.IO
         public override void Delete()
         {
             System.IO.File.Delete(_path);
+        }
+
+        public override bool Exists()
+        {
+            return System.IO.File.Exists(_path);
         }
 
         public string ComputeMd5()
