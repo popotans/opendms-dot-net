@@ -11,9 +11,31 @@ namespace OpenDMS.IO
                 System.IO.Directory.CreateDirectory(path);
         }
 
+        public static Directory Append(Directory directory, string pathToAppend)
+        {
+            Directory dir = new Directory(directory.ToString());
+            if (dir._path.EndsWith(System.IO.Path.DirectorySeparatorChar))
+                dir._path += pathToAppend.TrimStart(System.IO.Path.DirectorySeparatorChar);
+            else if (dir._path.EndsWith(System.IO.Path.AltDirectorySeparatorChar))
+                dir._path += pathToAppend.TrimStart(System.IO.Path.AltDirectorySeparatorChar);
+            else
+                dir._path += System.IO.Path.DirectorySeparatorChar.ToString() + pathToAppend;
+        }
+
+        public void Create()
+        {
+            if (!Exists())
+                System.IO.Directory.CreateDirectory(_path);
+        }
+
         public override void Delete()
         {
             System.IO.Directory.Delete(_path, true);
+        }
+
+        public override bool Exists()
+        {
+            return System.IO.Directory.Exists(_path);
         }
 
         public List<Directory> GetDirectories()
@@ -36,6 +58,14 @@ namespace OpenDMS.IO
                 files.Add(new File(paths[i]));
 
             return files;
+        }
+
+        public string GetDirectoryShortName()
+        {
+            string name = _path.TrimEnd(System.IO.Path.DirectorySeparatorChar);
+            name = name.TrimEnd(System.IO.Path.AltDirectorySeparatorChar);
+
+            return name.Substring(name.LastIndexOf(System.IO.Path.DirectorySeparatorChar));
         }
     }
 }

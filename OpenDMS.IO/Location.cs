@@ -28,5 +28,6 @@ namespace OpenDMS.IO
         }
 
         public abstract void Delete();
+        public abstract bool Exists();
     }
 }

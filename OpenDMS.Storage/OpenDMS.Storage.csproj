@@ -105,6 +105,7 @@
     <Compile Include="Providers\CouchDB\EngineMethods\CreateNewResource.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateNewVersion.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroups.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\GetGroup.cs" />
     <Compile Include="Providers\CouchDB\Json\JsonParseException.cs" />
     <Compile Include="Providers\CouchDB\Json\ValueParser.cs" />
     <Compile Include="Providers\CouchDB\Model\Attachment.cs" />
@@ -112,6 +113,10 @@
     <Compile Include="Providers\CouchDB\Model\Database.cs" />
     <Compile Include="Providers\CouchDB\Model\Document.cs" />
     <Compile Include="Providers\CouchDB\Model\View.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Actions\Base.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\ActiveTransactionException.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\InvalidTransactionException.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Lock.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GroupCollection.cs" />
     <Compile Include="Providers\CouchDB\Transitions\UserCollection.cs" />
     <Compile Include="Providers\EngineBase.cs" />
@@ -181,7 +186,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

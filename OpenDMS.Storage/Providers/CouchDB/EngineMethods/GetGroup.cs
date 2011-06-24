@@ -1,11 +1,13 @@
 ﻿
 namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
-    public class GetAllGroups : Base
+    public class GetGroup : Base
     {
         private IDatabase _db = null;
+        private string _groupName = null;
 
-        public GetAllGroups(IDatabase db,
+        public GetGroup(IDatabase db,
+            string groupName,
             Engine.ActionDelegate onActionChanged,
             Engine.ProgressDelegate onProgress, 
             Engine.CompletionDelegate onComplete,
@@ -14,15 +16,18 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             : base(onActionChanged, onProgress, onComplete, onTimeout, onError)
         {
             _db = db;
+            _groupName = groupName;
         }
 
         public override void Execute()
         {
-            Commands.GetView cmd;
+            Commands.GetDocument cmd;
+            Security.Group group;
 
             if (_onActionChanged != null) _onActionChanged(EngineActionType.Preparing, false);
 
-            cmd = new Commands.GetView(UriBuilder.Build(_db, "users", "GetAll"));
+            group = new Security.Group(_groupName, null, null, null);
+            cmd = new Commands.GetDocument(UriBuilder.Build(_db, group));
             
             // Run it straight back to the subscriber
             AttachSubscriberEvent(cmd, _onProgress);
@@ -30,7 +35,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             AttachSubscriberEvent(cmd, _onError);
             AttachSubscriberEvent(cmd, _onTimeout);
 
-            if (_onActionChanged != null) _onActionChanged(EngineActionType.GettingGroups, true);
+            if (_onActionChanged != null) _onActionChanged(EngineActionType.Getting, true);
 
             cmd.Execute(_db.Server.Timeout, _db.Server.Timeout, _db.Server.BufferSize, _db.Server.BufferSize);
         }

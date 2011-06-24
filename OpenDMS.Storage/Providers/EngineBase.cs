@@ -28,5 +28,20 @@ namespace OpenDMS.Storage.Providers
         {
             throw new NotImplementedException();
         }
+        
+        public virtual void GetGroup(EngineRequest request, IDatabase db, string groupName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void CreateNewResource(EngineRequest request, IDatabase db, Data.Metadata metadata, System.Collections.Generic.List<Security.UsageRight> usageRights)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void CreateNewVersion(EngineRequest request, IDatabase db, Data.Version version)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
