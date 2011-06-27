@@ -11,9 +11,9 @@ namespace OpenDMS.IO
         public File(Directory directory, string filename)
             : base(directory.ToString())
         {
-            if (_path.EndsWith(System.IO.Path.DirectorySeparatorChar))
+            if (_path.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
                 _path += filename;
-            else if (_path.EndsWith(System.IO.Path.AltDirectorySeparatorChar))
+            else if (_path.EndsWith(System.IO.Path.AltDirectorySeparatorChar.ToString()))
                 _path += filename;
             else
                 _path += System.IO.Path.DirectorySeparatorChar.ToString() + filename;

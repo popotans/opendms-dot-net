@@ -13,7 +13,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
 
         public override ReplyBase MakeReply(Response response)
         {
-            return new PutAttachmentReply(response);
+            try
+            {
+                return new PutAttachmentReply(response);
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while creating the PutAttachmentReply.", e);
+                throw;
+            }
         }
     }
 }

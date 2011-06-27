@@ -42,52 +42,89 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
             _client.OnTimeout += new Client.TimeoutDelegate(Client_OnTimeout);
             _client.OnClose += new Client.CloseDelegate(Client_OnClose);
 
-            if (_stream == null)
-                _client.Execute(HttpRequest,
-                    sendTimeout,
-                    receiveTimeout,
-                    sendBufferSize,
-                    receiveBufferSize);
-            else
-                _client.Execute(HttpRequest,
-                    _stream,
-                    sendTimeout,
-                    receiveTimeout,
-                    sendBufferSize,
-                    receiveBufferSize);
+            Logger.Storage.Debug("Begining command execution for " + GetType().FullName + "...");
+
+            try
+            {
+                if (_stream == null)
+                    _client.Execute(HttpRequest,
+                        sendTimeout,
+                        receiveTimeout,
+                        sendBufferSize,
+                        receiveBufferSize);
+                else
+                    _client.Execute(HttpRequest,
+                        _stream,
+                        sendTimeout,
+                        receiveTimeout,
+                        sendBufferSize,
+                        receiveBufferSize);
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while executing the command.", e);
+                throw;
+            }
         }
 
         public virtual void Close()
         {
-            _client.Close();
+            Logger.Storage.Debug("Closing client...");
+
+            try { _client.Close(); }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while closing the client.", e);
+                throw;
+            }
         }
 
         protected virtual void Client_OnClose(Client sender, Connection connection)
         {
+            Logger.Storage.Debug("Client closed.");
             if (OnClose != null) OnClose(this, sender, connection);
         }
 
         protected virtual void Client_OnTimeout(Client sender, Connection connection)
         {
+            Logger.Storage.Error("The command timed out.");
             if (OnTimeout != null) OnTimeout(this, sender, connection);
             else throw new UnsupportedException("OnTimeout is not supported");
         }
 
         protected virtual void Client_OnProgress(Client sender, Connection connection, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
+            Logger.Storage.Debug("Progress made on command (send at " + sendPercentComplete.ToString() + "%, receive at " + receivePercentComplete.ToString() + "%)");
             if (OnProgress != null) OnProgress(this, sender, connection, direction, packetSize, sendPercentComplete, receivePercentComplete);
         }
 
         protected virtual void Client_OnError(Client sender, string message, Exception exception)
         {
+            Logger.Storage.Error("An error occurred while processing the command.  Message: " + message, exception);
             if (OnError != null) OnError(this, sender, message, exception);
             else throw new UnsupportedException("OnError is not supported");
         }
 
         protected virtual void Client_OnComplete(Client sender, Connection connection, Response response)
         {
-            if (OnComplete != null) OnComplete(this, sender, connection, MakeReply(response));
-            else throw new UnsupportedException("OnComplete is not supported");
+            Logger.Storage.Debug("The command completed.");
+            ReplyBase reply = null;
+
+            try
+            {
+                reply = MakeReply(response);
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while attempting to create the reply object.", e);
+                OnError(this, sender, "An exception occurred while attempting to create the reply object.", e);
+            }
+
+            if (reply != null)
+            {
+                if (OnComplete != null) OnComplete(this, sender, connection, reply);
+                else throw new UnsupportedException("OnComplete is not supported");
+            }
         }
 
         public abstract ReplyBase MakeReply(Response response);

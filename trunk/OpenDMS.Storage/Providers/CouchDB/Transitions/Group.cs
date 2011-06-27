@@ -16,22 +16,38 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             List<string> groups = null;
             JArray usersJray, groupsJray;
 
-            if (document["Groups"] != null)
+            try
             {
-                groups = new List<string>();
-                groupsJray = (JArray)document["Groups"];
+                if (document["Groups"] != null)
+                {
+                    groups = new List<string>();
+                    groupsJray = (JArray)document["Groups"];
 
-                for (int i = 0; i < groupsJray.Count; i++)
-                    groups.Add(groupsJray[i].Value<string>());
+                    for (int i = 0; i < groupsJray.Count; i++)
+                        groups.Add(groupsJray[i].Value<string>());
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while attempting to parse groups.", e);
+                throw;
             }
 
-            if (document["Users"] != null)
+            try
             {
-                users = new List<string>();
-                usersJray = (JArray)document["Users"];
+                if (document["Users"] != null)
+                {
+                    users = new List<string>();
+                    usersJray = (JArray)document["Users"];
 
-                for (int i = 0; i < usersJray.Count; i++)
-                    groups.Add(usersJray[i].Value<string>());
+                    for (int i = 0; i < usersJray.Count; i++)
+                        groups.Add(usersJray[i].Value<string>());
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while attempting to parse users.", e);
+                throw;
             }
             
             return new Security.Group(document.Id,
@@ -46,18 +62,26 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             JArray groupsJray = new JArray();
             JArray usersJray = new JArray();
 
-            doc.Id = group.Id;
-            doc.Rev = group.Rev;
-            doc["Type"] = "group";
+            try
+            {
+                doc.Id = group.Id;
+                doc.Rev = group.Rev;
+                doc["Type"] = "group";
 
-            for (int i = 0; i < group.Groups.Count; i++)
-                groupsJray.Add(group.Groups[i]);
+                for (int i = 0; i < group.Groups.Count; i++)
+                    groupsJray.Add(group.Groups[i]);
 
-            for (int i = 0; i < group.Users.Count; i++)
-                usersJray.Add(group.Users[i]);
+                for (int i = 0; i < group.Users.Count; i++)
+                    usersJray.Add(group.Users[i]);
 
-            doc["Groups"] = groupsJray;
-            doc["Users"] = usersJray;
+                doc["Groups"] = groupsJray;
+                doc["Users"] = usersJray;
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while attempting to parse the group object.", e);
+                throw;
+            }
 
             return doc;
         }

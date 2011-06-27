@@ -101,11 +101,11 @@
     <Compile Include="Providers\CouchDB\Commands\ReplyBase.cs" />
     <Compile Include="Providers\CouchDB\Database.cs" />
     <Compile Include="Providers\CouchDB\Engine.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\AuthenticateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Base.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\CreateNewResource.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\CreateNewVersion.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroups.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetGroup.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\GetUser.cs" />
     <Compile Include="Providers\CouchDB\Json\JsonParseException.cs" />
     <Compile Include="Providers\CouchDB\Json\ValueParser.cs" />
     <Compile Include="Providers\CouchDB\Model\Attachment.cs" />
@@ -115,6 +115,7 @@
     <Compile Include="Providers\CouchDB\Model\View.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Actions\Base.cs" />
     <Compile Include="Providers\CouchDB\Transactions\ActiveTransactionException.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\InvalidStageException.cs" />
     <Compile Include="Providers\CouchDB\Transactions\InvalidTransactionException.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Lock.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GroupCollection.cs" />
@@ -123,6 +124,7 @@
     <Compile Include="Providers\EngineRequest.cs" />
     <Compile Include="Providers\ICommandReply.cs" />
     <Compile Include="Providers\IEngine.cs" />
+    <Compile Include="Security\DatabaseSessionManager.cs" />
     <Compile Include="Security\PermissionType.cs" />
     <Compile Include="Security\RequestingPartyType.cs" />
     <Compile Include="Security\Session.cs" />
@@ -186,7 +188,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
+      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

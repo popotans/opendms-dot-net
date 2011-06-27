@@ -14,12 +14,13 @@ namespace OpenDMS.IO
         public static Directory Append(Directory directory, string pathToAppend)
         {
             Directory dir = new Directory(directory.ToString());
-            if (dir._path.EndsWith(System.IO.Path.DirectorySeparatorChar))
+            if (dir._path.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
                 dir._path += pathToAppend.TrimStart(System.IO.Path.DirectorySeparatorChar);
-            else if (dir._path.EndsWith(System.IO.Path.AltDirectorySeparatorChar))
+            else if (dir._path.EndsWith(System.IO.Path.AltDirectorySeparatorChar.ToString()))
                 dir._path += pathToAppend.TrimStart(System.IO.Path.AltDirectorySeparatorChar);
             else
                 dir._path += System.IO.Path.DirectorySeparatorChar.ToString() + pathToAppend;
+            return dir;
         }
 
         public void Create()

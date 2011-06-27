@@ -17,7 +17,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
 
         public override ReplyBase MakeReply(Response response)
         {
-            return new HeadDocumentReply(response);
+            try
+            {
+                return new HeadDocumentReply(response);
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while creating the HeadDocumentReply.", e);
+                throw;
+            }
         }
     }
 }

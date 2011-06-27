@@ -19,18 +19,26 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             JArray rows;
             int totalRows;
 
-            totalRows = view["total_rows"].Value<int>();
-
-            if (totalRows <= 0)
-                return users;
-
-            rows = (JArray)view["rows"];
-
-            for (int i = 0; i < rows.Count; i++)
+            try
             {
-                transitionUser = new User();
-                doc = (Model.Document)rows[i]["key"];
-                users.Add(transitionUser.Transition(doc));
+                totalRows = view["total_rows"].Value<int>();
+
+                if (totalRows <= 0)
+                    return users;
+
+                rows = (JArray)view["rows"];
+
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    transitionUser = new User();
+                    doc = (Model.Document)rows[i]["key"];
+                    users.Add(transitionUser.Transition(doc));
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while attempting to parse users.", e);
+                throw;
             }
 
             return users;
@@ -41,13 +49,21 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             List<Model.Document> docs = new List<Model.Document>();
             User transitionUser;
 
-            if (users.Count <= 0)
-                return docs;
-
-            for (int i = 0; i < users.Count; i++)
+            try
             {
-                transitionUser = new User();
-                docs.Add(transitionUser.Transition(users[i]));
+                if (users.Count <= 0)
+                    return docs;
+
+                for (int i = 0; i < users.Count; i++)
+                {
+                    transitionUser = new User();
+                    docs.Add(transitionUser.Transition(users[i]));
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while attempting to parse the user object.", e);
+                throw;
             }
 
             return docs;

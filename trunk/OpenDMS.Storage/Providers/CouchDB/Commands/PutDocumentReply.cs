@@ -23,21 +23,28 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
             switch (_response.ResponseCode)
             {
                 case 201:
+                    Logger.Storage.Debug("Received a successful response from CouchDB.");
                     ResponseMessage = _201;
                     Ok = true;
                     JObject jobj = JObject.Parse(StringifyResponseStream());
                     Id = jobj["id"].Value<string>();
                     Rev = jobj["rev"].Value<string>();
+                    Logger.Storage.Debug("PutDocumentReply loaded.");
                     break;
                 case 202:
+                    Logger.Storage.Debug("Received a successful response from CouchDB.");
                     ResponseMessage = _202;
                     Ok = true;
+                    Logger.Storage.Debug("PutDocumentReply loaded.");
                     break;
                 case 409:
+                    Logger.Storage.Debug("Received a failure response from CouchDB: " + _409);
                     ResponseMessage = _409;
                     Ok = false;
+                    Logger.Storage.Debug("PutDocumentReply loaded.");
                     break;
                 default:
+                    Logger.Storage.Error("PutDocumentReply received an unknown response code: " + _response.ResponseCode.ToString());
                     Ok = false;
                     throw new UnsupportedException("The response code " + _response.ResponseCode.ToString() + " is not supported.");
             }

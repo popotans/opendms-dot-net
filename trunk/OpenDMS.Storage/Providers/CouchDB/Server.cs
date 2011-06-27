@@ -61,8 +61,6 @@ namespace OpenDMS.Storage.Providers.CouchDB
 
             //if (!string.IsNullOrEmpty(UserName))
             //    EncodedCredentials = "Basic " + Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(UserName + ":" + Password));
-
-            Logger.General.Debug("Common.Data.Providers.CouchDB.Server instantiated.");
         }
 
         /// <summary>

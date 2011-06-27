@@ -6,14 +6,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
         private IDatabase _db = null;
         private string _groupName = null;
 
-        public GetGroup(IDatabase db,
-            string groupName,
-            Engine.ActionDelegate onActionChanged,
-            Engine.ProgressDelegate onProgress, 
-            Engine.CompletionDelegate onComplete,
-            Engine.TimeoutDelegate onTimeout, 
-            Engine.ErrorDelegate onError)
-            : base(onActionChanged, onProgress, onComplete, onTimeout, onError)
+        public GetGroup(EngineRequest request, IDatabase db, string groupName)
+            : base(request)
         {
             _db = db;
             _groupName = groupName;
@@ -24,10 +18,27 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             Commands.GetDocument cmd;
             Security.Group group;
 
-            if (_onActionChanged != null) _onActionChanged(EngineActionType.Preparing, false);
+            try
+            {
+                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.Preparing, false);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
+                throw;
+            }
 
             group = new Security.Group(_groupName, null, null, null);
-            cmd = new Commands.GetDocument(UriBuilder.Build(_db, group));
+
+            try
+            {
+                cmd = new Commands.GetDocument(UriBuilder.Build(_db, group));
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while creating the GetDocument command.", e);
+                throw;
+            }
             
             // Run it straight back to the subscriber
             AttachSubscriberEvent(cmd, _onProgress);
@@ -35,9 +46,24 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             AttachSubscriberEvent(cmd, _onError);
             AttachSubscriberEvent(cmd, _onTimeout);
 
-            if (_onActionChanged != null) _onActionChanged(EngineActionType.Getting, true);
+            try
+            {
+                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.Getting, true);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
+                throw;
+            }
 
-            cmd.Execute(_db.Server.Timeout, _db.Server.Timeout, _db.Server.BufferSize, _db.Server.BufferSize);
+            try
+            {
+                cmd.Execute(_db.Server.Timeout, _db.Server.Timeout, _db.Server.BufferSize, _db.Server.BufferSize);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while executing the command.", e);
+            }
         }
     }
 }

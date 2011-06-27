@@ -1,19 +1,22 @@
 ﻿
 namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
-    public class GetAllGroups : Base
+    public class GetUser : Base
     {
         private IDatabase _db = null;
+        private string _username = null;
 
-        public GetAllGroups(EngineRequest request, IDatabase db)
+        public GetUser(EngineRequest request, IDatabase db, string username)
             : base(request)
         {
             _db = db;
+            _username = username;
         }
 
         public override void Execute()
         {
-            Commands.GetView cmd;
+            Commands.GetDocument cmd;
+            Security.User user;
 
             try
             {
@@ -25,13 +28,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
                 throw;
             }
 
+            user = new Security.User(_username);
+
             try
             {
-                cmd = new Commands.GetView(UriBuilder.Build(_db, "groups", "GetAll"));
+                cmd = new Commands.GetDocument(UriBuilder.Build(_db, user));
             }
             catch (System.Exception e)
             {
-                Logger.Storage.Error("An exception occurred while creating the GetView command.", e);
+                Logger.Storage.Error("An exception occurred while creating the GetDocument command.", e);
                 throw;
             }
             
@@ -43,7 +48,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 
             try
             {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.GettingGroups, true);
+                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.Getting, true);
             }
             catch (System.Exception e)
             {

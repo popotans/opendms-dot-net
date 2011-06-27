@@ -4,16 +4,14 @@ namespace OpenDMS.Storage.Security
 {
     public class Session
     {
-        public string UserId { get; private set; }
-        public string Username { get; private set; }
+        public User User { get; private set; }
         public Guid AuthToken { get; private set; }
         public DateTime Start { get; private set; }
         public DateTime Expiry { get; private set; }
 
-        public Session(string userid, Guid authToken, DateTime expiry)
+        public Session(User user, Guid authToken, DateTime expiry)
         {
-            UserId = userid;
-            Username = userid.Substring(5);
+            User = user;
             AuthToken = authToken;
             Start = DateTime.Now;
             Expiry = expiry;

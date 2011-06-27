@@ -39,36 +39,90 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
         public void WriteLock(File file)
         {
             JObject jobj = new JObject();
-            JsonWriter writer;
+            JsonWriter writer = null;
             System.IO.TextWriter txtWriter;
             FileStream fs;
 
-            jobj.Add("OwningUsername", _owningUsername);
-            jobj.Add("Created", _created);
-            jobj.Add("Duration", _duration.ToString("G"));
-            jobj.Add("Expiry", _expiry);
+            Logger.Storage.Debug("Writing lock to disk...");
 
-            fs = file.GetStream(System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, System.IO.FileOptions.None, 8192, this);
-            txtWriter = new System.IO.StreamWriter(fs);
-            writer = new JsonTextWriter(txtWriter);
-            jobj.WriteTo(writer);
+            try
+            {
+                jobj.Add("OwningUsername", _owningUsername);
+                jobj.Add("Created", _created);
+                jobj.Add("Duration", _duration.ToString("G"));
+                jobj.Add("Expiry", _expiry);
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while creating the JObject.", e);
+                throw;
+            }
+
+            try
+            {
+                fs = file.GetStream(System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, System.IO.FileOptions.None, 8192, this);
+                txtWriter = new System.IO.StreamWriter(fs);
+                writer = new JsonTextWriter(txtWriter);
+                jobj.WriteTo(writer);
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while writing the lock to disk.", e);
+                throw;
+            }
+            finally
+            {
+                if (writer != null)
+                    writer.Close();
+            }
+
+            Logger.Storage.Debug("Lock written to disk.");
         }
 
         public static Lock Load(File file)
         {
+            System.IO.TextReader txtReader;
+            FileStream fs;
+            JsonReader reader = null;
+            JObject jobj;
             string owningUsername;
             DateTime created, expiry;
             TimeSpan duration;
 
-            FileStream fs = file.GetStream(System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.None, System.IO.FileOptions.None, 8192, this);
-            System.IO.TextReader txtReader = new System.IO.StreamReader(fs);
-            JsonReader reader = new Newtonsoft.Json.JsonTextReader(txtReader);
-            JObject jobj = JObject.Load(reader);
+            Logger.Storage.Debug("Reading lock from disk...");
 
-            owningUsername = jobj["OwningUsername"].Value<string>();
-            created = jobj["Created"].Value<DateTime>();
-            duration = TimeSpan.Parse(jobj["Duration"].Value<string>());
-            expiry = jobj["Expiry"].Value<DateTime>();
+            try
+            {
+                fs = file.GetStream(System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.None, System.IO.FileOptions.None, 8192, file);
+                txtReader = new System.IO.StreamReader(fs);
+                reader = new Newtonsoft.Json.JsonTextReader(txtReader);
+                jobj = JObject.Load(reader);
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while reading the lock from disk.", e);
+                throw;
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Close();
+            }
+
+            try
+            {
+                owningUsername = jobj["OwningUsername"].Value<string>();
+                created = jobj["Created"].Value<DateTime>();
+                duration = TimeSpan.Parse(jobj["Duration"].Value<string>());
+                expiry = jobj["Expiry"].Value<DateTime>();
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while creating the lock object.", e);
+                throw;
+            }
+
+            Logger.Storage.Debug("Lock read from disk.");
 
             return new Lock(owningUsername, created, duration, expiry);
         }
@@ -89,6 +143,11 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
 
             errorMessage = null;
             return true;
+        }
+
+        public bool IsExpired()
+        {
+            return (_created + _duration < DateTime.Now);
         }
 
         public void ResetExpiry()
