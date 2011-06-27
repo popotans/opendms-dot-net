@@ -14,5 +14,7 @@ namespace OpenDMS.Storage.Providers
 
         public Security.RequestingPartyType RequestingPartyType { get; set; }
         public Security.Session Session { get; set; }
+
+        public object UserToken { get; set; }
     }
 }

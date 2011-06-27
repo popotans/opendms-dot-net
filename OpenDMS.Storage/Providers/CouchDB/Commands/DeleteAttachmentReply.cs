@@ -22,17 +22,22 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
             switch (_response.ResponseCode)
             {
                 case 200:
+                    Logger.Storage.Debug("Received a successful response from CouchDB.");
                     ResponseMessage = _200;
                     Ok = true;
                     JObject jobj = JObject.Parse(StringifyResponseStream());
                     Id = jobj["id"].Value<string>();
                     Rev = jobj["rev"].Value<string>();
+                    Logger.Storage.Debug("DeleteAttachmentReply loaded.");
                     break;
-                case 404:
+                case 409:
+                    Logger.Storage.Debug("Received a failure response from CouchDB: " + _409);
                     ResponseMessage = _409;
                     Ok = false;
+                    Logger.Storage.Debug("DeleteAttachmentReply loaded.");
                     break;
                 default:
+                    Logger.Storage.Error("DeleteAttachmentReply received an unknown response code: " + _response.ResponseCode.ToString());
                     Ok = false;
                     throw new UnsupportedException("The response code " + _response.ResponseCode.ToString() + " is not supported.");
             }

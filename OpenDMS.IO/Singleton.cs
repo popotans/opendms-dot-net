@@ -19,5 +19,10 @@ namespace OpenDMS.IO
                 return _instance;
             }
         }
+
+        public void CheckInitialization()
+        {
+            if (!_isInitialized) throw new OpenDMS.IO.NotInitializedException("The " + GetType().FullName + " has not been initialized.");
+        }
     }
 }

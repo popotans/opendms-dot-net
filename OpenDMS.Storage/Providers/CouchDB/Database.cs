@@ -13,7 +13,7 @@ namespace OpenDMS.Storage.Providers.CouchDB
             get { return new Uri(string.Format("{0}{1}/", Server.Uri, Name)); }
         }
 
-        public Database(Server server, string dbName)
+        public Database(IServer server, string dbName)
         {
             Server = server;
             Name = dbName;

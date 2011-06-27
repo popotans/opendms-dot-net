@@ -40,6 +40,13 @@ namespace OpenDMS.Storage
         /// The security logger.
         /// </value>
         public static ILog Security { get; set; }
+        /// <summary>
+        /// Gets or sets the storage logger.
+        /// </summary>
+        /// <value>
+        /// The storage logger.
+        /// </value>
+        public static ILog Storage { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Logger"/> class.
@@ -55,6 +62,10 @@ namespace OpenDMS.Storage
             Security = LogManager.GetLogger("security.log");
             AddAppender(Security, CreateRollingFileAppender(path, "security.log"));
             SetLevel(Security, "ALL");
+
+            Storage = LogManager.GetLogger("storage.log");
+            AddAppender(Storage, CreateRollingFileAppender(path, "storage.log"));
+            SetLevel(Storage, "ALL");
         }
 
         private void SetLevel(ILog log, string levelName)

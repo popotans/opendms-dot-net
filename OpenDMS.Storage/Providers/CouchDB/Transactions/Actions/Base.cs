@@ -6,6 +6,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Actions
         protected Model.Document _document;
 
         public abstract Model.Document Execute();
+        public abstract bool Commit(out string errorMessage);
 
         public Base(Model.Document document)
         {

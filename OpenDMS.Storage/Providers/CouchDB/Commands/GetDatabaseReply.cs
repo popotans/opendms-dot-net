@@ -30,6 +30,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
             switch (_response.ResponseCode)
             {
                 case 201:
+                    Logger.Storage.Debug("Received a successful response from CouchDB.");
                     ResponseMessage = _200;
                     JObject jobj = JObject.Parse(StringifyResponseStream());
                     Ok = true;
@@ -43,12 +44,16 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
                     InstanceStartTime = jobj["instance_start_time"].Value<ulong>();
                     PurgeSeq = jobj["purge_seq"].Value<int>();
                     UpdateSeq = jobj["update_seq"].Value<ulong>();
+                    Logger.Storage.Debug("GetDatabaseReply loaded.");
                     break;
                 case 404:
+                    Logger.Storage.Debug("Received a failure response from CouchDB: " + _404);
                     ResponseMessage = _404;
                     Ok = false;
+                    Logger.Storage.Debug("GetDatabaseReply loaded.");
                     break;
                 default:
+                    Logger.Storage.Error("GetDatabaseReply received an unknown response code: " + _response.ResponseCode.ToString());
                     Ok = false;
                     throw new UnsupportedException("The response code " + _response.ResponseCode.ToString() + " is not supported.");
             }

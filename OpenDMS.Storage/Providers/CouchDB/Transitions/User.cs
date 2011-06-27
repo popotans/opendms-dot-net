@@ -14,22 +14,31 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
         {
             List<string> groups = null;
 
-            if (document["Groups"] != null)
+            try
             {
-                groups = new List<string>();
-                JArray jarray = (JArray)document["Groups"];
+                if (document["Groups"] != null)
+                {
+                    groups = new List<string>();
+                    JArray jarray = (JArray)document["Groups"];
 
-                for (int i = 0; i < jarray.Count; i++)
-                    groups.Add(jarray[i].Value<string>());
-            }            
-            
-            return new Security.User(document.Id,
-                document.Rev,
-                document["Password"].Value<string>(),
-                document["FirstName"].Value<string>(),
-                document["MiddleName"].Value<string>(),
-                document["LastName"].Value<string>(),
-                groups);
+                    for (int i = 0; i < jarray.Count; i++)
+                        groups.Add(jarray[i].Value<string>());
+                }
+
+                return new Security.User(document.Id,
+                    document.Rev,
+                    document["Password"].Value<string>(),
+                    document["FirstName"].Value<string>(),
+                    document["MiddleName"].Value<string>(),
+                    document["LastName"].Value<string>(),
+                    groups,
+                    document["Superuser"].Value<bool>());
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while attempting to parse the document.", e);
+                throw;
+            }
         }
 
         public Model.Document Transition(Security.User user)
@@ -37,18 +46,27 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             Model.Document doc = new Model.Document();
             JArray jarray = new JArray();
 
-            doc.Id = user.Id;
-            doc.Rev = user.Rev;
-            doc["Type"] = "user";
-            doc["Password"] = user.Password;
-            doc["FirstName"] = user.FirstName;
-            doc["MiddleName"] = user.MiddleName;
-            doc["LastName"] = user.LastName;
+            try
+            {
+                doc.Id = user.Id;
+                doc.Rev = user.Rev;
+                doc["Type"] = "user";
+                doc["Password"] = user.Password;
+                doc["FirstName"] = user.FirstName;
+                doc["MiddleName"] = user.MiddleName;
+                doc["LastName"] = user.LastName;
+                doc["Superuser"] = user.IsSuperuser;
 
-            for (int i=0; i<user.Groups.Count; i++)
-                jarray.Add(user.Groups[i]);
+                for (int i = 0; i < user.Groups.Count; i++)
+                    jarray.Add(user.Groups[i]);
 
-            doc["Groups"] = jarray;
+                doc["Groups"] = jarray;
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while attempting to parse the user.", e);
+                throw;
+            }
 
             return doc;
         }

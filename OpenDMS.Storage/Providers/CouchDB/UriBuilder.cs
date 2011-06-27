@@ -44,6 +44,11 @@ namespace OpenDMS.Storage.Providers.CouchDB
             return new Uri(db.Uri.ToString() + group.Id);
         }
 
+        public static Uri Build(IDatabase db, Security.User user)
+        {
+            return new Uri(db.Uri.ToString() + user.Id);
+        }
+
         public static Uri Build(IDatabase db, Model.Document doc)
         {
             return new Uri(db.Uri.ToString() + doc.Id);

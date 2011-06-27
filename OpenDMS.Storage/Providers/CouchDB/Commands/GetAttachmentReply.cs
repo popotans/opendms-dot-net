@@ -22,17 +22,22 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
             switch (_response.ResponseCode)
             {
                 case 200:
+                    Logger.Storage.Debug("Received a successful response from CouchDB.");
                     ResponseMessage = _200;
                     ContentType = OpenDMS.Networking.Utilities.GetContentType(_response.Headers);
                     Length = OpenDMS.Networking.Utilities.GetContentLength(_response.Headers);
                     Stream = _response.Stream;
                     Ok = true;
+                    Logger.Storage.Debug("GetAttachmentReply loaded.");
                     break;
                 case 404:
+                    Logger.Storage.Debug("Received a failure response from CouchDB: " + _404);
                     ResponseMessage = _404;
                     Ok = false;
+                    Logger.Storage.Debug("GetAttachmentReply loaded.");
                     break;
                 default:
+                    Logger.Storage.Error("GetAttachmentReply received an unknown response code: " + _response.ResponseCode.ToString());
                     Ok = false;
                     throw new UnsupportedException("The response code " + _response.ResponseCode.ToString() + " is not supported.");
             }

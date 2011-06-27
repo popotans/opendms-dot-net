@@ -17,7 +17,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
 
         public override ReplyBase MakeReply(Response response)
         {
-            return new GetViewReply(response);
+            try
+            {
+                return new GetViewReply(response);
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while creating the GetViewReply.", e);
+                throw;
+            }
         }
     }
 }

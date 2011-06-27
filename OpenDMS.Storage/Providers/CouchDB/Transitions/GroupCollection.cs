@@ -19,18 +19,28 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             JArray rows;
             int totalRows;
 
-            totalRows = view["total_rows"].Value<int>();
-
-            if (totalRows <= 0)
-                return groups;
-
-            rows = (JArray)view["rows"];
-
-            for (int i = 0; i < rows.Count; i++)
+            try
             {
-                transitionGroup = new Group();
-                doc = (Model.Document)rows[i]["key"];
-                groups.Add(transitionGroup.Transition(doc));
+                totalRows = view["total_rows"].Value<int>();
+
+                if (totalRows <= 0)
+                    return groups;
+
+                rows = (JArray)view["rows"];
+
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    transitionGroup = new Group();
+                    JObject obj = (JObject)rows[i];
+                    JObject a = (JObject)obj["key"];
+                    doc = new Model.Document(rows[i]["key"]);
+                    groups.Add(transitionGroup.Transition(doc));
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while attempting to parse the view.", e);
+                throw;
             }
 
             return groups;
@@ -41,13 +51,21 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             List<Model.Document> docs = new List<Model.Document>();
             Group transitionGroup;
 
-            if (groups.Count <= 0)
-                return docs;
-
-            for (int i = 0; i < groups.Count; i++)
+            try
             {
-                transitionGroup = new Group();
-                docs.Add(transitionGroup.Transition(groups[i]));
+                if (groups.Count <= 0)
+                    return docs;
+
+                for (int i = 0; i < groups.Count; i++)
+                {
+                    transitionGroup = new Group();
+                    docs.Add(transitionGroup.Transition(groups[i]));
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while attempting to parse the view.", e);
+                throw;
             }
 
             return docs;

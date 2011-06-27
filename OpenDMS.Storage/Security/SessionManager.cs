@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using OpenDMS.IO;
+using OpenDMS.Storage.Providers.CouchDB.Commands;
 
 namespace OpenDMS.Storage.Security
 {
@@ -9,63 +10,88 @@ namespace OpenDMS.Storage.Security
     {
         public delegate void ErrorDelegate(string message, Exception exception);
         public delegate void InitializationCompletionDelegate();
+        public delegate void AuthenticationDelegate(Session session, string message);
         public event ErrorDelegate OnError;
         public event InitializationCompletionDelegate OnInitializationComplete;
+        public event AuthenticationDelegate OnAuthenticationComplete;
 
-        private Dictionary<string, Group> _groups;
-        private Dictionary<Guid, Session> _sessions;
         private Providers.IEngine _engine;
+        private Dictionary<Providers.IDatabase, DatabaseSessionManager> _dbSessionManagers;
+        private int _dbsLeftToLoadGroups;
 
         public SessionManager()
         {
-            _sessions = new Dictionary<Guid, Session>();
+            _dbSessionManagers = new Dictionary<Providers.IDatabase, DatabaseSessionManager>();
         }
 
-        public void Initialize(Providers.IEngine engine)
+        public void Initialize(Providers.IEngine engine, List<Providers.IDatabase> databases)
         {
-            LoadGroups();
-        }
+            _engine = engine;
+            _dbsLeftToLoadGroups = databases.Count;
 
-        private void LoadGroups()
-        {
-            Providers.EngineRequest request = new Providers.EngineRequest();
-            request.OnComplete += new Providers.EngineBase.CompletionDelegate(LoadGroups_OnComplete);
-            request.OnError += new Providers.EngineBase.ErrorDelegate(LoadGroups_OnError);
-            request.OnTimeout += new Providers.EngineBase.TimeoutDelegate(LoadGroups_OnTimeout);
-        }
-
-        private void LoadGroups_OnComplete(Providers.ICommandReply reply)
-        {
-            Providers.CouchDB.Commands.GetViewReply cmdReply = (Providers.CouchDB.Commands.GetViewReply)reply;
-            if (cmdReply.Ok)
+            try
             {
-                if (OnInitializationComplete != null) OnInitializationComplete();
+                for (int i = 0; i < databases.Count; i++)
+                {
+                    DatabaseSessionManager dsm = new DatabaseSessionManager(engine, databases[i]);
+                    dsm.OnError += new DatabaseSessionManager.ErrorDelegate(Initialize_OnError);
+                    dsm.OnLoadGroupsComplete += new DatabaseSessionManager.CompletionDelegate(Initialize_OnLoadGroupsComplete);
+                    Logger.Storage.Debug("Loading the groups into the DatabaseSessionManager object...");
+                    dsm.LoadGroups();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Debug("An exception occurred while initializing the SessionManager.", e);
+            }
+        }
+
+        private void Initialize_OnLoadGroupsComplete(DatabaseSessionManager sender, Providers.IDatabase db)
+        {
+            _dbsLeftToLoadGroups--;
+            Logger.Storage.Debug("The DatabaseSesssionManager successfully loaded all groups.");
+            _dbSessionManagers.Add(db, sender);
+            if (_dbsLeftToLoadGroups <= 0)
+            {
                 _isInitialized = true;
-            }
-            else
-            {
-                if (OnError != null) OnError(cmdReply.ErrorMessage, null);
+                if (OnInitializationComplete != null) OnInitializationComplete();
             }
         }
 
-        private void LoadGroups_OnError(string message, Exception exception)
+        private void Initialize_OnError(string message, Exception exception)
         {
+            Logger.Storage.Error("An error occurred while running DatabaseSessionManager.LoadGroups, message: " + message, exception);
             if (OnError != null) OnError(message, exception);
         }
 
-        private void LoadGroups_OnTimeout()
+        public void AuthenticateUser(Providers.IDatabase db, string username, string password)
         {
-            if (OnError != null) OnError("A timeout occurred while attempting to load group information.", null);
+            CheckInitialization();
+
+            if (!_dbSessionManagers.ContainsKey(db))
+                throw new ArgumentException("Unable to locate sessions for the argument database.");
+
+            DatabaseSessionManager dsm = _dbSessionManagers[db];
+            dsm.OnError += new DatabaseSessionManager.ErrorDelegate(AuthenticateUser_OnError);
+            dsm.OnAuthenticationComplete += new DatabaseSessionManager.AuthenticationDelegate(AuthenticateUser_OnAuthenticationComplete);
+            Logger.Storage.Debug("Attempting to authenticate the user '" + username + "'...");
+            Logger.Security.Debug("Authenticating user '" + username + "'...");
+            dsm.AuthenticateUser(username, password);
         }
 
-        //public Session AuthenticateUser(string username, string password)
-        //{
+        private void AuthenticateUser_OnAuthenticationComplete(DatabaseSessionManager sender, Providers.IDatabase db, Session session, string message)
+        {
+            Logger.Storage.Debug("The DatabaseSesssionManager successfully authenticated the user.");
+            if (session != null) Logger.Security.Debug("The user '" + session.User.Username + "' has been successfully authenticated and was given the AuthToken: " + session.AuthToken.ToString() + ".");
+            else Logger.Security.Warn("The user failed authentication.");
+            if (OnAuthenticationComplete != null) OnAuthenticationComplete(session, message);
+        }
 
-        //}
-
-        //public bool CheckAuthorization(Session session, UsageRight resourceUsageRights, UsageRight requestedUsageRights)
-        //{
-            
-        //}
+        private void AuthenticateUser_OnError(string message, Exception exception)
+        {
+            Logger.Storage.Error("An error occurred while running DatabaseSessionManager.AuthenticateUser, message: " + message, exception);
+            Logger.Security.Error("The user could not be authenticated due to an unexpected error, see the storage log for additional information.");
+            if (OnError != null) OnError(message, exception);
+        }
     }
 }

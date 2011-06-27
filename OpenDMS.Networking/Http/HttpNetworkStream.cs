@@ -24,7 +24,6 @@ namespace OpenDMS.Networking.Http
         private Socket _socket = null;
         private ulong _bytesSent = 0;
         private ulong _bytesReceived = 0;
-        private NetworkBuffer _prependBuffer = null;
 
         public bool CanRead { get { return _stream.CanRead; } }
         public bool CanSeek { get { return _stream.CanSeek; } }
@@ -47,7 +46,6 @@ namespace OpenDMS.Networking.Http
 
 
         public HttpNetworkStream(ulong contentLength, byte[] prependToStream, Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket)
-            : this(contentLength, socket, fileAccess, ownsSocket)
         {
             _contentLength = contentLength;
             _socket = socket;
@@ -196,10 +194,10 @@ namespace OpenDMS.Networking.Http
 
             // Synchronous so let any exceptions bubble up for the higher level
 
-            // We should only try if the total bytes received is less than the content length
+            // We should only try if the total bytes received is <= the content length
             // otherwise we fall into an infinite wait
             if (_contentLength > 0 &&
-                _bytesReceived < _contentLength)
+                _bytesReceived <= _contentLength)
             {
                 // Trim down the length to read to the content length if necessary
                 if (_contentLength < (ulong)length)
@@ -319,13 +317,13 @@ namespace OpenDMS.Networking.Http
             Timeout timeout = null;
             StreamAsyncEventArgs args = new StreamAsyncEventArgs();
 
-            args.Complete = ReadToEndAsync_Callback;
-            args.UserToken = new Tuple<Timeout, string>(timeout, "");
-            args.SetBuffer(new byte[_socket.ReceiveBufferSize], 0, _socket.ReceiveBufferSize);
-
             if (!TryStartTimeout(_socket.ReceiveTimeout, out timeout,
                 new Timeout.TimeoutEvent(ReadToEndAsync_OnTimeout)))
                 return;
+
+            args.Complete = ReadToEndAsync_Callback;
+            args.UserToken = new Tuple<Timeout, string>(timeout, "");
+            args.SetBuffer(new byte[_socket.ReceiveBufferSize], 0, _socket.ReceiveBufferSize);
 
             try
             {
@@ -405,7 +403,7 @@ namespace OpenDMS.Networking.Http
                 catch (Exception ex)
                 {
                     // Ignore it, its the higher level's job to deal with it.
-                    Logger.Network.Error("An unhandled exception was caught by HttpNetworkStream.ReadToEndAsync_Callback in the OnBufferOperationComplete event.", ex);
+                    Logger.Network.Error("An unhandled exception was caught by HttpNetworkStream.ReadToEndAsync_Callback in the OnStringOperationComplete event.", ex);
                 }
             }
             else
