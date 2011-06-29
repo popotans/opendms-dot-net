@@ -6,6 +6,13 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
 {
     public class Transaction
     {
+        public delegate void CommitSuccessDelegate(Transaction sender, Stage stage, Actions.Base action, ICommandReply reply);
+        public delegate void CommitFailureDelegate(Transaction sender, Stage stage, Actions.Base action, string message, Exception exception);
+        public delegate void CommitProgressDelegate(Transaction sender, Stage stage, Actions.Base action, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
+        public event CommitSuccessDelegate OnCommitSuccess;
+        public event CommitFailureDelegate OnCommitFailure;
+        public event CommitProgressDelegate OnCommitProgress;
+
         public Directory Directory { get; private set; }
 
         public Transaction(Directory directory)
@@ -13,7 +20,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
             Directory = directory;
         }
 
-        public void Begin(string username, TimeSpan expiryDuration)
+        public Stage Begin(string username, TimeSpan expiryDuration)
         {
             Lock loc;
             File file;
@@ -52,6 +59,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
                         loc.WriteLock(file);
                     }
                 }
+                else
+                {
+                    Directory.Create();
+                    file = new File(Directory, "lock");
+                    loc = new Lock(username, expiryDuration);
+                    loc.WriteLock(file);
+                }
+
+                return new Stage(this, 0);
             }
             catch (Exception e)
             {
@@ -205,25 +221,60 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
             }
         }
 
-        public bool Commit(string username, Actions.Base action, out string errorMessage)
+        public void Commit(string username, Actions.Base action)
         {
-            Stage stage;
-
             try
             {
-                stage = GetCurrentStage(username);
-
-                if (!stage.Commit(action, out errorMessage))
-                    return false;
-
-                Reset();
-                return true;
+                Commit(GetCurrentStage(username), username, action);
             }
             catch (Exception e)
             {
                 Logger.Storage.Error("An exception occurred while trying to commit the transaction.", e);
                 throw;
             }
+        }
+
+        public void Commit(Stage stage, string username, Actions.Base action)
+        {
+            try
+            {
+                stage.OnCommitFailure += new Stage.CommitFailureDelegate(Commit_OnCommitFailure);
+                stage.OnCommitProgress += new Stage.CommitProgressDelegate(Commit_OnCommitProgress);
+                stage.OnCommitSuccess += new Stage.CommitSuccessDelegate(Commit_OnCommitSuccess);
+
+                stage.Commit(action);
+            }
+            catch (Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while trying to commit the transaction.", e);
+                throw;
+            }
+        }
+
+        private void Commit_OnCommitSuccess(Stage sender, Actions.Base action, ICommandReply reply)
+        {
+
+            // Don't reset until after the subscriber has a chance to do whatever they want with the
+            // event.
+            if (OnCommitSuccess != null) OnCommitSuccess(this, sender, action, reply);
+            else
+            {
+                Reset(); // We need to reset before the exception.
+                throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Transaction.OnFailure event must be implemented.");
+            }
+
+            Reset();
+        }
+
+        private void Commit_OnCommitProgress(Stage sender, Actions.Base action, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+        {
+            if (OnCommitProgress != null) OnCommitProgress(this, sender, action, packetSize, sendPercentComplete, receivePercentComplete);
+        }
+        
+        private void Commit_OnCommitFailure(Stage sender, Actions.Base action, string message, Exception exception)
+        {
+            if (OnCommitFailure != null) OnCommitFailure(this, sender, action, message, null);
+            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Transaction.OnFailure event must be implemented.");
         }
 
         private int GetCurrentStageNumber()

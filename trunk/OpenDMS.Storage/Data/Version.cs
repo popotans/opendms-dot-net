@@ -97,7 +97,6 @@ namespace OpenDMS.Storage.Data
         public string Revision { get; protected set; }
         public Metadata Metadata { get; protected set; }
         public Content Content { get; protected set; }
-        public List<Security.UsageRight> UsageRights { get; protected set; }
 
         public bool CanDelete { get { return _availableActions.HasFlag(ActionsType.Delete); } }
         public bool CanHeadCurrentRevision { get { return _availableActions.HasFlag(ActionsType.HeadCurrentRevision); } }
@@ -118,7 +117,7 @@ namespace OpenDMS.Storage.Data
         /// </summary>
         /// <remarks>Enables actions: None</remarks>
         public Version()
-            : this(null, null, null, null, null)
+            : this(null, null, null, null)
         {
         }
 
@@ -126,13 +125,12 @@ namespace OpenDMS.Storage.Data
         /// Initializes a new instance of the <see cref="Version"/> class.
         /// </summary>
         /// <param name="versionId">The <see cref="VersionId"/>.</param>
-        /// <param name="usageRights">The usage rights.</param>
         /// <remarks>Enables actions: <see cref="ActionsType.CreateWithoutPropertiesOrContent"/>, 
         ///     <see cref="ActionsType.HeadCurrentRevision"/> and 
         ///     <see cref="ActionsType.GetCurrentRevision"/>.
         /// </remarks>
-        public Version(VersionId versionId, List<Security.UsageRight> usageRights)
-            : this(versionId, null, null, null, usageRights)
+        public Version(VersionId versionId)
+            : this(versionId, null, null, null)
         {
         }
         
@@ -141,7 +139,6 @@ namespace OpenDMS.Storage.Data
         /// </summary>
         /// <param name="versionId">The <see cref="VersionId"/>.</param>
         /// <param name="revision">The revision.</param>
-        /// <param name="usageRights">The usage rights.</param>
         /// <remarks>Enables actions: <see cref="ActionsType.Delete"/>, 
         ///     <see cref="ActionsType.HeadCurrentRevision"/>,
         ///     <see cref="ActionsType.HeadSpecificRevision"/>, 
@@ -150,8 +147,8 @@ namespace OpenDMS.Storage.Data
         ///     <see cref="ActionsType.GetSpecificRevision"/> and 
         ///     <see cref="ActionsType.UpdateWithoutPropertiesOrContent"/>.
         /// </remarks>
-        public Version(VersionId versionId, string revision, List<Security.UsageRight> usageRights)
-            : this(versionId, revision, null, null, usageRights)
+        public Version(VersionId versionId, string revision)
+            : this(versionId, revision, null, null)
         {
         }
 
@@ -160,14 +157,13 @@ namespace OpenDMS.Storage.Data
         /// </summary>
         /// <param name="versionId">The <see cref="VersionId"/>.</param>
         /// <param name="metadata">The <see cref="Metadata"/>.</param>
-        /// <param name="usageRights">The usage rights.</param>
         /// <remarks>Enables actions: <see cref="ActionsType.HeadCurrentRevision"/>, 
         ///     <see cref="ActionsType.GetCurrentRevision"/>,
         ///     <see cref="ActionsType.CreateWithoutPropertiesOrContent"/>,
         ///     <see cref="ActionsType.CreateWithPropertiesWithoutContent"/>.
         /// </remarks>
-        public Version(VersionId versionId, Metadata metadata, List<Security.UsageRight> usageRights)
-            : this(versionId, null, metadata, null, usageRights)
+        public Version(VersionId versionId, Metadata metadata)
+            : this(versionId, null, metadata, null)
         {
         }
 
@@ -176,14 +172,13 @@ namespace OpenDMS.Storage.Data
         /// </summary>
         /// <param name="versionId">The <see cref="VersionId"/>.</param>
         /// <param name="content">The <see cref="Content"/>.</param>
-        /// <param name="usageRights">The usage rights.</param>
         /// <remarks>Enables actions: <see cref="ActionsType.HeadCurrentRevision"/>, 
         ///     <see cref="ActionsType.GetCurrentRevision"/>,
         ///     <see cref="ActionsType.CreateWithoutPropertiesOrContent"/>,
         ///     <see cref="ActionsType.CreateWithoutPropertiesWithContent"/>.
         /// </remarks>
-        public Version(VersionId versionId, Content content, List<Security.UsageRight> usageRights)
-            : this(versionId, null, null, content, usageRights)
+        public Version(VersionId versionId, Content content)
+            : this(versionId, null, null, content)
         {
         }
 
@@ -193,7 +188,6 @@ namespace OpenDMS.Storage.Data
         /// <param name="versionId">The <see cref="VersionId"/>.</param>
         /// <param name="metadata">The <see cref="Metadata"/>.</param>
         /// <param name="content">The <see cref="Content"/>.</param>
-        /// <param name="usageRights">The usage rights.</param>
         /// <remarks>Enables actions: <see cref="ActionsType.HeadCurrentRevision"/>, 
         ///     <see cref="ActionsType.GetCurrentRevision"/>,
         ///     <see cref="ActionsType.CreateWithoutPropertiesOrContent"/>,
@@ -201,8 +195,8 @@ namespace OpenDMS.Storage.Data
         ///     <see cref="ActionsType.CreateWithoutPropertiesWithContent"/>,
         ///     <see cref="ActionsType.CreateWithPropertiesAndContent"/>.
         /// </remarks>
-        public Version(VersionId versionId, Metadata metadata, Content content, List<Security.UsageRight> usageRights)
-            : this(versionId, null, metadata, content, usageRights)
+        public Version(VersionId versionId, Metadata metadata, Content content)
+            : this(versionId, null, metadata, content)
         {
         }
 
@@ -212,7 +206,6 @@ namespace OpenDMS.Storage.Data
         /// <param name="versionId">The <see cref="VersionId"/>.</param>
         /// <param name="revision">The revision.</param>
         /// <param name="metadata">The <see cref="Metadata"/>.</param>
-        /// <param name="usageRights">The usage rights.</param>
         /// <remarks>Enables actions: <see cref="ActionsType.Delete"/>,
         ///     <see cref="ActionsType.HeadCurrentRevision"/>,
         ///     <see cref="ActionsType.HeadSpecificRevision"/>,
@@ -223,8 +216,8 @@ namespace OpenDMS.Storage.Data
         ///     <see cref="ActionsType.UpdateWithoutPropertiesOrContent"/>,
         ///     <see cref="ActionsType.UpdateWithPropertiesWithoutContent"/>.
         /// </remarks>
-        public Version(VersionId versionId, string revision, Metadata metadata, List<Security.UsageRight> usageRights)
-            : this(versionId, revision, metadata, null, usageRights)
+        public Version(VersionId versionId, string revision, Metadata metadata)
+            : this(versionId, revision, metadata, null)
         {
         }
 
@@ -234,7 +227,6 @@ namespace OpenDMS.Storage.Data
         /// <param name="versionId">The <see cref="VersionId"/>.</param>
         /// <param name="revision">The revision.</param>
         /// <param name="metadata">The <see cref="Content"/>.</param>
-        /// <param name="usageRights">The usage rights.</param>
         /// <remarks>Enables actions: <see cref="ActionsType.Delete"/>, 
         ///     <see cref="ActionsType.HeadCurrentRevision"/>,
         ///     <see cref="ActionsType.HeadSpecificRevision"/>,
@@ -245,8 +237,8 @@ namespace OpenDMS.Storage.Data
         ///     <see cref="ActionsType.UpdateWithoutPropertiesOrContent"/>,
         ///     <see cref="ActionsType.UpdateWithoutPropertiesWithContent"/>.
         /// </remarks>
-        public Version(VersionId versionId, string revision, Content content, List<Security.UsageRight> usageRights)
-            : this(versionId, revision, null, content, usageRights)
+        public Version(VersionId versionId, string revision, Content content)
+            : this(versionId, revision, null, content)
         {
         }
 
@@ -257,17 +249,15 @@ namespace OpenDMS.Storage.Data
         /// <param name="revision">The revision.</param>
         /// <param name="metadata">The <see cref="Metadata"/>.</param>
         /// <param name="content">The content.</param>
-        /// <param name="usageRights">The usage rights.</param>
         /// <remarks>
         /// Enables actions: all
         /// </remarks>
-        public Version(VersionId versionId, string revision, Metadata metadata, Content content, List<Security.UsageRight> usageRights)
+        public Version(VersionId versionId, string revision, Metadata metadata, Content content)
         {
             VersionId = versionId;
             Revision = revision;
             Metadata = metadata;
             Content = content;
-            UsageRights = usageRights;
         }
 
         /// <summary>

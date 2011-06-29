@@ -1,10 +1,18 @@
-﻿using OpenDMS.IO;
+﻿using System;
+using OpenDMS.IO;
 using Newtonsoft.Json;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions
 {
     public class Stage
     {
+        public delegate void CommitSuccessDelegate(Stage sender, Actions.Base action, ICommandReply reply);
+        public delegate void CommitFailureDelegate(Stage sender, Actions.Base action, string message, Exception exception);
+        public delegate void CommitProgressDelegate(Stage sender, Actions.Base action, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
+        public event CommitSuccessDelegate OnCommitSuccess;
+        public event CommitFailureDelegate OnCommitFailure;
+        public event CommitProgressDelegate OnCommitProgress;
+
         private int _number;
         private Directory _directory;
         private Transaction _transaction;
@@ -39,9 +47,36 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
             _directory.Delete();
         }
 
-        public bool Commit(Actions.Base action, out string errorMessage)
+        public void Commit(Actions.Base action)
         {
-            return action.Commit(out errorMessage);
+            action.OnTimeout += new Actions.Base.CommitTimeoutDelegate(Commit_OnTimeout);
+            action.OnProgress += new Actions.Base.CommitProgressDelegate(Commit_OnProgress);
+            action.OnError += new Actions.Base.CommitErrorDelegate(Commit_OnError);
+            action.OnComplete += new Actions.Base.CommitCompletionDelegate(Commit_OnComplete);
+            action.Commit();
+        }
+
+        private void Commit_OnComplete(Actions.Base sender, ICommandReply reply)
+        {
+            if (OnCommitSuccess != null) OnCommitSuccess(this, sender, reply);
+            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Stage.OnSuccess event must be implemented.");
+        }
+
+        private void Commit_OnError(Actions.Base sender, string message, System.Exception exception)
+        {
+            if (OnCommitFailure != null) OnCommitFailure(this, sender, message, null);
+            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Stage.OnFailure event must be implemented.");
+        }
+
+        private void Commit_OnProgress(Actions.Base sender, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+        {
+            if (OnCommitProgress != null) OnCommitProgress(this, sender, packetSize, sendPercentComplete, receivePercentComplete);
+        }
+
+        private void Commit_OnTimeout(Actions.Base sender)
+        {
+            if (OnCommitFailure != null) OnCommitFailure(this, sender, "The commit action timed out.", null);
+            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Stage.OnFailure event must be implemented.");
         }
 
         public bool Exists()

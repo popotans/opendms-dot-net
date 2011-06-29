@@ -123,5 +123,16 @@ namespace OpenDMS.Storage.Providers.CouchDB
             EngineMethods.GetUser act = new EngineMethods.GetUser(request, db, username);
             act.Execute();
         }
+
+        public override void CreateUser(EngineRequest request, IDatabase db, Security.User user)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Creating user: " + user.Username + " in db: " + db.Name + " on server: " + db.Server.Uri.ToString());
+
+
+
+            //EngineMethods.c
+        }
+
     }
 }

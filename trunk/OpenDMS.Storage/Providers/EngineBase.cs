@@ -104,5 +104,81 @@ namespace OpenDMS.Storage.Providers
         {
             throw new NotImplementedException();
         }
+
+
+        public void GetResource(EngineRequest request, IDatabase db, Data.ResourceId resource)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetResourceReadOnly(EngineRequest request, IDatabase db, Data.ResourceId resource)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CreateNewResource(EngineRequest request, IDatabase db, Data.Metadata metadata)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ModifyResource(EngineRequest request, IDatabase db, Data.Resource resource)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RollbackResource(EngineRequest request, IDatabase db, Data.ResourceId resource, int rollbackDepth)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeleteResource(EngineRequest request, IDatabase db, Data.ResourceId resource)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetVersion(EngineRequest request, IDatabase db, Data.VersionId version)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetCurrentVersion(EngineRequest request, IDatabase db, Data.ResourceId resource)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateVersion(EngineRequest request, IDatabase db, Data.Version version)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ModifyVersion(EngineRequest request, IDatabase db, Data.Version version)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetResourcePermissions(EngineRequest request, IDatabase db, Data.ResourceId resource)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetGlobalPermissions(EngineRequest request, IDatabase db)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateGlobalPermissions(EngineRequest request, IDatabase db, List<Security.UsageRight> usageRights)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetResourceUsageRightsTemplate(EngineRequest request, IDatabase db)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ModifyResourceUsageRightsTemplate(EngineRequest request, IDatabase db, List<Security.UsageRight> usageRights)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
