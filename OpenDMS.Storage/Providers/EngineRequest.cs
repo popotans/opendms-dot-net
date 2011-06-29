@@ -13,7 +13,7 @@ namespace OpenDMS.Storage.Providers
         public EngineBase.ErrorDelegate OnError { get; set; }
 
         public Security.RequestingPartyType RequestingPartyType { get; set; }
-        public Security.Session Session { get; set; }
+        public System.Guid AuthToken { get; set; }
 
         public object UserToken { get; set; }
     }

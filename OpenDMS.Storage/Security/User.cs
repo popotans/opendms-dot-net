@@ -44,11 +44,11 @@ namespace OpenDMS.Storage.Security
             Username = id;
         }
 
-        public User(string id, string rev, string encryptedPassword, string firstname, string middlename, string lastname, List<string> groups, bool isSuperuser)
+        public User(string id, string rev, string unencryptedPassword, string firstname, string middlename, string lastname, List<string> groups, bool isSuperuser)
             : base(rev, groups)
         {
             Username = id;
-            Password = encryptedPassword;
+            Password = unencryptedPassword;
             FirstName = firstname;
             MiddleName = middlename;
             LastName = lastname;

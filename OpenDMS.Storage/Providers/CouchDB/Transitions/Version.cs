@@ -12,30 +12,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
         {
             Data.VersionId id;
             string rev;
-            List<Security.UsageRight> usageRights = null;
-            Security.UsageRight usageRight = null;
-            JProperty prop = null;
 
             try
             {
                 id = new Data.VersionId(document.Id);
                 rev = document.Rev;
                 document["Type"] = "version";
-
-                if (document["UsageRights"] != null)
-                {
-                    usageRights = new List<Security.UsageRight>();
-                    JArray jarray = (JArray)document["UsageRights"];
-
-                    for (int i = 0; i < jarray.Count; i++)
-                    {
-                        prop = (JProperty)jarray[i];
-                        usageRight = new Security.UsageRight(prop.Name, (Security.PermissionType)prop.Value<int>());
-                        usageRights.Add(usageRight);
-                    }
-
-                    document.Remove("UsageRights");
-                }
 
                 document.Remove("_id");
                 if (document["_rev"] != null)
@@ -49,14 +31,13 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             }
 
             remainder = document;
-            return new Data.Version(id, rev, usageRights);
+            return new Data.Version(id, rev);
         }
 
         public Model.Document Transition(Data.Version version, out List<Exception> errors)
         {
             Model.Document doc = null;
             Model.Attachment att = null;
-            JArray jarray = null;
 
             try
             {
@@ -73,16 +54,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                     att.ContentType = version.Content.ContentType.Name;
                     att.AttachmentLength = version.Content.Length;
                     doc.AddAttachment(System.IO.Path.GetFileName(version.Content.LocalFilepath), att);
-                }
-
-                if (version.UsageRights != null && version.UsageRights.Count > 0)
-                {
-                    jarray = new JArray();
-
-                    for (int i = 0; i < version.UsageRights.Count; i++)
-                        jarray.Add(new JProperty(version.UsageRights[i].Entity, (int)version.UsageRights[i].Permissions));
-
-                    doc.Add("UsageRights", jarray);
                 }
             }
             catch (Exception e)

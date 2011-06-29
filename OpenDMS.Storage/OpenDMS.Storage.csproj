@@ -103,6 +103,7 @@
     <Compile Include="Providers\CouchDB\Engine.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\AuthenticateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Base.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroups.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetGroup.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetUser.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="Providers\CouchDB\Model\Document.cs" />
     <Compile Include="Providers\CouchDB\Model\View.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Actions\Base.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Actions\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\ActiveTransactionException.cs" />
     <Compile Include="Providers\CouchDB\Transactions\InvalidStageException.cs" />
     <Compile Include="Providers\CouchDB\Transactions\InvalidTransactionException.cs" />
@@ -124,11 +126,20 @@
     <Compile Include="Providers\EngineRequest.cs" />
     <Compile Include="Providers\ICommandReply.cs" />
     <Compile Include="Providers\IEngine.cs" />
+    <Compile Include="Security\Authorization\GlobalPermission.cs" />
+    <Compile Include="Security\Authorization\GlobalPermissionType.cs" />
+    <Compile Include="Security\Authorization\GlobalRequest.cs" />
+    <Compile Include="Security\Authorization\Permissions.cs" />
+    <Compile Include="Security\Authorization\Request.cs" />
+    <Compile Include="Security\Authorization\ResourcePermission.cs" />
+    <Compile Include="Security\Authorization\ResourceRequest.cs" />
+    <Compile Include="Security\Authorization\Retriever.cs" />
     <Compile Include="Security\DatabaseSessionManager.cs" />
-    <Compile Include="Security\PermissionType.cs" />
+    <Compile Include="Security\Authorization\ResourcePermissionType.cs" />
     <Compile Include="Security\RequestingPartyType.cs" />
     <Compile Include="Security\Session.cs" />
     <Compile Include="Security\SessionManager.cs" />
+    <Compile Include="Security\UnknownDatabaseException.cs" />
     <Compile Include="Security\UsageRight.cs" />
     <Compile Include="Providers\CouchDB\Server.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Manager.cs" />
@@ -151,6 +162,7 @@
     <Content Include="libs\log4net.dll" />
     <Content Include="libs\Newtonsoft.Json.dll" />
     <Content Include="Providers\CouchDB\Transactions\Problem.txt" />
+    <Content Include="Security\Authorization\Authorization System.txt" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -188,7 +200,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

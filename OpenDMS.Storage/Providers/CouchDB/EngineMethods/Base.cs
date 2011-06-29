@@ -5,6 +5,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
     {
         protected bool _isEventSubscriptionSuppressed = false;
         protected EngineRequest _request;
+        protected Security.SessionManager _sessionManager;
         
         protected Engine.ActionDelegate _onActionChanged = null;
         protected Engine.ProgressDelegate _onProgress = null;
@@ -24,6 +25,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             _onComplete = request.OnComplete;
             _onTimeout = request.OnTimeout;
             _onError = request.OnError;
+        }
+
+        public Base(EngineRequest request, Security.SessionManager sessionManager)
+            : this(request)
+        {
+            _sessionManager = sessionManager;
         }
 
         protected void AttachSubscriberEvent(Commands.Base cmd, Engine.TimeoutDelegate onTimeout)
@@ -101,5 +108,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             };
             cmd.OnProgress += progressDelegate;
         }
+
     }
 }

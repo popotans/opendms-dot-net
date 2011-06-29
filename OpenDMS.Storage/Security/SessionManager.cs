@@ -93,5 +93,27 @@ namespace OpenDMS.Storage.Security
             Logger.Security.Error("The user could not be authenticated due to an unexpected error, see the storage log for additional information.");
             if (OnError != null) OnError(message, exception);
         }
+
+        public Session LookupSession(Providers.IDatabase db, Guid authToken)
+        {
+            Session session;
+
+            Logger.Security.Debug("Running session lookup for authentication token '" + authToken.ToString() + "'...");
+
+            if (!_dbSessionManagers.ContainsKey(db))
+            {
+                Logger.Security.Error("The database '" + db.Name + "' could not be found in the collection of managed databases.");
+                throw new UnknownDatabaseException("The database could not be found.");
+            }
+
+            session = _dbSessionManagers[db].LookupSession(authToken);
+
+            if (session == null)
+                Logger.Security.Debug("A session could not be found for authentication token " + authToken.ToString());
+            else
+                Logger.Security.Debug("A session was found for user '" + session.User.Username + "'");
+
+            return session;
+        }
     }
 }

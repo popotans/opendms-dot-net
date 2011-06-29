@@ -151,5 +151,13 @@ namespace OpenDMS.Storage.Security
             Logger.Storage.Error("A timeout occurred while running GetUser.");
             if (OnError != null) OnError("A timeout occurred while attempting to download user information.", null);
         }
+
+        public Session LookupSession(Guid authToken)
+        {
+            if (!_sessions.ContainsKey(authToken))
+                return null;
+
+            return _sessions[authToken];
+        }
     }
 }
