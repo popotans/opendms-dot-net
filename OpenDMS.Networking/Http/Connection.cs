@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Net;
 using System.Net.Sockets;
 
@@ -6,79 +6,32 @@ namespace OpenDMS.Networking.Http
 {
     public class Connection
     {
-        public delegate void ConnectionDelegate(Connection sender);
-        public event ConnectionDelegate OnConnect;
-        public event ConnectionDelegate OnDisconnect;
-        public event ConnectionDelegate OnTimeout;
-        public delegate void ErrorDelegate(Connection sender, string message, Exception exception);
-        public event ErrorDelegate OnError;
-        public delegate void ProgressDelegate(Connection sender, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
-        public event ProgressDelegate OnProgress;
-        public delegate void CompletionEvent(Connection sender, Methods.Response response);
-        public event CompletionEvent OnComplete;
-
-        private ConnectionManager _factory = null;
-        private Uri _uri = null;
-        private Socket _socket = null;
-        private int _sendTimeout = 60000;
-        private int _receiveTimeout = 60000;
-        private int _sendBufferSize = 8192;
-        private int _receiveBufferSize = 8192;
-        private bool _isBusy = false;
-
-        public Uri Uri { get { return _uri; } }
-        public int SendTimeout { get { return _sendTimeout; } set { _sendTimeout = value; } }
-        public int ReceiveTimeout { get { return _receiveTimeout; } set { _receiveTimeout = value; } }
-        public bool IsBusy { get { return _isBusy; } set { _isBusy = value; } }
-        public bool IsConnected { get { return (_socket != null && _socket.Connected); } }
-
-        // Counters and such
-        private ulong _bytesSentTotal = 0;
-        private ulong _bytesSentHeadersOnly = 0;
-        private ulong _bytesSentContentOnly = 0;
-        private ulong _bytesReceivedTotal = 0;
-        private ulong _bytesReceivedHeadersOnly = 0;
-        private ulong _bytesReceivedContentOnly = 0;
-        private ulong _headersLengthTx = 0;
-        private ulong _contentLengthTx = 0;
-        private ulong _headersLengthRx = 0;
-        private ulong _contentLengthRx = 0;
+		#region Fields (19) 
 
         private SocketAsyncEventArgs _args = null;
+        private ulong _bytesReceivedContentOnly = 0;
+        private ulong _bytesReceivedHeadersOnly = 0;
+        private ulong _bytesReceivedTotal = 0;
+        private ulong _bytesSentContentOnly = 0;
+        private ulong _bytesSentHeadersOnly = 0;
+        // Counters and such
+        private ulong _bytesSentTotal = 0;
+        private ulong _contentLengthRx = 0;
+        private ulong _contentLengthTx = 0;
+        private ConnectionManager _factory = null;
+        private ulong _headersLengthRx = 0;
+        private ulong _headersLengthTx = 0;
+        private bool _isBusy = false;
+        private int _receiveBufferSize = 8192;
+        private int _receiveTimeout = 60000;
+        private int _sendBufferSize = 8192;
+        private int _sendTimeout = 60000;
+        private Socket _socket = null;
+        private Uri _uri = null;
 
-        public ulong BytesSentTotal { get { return _bytesSentTotal; } }
-        public ulong BytesSentHeadersOnly { get { return _bytesSentHeadersOnly; } }
-        public ulong BytesSentContentOnly { get { return _bytesSentContentOnly; } }
-        public ulong BytesReceivedTotal { get { return _bytesReceivedTotal; } }
-        public ulong BytesReceivedHeadersOnly { get { return _bytesReceivedHeadersOnly; } }
-        public ulong BytesReceivedContentOnly { get { return _bytesReceivedContentOnly; } }
-        public ulong HeadersLength { get { return _headersLengthTx; } }
-        public ulong ContentLength { get { return _contentLengthTx; } }
-        public decimal SendPercentComplete 
-        { 
-            get 
-            {
-                if ((_headersLengthTx + _contentLengthTx) == 0)
-                    return 0;
-                return ((decimal)_bytesSentTotal / (decimal)(_headersLengthTx + _contentLengthTx)) * (decimal)100; 
-            } 
-        }
-        public decimal ReceivePercentComplete 
-        { 
-            get
-            {
-                if ((_headersLengthRx + _contentLengthRx) == 0)
-                    return 0;
-                return ((decimal)_bytesReceivedTotal / (decimal)(_headersLengthRx + _contentLengthRx)) * (decimal)100; 
-            } 
-        }
+		#endregion Fields 
 
-
-        public Connection(ConnectionManager factory, Uri uri) 
-        {
-            _factory = factory;
-            _uri = uri;
-        }
+		#region Constructors (2) 
 
         public Connection(ConnectionManager factory, Uri uri, int sendTimeout, int receiveTimeout,
             int sendBufferSize, int receiveBufferSize)
@@ -90,67 +43,125 @@ namespace OpenDMS.Networking.Http
             _receiveBufferSize = receiveBufferSize;
         }
 
-        private bool TryCreateUserTokenAndTimeout(NetworkBuffer networkBuffer, int milliseconds,
-            out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
+        public Connection(ConnectionManager factory, Uri uri) 
         {
-            return TryCreateUserTokenAndTimeout(networkBuffer, null, milliseconds, out userToken, onTimeout);
+            _factory = factory;
+            _uri = uri;
         }
 
-        private bool TryCreateUserTokenAndTimeout(object token2, int milliseconds,
-            out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
-        {
-            return TryCreateUserTokenAndTimeout(null, token2, milliseconds, out userToken, onTimeout);
+		#endregion Constructors 
+
+		#region Properties (15) 
+
+        public ulong BytesReceivedContentOnly { get { return _bytesReceivedContentOnly; } }
+
+        public ulong BytesReceivedHeadersOnly { get { return _bytesReceivedHeadersOnly; } }
+
+        public ulong BytesReceivedTotal { get { return _bytesReceivedTotal; } }
+
+        public ulong BytesSentContentOnly { get { return _bytesSentContentOnly; } }
+
+        public ulong BytesSentHeadersOnly { get { return _bytesSentHeadersOnly; } }
+
+        public ulong BytesSentTotal { get { return _bytesSentTotal; } }
+
+        public ulong ContentLength { get { return _contentLengthTx; } }
+
+        public ulong HeadersLength { get { return _headersLengthTx; } }
+
+        public bool IsBusy { get { return _isBusy; } set { _isBusy = value; } }
+
+        public bool IsConnected { get { return (_socket != null && _socket.Connected); } }
+
+        public decimal ReceivePercentComplete 
+        { 
+            get
+            {
+                if ((_headersLengthRx + _contentLengthRx) == 0)
+                    return 0;
+                return ((decimal)_bytesReceivedTotal / (decimal)(_headersLengthRx + _contentLengthRx)) * (decimal)100; 
+            } 
         }
 
-        private bool TryCreateUserTokenAndTimeout(NetworkBuffer networkBuffer, object token2, int milliseconds,
-            out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
-        {
-            userToken = null;
+        public int ReceiveTimeout { get { return _receiveTimeout; } set { _receiveTimeout = value; } }
 
-            try
+        public decimal SendPercentComplete 
+        { 
+            get 
             {
-                userToken = new AsyncUserToken(networkBuffer, token2).StartTimeout(milliseconds, onTimeout);
-            }
-            catch (Exception e)
+                if ((_headersLengthTx + _contentLengthTx) == 0)
+                    return 0;
+                return ((decimal)_bytesSentTotal / (decimal)(_headersLengthTx + _contentLengthTx)) * (decimal)100; 
+            } 
+        }
+
+        public int SendTimeout { get { return _sendTimeout; } set { _sendTimeout = value; } }
+
+        public Uri Uri { get { return _uri; } }
+
+		#endregion Properties 
+
+		#region Delegates and Events (10) 
+
+		// Delegates (4) 
+
+        public delegate void CompletionEvent(Connection sender, Methods.Response response);
+        public delegate void ConnectionDelegate(Connection sender);
+        public delegate void ErrorDelegate(Connection sender, string message, Exception exception);
+        public delegate void ProgressDelegate(Connection sender, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
+		// Events (6) 
+
+        public event CompletionEvent OnComplete;
+
+        public event ConnectionDelegate OnConnect;
+
+        public event ConnectionDelegate OnDisconnect;
+
+        public event ErrorDelegate OnError;
+
+        public event ProgressDelegate OnProgress;
+
+        public event ConnectionDelegate OnTimeout;
+
+		#endregion Delegates and Events 
+
+		#region Methods (23) 
+
+		// Public Methods (3) 
+
+        public void CloseAsync()
+        {
+            AsyncUserToken userToken = null;
+
+            if (_socket != null)
             {
-                Logger.Network.Error("An exception occurred while starting the timeout.", e);
-                if (OnError != null)
+                _args.Completed += new EventHandler<SocketAsyncEventArgs>(Close_Completed);
+                lock (_socket)
                 {
-                    OnError(this, "Exception while starting timeout.", e);
-                    return false;
+                    if (!TryCreateUserTokenAndTimeout(null, _sendTimeout, out userToken,
+                        new Timeout.TimeoutEvent(Close_Timeout)))
+                        return;
+
+                    _args.UserToken = userToken;
+
+                    Logger.Network.Debug("Disconnecting the socket and closing...");
+
+                    try
+                    {
+                        if (!_socket.DisconnectAsync(_args))
+                        {
+                            Logger.Network.Debug("CloseAsync completed synchronously.");
+                            Close_Completed(null, _args);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Network.Error("An exception occurred while disconnecting the socket.", e);
+                        if (OnError != null) OnError(this, "Exception disconnecting socket.", e);
+                        else throw;
+                    }
                 }
-                else throw;
             }
-
-            return true;
-        }
-
-        private bool TryStopTimeout(object obj)
-        {
-            if (obj.GetType() != typeof(AsyncUserToken))
-                throw new ArgumentException("Argument must be of type AsyncUserToken");
-
-            return TryStopTimeout((AsyncUserToken)obj);
-        }
-
-        private bool TryStopTimeout(AsyncUserToken userToken)
-        {
-            try
-            {
-                userToken.StopTimeout();
-            }
-            catch (Exception ex)
-            {
-                Logger.Network.Error("An exception occurred while stopping the timeout.", ex);
-                if (OnError != null)
-                {
-                    OnError(this, "Exception while stopping timeout.", ex);
-                    return false;
-                }
-                else throw;
-            }
-
-            return true;
         }
 
         public void ConnectAsync()
@@ -225,97 +236,72 @@ namespace OpenDMS.Networking.Http
             }
         }
 
-        private void Connect_Completed(object sender, SocketAsyncEventArgs e)
+        public void SendRequest(Methods.Request request, System.IO.Stream stream)
         {
-            _args.Completed -= Connect_Completed;
+            if (!IsConnected)
+                throw new HttpNetworkException("Socket is closed or not ready");
 
-            if (!TryStopTimeout(_args.UserToken))
-                return;
+            AsyncUserToken userToken = null;
+            byte[] headers = null;
+            Logger.Network.Debug("Sending request headers...");
 
-            Logger.Network.Debug("Connected successfully.");
-
-            try
+            // Reset the stream position if we can
+            if (stream != null)
             {
-                if (OnConnect != null) OnConnect(this);
+                if (stream.CanSeek)
+                {
+                    stream.Position = 0;
+                    _contentLengthTx = (ulong)stream.Length;
+                    request.ContentLength = _contentLengthTx.ToString();
+                }
+                else if ((_contentLengthTx = Utilities.GetContentLength(request.Headers)) <= 0)
+                    throw new HttpNetworkException("A stream was provided and the content length was not set.");
+                else if (!stream.CanRead)
+                    throw new ArgumentException("The stream cannot be read.");
             }
-            catch (Exception ex)
+
+
+            _args.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
+
+            headers = System.Text.Encoding.ASCII.GetBytes(GetRequestHeader(request));
+
+            _headersLengthTx = (ulong)headers.LongLength;
+
+            if (!TryCreateUserTokenAndTimeout(new NetworkBuffer(headers), 
+                stream, _sendTimeout, out userToken, new Timeout.TimeoutEvent(SendRequest_Timeout)))
+                return;            
+
+            _args.UserToken = userToken;
+            if (userToken.NetworkBuffer.Length > _sendBufferSize)
             {
-                // Ignore it, its the higher level's job to deal with it.
-                Logger.Network.Error("An unhandled exception was caught by Connection.Connect_Completed in the OnConnect event.", ex);
-                throw;
+                byte[] newBuffer = new byte[_sendBufferSize];
+                userToken.NetworkBuffer.CopyTo(newBuffer, 0, _sendBufferSize);
+                _args.SetBuffer(newBuffer, 0, _sendBufferSize);
             }
-        }
+            else
+            {
+                _args.SetBuffer(userToken.NetworkBuffer.Buffer, 0, userToken.NetworkBuffer.Length);
+            }
 
-        private void Connect_Timeout()
-        {
-            _args.Completed -= Connect_Completed;
-            Logger.Network.Error("Timeout during connection.");
-            CloseSocketAndTimeout();
-        }
-
-        private void CloseSocketAndTimeout()
-        {
             lock (_socket)
             {
-                Logger.Network.Debug("Closing socket.");
                 try
                 {
-                    _socket.Close();
-                }
-                catch (Exception e)
-                {
-                    Logger.Network.Error("An exception occurred while calling _socket.Close.", e);
-                    if (OnError != null) OnError(this, "Exception calling _socket.Close.", e);
-                    else throw;
-                }
-
-                try
-                {
-                    if (OnTimeout != null) OnTimeout(this);
+                    if (!_socket.SendAsync(_args))
+                    {
+                        Logger.Network.Debug("SendAsync completed synchronously.");
+                        SendRequest_Completed(null, _args);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    // Ignore it, its the higher level's job to deal with it.
-                    Logger.Network.Error("An unhandled exception was caught by Connection.CloseSocketAndTimeout in the OnTimeout event.", ex);
-                    throw;
+                    Logger.Network.Error("An exception occurred while sending on socket.", ex);
+                    if (OnError != null) OnError(this, "Exception sending on socket.", ex);
+                    else throw;
                 }
             }
         }
-
-        public void CloseAsync()
-        {
-            AsyncUserToken userToken = null;
-
-            if (_socket != null)
-            {
-                _args.Completed += new EventHandler<SocketAsyncEventArgs>(Close_Completed);
-                lock (_socket)
-                {
-                    if (!TryCreateUserTokenAndTimeout(null, _sendTimeout, out userToken,
-                        new Timeout.TimeoutEvent(Close_Timeout)))
-                        return;
-
-                    _args.UserToken = userToken;
-
-                    Logger.Network.Debug("Disconnecting the socket and closing...");
-
-                    try
-                    {
-                        if (!_socket.DisconnectAsync(_args))
-                        {
-                            Logger.Network.Debug("CloseAsync completed synchronously.");
-                            Close_Completed(null, _args);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Network.Error("An exception occurred while disconnecting the socket.", e);
-                        if (OnError != null) OnError(this, "Exception disconnecting socket.", e);
-                        else throw;
-                    }
-                }
-            }
-        }
+		// Private Methods (20) 
 
         private void Close_Completed(object sender, SocketAsyncEventArgs e)
         {
@@ -359,46 +345,194 @@ namespace OpenDMS.Networking.Http
             Logger.Network.Error("Timeout during closing.");
             CloseSocketAndTimeout();
         }
-        
-        private void ReceiveResponseAsync()
+
+        private void CloseSocketAndTimeout()
         {
-            if (!IsConnected)
-                throw new HttpNetworkException("Socket is closed or not ready.");
-
-            AsyncUserToken userToken = null;
-            string headers = "";
-            byte[] buffer = new byte[_receiveBufferSize];
-
-            Logger.Network.Debug("Receiving response headers...");
-
-            if (!TryCreateUserTokenAndTimeout(headers, _receiveTimeout, out userToken,
-                new Timeout.TimeoutEvent(ReceiveResponse_Timeout)))
-                return;
-
-            _args.UserToken = userToken;
-            _args.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_Completed);
-            _args.SetBuffer(buffer, 0, buffer.Length);
-            
             lock (_socket)
             {
+                Logger.Network.Debug("Closing socket.");
                 try
                 {
-                    if (!_socket.ReceiveAsync(_args))
-                    {
-                        Logger.Network.Debug("ReceiveAsync completed synchronously.");
-                        ReceiveResponse_Completed(null, _args);
-                    }
+                    _socket.Close();
                 }
                 catch (Exception e)
                 {
-                    Logger.Network.Error("An exception occurred while receiving from the socket.", e);
-                    if (OnError != null) OnError(this, "Exception receiving from socket.", e);
+                    Logger.Network.Error("An exception occurred while calling _socket.Close.", e);
+                    if (OnError != null) OnError(this, "Exception calling _socket.Close.", e);
                     else throw;
                 }
-            }
-        }    
 
-        private void ReceiveResponse_Completed(object sender, SocketAsyncEventArgs e)
+                try
+                {
+                    if (OnTimeout != null) OnTimeout(this);
+                }
+                catch (Exception ex)
+                {
+                    // Ignore it, its the higher level's job to deal with it.
+                    Logger.Network.Error("An unhandled exception was caught by Connection.CloseSocketAndTimeout in the OnTimeout event.", ex);
+                    throw;
+                }
+            }
+        }
+
+        private void Connect_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            _args.Completed -= Connect_Completed;
+
+            if (!TryStopTimeout(_args.UserToken))
+                return;
+
+            Logger.Network.Debug("Connected successfully.");
+
+            try
+            {
+                if (OnConnect != null) OnConnect(this);
+            }
+            catch (Exception ex)
+            {
+                // Ignore it, its the higher level's job to deal with it.
+                Logger.Network.Error("An unhandled exception was caught by Connection.Connect_Completed in the OnConnect event.", ex);
+                throw;
+            }
+        }
+
+        private void Connect_Timeout()
+        {
+            _args.Completed -= Connect_Completed;
+            Logger.Network.Error("Timeout during connection.");
+            CloseSocketAndTimeout();
+        }
+
+        private string GetRequestHeader(Methods.Request request)
+        {
+            string str = request.RequestLine + "\r\n";
+            str += "Host: " + _uri.Host + "\r\n";
+
+            for (int i = 0; i < request.Headers.Count; i++)
+                str += request.Headers.GetKey(i) + ": " + request.Headers[i] + "\r\n";
+
+            str += "\r\n";
+
+            return str;
+        }
+
+        private void ReceiveResponse_ChunkedData(byte[] remainingBytes, Socket socket, Methods.Response response)
+        {
+            Tuple<string, Methods.Response> token;
+            string responseBody = "";
+
+            if (remainingBytes != null && remainingBytes.Length > 0)
+            {
+                responseBody += System.Text.Encoding.UTF8.GetString(remainingBytes);
+                if (OnProgress != null) OnProgress(this, DirectionType.Download, remainingBytes.Length, 100, -1);
+            }
+
+            AsyncUserToken userToken;
+            NetworkBuffer networkBuffer = new NetworkBuffer(new byte[_receiveBufferSize]);
+
+            token = new Tuple<string, Methods.Response>(responseBody, response);
+            if (!TryCreateUserTokenAndTimeout(networkBuffer, token, _receiveTimeout, out userToken, 
+                new Timeout.TimeoutEvent(ReceiveResponse_ChunkedData_Timeout)))
+                return;
+
+            _args = new SocketAsyncEventArgs();
+            _args.UserToken = userToken;
+            _args.SetBuffer(networkBuffer.Buffer, 0, networkBuffer.Length);
+            _args.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_ChunkedData_Completed);
+
+            try
+            {
+                if (!socket.ReceiveAsync(_args))
+                {
+                    Logger.Network.Debug("ReceiveAsync completed synchronously.");
+                    ReceiveResponse_ChunkedData_Completed(null, _args);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Network.Error("An exception occurred while receiving from the socket.", e);
+                if (OnError != null) OnError(this, "Exception receiving from socket.", e);
+                else throw;
+            }
+        }
+
+        private void ReceiveResponse_ChunkedData_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            e.Completed -= ReceiveResponse_ChunkedData_Completed;
+
+            if (!TryStopTimeout(e.UserToken))
+                return;
+
+            AsyncUserToken userToken;
+            string newpacket;
+            Methods.Response response;
+            Tuple<string, Methods.Response> token;
+            string responseBody;
+            int chunkLength = 0;
+            int packetSize = 0;
+            int index;
+
+            try
+            {
+                newpacket = System.Text.Encoding.UTF8.GetString(e.Buffer, e.Offset, e.BytesTransferred);
+            }
+            catch (Exception ex)
+            {
+                Logger.Network.Error("An exception occurred while getting a string from the buffer.", ex);
+                if (OnError != null)
+                {
+                    OnError(this, "Exception while getting a string from the buffer.", ex);
+                    return;
+                }
+                else throw;
+            }
+
+            userToken = (AsyncUserToken)e.UserToken;
+            token = (Tuple<string, Methods.Response>)userToken.Token;
+            responseBody = token.Item1;
+            response = token.Item2;
+            
+            while ((index = newpacket.IndexOf("\r\n")) > 0)
+            {
+                chunkLength = Utilities.ConvertHexToInt(newpacket.Substring(0, index));
+                newpacket = newpacket.Substring(index + 2);
+                if (chunkLength == 0)
+                    break;
+                packetSize += chunkLength;
+                responseBody += newpacket.Substring(0, chunkLength);
+                newpacket = newpacket.Substring(chunkLength + 2);
+            }
+
+            _contentLengthRx += (ulong)packetSize;
+            if (OnProgress != null) OnProgress(this, DirectionType.Download, packetSize, 100, -1);
+
+            if (chunkLength > 0)
+            {
+                token = new Tuple<string, Methods.Response>(responseBody, response);
+                if (!TryCreateUserTokenAndTimeout(userToken.NetworkBuffer, token, _receiveTimeout, out userToken,
+                    new Timeout.TimeoutEvent(ReceiveResponse_ChunkedData_Timeout)))
+                    return;
+
+                e.SetBuffer(userToken.NetworkBuffer.Buffer, 0, userToken.NetworkBuffer.Length);
+                e.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_ChunkedData_Completed);
+            }
+            else
+            {
+                response.Stream = new HttpNetworkStream(_contentLengthRx,
+                    System.Text.Encoding.UTF8.GetBytes(responseBody),
+                    _socket, System.IO.FileAccess.Read, false);
+                if (OnComplete != null) OnComplete(this, response);
+            }
+        }
+
+        private void ReceiveResponse_ChunkedData_Timeout()
+        {
+            _args.Completed -= ReceiveResponse_ChunkedData_Completed;
+            Logger.Network.Error("Timeout during receiving chunked response.");
+            CloseSocketAndTimeout();
+        }
+
+            private void ReceiveResponse_Completed(object sender, SocketAsyncEventArgs e)
         {
             e.Completed -= ReceiveResponse_Completed;
 
@@ -552,140 +686,6 @@ namespace OpenDMS.Networking.Http
             }
         }
 
-        private void ReceiveResponse_ChunkedData(byte[] remainingBytes, Socket socket, Methods.Response response)
-        {
-            Tuple<string, Methods.Response> token;
-            string responseBody = "";
-
-            if (remainingBytes != null && remainingBytes.Length > 0)
-            {
-                responseBody += System.Text.Encoding.UTF8.GetString(remainingBytes);
-                if (OnProgress != null) OnProgress(this, DirectionType.Download, remainingBytes.Length, 100, -1);
-            }
-
-            AsyncUserToken userToken;
-            NetworkBuffer networkBuffer = new NetworkBuffer(new byte[_receiveBufferSize]);
-
-            token = new Tuple<string, Methods.Response>(responseBody, response);
-            if (!TryCreateUserTokenAndTimeout(networkBuffer, token, _receiveTimeout, out userToken, 
-                new Timeout.TimeoutEvent(ReceiveResponse_ChunkedData_Timeout)))
-                return;
-
-            _args = new SocketAsyncEventArgs();
-            _args.UserToken = userToken;
-            _args.SetBuffer(networkBuffer.Buffer, 0, networkBuffer.Length);
-            _args.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_ChunkedData_Completed);
-
-            try
-            {
-                if (!socket.ReceiveAsync(_args))
-                {
-                    Logger.Network.Debug("ReceiveAsync completed synchronously.");
-                    ReceiveResponse_ChunkedData_Completed(null, _args);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Network.Error("An exception occurred while receiving from the socket.", e);
-                if (OnError != null) OnError(this, "Exception receiving from socket.", e);
-                else throw;
-            }
-        }
-
-        private void ReceiveResponse_ChunkedData_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            e.Completed -= ReceiveResponse_ChunkedData_Completed;
-
-            if (!TryStopTimeout(e.UserToken))
-                return;
-
-            AsyncUserToken userToken;
-            string newpacket;
-            Methods.Response response;
-            Tuple<string, Methods.Response> token;
-            string responseBody;
-            int chunkLength = 0;
-            int packetSize = 0;
-            int index;
-
-            try
-            {
-                newpacket = System.Text.Encoding.UTF8.GetString(e.Buffer, e.Offset, e.BytesTransferred);
-            }
-            catch (Exception ex)
-            {
-                Logger.Network.Error("An exception occurred while getting a string from the buffer.", ex);
-                if (OnError != null)
-                {
-                    OnError(this, "Exception while getting a string from the buffer.", ex);
-                    return;
-                }
-                else throw;
-            }
-
-            userToken = (AsyncUserToken)e.UserToken;
-            token = (Tuple<string, Methods.Response>)userToken.Token;
-            responseBody = token.Item1;
-            response = token.Item2;
-            
-            while ((index = newpacket.IndexOf("\r\n")) > 0)
-            {
-                chunkLength = Utilities.ConvertHexToInt(newpacket.Substring(0, index));
-                newpacket = newpacket.Substring(index + 2);
-                if (chunkLength == 0)
-                    break;
-                packetSize += chunkLength;
-                responseBody += newpacket.Substring(0, chunkLength);
-                newpacket = newpacket.Substring(chunkLength + 2);
-            }
-
-            _contentLengthRx += (ulong)packetSize;
-            if (OnProgress != null) OnProgress(this, DirectionType.Download, packetSize, 100, -1);
-
-            if (chunkLength > 0)
-            {
-                token = new Tuple<string, Methods.Response>(responseBody, response);
-                if (!TryCreateUserTokenAndTimeout(userToken.NetworkBuffer, token, _receiveTimeout, out userToken,
-                    new Timeout.TimeoutEvent(ReceiveResponse_ChunkedData_Timeout)))
-                    return;
-
-                e.SetBuffer(userToken.NetworkBuffer.Buffer, 0, userToken.NetworkBuffer.Length);
-                e.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_ChunkedData_Completed);
-            }
-            else
-            {
-                response.Stream = new HttpNetworkStream(_contentLengthRx,
-                    System.Text.Encoding.UTF8.GetBytes(responseBody),
-                    _socket, System.IO.FileAccess.Read, false);
-                if (OnComplete != null) OnComplete(this, response);
-            }
-        }
-
-        private void ReceiveResponse_ChunkedData_Timeout()
-        {
-            _args.Completed -= ReceiveResponse_ChunkedData_Completed;
-            Logger.Network.Error("Timeout during receiving chunked response.");
-            CloseSocketAndTimeout();
-        }
-
-        private void Stream_OnProgress(HttpNetworkStream sender, DirectionType direction, int packetSize)
-        {
-            _bytesReceivedTotal += (ulong)packetSize;
-            _bytesReceivedContentOnly += (ulong)packetSize;
-
-            try
-            {
-                if (OnProgress != null) 
-                    OnProgress(this, DirectionType.Download, packetSize, SendPercentComplete, ReceivePercentComplete);
-            }
-            catch (Exception ex)
-            {
-                // Ignore it, its the higher level's job to deal with it.
-                Logger.Network.Error("An unhandled exception was caught by Connection.Stream_OnProgress in the OnProgress event.", ex);
-                throw;
-            }
-        }
-
         private void ReceiveResponse_Timeout()
         {
             _args.Completed -= ReceiveResponse_Completed;
@@ -693,67 +693,39 @@ namespace OpenDMS.Networking.Http
             CloseSocketAndTimeout();
         }
 
-        public void SendRequest(Methods.Request request, System.IO.Stream stream)
+        private void ReceiveResponseAsync()
         {
             if (!IsConnected)
-                throw new HttpNetworkException("Socket is closed or not ready");
+                throw new HttpNetworkException("Socket is closed or not ready.");
 
             AsyncUserToken userToken = null;
-            byte[] headers = null;
-            Logger.Network.Debug("Sending request headers...");
+            string headers = "";
+            byte[] buffer = new byte[_receiveBufferSize];
 
-            // Reset the stream position if we can
-            if (stream != null)
-            {
-                if (stream.CanSeek)
-                {
-                    stream.Position = 0;
-                    _contentLengthTx = (ulong)stream.Length;
-                    request.ContentLength = _contentLengthTx.ToString();
-                }
-                else if ((_contentLengthTx = Utilities.GetContentLength(request.Headers)) <= 0)
-                    throw new HttpNetworkException("A stream was provided and the content length was not set.");
-                else if (!stream.CanRead)
-                    throw new ArgumentException("The stream cannot be read.");
-            }
+            Logger.Network.Debug("Receiving response headers...");
 
-
-            _args.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
-
-            headers = System.Text.Encoding.ASCII.GetBytes(GetRequestHeader(request));
-
-            _headersLengthTx = (ulong)headers.LongLength;
-
-            if (!TryCreateUserTokenAndTimeout(new NetworkBuffer(headers), 
-                stream, _sendTimeout, out userToken, new Timeout.TimeoutEvent(SendRequest_Timeout)))
-                return;            
+            if (!TryCreateUserTokenAndTimeout(headers, _receiveTimeout, out userToken,
+                new Timeout.TimeoutEvent(ReceiveResponse_Timeout)))
+                return;
 
             _args.UserToken = userToken;
-            if (userToken.NetworkBuffer.Length > _sendBufferSize)
-            {
-                byte[] newBuffer = new byte[_sendBufferSize];
-                userToken.NetworkBuffer.CopyTo(newBuffer, 0, _sendBufferSize);
-                _args.SetBuffer(newBuffer, 0, _sendBufferSize);
-            }
-            else
-            {
-                _args.SetBuffer(userToken.NetworkBuffer.Buffer, 0, userToken.NetworkBuffer.Length);
-            }
-
+            _args.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_Completed);
+            _args.SetBuffer(buffer, 0, buffer.Length);
+            
             lock (_socket)
             {
                 try
                 {
-                    if (!_socket.SendAsync(_args))
+                    if (!_socket.ReceiveAsync(_args))
                     {
-                        Logger.Network.Debug("SendAsync completed synchronously.");
-                        SendRequest_Completed(null, _args);
+                        Logger.Network.Debug("ReceiveAsync completed synchronously.");
+                        ReceiveResponse_Completed(null, _args);
                     }
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Logger.Network.Error("An exception occurred while sending on socket.", ex);
-                    if (OnError != null) OnError(this, "Exception sending on socket.", ex);
+                    Logger.Network.Error("An exception occurred while receiving from the socket.", e);
+                    if (OnError != null) OnError(this, "Exception receiving from socket.", e);
                     else throw;
                 }
             }
@@ -907,17 +879,87 @@ namespace OpenDMS.Networking.Http
             CloseSocketAndTimeout();
         }
 
-        private string GetRequestHeader(Methods.Request request)
+        private void Stream_OnProgress(HttpNetworkStream sender, DirectionType direction, int packetSize)
         {
-            string str = request.RequestLine + "\r\n";
-            str += "Host: " + _uri.Host + "\r\n";
+            _bytesReceivedTotal += (ulong)packetSize;
+            _bytesReceivedContentOnly += (ulong)packetSize;
 
-            for (int i = 0; i < request.Headers.Count; i++)
-                str += request.Headers.GetKey(i) + ": " + request.Headers[i] + "\r\n";
-
-            str += "\r\n";
-
-            return str;
+            try
+            {
+                if (OnProgress != null) 
+                    OnProgress(this, DirectionType.Download, packetSize, SendPercentComplete, ReceivePercentComplete);
+            }
+            catch (Exception ex)
+            {
+                // Ignore it, its the higher level's job to deal with it.
+                Logger.Network.Error("An unhandled exception was caught by Connection.Stream_OnProgress in the OnProgress event.", ex);
+                throw;
+            }
         }
+
+        private bool TryCreateUserTokenAndTimeout(NetworkBuffer networkBuffer, int milliseconds,
+            out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
+        {
+            return TryCreateUserTokenAndTimeout(networkBuffer, null, milliseconds, out userToken, onTimeout);
+        }
+
+        private bool TryCreateUserTokenAndTimeout(object token2, int milliseconds,
+            out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
+        {
+            return TryCreateUserTokenAndTimeout(null, token2, milliseconds, out userToken, onTimeout);
+        }
+
+        private bool TryCreateUserTokenAndTimeout(NetworkBuffer networkBuffer, object token2, int milliseconds,
+            out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
+        {
+            userToken = null;
+
+            try
+            {
+                userToken = new AsyncUserToken(networkBuffer, token2).StartTimeout(milliseconds, onTimeout);
+            }
+            catch (Exception e)
+            {
+                Logger.Network.Error("An exception occurred while starting the timeout.", e);
+                if (OnError != null)
+                {
+                    OnError(this, "Exception while starting timeout.", e);
+                    return false;
+                }
+                else throw;
+            }
+
+            return true;
+        }
+
+        private bool TryStopTimeout(object obj)
+        {
+            if (obj.GetType() != typeof(AsyncUserToken))
+                throw new ArgumentException("Argument must be of type AsyncUserToken");
+
+            return TryStopTimeout((AsyncUserToken)obj);
+        }
+
+        private bool TryStopTimeout(AsyncUserToken userToken)
+        {
+            try
+            {
+                userToken.StopTimeout();
+            }
+            catch (Exception ex)
+            {
+                Logger.Network.Error("An exception occurred while stopping the timeout.", ex);
+                if (OnError != null)
+                {
+                    OnError(this, "Exception while stopping timeout.", ex);
+                    return false;
+                }
+                else throw;
+            }
+
+            return true;
+        }
+
+		#endregion Methods 
     }
 }

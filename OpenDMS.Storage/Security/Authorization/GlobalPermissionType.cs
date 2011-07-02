@@ -6,10 +6,28 @@ namespace OpenDMS.Storage.Security.Authorization
     {
         None = 0x0,
 
-        // Flags are given slack between bitflags to allow for changes.
+        // Slack between bitflags to allow for changes.
 
-        Create = 0x10,
-        Statistics = 0x100,
-        All = Create | Statistics
+        Statistics              = 0x000010,
+        CreateResource          = 0x000100,
+
+        GetGlobalPermissions    = 0x001000,
+        ModifyGlobalPermissions = 0x001001,
+
+        CreateGroup             = 0x010000,
+        ModifyGroup             = 0x010001,
+        DeleteGroup             = 0x010010,
+        ListGroups              = 0x010100,
+        GetGroup                = 0x011000,
+        AllGroups               = CreateGroup | ModifyGroup | DeleteGroup | ListGroups | GetGroup,
+
+        CreateUser              = 0x100000,
+        ModifyUser              = 0x100001,
+        DeleteUser              = 0x100010,
+        ListUsers               = 0x100100,
+        GetUser                 = 0x101000,
+        AllUsers                = CreateUser | ModifyUser | DeleteUser | ListUsers | GetUser,
+
+        All = CreateResource | Statistics | AllUsers | AllGroups | GetGlobalPermissions | ModifyGlobalPermissions
     }
 }

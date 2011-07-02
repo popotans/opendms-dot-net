@@ -1,22 +1,47 @@
-ï»¿using System;
+using System;
 using System.Net.Sockets;
 
 namespace OpenDMS.Networking.Http
 {
     public class PrependableNetworkStream : IDisposable
     {
+		#region Fields (4) 
+
+        private NetworkBuffer _bufferToPrepend = null;
+        private long _bufferToPrependPosition = 0;
+        private Socket _socket = null;
         // Before you think about using a memorystream, I have considered it.
         // The problem is that as you write to the stream, the earlier bytes remain
         // thereby, flooding memory for large streams.
         private NetworkStream _stream = null;
-        private NetworkBuffer _bufferToPrepend = null;
-        private long _bufferToPrependPosition = 0;
-        private Socket _socket = null;
+
+		#endregion Fields 
+
+		#region Constructors (2) 
+
+        public PrependableNetworkStream(Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket, byte[] bytesToPrepend)
+            : this(socket, fileAccess, ownsSocket)
+        {
+            _bufferToPrepend = new NetworkBuffer(bytesToPrepend);
+        }
+
+        public PrependableNetworkStream(Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket)
+        {
+            _stream = new NetworkStream(socket, fileAccess, ownsSocket);
+        }
+
+		#endregion Constructors 
+
+		#region Properties (10) 
 
         public bool CanRead { get { return _stream.CanRead; } }
+
         public bool CanSeek { get { return _stream.CanSeek; } }
+
         public bool CanTimeout { get { return _stream.CanTimeout; } }
+
         public bool CanWrite { get { return _stream.CanWrite; } }
+
         public bool DataAvailable { get { return _stream.DataAvailable; } }
 
         public long Length
@@ -51,21 +76,28 @@ namespace OpenDMS.Networking.Http
         }
 
         public int ReadTimeout { get { return _stream.ReadTimeout; } set { _stream.ReadTimeout = value; } }
+
         public Socket Socket { get { return _socket; } }
+
         public int WriteTimeout { get { return _stream.WriteTimeout; } set { _stream.WriteTimeout = value; } }
 
+		#endregion Properties 
 
-        public PrependableNetworkStream(Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket)
+		#region Methods (8) 
+
+		// Public Methods (7) 
+
+        public void Close()
         {
-            _stream = new NetworkStream(socket, fileAccess, ownsSocket);
+            _stream.Close();
         }
 
-        public PrependableNetworkStream(Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket, byte[] bytesToPrepend)
-            : this(socket, fileAccess, ownsSocket)
+        public void Dispose()
         {
-            _bufferToPrepend = new NetworkBuffer(bytesToPrepend);
+            _stream.Dispose();
+            _bufferToPrepend = null;
         }
-        
+
         public int Read(byte[] buffer, int offset, int count)
         {
             int bytesRead = 0;
@@ -134,17 +166,6 @@ namespace OpenDMS.Networking.Http
             _stream.BeginRead(e.Buffer, e.Offset, e.Count, new AsyncCallback(ReadAsync_Callback), e);
         }
 
-        private void ReadAsync_Callback(IAsyncResult result)
-        {
-            StreamAsyncEventArgs e = (StreamAsyncEventArgs)result.AsyncState;
-            int bytesRead = 0;
-
-            bytesRead = _stream.EndRead(result);
-            e.SetBuffer(e.Buffer, 0, bytesRead);
-
-            e.Complete(e);
-        }
-
         public void Write(byte[] buffer, int offset, int count)
         {
             // Writing just passes through to _stream since it is block based anyway
@@ -164,16 +185,19 @@ namespace OpenDMS.Networking.Http
             
             e.Complete(e);
         }
+		// Private Methods (1) 
 
-        public void Close()
+        private void ReadAsync_Callback(IAsyncResult result)
         {
-            _stream.Close();
+            StreamAsyncEventArgs e = (StreamAsyncEventArgs)result.AsyncState;
+            int bytesRead = 0;
+
+            bytesRead = _stream.EndRead(result);
+            e.SetBuffer(e.Buffer, 0, bytesRead);
+
+            e.Complete(e);
         }
 
-        public void Dispose()
-        {
-            _stream.Dispose();
-            _bufferToPrepend = null;
-        }
+		#endregion Methods 
     }
 }

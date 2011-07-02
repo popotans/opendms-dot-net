@@ -4,12 +4,18 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
     public class AuthenticateUser : Base
     {
-        private EngineBase _engine;
-        private Security.SessionManager _sessionMgr;
+		#region Fields (6) 
+
         private IDatabase _db = null;
-        private string _username = null;
-        private string _password = null;
+        private EngineBase _engine;
         private bool _ignoringAuthenticationComplete;
+        private string _password = null;
+        private Security.SessionManager _sessionMgr;
+        private string _username = null;
+
+		#endregion Fields 
+
+		#region Constructors (1) 
 
         public AuthenticateUser(EngineBase engine, Security.SessionManager sessionMgr, IDatabase db, string username, string password)
             : base(null)
@@ -20,6 +26,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             _username = username;
             _password = password;
         }
+
+		#endregion Constructors 
+
+		#region Methods (3) 
+
+		// Public Methods (1) 
 
         public override void Execute()
         {
@@ -38,6 +50,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
                 throw;
             }
         }
+		// Private Methods (2) 
 
         private void AuthenticateUser_OnAuthenticationComplete(Security.Session session, string message)
         {
@@ -74,5 +87,13 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
                 throw;
             }
         }
+
+        protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
+        {
+            // This will never be called for Authentication - everyone can authenticate
+            throw new NotImplementedException();
+        }
+
+		#endregion Methods 
     }
 }

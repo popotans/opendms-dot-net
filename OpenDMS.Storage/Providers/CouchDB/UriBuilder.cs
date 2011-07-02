@@ -63,5 +63,10 @@ namespace OpenDMS.Storage.Providers.CouchDB
         {
             return new Uri(db.Uri.ToString() + "_design/" + designDocumentName + "/_view/" + viewName);
         }
+
+        public static Uri Build(IDatabase db, IGlobalUsageRights globalUsageRights)
+        {
+            return new Uri(db.Uri.ToString() + globalUsageRights.Id);
+        }
     }
 }

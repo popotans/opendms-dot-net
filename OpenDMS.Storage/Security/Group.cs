@@ -26,5 +26,17 @@ namespace OpenDMS.Storage.Security
             GroupName = id;
             Users = users;
         }
+
+        public bool UserIsMember(string username)
+        {
+            if (username.StartsWith("user-"))
+                username = username.Substring(5);
+
+            for (int i = 0; i < Users.Count; i++)
+                if (Users[i] == username)
+                    return true;
+
+            return false;
+        }
     }
 }

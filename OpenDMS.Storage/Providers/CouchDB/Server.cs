@@ -68,9 +68,9 @@ namespace OpenDMS.Storage.Providers.CouchDB
         /// </summary>
         /// <param name="name">Name of the database</param>
         /// <returns></returns>
-        IDatabase IServer.GetDatabase(string name)
+        IDatabase IServer.GetDatabase(string name, Security.DatabaseSessionManager sessionManager)
         {
-            return new Database(this, name);
+            return new Database(this, name, sessionManager);
         }
     }
 }

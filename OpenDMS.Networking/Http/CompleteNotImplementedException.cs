@@ -1,17 +1,21 @@
-ï»¿using System;
+using System;
 
 namespace OpenDMS.Networking.Http
 {
     public class CompleteNotImplementedException : Exception
     {
-        public CompleteNotImplementedException(string message)
-            : base(message)
-        {
-        }
+		#region Constructors (2) 
 
         public CompleteNotImplementedException(string message, Exception innerException)
             : base(message, innerException)
         {
         }
+
+        public CompleteNotImplementedException(string message)
+            : base(message)
+        {
+        }
+
+		#endregion Constructors 
     }
 }

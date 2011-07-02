@@ -1,11 +1,13 @@
-ï»¿using System;
+using System;
 
 namespace OpenDMS.IO
 {
     public class NotInitializedException : Exception
     {
-        public NotInitializedException()
-            : base()
+		#region Constructors (3) 
+
+        public NotInitializedException(string message, Exception innerException)
+            : base(message, innerException)
         {
         }
 
@@ -14,9 +16,11 @@ namespace OpenDMS.IO
         {
         }
 
-        public NotInitializedException(string message, Exception innerException)
-            : base(message, innerException)
+        public NotInitializedException()
+            : base()
         {
         }
+
+		#endregion Constructors 
     }
 }

@@ -16,6 +16,7 @@ namespace OpenDMS.Storage.Providers
         public delegate void CompletionDelegate(EngineRequest request, ICommandReply reply);
         public delegate void TimeoutDelegate(EngineRequest request);
         public delegate void ErrorDelegate(EngineRequest request, string message, Exception exception);
+        public delegate void AuthorizationDelegate(EngineRequest request);
 
         protected Security.SessionManager _sessionMgr;
 
@@ -55,128 +56,122 @@ namespace OpenDMS.Storage.Providers
             if (OnAuthenticated != null) OnAuthenticated(isError, isAuthenticated, session, message, exception);
         }
 
-        public virtual void GetAllGroups(EngineRequest request, IDatabase db)
-        {
-            throw new NotImplementedException();
-        }
-        
-        public virtual void GetGroup(EngineRequest request, IDatabase db, string groupName)
+        public virtual void GetAllGroups(EngineRequest request)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void CreateNewResource(EngineRequest request, IDatabase db, Data.Metadata metadata, System.Collections.Generic.List<Security.UsageRight> usageRights)
+        public virtual void GetGroup(EngineRequest request, string groupName)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void CreateNewVersion(EngineRequest request, IDatabase db, Data.Version version)
+        public virtual void CreateGroup(EngineRequest request, Security.Group group)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void CreateGroup(EngineRequest request, IDatabase db, Security.Group group)
+        public virtual void ModifyGroup(EngineRequest request, Security.Group group)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void UpdateGroup(EngineRequest request, IDatabase db, Security.Group group)
+        public virtual void GetAllUsers(EngineRequest request)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void GetAllUsers(EngineRequest request, IDatabase db)
+        public virtual void GetUser(EngineRequest request, string username)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void GetUser(EngineRequest request, IDatabase db, string username)
+        public virtual void CreateUser(EngineRequest request, Security.User user)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void CreateUser(EngineRequest request, IDatabase db, Security.User user)
+        public virtual void ModifyUser(EngineRequest request, Security.User user)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void UpdateUser(EngineRequest request, IDatabase db, Security.User user)
+        public virtual void GetResource(EngineRequest request, Data.ResourceId resource)
         {
             throw new NotImplementedException();
         }
 
-
-        public void GetResource(EngineRequest request, IDatabase db, Data.ResourceId resource)
+        public virtual void GetResourceReadOnly(EngineRequest request, Data.ResourceId resource)
         {
             throw new NotImplementedException();
         }
 
-        public void GetResourceReadOnly(EngineRequest request, IDatabase db, Data.ResourceId resource)
+        public virtual void CreateNewResource(EngineRequest request, Data.Metadata metadata)
         {
             throw new NotImplementedException();
         }
 
-        public void CreateNewResource(EngineRequest request, IDatabase db, Data.Metadata metadata)
+        public virtual void CreateNewResource(EngineRequest request, Data.Metadata metadata, List<Security.UsageRight> usageRights)
         {
             throw new NotImplementedException();
         }
 
-        public void ModifyResource(EngineRequest request, IDatabase db, Data.Resource resource)
+        public virtual void ModifyResource(EngineRequest request, Data.Resource resource)
         {
             throw new NotImplementedException();
         }
 
-        public void RollbackResource(EngineRequest request, IDatabase db, Data.ResourceId resource, int rollbackDepth)
+        public virtual void RollbackResource(EngineRequest request, Data.ResourceId resource, int rollbackDepth)
         {
             throw new NotImplementedException();
         }
 
-        public void DeleteResource(EngineRequest request, IDatabase db, Data.ResourceId resource)
+        public virtual void DeleteResource(EngineRequest request, Data.ResourceId resource)
         {
             throw new NotImplementedException();
         }
 
-        public void GetVersion(EngineRequest request, IDatabase db, Data.VersionId version)
+        public virtual void GetVersion(EngineRequest request, Data.VersionId version)
         {
             throw new NotImplementedException();
         }
 
-        public void GetCurrentVersion(EngineRequest request, IDatabase db, Data.ResourceId resource)
+        public virtual void GetCurrentVersion(EngineRequest request, Data.ResourceId resource)
         {
             throw new NotImplementedException();
         }
 
-        public void UpdateVersion(EngineRequest request, IDatabase db, Data.Version version)
+        public virtual void CreateNewVersion(EngineRequest request, Data.Version version)
         {
             throw new NotImplementedException();
         }
 
-        public void ModifyVersion(EngineRequest request, IDatabase db, Data.Version version)
+        public virtual void ModifyVersion(EngineRequest request, Data.Version version)
         {
             throw new NotImplementedException();
         }
 
-        public void GetResourcePermissions(EngineRequest request, IDatabase db, Data.ResourceId resource)
+        public virtual void GetResourcePermissions(EngineRequest request, Data.ResourceId resource)
         {
             throw new NotImplementedException();
         }
 
-        public void GetGlobalPermissions(EngineRequest request, IDatabase db)
+        public virtual void GetGlobalPermissions(EngineRequest request)
         {
             throw new NotImplementedException();
         }
 
-        public void UpdateGlobalPermissions(EngineRequest request, IDatabase db, List<Security.UsageRight> usageRights)
+        public virtual void ModifyGlobalPermissions(EngineRequest request, List<Security.UsageRight> usageRights)
         {
             throw new NotImplementedException();
         }
 
-        public void GetResourceUsageRightsTemplate(EngineRequest request, IDatabase db)
+        public virtual void GetResourceUsageRightsTemplate(EngineRequest request)
         {
             throw new NotImplementedException();
         }
 
-        public void ModifyResourceUsageRightsTemplate(EngineRequest request, IDatabase db, List<Security.UsageRight> usageRights)
+        public virtual void ModifyResourceUsageRightsTemplate(EngineRequest request, List<Security.UsageRight> usageRights)
         {
             throw new NotImplementedException();
         }
