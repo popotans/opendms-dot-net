@@ -1,4 +1,4 @@
-ï»¿using log4net;
+using log4net;
 using log4net.Appender;
 using log4net.Layout;
 using log4net.Repository.Hierarchy;
@@ -7,13 +7,7 @@ namespace OpenDMS.Networking
 {
     public class Logger
     {
-        /// <summary>
-        /// Gets or sets the network logger.
-        /// </summary>
-        /// <value>
-        /// The network logger.
-        /// </value>
-        public static ILog Network { get; set; }
+		#region Constructors (1) 
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Logger"/> class.
@@ -27,11 +21,23 @@ namespace OpenDMS.Networking
             SetLevel(Network, "ALL");
         }
 
-        private void SetLevel(ILog log, string levelName)
-        {
-            log4net.Repository.Hierarchy.Logger logger = (log4net.Repository.Hierarchy.Logger)log.Logger;
-            logger.Level = logger.Hierarchy.LevelMap[levelName];
-        }
+		#endregion Constructors 
+
+		#region Properties (1) 
+
+        /// <summary>
+        /// Gets or sets the network logger.
+        /// </summary>
+        /// <value>
+        /// The network logger.
+        /// </value>
+        public static ILog Network { get; set; }
+
+		#endregion Properties 
+
+		#region Methods (3) 
+
+		// Private Methods (3) 
 
         private void AddAppender(ILog log, IAppender appender)
         {
@@ -62,5 +68,13 @@ namespace OpenDMS.Networking
 
             return rfa;
         }
+
+        private void SetLevel(ILog log, string levelName)
+        {
+            log4net.Repository.Hierarchy.Logger logger = (log4net.Repository.Hierarchy.Logger)log.Logger;
+            logger.Level = logger.Hierarchy.LevelMap[levelName];
+        }
+
+		#endregion Methods 
     }
 }

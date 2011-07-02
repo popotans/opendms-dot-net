@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using log4net;
 using log4net.Appender;
 using log4net.Layout;
@@ -8,13 +8,7 @@ namespace OpenDMS.IO
 {
     public class Logger
     {
-        /// <summary>
-        /// Gets or sets the file system logger.
-        /// </summary>
-        /// <value>
-        /// The file system logger.
-        /// </value>
-        public static ILog FileSystem { get; set; }
+		#region Constructors (1) 
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Logger"/> class.
@@ -28,11 +22,23 @@ namespace OpenDMS.IO
             SetLevel(FileSystem, "ALL");
         }
 
-        private void SetLevel(ILog log, string levelName)
-        {
-            log4net.Repository.Hierarchy.Logger logger = (log4net.Repository.Hierarchy.Logger)log.Logger;
-            logger.Level = logger.Hierarchy.LevelMap[levelName];
-        }
+		#endregion Constructors 
+
+		#region Properties (1) 
+
+        /// <summary>
+        /// Gets or sets the file system logger.
+        /// </summary>
+        /// <value>
+        /// The file system logger.
+        /// </value>
+        public static ILog FileSystem { get; set; }
+
+		#endregion Properties 
+
+		#region Methods (3) 
+
+		// Private Methods (3) 
 
         private void AddAppender(ILog log, IAppender appender)
         {
@@ -63,5 +69,13 @@ namespace OpenDMS.IO
 
             return rfa;
         }
+
+        private void SetLevel(ILog log, string levelName)
+        {
+            log4net.Repository.Hierarchy.Logger logger = (log4net.Repository.Hierarchy.Logger)log.Logger;
+            logger.Level = logger.Hierarchy.LevelMap[levelName];
+        }
+
+		#endregion Methods 
     }
 }

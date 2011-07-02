@@ -3,38 +3,33 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
     public class GetAllGroups : Base
     {
-        private IDatabase _db = null;
-
-        public GetAllGroups(EngineRequest request, IDatabase db)
+        public GetAllGroups(EngineRequest request)
             : base(request)
         {
-            _db = db;
         }
 
         public override void Execute()
         {
+            GetGlobalPermissions();
+        }
+        
+        protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
+        {
             Commands.GetView cmd;
 
+            if (!GetGlobalPermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.GlobalPermissionType.ListGroups))
+                return;
+            
             try
             {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.Preparing, false);
-            }
-            catch (System.Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
-                throw;
-            }
-
-            try
-            {
-                cmd = new Commands.GetView(UriBuilder.Build(_db, "groups", "GetAll"));
+                cmd = new Commands.GetView(UriBuilder.Build(request.Database, "groups", "GetAll"));
             }
             catch (System.Exception e)
             {
                 Logger.Storage.Error("An exception occurred while creating the GetView command.", e);
                 throw;
             }
-            
+
             // Run it straight back to the subscriber
             AttachSubscriberEvent(cmd, _onProgress);
             AttachSubscriberEvent(cmd, _onComplete);
@@ -43,7 +38,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 
             try
             {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.GettingGroups, true);
+                if (_onActionChanged != null) _onActionChanged(request, EngineActionType.GettingGroups, true);
             }
             catch (System.Exception e)
             {
@@ -53,7 +48,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 
             try
             {
-                cmd.Execute(_db.Server.Timeout, _db.Server.Timeout, _db.Server.BufferSize, _db.Server.BufferSize);
+                cmd.Execute(request.Database.Server.Timeout, request.Database.Server.Timeout, request.Database.Server.BufferSize, request.Database.Server.BufferSize);
             }
             catch (System.Exception e)
             {

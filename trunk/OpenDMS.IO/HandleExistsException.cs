@@ -1,11 +1,13 @@
-ï»¿using System;
+using System;
 
 namespace OpenDMS.IO
 {
     public class HandleExistsException : Exception
     {
-        public HandleExistsException()
-            : base()
+		#region Constructors (3) 
+
+        public HandleExistsException(string message, Exception innerException)
+            : base(message, innerException)
         {
         }
 
@@ -14,9 +16,11 @@ namespace OpenDMS.IO
         {
         }
 
-        public HandleExistsException(string message, Exception innerException)
-            : base(message, innerException)
+        public HandleExistsException()
+            : base()
         {
         }
+
+		#endregion Constructors 
     }
 }

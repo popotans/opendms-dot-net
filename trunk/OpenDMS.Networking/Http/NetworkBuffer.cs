@@ -1,27 +1,49 @@
-ï»¿using System;
+using System;
 
 namespace OpenDMS.Networking.Http
 {
     public class NetworkBuffer
     {
+		#region Fields (1) 
+
         private byte[] _buffer = null;
 
-        public int Length { get { return _buffer.Length; } }
-        public byte[] Buffer { get { return _buffer; } }
+		#endregion Fields 
 
-        public NetworkBuffer()
-        {
-        }
+		#region Constructors (2) 
 
         public NetworkBuffer(byte[] bytes)
         {
             _buffer = bytes;
         }
 
+        public NetworkBuffer()
+        {
+        }
+
+		#endregion Constructors 
+
+		#region Properties (3) 
+
+        public byte[] Buffer { get { return _buffer; } }
+
+        public int Length { get { return _buffer.Length; } }
+
         public byte this[int index]
         {
             get { return _buffer[index]; }
             set { _buffer[index] = value; }
+        }
+
+		#endregion Properties 
+
+		#region Methods (2) 
+
+		// Public Methods (2) 
+
+        public void CopyTo(byte[] buffer, int offset, int length)
+        {
+            System.Buffer.BlockCopy(_buffer, 0, buffer, offset, length);
         }
 
         public NetworkBuffer GetSubBuffer(int offset, int length, bool removeFromOriginal)
@@ -42,9 +64,6 @@ namespace OpenDMS.Networking.Http
             return new NetworkBuffer(newBuffer);
         }
 
-        public void CopyTo(byte[] buffer, int offset, int length)
-        {
-            System.Buffer.BlockCopy(_buffer, 0, buffer, offset, length);
-        }
+		#endregion Methods 
     }
 }

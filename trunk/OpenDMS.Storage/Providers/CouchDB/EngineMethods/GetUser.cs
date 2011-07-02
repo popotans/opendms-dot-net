@@ -3,36 +3,29 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
     public class GetUser : Base
     {
-        private IDatabase _db = null;
         private string _username = null;
 
-        public GetUser(EngineRequest request, IDatabase db, string username)
+        public GetUser(EngineRequest request, string username)
             : base(request)
         {
-            _db = db;
             _username = username;
         }
 
         public override void Execute()
         {
+            GetGlobalPermissions();
+        }
+
+        protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
+        {
             Commands.GetDocument cmd;
             Security.User user;
-
-            try
-            {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.Preparing, false);
-            }
-            catch (System.Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
-                throw;
-            }
 
             user = new Security.User(_username);
 
             try
             {
-                cmd = new Commands.GetDocument(UriBuilder.Build(_db, user));
+                cmd = new Commands.GetDocument(UriBuilder.Build(request.Database, user));
             }
             catch (System.Exception e)
             {
@@ -58,7 +51,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 
             try
             {
-                cmd.Execute(_db.Server.Timeout, _db.Server.Timeout, _db.Server.BufferSize, _db.Server.BufferSize);
+                cmd.Execute(request.Database.Server.Timeout, request.Database.Server.Timeout, request.Database.Server.BufferSize, request.Database.Server.BufferSize);
             }
             catch (System.Exception e)
             {

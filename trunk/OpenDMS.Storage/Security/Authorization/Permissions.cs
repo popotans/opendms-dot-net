@@ -11,5 +11,19 @@ namespace OpenDMS.Storage.Security.Authorization
             Global = global;
             Resource = resource;
         }
+
+        public bool HasFlag(GlobalPermissionType flags)
+        {
+            if (Global != null)
+                return Global.Permissions.HasFlag(flags);
+            return false;
+        }
+
+        public bool HasFlag(ResourcePermissionType flags)
+        {
+            if (Resource != null)
+                return Resource.Permissions.HasFlag(flags);
+            return false;
+        }
     }
 }

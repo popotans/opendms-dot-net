@@ -13,6 +13,7 @@ namespace OpenDMS.Storage.Providers
         RecoveringFromTimeout,
         Reverting,
         SessionLookup,
+        CheckingPermissions,
         // No need to send a complete action as completion is signaled by Error, Timeout or Completion
         // Complete
     }

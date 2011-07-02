@@ -1,12 +1,25 @@
-ï»¿using System;
+using System;
 
 namespace OpenDMS.Networking.Http
 {
     public class ConnectionManager
     {
+		#region Delegates and Events (3) 
+
+		// Delegates (1) 
+
         public delegate void ConnectedDelegate(Connection sender);
+		// Events (2) 
+
         public event ConnectedDelegate OnConnected;
+
         public event Connection.ErrorDelegate OnError;
+
+		#endregion Delegates and Events 
+
+		#region Methods (3) 
+
+		// Public Methods (1) 
 
         public Connection GetConnection(Uri uri, int sendTimeout, int receiveTimeout,
             int sendBufferSize, int receiveBufferSize)
@@ -19,6 +32,13 @@ namespace OpenDMS.Networking.Http
             conn.ConnectAsync();
             return conn;
         }
+		// Private Methods (2) 
+
+        private void Connection_OnConnect(Connection sender)
+        {
+            sender.OnConnect -= Connection_OnConnect;
+            if (OnConnected != null) OnConnected(sender);
+        }
 
         private void Connection_OnError(Connection sender, string message, Exception exception)
         {
@@ -27,10 +47,6 @@ namespace OpenDMS.Networking.Http
             if (OnError != null) OnError(sender, message, exception);
         }
 
-        private void Connection_OnConnect(Connection sender)
-        {
-            sender.OnConnect -= Connection_OnConnect;
-            if (OnConnected != null) OnConnected(sender);
-        }
+		#endregion Methods 
     }
 }

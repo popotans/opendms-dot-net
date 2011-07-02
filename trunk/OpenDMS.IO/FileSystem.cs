@@ -1,24 +1,77 @@
-ï»¿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace OpenDMS.IO
 {
     public sealed class FileSystem : Singleton<FileSystem>
     {
-        private List<FileStream> _handles = null; // Cannot use Dictionary because we can have multiple access to a single file
+		#region Fields (1) 
 
-        public Directory Root { get; private set; }
+        private List<FileStream> _handles = null;
+
+		#endregion Fields 
+
+		#region Constructors (1) 
+
+        public FileSystem()
+        {
+            _handles = new List<FileStream>();
+        }
+
+		#endregion Constructors 
+
+		#region Properties (2) 
+
         public int BufferSize { get; private set; }
+
+ // Cannot use Dictionary because we can have multiple access to a single file
+        public Directory Root { get; private set; }
+
+		#endregion Properties 
+
+		#region Methods (4) 
+
+		// Public Methods (4) 
+
+        public void CloseHandle(FileStream fs)
+        {
+            if (!_isInitialized)
+                throw new NotInitializedException("Must call Initialize.");
+
+            lock (_handles)
+            {
+                if (!_handles.Contains(fs))
+                    throw new HandleExistsException("The handle does not exist.");
+                
+                // We force close and dispose, we will not tolerate unmanaged IO
+                fs.Close();
+                fs.Dispose();
+
+                // Drop it from handles - btw we can say remove knowing it will hit the correct resource
+                // because it is located using the HashCode, which will have customized to always test itself for
+                // uniqueness within handles.
+                _handles.Remove(fs);
+
+                if (Logger.FileSystem != null)
+                    Logger.FileSystem.Debug("Handle released for " + fs.GetLogString());
+            }
+        }
+
+        public bool HandleExists(FileStream fs)
+        {
+            if (!_isInitialized)
+                throw new NotInitializedException("Must call Initialize.");
+
+            lock (_handles)
+            {
+                return _handles.Contains(fs);
+            }
+        }
 
         public void Initialize(Directory root, int bufferSize)
         {
             Root = root;
             BufferSize = bufferSize;
             _isInitialized = true;
-        }
-
-        public FileSystem()
-        {
-            _handles = new List<FileStream>();
         }
 
         public void RegisterHandle(FileStream fs)
@@ -55,39 +108,6 @@ namespace OpenDMS.IO
             }
         }
 
-        public void CloseHandle(FileStream fs)
-        {
-            if (!_isInitialized)
-                throw new NotInitializedException("Must call Initialize.");
-
-            lock (_handles)
-            {
-                if (!_handles.Contains(fs))
-                    throw new HandleExistsException("The handle does not exist.");
-                
-                // We force close and dispose, we will not tolerate unmanaged IO
-                fs.Close();
-                fs.Dispose();
-
-                // Drop it from handles - btw we can say remove knowing it will hit the correct resource
-                // because it is located using the HashCode, which will have customized to always test itself for
-                // uniqueness within handles.
-                _handles.Remove(fs);
-
-                if (Logger.FileSystem != null)
-                    Logger.FileSystem.Debug("Handle released for " + fs.GetLogString());
-            }
-        }
-
-        public bool HandleExists(FileStream fs)
-        {
-            if (!_isInitialized)
-                throw new NotInitializedException("Must call Initialize.");
-
-            lock (_handles)
-            {
-                return _handles.Contains(fs);
-            }
-        }
+		#endregion Methods 
     }
 }

@@ -41,10 +41,6 @@ Storage.Security.Authorization.PermissionType - enumeration of available rights
 
 Storage.Security.Authorization.Request - represents a user's request for authorization
 
-Storage.Security.Authorization.Retriever - Fetches rights information from the DB
-1) Supports fetching of global rights
-2) Supports fetching of resource rights
-
 Storage.Security.Authorization.Saver - Saves rights information to the DB
 1) Supports fetching of global rights
 2) Supports fetching of resource rights

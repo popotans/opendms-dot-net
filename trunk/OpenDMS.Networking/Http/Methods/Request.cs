@@ -1,20 +1,36 @@
-ï»¿using System;
+using System;
 using System.Net;
 
 namespace OpenDMS.Networking.Http.Methods
 {
     public abstract class Request : MessageBase
     {
-        private Uri _uri = null;
-        //private string _method = null;
+		#region Fields (1) 
 
-        public abstract string Method { get; }
-        
-        public virtual string RequestLine
+        private Uri _uri = null;
+
+		#endregion Fields 
+
+		#region Constructors (1) 
+
+        public Request(Uri uri)
+        {
+            _uri = uri;
+        }
+
+		#endregion Constructors 
+
+		#region Properties (5) 
+
+        public virtual string ContentLength
         {
             get
             {
-                return Method + " " + Uri.PathAndQuery + " HTTP/1.1";
+                return Headers[HttpRequestHeader.ContentLength];
+            }
+            set
+            {
+                Headers[HttpRequestHeader.ContentLength] = value;
             }
         }
 
@@ -30,18 +46,16 @@ namespace OpenDMS.Networking.Http.Methods
             }
         }
 
-        public virtual string ContentLength
+        //private string _method = null;
+        public abstract string Method { get; }
+
+        public virtual string RequestLine
         {
             get
             {
-                return Headers[HttpRequestHeader.ContentLength];
-            }
-            set
-            {
-                Headers[HttpRequestHeader.ContentLength] = value;
+                return Method + " " + Uri.PathAndQuery + " HTTP/1.1";
             }
         }
-
 
         public Uri Uri
         {
@@ -49,9 +63,6 @@ namespace OpenDMS.Networking.Http.Methods
             set { _uri = value; }
         }
 
-        public Request(Uri uri)
-        {
-            _uri = uri;
-        }
+		#endregion Properties 
     }
 }

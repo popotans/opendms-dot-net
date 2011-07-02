@@ -1,101 +1,26 @@
-ï»¿using System.Diagnostics;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace OpenDMS.IO
 {
     public class FileStream : System.IO.FileStream
     {
-        private int _hashCode = 0;
-        private File _file;
-        private System.IO.FileMode _mode;
+		#region Fields (10) 
+
         private System.IO.FileAccess _access;
-        private System.IO.FileShare _share;
-        private System.IO.FileOptions _options;
         private int _bufferSize;
-        private object _creator;
         private System.DateTime _createdTimestamp;
+        private object _creator;
+        private File _file;
+        private int _hashCode = 0;
         private StackFrame _lastAccess;
+        private System.IO.FileMode _mode;
+        private System.IO.FileOptions _options;
+        private System.IO.FileShare _share;
 
-        public File File
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return _file;
-            }
-        }
+		#endregion Fields 
 
-        public System.IO.FileMode Mode 
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return _mode;
-            }
-        }
-
-        public System.IO.FileAccess Access 
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return _access;
-            }
-        }
-
-        public System.IO.FileShare Share 
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return _share;
-            }
-        }
-
-        public System.IO.FileOptions Options 
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return _options;
-            }
-        }
-
-        public int BufferSize 
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return _bufferSize;
-            }
-        }
-
-        public object Creator 
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return _creator;
-            }
-        }
-
-        public System.DateTime CreatedTimestamp 
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return _createdTimestamp;
-            }
-        }
-
-        public StackFrame LastAccess 
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return _lastAccess;
-            }
-        }
+		#region Constructors (1) 
 
         public FileStream(File file, System.IO.FileMode mode, System.IO.FileAccess access, System.IO.FileShare share, System.IO.FileOptions options, int bufferSize, object creator)
             : base(file.ToString(), mode, access, share, bufferSize, options)
@@ -113,156 +38,25 @@ namespace OpenDMS.IO
             FileSystem.Instance.RegisterHandle(this);
         }
 
-        public override int Read(byte[] array, int offset, int count)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            return base.Read(array, offset, count);
-        }
+		#endregion Constructors 
 
-        public override System.IAsyncResult BeginRead(byte[] array, int offset, int numBytes, System.AsyncCallback userCallback, object stateObject)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            return base.BeginRead(array, offset, numBytes, userCallback, stateObject);
-        }
+		#region Properties (17) 
 
-        public override System.IAsyncResult BeginWrite(byte[] array, int offset, int numBytes, System.AsyncCallback userCallback, object stateObject)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            return base.BeginWrite(array, offset, numBytes, userCallback, stateObject);
-        }
-
-        public override void Close()
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            base.Close();
-        }
-
-        public override int EndRead(System.IAsyncResult asyncResult)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            return base.EndRead(asyncResult);
-        }
-
-        public override void EndWrite(System.IAsyncResult asyncResult)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            base.EndWrite(asyncResult);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            FileSystem.Instance.CloseHandle(this);
-            base.Dispose(disposing);
-        }
-
-        public override void Flush()
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            base.Flush();
-        }
-
-        public override void Flush(bool flushToDisk)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            base.Flush(flushToDisk);
-        }
-
-        public override void Lock(long position, long length)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            base.Lock(position, length);
-        }
-
-        public override long Length
+        public System.IO.FileAccess Access 
         {
             get
             {
                 _lastAccess = new StackTrace(true).GetFrame(1);
-                return base.Length;
+                return _access;
             }
         }
 
-        public override long Position
+        public int BufferSize 
         {
             get
             {
                 _lastAccess = new StackTrace(true).GetFrame(1);
-                return base.Position;
-            }
-            set
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                base.Position = value;
-            }
-        }
-
-        public override int ReadByte()
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            return base.ReadByte();
-        }
-
-        public override int ReadTimeout
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return base.ReadTimeout;
-            }
-            set
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                base.ReadTimeout = value;
-            }
-        }
-
-        public override long Seek(long offset, System.IO.SeekOrigin origin)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            return base.Seek(offset, origin);
-        }
-
-        public override void SetLength(long value)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            base.SetLength(value);
-        }
-
-        public override string ToString()
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            return base.ToString();
-        }
-
-        public override void Unlock(long position, long length)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            base.Unlock(position, length);
-        }
-
-        public override void Write(byte[] array, int offset, int count)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            base.Write(array, offset, count);
-        }
-
-        public override void WriteByte(byte value)
-        {
-            _lastAccess = new StackTrace(true).GetFrame(1);
-            base.WriteByte(value);
-        }
-
-        public override int WriteTimeout
-        {
-            get
-            {
-                _lastAccess = new StackTrace(true).GetFrame(1);
-                return base.WriteTimeout;
-            }
-            set
-            {
-                base.WriteTimeout = value;
+                return _bufferSize;
             }
         }
 
@@ -302,6 +96,179 @@ namespace OpenDMS.IO
             }
         }
 
+        public System.DateTime CreatedTimestamp 
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return _createdTimestamp;
+            }
+        }
+
+        public object Creator 
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return _creator;
+            }
+        }
+
+        public File File
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return _file;
+            }
+        }
+
+        public StackFrame LastAccess 
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return _lastAccess;
+            }
+        }
+
+        public override long Length
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return base.Length;
+            }
+        }
+
+        public System.IO.FileMode Mode 
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return _mode;
+            }
+        }
+
+        public System.IO.FileOptions Options 
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return _options;
+            }
+        }
+
+        public override long Position
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return base.Position;
+            }
+            set
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                base.Position = value;
+            }
+        }
+
+        public override int ReadTimeout
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return base.ReadTimeout;
+            }
+            set
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                base.ReadTimeout = value;
+            }
+        }
+
+        public System.IO.FileShare Share 
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return _share;
+            }
+        }
+
+        public override int WriteTimeout
+        {
+            get
+            {
+                _lastAccess = new StackTrace(true).GetFrame(1);
+                return base.WriteTimeout;
+            }
+            set
+            {
+                base.WriteTimeout = value;
+            }
+        }
+
+		#endregion Properties 
+
+		#region Methods (20) 
+
+		// Public Methods (19) 
+
+        public override System.IAsyncResult BeginRead(byte[] array, int offset, int numBytes, System.AsyncCallback userCallback, object stateObject)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            return base.BeginRead(array, offset, numBytes, userCallback, stateObject);
+        }
+
+        public override System.IAsyncResult BeginWrite(byte[] array, int offset, int numBytes, System.AsyncCallback userCallback, object stateObject)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            return base.BeginWrite(array, offset, numBytes, userCallback, stateObject);
+        }
+
+        public override void Close()
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            base.Close();
+        }
+
+        public void Copy(FileStream stream)
+        {
+            byte[] buffer = new byte[_bufferSize];
+            int bytesRead;
+
+            if (base.CanSeek)
+                base.Position = 0;
+
+            while ((bytesRead = base.Read(buffer, 0, buffer.Length)) > 0)
+                stream.Write(buffer, 0, bytesRead);
+        }
+
+        public override int EndRead(System.IAsyncResult asyncResult)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            return base.EndRead(asyncResult);
+        }
+
+        public override void EndWrite(System.IAsyncResult asyncResult)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            base.EndWrite(asyncResult);
+        }
+
+        public override void Flush()
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            base.Flush();
+        }
+
+        public override void Flush(bool flushToDisk)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            base.Flush(flushToDisk);
+        }
+
         public override int GetHashCode()
         {
             if (_hashCode != 0)
@@ -322,18 +289,6 @@ namespace OpenDMS.IO
             return _hashCode;
         }
 
-        public void Copy(FileStream stream)
-        {
-            byte[] buffer = new byte[_bufferSize];
-            int bytesRead;
-
-            if (base.CanSeek)
-                base.Position = 0;
-
-            while ((bytesRead = base.Read(buffer, 0, buffer.Length)) > 0)
-                stream.Write(buffer, 0, bytesRead);
-        }
-
         public string GetLogString()
         {
             return "FullPath=" + File.ToString() + "\r\n" +
@@ -346,5 +301,69 @@ namespace OpenDMS.IO
                     "Options=" + Options.ToString() + "\r\n" +
                     "BufferSize=" + BufferSize.ToString();
         }
+
+        public override void Lock(long position, long length)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            base.Lock(position, length);
+        }
+
+        public override int Read(byte[] array, int offset, int count)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            return base.Read(array, offset, count);
+        }
+
+        public override int ReadByte()
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            return base.ReadByte();
+        }
+
+        public override long Seek(long offset, System.IO.SeekOrigin origin)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            return base.Seek(offset, origin);
+        }
+
+        public override void SetLength(long value)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            base.SetLength(value);
+        }
+
+        public override string ToString()
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            return base.ToString();
+        }
+
+        public override void Unlock(long position, long length)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            base.Unlock(position, length);
+        }
+
+        public override void Write(byte[] array, int offset, int count)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            base.Write(array, offset, count);
+        }
+
+        public override void WriteByte(byte value)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            base.WriteByte(value);
+        }
+		// Protected Methods (1) 
+
+        protected override void Dispose(bool disposing)
+        {
+            _lastAccess = new StackTrace(true).GetFrame(1);
+            FileSystem.Instance.CloseHandle(this);
+            base.Dispose(disposing);
+        }
+
+		#endregion Methods 
     }
 }

@@ -105,8 +105,12 @@
     <Compile Include="Providers\CouchDB\EngineMethods\Base.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroups.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\GetGlobalPermissions.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetGroup.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetUser.cs" />
+    <Compile Include="Providers\CouchDB\GlobalUsageRights.cs" />
+    <Compile Include="Providers\CouchDB\Transitions\GlobalUsageRights.cs" />
+    <Compile Include="Providers\IGlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Json\JsonParseException.cs" />
     <Compile Include="Providers\CouchDB\Json\ValueParser.cs" />
     <Compile Include="Providers\CouchDB\Model\Attachment.cs" />
@@ -129,11 +133,11 @@
     <Compile Include="Security\Authorization\GlobalPermission.cs" />
     <Compile Include="Security\Authorization\GlobalPermissionType.cs" />
     <Compile Include="Security\Authorization\GlobalRequest.cs" />
+    <Compile Include="Security\Authorization\Manager.cs" />
     <Compile Include="Security\Authorization\Permissions.cs" />
     <Compile Include="Security\Authorization\Request.cs" />
     <Compile Include="Security\Authorization\ResourcePermission.cs" />
     <Compile Include="Security\Authorization\ResourceRequest.cs" />
-    <Compile Include="Security\Authorization\Retriever.cs" />
     <Compile Include="Security\DatabaseSessionManager.cs" />
     <Compile Include="Security\Authorization\ResourcePermissionType.cs" />
     <Compile Include="Security\RequestingPartyType.cs" />

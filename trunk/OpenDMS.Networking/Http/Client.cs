@@ -1,23 +1,49 @@
-ï»¿using System;
+using System;
 
 namespace OpenDMS.Networking.Http
 {
     public class Client
     {
-        public delegate void ProgressDelegate(Client sender, Connection connection, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
-        public event ProgressDelegate OnProgress;
-        public delegate void TimeoutDelegate(Client sender, Connection connection);
-        public event TimeoutDelegate OnTimeout;
-        public delegate void CompletionDelegate(Client sender, Connection connection, Methods.Response response);
-        public event CompletionDelegate OnComplete;
-        public delegate void ErrorDelegate(Client sender, string message, Exception exception);
-        public event ErrorDelegate OnError;
-        public delegate void CloseDelegate(Client sender, Connection connection);
-        public event CloseDelegate OnClose;
+		#region Fields (3) 
 
+        private Connection _connection;
         private Methods.Request _request;
         private System.IO.Stream _stream;
-        private Connection _connection;
+
+		#endregion Fields 
+
+		#region Delegates and Events (10) 
+
+		// Delegates (5) 
+
+        public delegate void CloseDelegate(Client sender, Connection connection);
+        public delegate void CompletionDelegate(Client sender, Connection connection, Methods.Response response);
+        public delegate void ErrorDelegate(Client sender, string message, Exception exception);
+        public delegate void ProgressDelegate(Client sender, Connection connection, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
+        public delegate void TimeoutDelegate(Client sender, Connection connection);
+		// Events (5) 
+
+        public event CloseDelegate OnClose;
+
+        public event CompletionDelegate OnComplete;
+
+        public event ErrorDelegate OnError;
+
+        public event ProgressDelegate OnProgress;
+
+        public event TimeoutDelegate OnTimeout;
+
+		#endregion Delegates and Events 
+
+		#region Methods (10) 
+
+		// Public Methods (3) 
+
+        public void Close()
+        {
+            if (_connection != null && _connection.IsConnected)
+                _connection.CloseAsync();
+        }
 
         public void Execute(Methods.Request request, int sendTimeout, int receiveTimeout,
             int sendBufferSize, int receiveBufferSize)
@@ -40,18 +66,39 @@ namespace OpenDMS.Networking.Http
             _connection = connMgr.GetConnection(request.Uri, sendTimeout, receiveTimeout,
                 sendBufferSize, receiveBufferSize);
         }
+		// Private Methods (7) 
 
-        public void Close()
+        private void Connection_OnComplete(Connection sender, Methods.Response response)
         {
-            if (_connection != null && _connection.IsConnected)
-                _connection.CloseAsync();
+            Logger.Network.Info("Http.Client received a completion event from Http.Network.HttpConnection.");
+            if (OnComplete != null) OnComplete(this, sender, response);
+            else throw new CompleteNotImplementedException("No subscription to OnComplete.");
         }
 
-        private void ConnectionManager_OnError(Connection sender, string message, Exception exception)
+        private void Connection_OnDisconnect(Connection sender)
         {
-            Logger.Network.Error("Http.Client received an error from Http.Network.HttpConnectionFactory. Message: " + message, exception);
+            Logger.Network.Debug("Http.Client received a close event from Http.Network.HttpConnection.");
+            if (OnClose != null) OnClose(this, sender);
+        }
+
+        private void Connection_OnError(Connection sender, string message, Exception exception)
+        {
+            Logger.Network.Error("Http.Client received an error from Http.Network.HttpConnection. Message: " + message, exception);
             if (OnError != null) OnError(this, message, exception);
             else throw new ErrorNotImplementedException("No subscription to OnError.");
+        }
+
+        private void Connection_OnProgress(Connection sender, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+        {
+            // Not logged, way to verbose
+            if (OnProgress != null) OnProgress(this, sender, direction, packetSize, sendPercentComplete, receivePercentComplete);
+        }
+
+        private void Connection_OnTimeout(Connection sender)
+        {
+            Logger.Network.Error("Http.Client received an timeout from Http.Network.HttpConnection.");
+            if (OnTimeout != null) OnTimeout(this, sender);
+            else throw new ErrorNotImplementedException("No subscription to OnTimeout.");
         }
 
         private void ConnectionManager_OnConnected(Connection sender)
@@ -80,37 +127,13 @@ namespace OpenDMS.Networking.Http
             }
         }
 
-        private void Connection_OnError(Connection sender, string message, Exception exception)
+        private void ConnectionManager_OnError(Connection sender, string message, Exception exception)
         {
-            Logger.Network.Error("Http.Client received an error from Http.Network.HttpConnection. Message: " + message, exception);
+            Logger.Network.Error("Http.Client received an error from Http.Network.HttpConnectionFactory. Message: " + message, exception);
             if (OnError != null) OnError(this, message, exception);
             else throw new ErrorNotImplementedException("No subscription to OnError.");
         }
 
-        private void Connection_OnDisconnect(Connection sender)
-        {
-            Logger.Network.Debug("Http.Client received a close event from Http.Network.HttpConnection.");
-            if (OnClose != null) OnClose(this, sender);
-        }
-
-        private void Connection_OnTimeout(Connection sender)
-        {
-            Logger.Network.Error("Http.Client received an timeout from Http.Network.HttpConnection.");
-            if (OnTimeout != null) OnTimeout(this, sender);
-            else throw new ErrorNotImplementedException("No subscription to OnTimeout.");
-        }
-
-        private void Connection_OnComplete(Connection sender, Methods.Response response)
-        {
-            Logger.Network.Info("Http.Client received a completion event from Http.Network.HttpConnection.");
-            if (OnComplete != null) OnComplete(this, sender, response);
-            else throw new CompleteNotImplementedException("No subscription to OnComplete.");
-        }
-
-        private void Connection_OnProgress(Connection sender, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
-        {
-            // Not logged, way to verbose
-            if (OnProgress != null) OnProgress(this, sender, direction, packetSize, sendPercentComplete, receivePercentComplete);
-        }
+		#endregion Methods 
     }
 }

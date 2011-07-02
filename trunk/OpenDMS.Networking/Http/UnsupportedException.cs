@@ -1,11 +1,13 @@
-ï»¿using System;
+using System;
 
 namespace OpenDMS.Networking.Http
 {
     public class UnsupportedException : Exception
     {
-        public UnsupportedException()
-            : base()
+		#region Constructors (3) 
+
+        public UnsupportedException(string message, Exception innerException)
+            : base(message, innerException)
         {
         }
 
@@ -14,9 +16,11 @@ namespace OpenDMS.Networking.Http
         {
         }
 
-        public UnsupportedException(string message, Exception innerException)
-            : base(message, innerException)
+        public UnsupportedException()
+            : base()
         {
         }
+
+		#endregion Constructors 
     }
 }

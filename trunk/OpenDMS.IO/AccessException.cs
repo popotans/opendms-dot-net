@@ -1,11 +1,13 @@
-ï»¿using System;
+using System;
 
 namespace OpenDMS.IO
 {
     public class AccessException : Exception
     {
-        public AccessException()
-            : base()
+		#region Constructors (3) 
+
+        public AccessException(string message, Exception innerException)
+            : base(message, innerException)
         {
         }
 
@@ -14,9 +16,11 @@ namespace OpenDMS.IO
         {
         }
 
-        public AccessException(string message, Exception innerException)
-            : base(message, innerException)
+        public AccessException()
+            : base()
         {
         }
+
+		#endregion Constructors 
     }
 }

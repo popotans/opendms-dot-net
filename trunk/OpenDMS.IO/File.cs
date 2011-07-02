@@ -1,12 +1,9 @@
-ï»¿
+
 namespace OpenDMS.IO
 {
     public class File : Location
     {
-        public File(string path)
-            : base(System.IO.Path.GetFullPath(path))
-        {
-        }
+		#region Constructors (2) 
 
         public File(Directory directory, string filename)
             : base(directory.ToString())
@@ -19,25 +16,16 @@ namespace OpenDMS.IO
                 _path += System.IO.Path.DirectorySeparatorChar.ToString() + filename;
         }
 
-        public FileStream GetStream(System.IO.FileMode mode, System.IO.FileAccess access, System.IO.FileShare share, System.IO.FileOptions options, int bufferSize, object creator)
+        public File(string path)
+            : base(System.IO.Path.GetFullPath(path))
         {
-            return new FileStream(this, mode, access, share, options, bufferSize, creator);
         }
 
-        public void Copy(File file)
-        {
-            System.IO.File.Copy(_path, file.ToString());
-        }
+		#endregion Constructors 
 
-        public override void Delete()
-        {
-            System.IO.File.Delete(_path);
-        }
+		#region Methods (6) 
 
-        public override bool Exists()
-        {
-            return System.IO.File.Exists(_path);
-        }
+		// Public Methods (6) 
 
         public string ComputeMd5()
         {
@@ -62,6 +50,26 @@ namespace OpenDMS.IO
             return output;
         }
 
+        public void Copy(File file)
+        {
+            System.IO.File.Copy(_path, file.ToString());
+        }
+
+        public override void Delete()
+        {
+            System.IO.File.Delete(_path);
+        }
+
+        public override bool Exists()
+        {
+            return System.IO.File.Exists(_path);
+        }
+
+        public FileStream GetStream(System.IO.FileMode mode, System.IO.FileAccess access, System.IO.FileShare share, System.IO.FileOptions options, int bufferSize, object creator)
+        {
+            return new FileStream(this, mode, access, share, options, bufferSize, creator);
+        }
+
         public bool VerifyMd5(string md5ToCompare)
         {
             System.StringComparer comparer = System.StringComparer.OrdinalIgnoreCase;
@@ -71,5 +79,7 @@ namespace OpenDMS.IO
 
             return true;
         }
+
+		#endregion Methods 
     }
 }

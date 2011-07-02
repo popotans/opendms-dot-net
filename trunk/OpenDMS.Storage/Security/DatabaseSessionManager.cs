@@ -35,12 +35,14 @@ namespace OpenDMS.Storage.Security
             request.OnComplete += new Providers.EngineBase.CompletionDelegate(LoadGroups_OnComplete);
             request.OnError += new Providers.EngineBase.ErrorDelegate(LoadGroups_OnError);
             request.OnTimeout += new Providers.EngineBase.TimeoutDelegate(LoadGroups_OnTimeout);
+            request.Database = _db;
+            request.Engine = _engine;
             request.RequestingPartyType = RequestingPartyType.System;
 
             _ignoringLoadGroupComplete = false;
 
             Logger.Storage.Debug("Asking the engine to load all groups for the database named " + _db.Name + ".");
-            _engine.GetAllGroups(request, _db);
+            _engine.GetAllGroups(request);
         }
 
         private void LoadGroups_OnComplete(Providers.EngineRequest request, Providers.ICommandReply reply)
@@ -107,7 +109,7 @@ namespace OpenDMS.Storage.Security
             request.UserToken = password;
 
             Logger.Storage.Debug("Asking the engine to get the information for a the specific user '" + username + "'.");
-            _engine.GetUser(request, _db, username);
+            _engine.GetUser(request, username);
         }
 
         private void AuthenticateUser_OnComplete(Providers.EngineRequest request, Providers.ICommandReply reply)
@@ -158,6 +160,20 @@ namespace OpenDMS.Storage.Security
                 return null;
 
             return _sessions[authToken];
+        }
+
+        public List<Group> GroupMembershipOfUser(string username)
+        {
+            List<Group> groups = new List<Group>();
+
+            if (username.StartsWith("user-"))
+                username = username.Substring(5);
+
+            for (int i = 0; i < _groups.Count; i++)
+                if (_groups[i].UserIsMember(username))
+                    groups.Add(_groups[i]);
+
+            return groups;
         }
     }
 }

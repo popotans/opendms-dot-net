@@ -12,6 +12,6 @@ namespace OpenDMS.Storage.Providers
 
         Uri Uri { get; }
 
-        IDatabase GetDatabase(string name);
+        IDatabase GetDatabase(string name, Security.DatabaseSessionManager sessionManager);
     }
 }

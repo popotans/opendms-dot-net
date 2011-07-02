@@ -1,84 +1,58 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
     public class CreateUser : Base
     {
-        private IDatabase _db = null;
         private Security.User _user = null;
 
-        public CreateUser(EngineRequest request, Security.SessionManager sessionManager, IDatabase db, Security.User user)
-            : base(request, sessionManager)
+        public CreateUser(EngineRequest request, Security.User user)
+            : base(request)
         {
         }
 
         public override void Execute()
+        {
+            GetGlobalPermissions();
+        }
+
+        protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
         {
             Transactions.Transaction t;
             Transactions.Stage stage;
             Transitions.User txUser;
             Model.Document doc;
             Transactions.Actions.CreateUser action;
+            string creatingUsername;
 
-            try
-            {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.SessionLookup, false);
-            }
-            catch (System.Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
-                throw;
-            }
+            if (!GetGlobalPermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.GlobalPermissionType.CreateUser))
+                return;
 
-            // If the requesting party is not the system, we need to get a session
-            // System is immune to session checking.
-            if (_request.RequestingPartyType != Security.RequestingPartyType.System)
-            {
-                Security.Session session = _sessionManager.LookupSession(_db, _request.AuthToken);
-                if (session == null)
-                {
-                    Logger.Security.Error("Request to create user failed as the specified authentication token could not be paired with a session.");
-                    try
-                    {
-                        _onError(_request, "No session match.", null);
-                        return;
-                    }
-                    catch (System.Exception e)
-                    {
-                        Logger.Storage.Error("An exception occurred while calling the OnError event.", e);
-                        throw;
-                    }
-                }
-            }
+            if(request.RequestingPartyType == Security.RequestingPartyType.System)
+                creatingUsername = "System";
+            else
+                creatingUsername = request.Session.User.Username;
 
-            try
-            {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.Preparing, false);
-            }
-            catch (System.Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
-                throw;
-            }
-
-            t = Transactions.Manager.Instance.CreateTransaction("System", _user.Id);
-            stage = t.Begin("System", new System.TimeSpan(0, 5, 0));
+            t = Transactions.Manager.Instance.CreateTransaction(creatingUsername, _user.Id);
+            stage = t.Begin(creatingUsername, new System.TimeSpan(0, 5, 0));
             txUser = new Transitions.User();
             doc = txUser.Transition(_user);
-            action = new Transactions.Actions.CreateUser(_db, doc);
+            action = new Transactions.Actions.CreateUser(request.Database, doc);
 
-            stage.OnCommitFailure += new Transactions.Stage.CommitFailureDelegate(Commit_OnCommitFailure);
-            stage.OnCommitProgress += new Transactions.Stage.CommitProgressDelegate(Commit_OnCommitProgress);
-            stage.OnCommitSuccess += new Transactions.Stage.CommitSuccessDelegate(Commit_OnCommitSuccess);
-            stage.Execute(new Transactions.Actions.CreateUser(_db, doc));
+            // Executes and saves locally
+            stage.Execute(new Transactions.Actions.CreateUser(request.Database, doc));
 
-            stage.Commit(action);
+            t.OnCommitFailure += new Transactions.Transaction.CommitFailureDelegate(Commit_OnCommitFailure);
+            t.OnCommitProgress += new Transactions.Transaction.CommitProgressDelegate(Commit_OnCommitProgress);
+            t.OnCommitSuccess += new Transactions.Transaction.CommitSuccessDelegate(Commit_OnCommitSuccess);
+
+            // Sends to CouchDB
+            t.Commit(stage, creatingUsername, action);
         }
 
-        private void Commit_OnCommitSuccess(Transactions.Stage sender, Transactions.Actions.Base action, ICommandReply reply)
+        private void Commit_OnCommitSuccess(Transactions.Transaction sender, Transactions.Stage stage, Transactions.Actions.Base action, ICommandReply reply)
         {
-            sender.
-            // Check authorization
             try { _onComplete(_request, reply); }
             catch (Exception e)
             {
@@ -87,7 +61,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             }
         }
 
-        private void Commit_OnCommitProgress(Transactions.Stage sender, Transactions.Actions.Base action, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+        private void Commit_OnCommitProgress(Transactions.Transaction sender, Transactions.Stage stage, Transactions.Actions.Base action, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
             try { _onProgress(_request, Networking.Http.DirectionType.Upload, packetSize, sendPercentComplete, receivePercentComplete); }
             catch (Exception e)
@@ -97,7 +71,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             }
         }
 
-        private void Commit_OnCommitFailure(Transactions.Stage sender, Transactions.Actions.Base action, string message, System.Exception exception)
+        private void Commit_OnCommitFailure(Transactions.Transaction sender, Transactions.Stage stage, Transactions.Actions.Base action, string message, Exception exception)
         {
             try { _onError(_request, message, exception); }
             catch (Exception e)

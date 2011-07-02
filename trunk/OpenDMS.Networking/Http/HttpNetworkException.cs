@@ -1,17 +1,21 @@
-ï»¿using System;
+using System;
 
 namespace OpenDMS.Networking.Http
 {
     public class HttpNetworkException : Exception
     {
-        public HttpNetworkException(string message)
-            : base(message)
-        {
-        }
+		#region Constructors (2) 
 
         public HttpNetworkException(string message, Exception innerException)
             : base(message, innerException)
         {
         }
+
+        public HttpNetworkException(string message)
+            : base(message)
+        {
+        }
+
+		#endregion Constructors 
     }
 }

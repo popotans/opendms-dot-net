@@ -1,15 +1,23 @@
-ï»¿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace OpenDMS.IO
 {
     public class Directory : Location
     {
+		#region Constructors (1) 
+
         public Directory(string path)
             : base(System.IO.Path.GetDirectoryName(path))
         {
             if (!System.IO.Directory.Exists(path))
                 System.IO.Directory.CreateDirectory(path);
         }
+
+		#endregion Constructors 
+
+		#region Methods (7) 
+
+		// Public Methods (7) 
 
         public static Directory Append(Directory directory, string pathToAppend)
         {
@@ -50,6 +58,14 @@ namespace OpenDMS.IO
             return dirs;
         }
 
+        public string GetDirectoryShortName()
+        {
+            string name = _path.TrimEnd(System.IO.Path.DirectorySeparatorChar);
+            name = name.TrimEnd(System.IO.Path.AltDirectorySeparatorChar);
+
+            return name.Substring(name.LastIndexOf(System.IO.Path.DirectorySeparatorChar));
+        }
+
         public List<File> GetFiles()
         {
             List<File> files = new List<File>();
@@ -61,12 +77,6 @@ namespace OpenDMS.IO
             return files;
         }
 
-        public string GetDirectoryShortName()
-        {
-            string name = _path.TrimEnd(System.IO.Path.DirectorySeparatorChar);
-            name = name.TrimEnd(System.IO.Path.AltDirectorySeparatorChar);
-
-            return name.Substring(name.LastIndexOf(System.IO.Path.DirectorySeparatorChar));
-        }
+		#endregion Methods 
     }
 }
