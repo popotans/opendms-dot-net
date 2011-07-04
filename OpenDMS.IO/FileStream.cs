@@ -17,6 +17,7 @@ namespace OpenDMS.IO
         private System.IO.FileMode _mode;
         private System.IO.FileOptions _options;
         private System.IO.FileShare _share;
+        private bool _isClosed = false;
 
 		#endregion Fields 
 
@@ -230,7 +231,11 @@ namespace OpenDMS.IO
         public override void Close()
         {
             _lastAccess = new StackTrace(true).GetFrame(1);
-            base.Close();
+            if (!_isClosed)
+            {
+                _isClosed = true;
+                base.Close();
+            }
         }
 
         public void Copy(FileStream stream)

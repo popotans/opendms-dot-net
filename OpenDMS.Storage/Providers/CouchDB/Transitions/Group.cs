@@ -65,14 +65,21 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             try
             {
                 doc.Id = group.Id;
-                doc.Rev = group.Rev;
+                if (group.Rev != null)
+                    doc.Rev = group.Rev;
                 doc["Type"] = "group";
 
-                for (int i = 0; i < group.Groups.Count; i++)
-                    groupsJray.Add(group.Groups[i]);
+                if (group.Groups != null)
+                {
+                    for (int i = 0; i < group.Groups.Count; i++)
+                        groupsJray.Add(group.Groups[i]);
+                }
 
-                for (int i = 0; i < group.Users.Count; i++)
-                    usersJray.Add(group.Users[i]);
+                if (group.Users != null)
+                {
+                    for (int i = 0; i < group.Users.Count; i++)
+                        usersJray.Add(group.Users[i]);
+                }
 
                 doc["Groups"] = groupsJray;
                 doc["Users"] = usersJray;

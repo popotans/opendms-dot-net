@@ -10,12 +10,17 @@ namespace OpenDMS.Storage.Providers
 {
     public interface IEngine
     {
+        bool IsInitializing { get; }
+
         // Non-sessioned requests
         void AuthenticateUser(IDatabase db, string username, string hashedPassword, EngineBase.AuthenticationDelegate onAuthenticated);
-        void Initialize(List<Providers.IDatabase> databases, EngineBase.InitializationDelegate onInitialized);
+        void Initialize(string transactionRootDirectory, string logDirectory,
+            List<Providers.IDatabase> databases, EngineBase.InitializationDelegate onInitialized);
+        void SetState(bool isInitializing, bool isInitialized);
 
         // Sessioned requests
         void GetAllGroups(EngineRequest request);
+        void GetAllGroupsForInitialization(EngineRequest request);
         void GetGroup(EngineRequest request, string groupName);
         void CreateGroup(EngineRequest request, Group group);
         void ModifyGroup(EngineRequest request, Group group);
@@ -44,5 +49,7 @@ namespace OpenDMS.Storage.Providers
         void ModifyGlobalPermissions(EngineRequest request, List<UsageRight> usageRights);
         void GetResourceUsageRightsTemplate(EngineRequest request);
         void ModifyResourceUsageRightsTemplate(EngineRequest request, List<UsageRight> usageRights);
+
+        void Install(EngineRequest request);
     }
 }

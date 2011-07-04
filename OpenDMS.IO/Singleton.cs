@@ -10,7 +10,7 @@ namespace OpenDMS.IO
 
 		#endregion Fields 
 
-		#region Properties (1) 
+		#region Properties (2) 
 
         public static T Instance
         {
@@ -25,6 +25,8 @@ namespace OpenDMS.IO
                 return _instance;
             }
         }
+
+        public bool IsInitialized { get { return _isInitialized; } }
 
 		#endregion Properties 
 

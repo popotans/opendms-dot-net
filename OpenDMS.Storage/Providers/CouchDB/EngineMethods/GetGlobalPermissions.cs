@@ -64,7 +64,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             
             try
             {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.Getting, true);
+                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.GettingGlobalUsageRights, true);
             }
             catch (System.Exception e)
             {

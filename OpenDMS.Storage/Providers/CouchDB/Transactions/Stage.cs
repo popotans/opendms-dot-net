@@ -7,10 +7,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
     public class Stage
     {
         public delegate void CommitSuccessDelegate(Stage sender, Actions.Base action, ICommandReply reply);
-        public delegate void CommitFailureDelegate(Stage sender, Actions.Base action, string message, Exception exception);
+        public delegate void CommitTimeoutDelegate(Stage sender, Actions.Base action, string message, Exception exception);
+        public delegate void CommitErrorDelegate(Stage sender, Actions.Base action, string message, Exception exception);
         public delegate void CommitProgressDelegate(Stage sender, Actions.Base action, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public event CommitSuccessDelegate OnCommitSuccess;
-        public event CommitFailureDelegate OnCommitFailure;
+        public event CommitTimeoutDelegate OnCommitTimeout;
+        public event CommitErrorDelegate OnCommitError;
         public event CommitProgressDelegate OnCommitProgress;
 
         private int _number;
@@ -64,8 +66,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
 
         private void Commit_OnError(Actions.Base sender, string message, System.Exception exception)
         {
-            if (OnCommitFailure != null) OnCommitFailure(this, sender, message, null);
-            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Stage.OnFailure event must be implemented.");
+            if (OnCommitError != null) OnCommitError(this, sender, message, null);
+            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Stage.OnCommitError event must be implemented.");
         }
 
         private void Commit_OnProgress(Actions.Base sender, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
@@ -75,8 +77,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
 
         private void Commit_OnTimeout(Actions.Base sender)
         {
-            if (OnCommitFailure != null) OnCommitFailure(this, sender, "The commit action timed out.", null);
-            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Stage.OnFailure event must be implemented.");
+            if (OnCommitTimeout != null) OnCommitTimeout(this, sender, "The commit action timed out.", null);
+            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Stage.OnCommitTimeout event must be implemented.");
         }
 
         public bool Exists()

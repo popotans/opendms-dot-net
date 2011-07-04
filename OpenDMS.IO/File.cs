@@ -6,14 +6,8 @@ namespace OpenDMS.IO
 		#region Constructors (2) 
 
         public File(Directory directory, string filename)
-            : base(directory.ToString())
+            : base(directory.ToString() + filename)
         {
-            if (_path.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
-                _path += filename;
-            else if (_path.EndsWith(System.IO.Path.AltDirectorySeparatorChar.ToString()))
-                _path += filename;
-            else
-                _path += System.IO.Path.DirectorySeparatorChar.ToString() + filename;
         }
 
         public File(string path)

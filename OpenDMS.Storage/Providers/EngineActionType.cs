@@ -6,14 +6,15 @@ namespace OpenDMS.Storage.Providers
         Preparing,
         Getting,
         GettingGroups,
-        CreatingNewResource,
-        CreatingNewVersion,
-        UpdatingResource,
-        RecoveringFromError,
-        RecoveringFromTimeout,
-        Reverting,
+        GettingGroup,
+        GettingUser,
+        Aborting,
         SessionLookup,
         CheckingPermissions,
+        CreatingUser,
+        CreatingGlobalUsageRights,
+        GettingGlobalUsageRights,
+        CreatingGroup,
         // No need to send a complete action as completion is signaled by Error, Timeout or Completion
         // Complete
     }

@@ -17,7 +17,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
         {
             Commands.GetView cmd;
 
-            if (!GetGlobalPermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.GlobalPermissionType.ListGroups))
+            if (!GetGlobalPermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.GlobalPermissionType.GetGroup))
                 return;
             
             try

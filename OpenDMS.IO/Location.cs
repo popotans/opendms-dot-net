@@ -14,7 +14,15 @@ namespace OpenDMS.IO
 
         public Location(string path)
         {
-            _path = path;
+            if (GetType() == typeof(Directory))
+            {
+                path = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+                if (!path.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                    path += Path.DirectorySeparatorChar.ToString();
+                _path = path;
+            }
+            else
+                _path = path;
         }
 
 		#endregion Constructors 
@@ -25,10 +33,10 @@ namespace OpenDMS.IO
         {
             get
             {
-                if (this == FileSystem.Instance.Root)
+                if (System.IO.Directory.GetParent(_path) != null)
+                    return new Directory(System.IO.Directory.GetParent(_path).FullName);
+                else
                     return null;
-
-                return new Directory(System.IO.Directory.GetParent(_path).FullName);
             }
         }
 

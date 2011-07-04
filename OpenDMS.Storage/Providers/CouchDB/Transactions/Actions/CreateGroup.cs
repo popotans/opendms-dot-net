@@ -1,9 +1,9 @@
 ﻿
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Actions
 {
-    public class CreateUser : Base
+    public class CreateGroup : Base
     {
-        public CreateUser(IDatabase db, Model.Document doc)
+        public CreateGroup(IDatabase db, Model.Document doc)
             : base(db, doc)
         {
         }
