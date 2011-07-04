@@ -26,6 +26,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 
                     for (int i = 0; i < jarray.Count; i++)
                     {
+                        JObject jobj = (JObject)jarray[i];
                         prop = (JProperty)jarray[i];
                         usageRight = new Security.UsageRight(prop.Name, (Security.Authorization.ResourcePermissionType)prop.Value<int>());
                         usageRights.Add(usageRight);
@@ -62,7 +63,11 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                     jarray = new JArray();
 
                     for (int i = 0; i < globals.UsageRights.Count; i++)
-                        jarray.Add(new JProperty(globals.UsageRights[i].Entity, (int)globals.UsageRights[i].Permissions.Resource.Permissions));
+                    {
+                        JObject jobj = new JObject();
+                        jobj.Add(new JProperty(globals.UsageRights[i].Entity, (int)globals.UsageRights[i].Permissions.Global.Permissions));
+                        jarray.Add(jobj);
+                    }
 
                     document.Add("UsageRights", jarray);
                 }

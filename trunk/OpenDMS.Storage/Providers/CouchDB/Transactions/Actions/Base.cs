@@ -14,13 +14,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Actions
         public event CommitProgressDelegate OnProgress;
         public event CommitTimeoutDelegate OnTimeout;
 
+        protected IDatabase _db;
         protected Model.Document _document;
 
         public abstract Model.Document Execute();
         public abstract void Commit();
 
-        public Base(Model.Document document)
+        public Base(IDatabase db, Model.Document document)
         {
+            _db = db;
             _document = document;
         }
 
@@ -42,6 +44,26 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Actions
         protected void TriggerOnTimeout()
         {
             if (OnTimeout != null) OnTimeout(this);
+        }
+
+        protected virtual void Commit_OnTimeout(Commands.Base sender, Networking.Http.Client client, Networking.Http.Connection connection)
+        {
+            TriggerOnTimeout();
+        }
+
+        protected virtual void Commit_OnError(Commands.Base sender, Networking.Http.Client client, string message, System.Exception exception)
+        {
+            TriggerOnError(message, exception);
+        }
+
+        protected virtual void Commit_OnComplete(Commands.Base sender, Networking.Http.Client client, Networking.Http.Connection connection, Commands.ReplyBase reply)
+        {
+            TriggerOnComplete(reply);
+        }
+
+        protected virtual void Commit_OnProgress(Commands.Base sender, Networking.Http.Client client, Networking.Http.Connection connection, Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+        {
+            TriggerOnProgress(packetSize, sendPercentComplete, receivePercentComplete);
         }
     }
 }

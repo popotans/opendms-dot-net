@@ -6,6 +6,7 @@ namespace OpenDMS.IO
     {
 		#region Fields (1) 
 
+        // Cannot use Dictionary because we can have multiple access to a single file
         private List<FileStream> _handles = null;
 
 		#endregion Fields 
@@ -19,12 +20,9 @@ namespace OpenDMS.IO
 
 		#endregion Constructors 
 
-		#region Properties (2) 
+		#region Properties (1) 
 
         public int BufferSize { get; private set; }
-
- // Cannot use Dictionary because we can have multiple access to a single file
-        public Directory Root { get; private set; }
 
 		#endregion Properties 
 
@@ -67,9 +65,8 @@ namespace OpenDMS.IO
             }
         }
 
-        public void Initialize(Directory root, int bufferSize)
+        public void Initialize(int bufferSize)
         {
-            Root = root;
             BufferSize = bufferSize;
             _isInitialized = true;
         }

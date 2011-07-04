@@ -31,6 +31,7 @@ namespace OpenDMS.Storage.Security
 
         public void LoadGroups()
         {
+            
             Providers.EngineRequest request = new Providers.EngineRequest();
             request.OnComplete += new Providers.EngineBase.CompletionDelegate(LoadGroups_OnComplete);
             request.OnError += new Providers.EngineBase.ErrorDelegate(LoadGroups_OnError);
@@ -41,8 +42,9 @@ namespace OpenDMS.Storage.Security
 
             _ignoringLoadGroupComplete = false;
 
-            Logger.Storage.Debug("Asking the engine to load all groups for the database named " + _db.Name + ".");
-            _engine.GetAllGroups(request);
+            Logger.Storage.Debug("Loading all groups for the database named " + _db.Name + ".");
+            
+            _engine.GetAllGroupsForInitialization(request);
         }
 
         private void LoadGroups_OnComplete(Providers.EngineRequest request, Providers.ICommandReply reply)

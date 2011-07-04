@@ -11,8 +11,6 @@ namespace OpenDMS.Storage.Providers.CouchDB
 		#region Fields (3) 
 
         private bool _ignoringAuthenticateComplete;
-        private bool _ignoringInitializationComplete;
-        private bool _isInitializing;
 
 		#endregion Fields 
 
@@ -21,18 +19,17 @@ namespace OpenDMS.Storage.Providers.CouchDB
         public Engine()
             : base()
         {
-            Logger.Storage.Debug("Instantiating engine...");
-            _ignoringInitializationComplete = false;
+            if (Logger.Storage != null) Logger.Storage.Debug("Instantiating engine...");
             _ignoringAuthenticateComplete = false;
             _isInitializing = false;
-            Logger.Storage.Debug("Engine instantiated.");
+            if (Logger.Storage != null) Logger.Storage.Debug("Engine instantiated.");
         }
 
 		#endregion Constructors 
 
-		#region Methods (10) 
+		#region Methods (12) 
 
-		// Public Methods (6) 
+		// Public Methods (8) 
 
         public override void AuthenticateUser(IDatabase db, string username, string hashedPassword, AuthenticationDelegate onAuthenticated)
         {
@@ -53,23 +50,31 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
+        public override void GetAllGroups(EngineRequest request)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting all groups from db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
+            EngineMethods.GetAllGroups act = new EngineMethods.GetAllGroups(request);
+            act.Execute();
+        }
+
+        public override void GetAllGroupsForInitialization(EngineRequest request)
+        {
+            // Doing it for initialization, don't check initialization but do check state
+            if (!_isInitializing)
+                throw new InvalidOperationException("The engine is not initializing.");
+            else if (_isInitialized)
+                throw new InvalidOperationException("The engine is already initialized.");
+
+            EngineMethods.GetAllGroupsForInitialization act = new EngineMethods.GetAllGroupsForInitialization(request);
+            act.Execute();
+        }
+
         public override void GetGlobalPermissions(EngineRequest request)
         {
             CheckInitialization();
             Logger.Storage.Debug("Getting global permissions in db: " + request.Database.Name);
             EngineMethods.GetGlobalPermissions act = new EngineMethods.GetGlobalPermissions(request);
-            act.Execute();
-        }
-
-        public override void GetAllGroups(EngineRequest request)
-        {
-            // SessionManager needs access to this method, so this method can be used when initializing.
-            // Alternatively this could be built into SessionManager, but for now, we will just do this.
-            if (!_isInitialized && !_isInitializing)
-                throw new OpenDMS.IO.NotInitializedException();
-
-            Logger.Storage.Debug("Getting all groups from db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
-            EngineMethods.GetAllGroups act = new EngineMethods.GetAllGroups(request);
             act.Execute();
         }
 
@@ -89,17 +94,32 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
-        public override void Initialize(List<Providers.IDatabase> databases, InitializationDelegate onInitialized)
+        public override void Initialize(string transactionRootDirectory, string logDirectory,
+            List<Providers.IDatabase> databases, InitializationDelegate onInitialized)
         {
-            Logger.Storage.Debug("Initializing engine...");
-            _sessionMgr.OnError += new Security.SessionManager.ErrorDelegate(Initialize_OnError);
-            _sessionMgr.OnInitializationComplete += new Security.SessionManager.InitializationCompletionDelegate(Initialize_OnInitializationComplete);
-            RegisterOnInitialized(onInitialized);
-            _ignoringInitializationComplete = false;
-            _isInitializing = true;
-            _sessionMgr.Initialize(this, databases);
+            // We do not check initialization here
+            new OpenDMS.IO.Logger(logDirectory);
+            new OpenDMS.Networking.Logger(logDirectory);
+            new OpenDMS.Storage.Logger(logDirectory);
+
+            OpenDMS.IO.FileSystem.Instance.Initialize(8192);
+            Transactions.Manager.Instance.Initalize(new IO.Directory(transactionRootDirectory));
+
+            EngineRequest request = new EngineRequest();
+            request.Engine = this;
+            request.RequestingPartyType = Security.RequestingPartyType.System;
+            EngineMethods.Initialize act = new EngineMethods.Initialize(request, _sessionMgr, 
+                onInitialized, databases);
+            act.Execute();
         }
 
+        public override void Install(EngineRequest request)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Installing to db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
+            EngineMethods.Install act = new EngineMethods.Install(request);
+            act.Execute();
+        }
 		// Private Methods (4) 
 
         private void AuthenticateUser_OnAuthenticationComplete(Security.Session session, string message)
@@ -126,32 +146,6 @@ namespace OpenDMS.Storage.Providers.CouchDB
 
             Logger.Storage.Error("An error occurred while trying to authenticate the user.", exception);
             TriggerOnAuthenticated(true, false, null, message, exception);
-        }
-
-        private void Initialize_OnError(string message, Exception exception)
-        {
-            _ignoringInitializationComplete = true;
-
-            _sessionMgr.OnError -= Initialize_OnError;
-            _sessionMgr.OnInitializationComplete -= Initialize_OnInitializationComplete;
-
-            _isInitialized = false;
-            _isInitializing = false;
-            Logger.Storage.Error("An error occurred while trying to initialize the engine.", exception);
-            TriggerOnInitialized(false, message, exception);
-        }
-
-        private void Initialize_OnInitializationComplete()
-        {
-            _sessionMgr.OnError -= Initialize_OnError;
-            _sessionMgr.OnInitializationComplete -= Initialize_OnInitializationComplete;
-
-            if (_ignoringInitializationComplete) return;
-
-            _isInitialized = true;
-            _isInitializing = false;
-            Logger.Storage.Debug("Engine initialized.");
-            TriggerOnInitialized(true, "Initialization successful.", null);
         }
 
 		#endregion Methods 

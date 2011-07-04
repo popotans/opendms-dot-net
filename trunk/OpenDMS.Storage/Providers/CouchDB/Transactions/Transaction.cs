@@ -7,10 +7,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
     public class Transaction
     {
         public delegate void CommitSuccessDelegate(Transaction sender, Stage stage, Actions.Base action, ICommandReply reply);
-        public delegate void CommitFailureDelegate(Transaction sender, Stage stage, Actions.Base action, string message, Exception exception);
+        public delegate void CommitErrorDelegate(Transaction sender, Stage stage, Actions.Base action, string message, Exception exception);
+        public delegate void CommitTimeoutDelegate(Transaction sender, Stage stage, Actions.Base action, string message, Exception exception);
         public delegate void CommitProgressDelegate(Transaction sender, Stage stage, Actions.Base action, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public event CommitSuccessDelegate OnCommitSuccess;
-        public event CommitFailureDelegate OnCommitFailure;
+        public event CommitErrorDelegate OnCommitError;
+        public event CommitTimeoutDelegate OnCommitTimeout;
         public event CommitProgressDelegate OnCommitProgress;
 
         public Directory Directory { get; private set; }
@@ -210,9 +212,23 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
         {
             try
             {
-                Lock loc = GetLockAndCheckAccess(username);
-                if (loc != null)
+                Lock loc = GetLock();
+                if (loc == null)
+                {
                     Reset();
+                    return;
+                }
+
+                string errorMessage;
+                if (loc.CanUserAccess(username, out errorMessage))
+                {
+                    Reset();
+                    return;
+                }
+                else
+                {
+                    throw new ActiveTransactionException("The transaction is in use by another user.");
+                }
             }
             catch (Exception e)
             {
@@ -238,7 +254,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
         {
             try
             {
-                stage.OnCommitFailure += new Stage.CommitFailureDelegate(Commit_OnCommitFailure);
+                stage.OnCommitError += new Stage.CommitErrorDelegate(Commit_OnCommitError);
+                stage.OnCommitTimeout += new Stage.CommitTimeoutDelegate(Commit_OnCommitTimeout);
                 stage.OnCommitProgress += new Stage.CommitProgressDelegate(Commit_OnCommitProgress);
                 stage.OnCommitSuccess += new Stage.CommitSuccessDelegate(Commit_OnCommitSuccess);
 
@@ -251,9 +268,20 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
             }
         }
 
+        private void Commit_OnCommitTimeout(Stage sender, Actions.Base action, string message, Exception exception)
+        {
+            if (OnCommitTimeout != null) OnCommitTimeout(this, sender, action, message, null);
+            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Transaction.OnCommitTimeout event must be implemented.");
+        }
+
+        private void Commit_OnCommitError(Stage sender, Actions.Base action, string message, Exception exception)
+        {
+            if (OnCommitError != null) OnCommitError(this, sender, action, message, null);
+            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Transaction.OnCommitError event must be implemented.");
+        }
+
         private void Commit_OnCommitSuccess(Stage sender, Actions.Base action, ICommandReply reply)
         {
-
             // Don't reset until after the subscriber has a chance to do whatever they want with the
             // event.
             if (OnCommitSuccess != null) OnCommitSuccess(this, sender, action, reply);
@@ -269,12 +297,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
         private void Commit_OnCommitProgress(Stage sender, Actions.Base action, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
             if (OnCommitProgress != null) OnCommitProgress(this, sender, action, packetSize, sendPercentComplete, receivePercentComplete);
-        }
-        
-        private void Commit_OnCommitFailure(Stage sender, Actions.Base action, string message, Exception exception)
-        {
-            if (OnCommitFailure != null) OnCommitFailure(this, sender, action, message, null);
-            else throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Transaction.OnFailure event must be implemented.");
         }
 
         private int GetCurrentStageNumber()
@@ -314,7 +336,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
             {
                 loc = GetLock();
 
-                if (!loc.CanUserAccess(username, out errorMessage))
+                if (username != "System" && !loc.CanUserAccess(username, out errorMessage))
                     throw new ActiveTransactionException(errorMessage);
             }
             catch (Exception e)
@@ -339,12 +361,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
 
                     // Does the lock exist?
                     if (!file.Exists())
-                        throw new InvalidTransactionException("A transaction lock does not exist.");
+                        return null;
 
                     return Lock.Load(file);
                 }
                 else
-                    throw new InvalidTransactionException("The transaction does not exist.");
+                    return null;
             }
             catch (Exception e)
             {

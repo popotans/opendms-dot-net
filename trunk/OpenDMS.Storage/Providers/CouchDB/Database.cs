@@ -6,12 +6,17 @@ namespace OpenDMS.Storage.Providers.CouchDB
 {
     public class Database : IDatabase
     {
-		#region Constructors (1) 
+        #region Constructors (1)
 
-        public Database(IServer server, string dbName, DatabaseSessionManager sessionManager)
+        public Database(IServer server, string dbName)
         {
             Server = server;
             Name = dbName;
+        }
+
+        public Database(IServer server, string dbName, DatabaseSessionManager sessionManager)
+            : this(server, dbName)
+        {
             SessionManager = sessionManager;
         }
 
@@ -23,7 +28,7 @@ namespace OpenDMS.Storage.Providers.CouchDB
 
         public IServer Server { get; private set; }
 
-        public DatabaseSessionManager SessionManager { get; private set; }
+        public DatabaseSessionManager SessionManager { get; set; }
 
         public Uri Uri
         {

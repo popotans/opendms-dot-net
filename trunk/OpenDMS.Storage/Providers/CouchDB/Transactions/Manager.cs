@@ -32,6 +32,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
 
             t = new Transaction(dir);
             loc = t.GetLock();
+            if (loc == null)
+                return false;
             return loc.IsExpired();
         }
 
@@ -55,9 +57,27 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
         public Transaction CreateTransaction(string username, string id)
         {
             if (TransactionExists(id))
-                throw new InvalidTransactionException("The transaction already exists.");
+            {
+                if (TransactionIsActive(id))
+                    throw new InvalidTransactionException("The transaction already exists and is active.");
+                else
+                {
+                    Transaction t;
+                    Directory dir = Directory.Append(_directory, id);
+                    t = new Transaction(dir);
+                    t.Abort("System");
+                }
+            }
+                    
 
             return new Transaction(Directory.Append(_directory, id));
+        }
+
+        public void AbortAllTransactions()
+        {
+            // Warning - this deletes all transactions without regard for ownership.
+            // This will really throw a wrench into the works if used when any transactions are actively executing.
+            _directory.Delete();
         }
     }
 }

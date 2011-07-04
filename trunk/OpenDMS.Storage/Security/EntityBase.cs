@@ -12,6 +12,15 @@ namespace OpenDMS.Storage.Security
         {
             Rev = rev;
             Groups = groups;
+
+            if (groups == null)
+                return;
+
+            for (int i = 0; i < Groups.Count; i++)
+            {
+                if (!Groups[i].StartsWith("group-"))
+                    Groups[i] = "group-" + Groups[i];
+            }
         }
     }
 }

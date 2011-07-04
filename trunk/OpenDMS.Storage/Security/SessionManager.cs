@@ -34,6 +34,8 @@ namespace OpenDMS.Storage.Security
                 for (int i = 0; i < databases.Count; i++)
                 {
                     DatabaseSessionManager dsm = new DatabaseSessionManager(engine, databases[i]);
+                    if (databases[i].SessionManager == null)
+                        databases[i].SessionManager = dsm;
                     dsm.OnError += new DatabaseSessionManager.ErrorDelegate(Initialize_OnError);
                     dsm.OnLoadGroupsComplete += new DatabaseSessionManager.CompletionDelegate(Initialize_OnLoadGroupsComplete);
                     Logger.Storage.Debug("Loading the groups into the DatabaseSessionManager object...");
@@ -114,6 +116,13 @@ namespace OpenDMS.Storage.Security
                 Logger.Security.Debug("A session was found for user '" + session.User.Username + "'");
 
             return session;
+        }
+
+        public DatabaseSessionManager LookupDatabaseSessionManager(Providers.IDatabase db)
+        {
+            if (_dbSessionManagers.ContainsKey(db))
+                return _dbSessionManagers[db];
+            return null;
         }
     }
 }

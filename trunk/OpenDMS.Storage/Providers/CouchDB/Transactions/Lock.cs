@@ -129,7 +129,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
 
         public bool CanUserAccess(string username, out string errorMessage)
         {
-            if (_owningUsername != username)
+            if (_owningUsername != username && username != "System")
             {
                 errorMessage = "Invalid user.";
                 return false;

@@ -7,6 +7,6 @@ namespace OpenDMS.Storage.Providers
         string Name { get; }
         IServer Server { get; }
         Uri Uri { get; }
-        Security.DatabaseSessionManager SessionManager { get; }
+        Security.DatabaseSessionManager SessionManager { get; set; }
     }
 }

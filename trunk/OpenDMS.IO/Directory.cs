@@ -7,7 +7,7 @@ namespace OpenDMS.IO
 		#region Constructors (1) 
 
         public Directory(string path)
-            : base(System.IO.Path.GetDirectoryName(path))
+            : base(path)
         {
             if (!System.IO.Directory.Exists(path))
                 System.IO.Directory.CreateDirectory(path);
@@ -21,14 +21,16 @@ namespace OpenDMS.IO
 
         public static Directory Append(Directory directory, string pathToAppend)
         {
-            Directory dir = new Directory(directory.ToString());
-            if (dir._path.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
-                dir._path += pathToAppend.TrimStart(System.IO.Path.DirectorySeparatorChar);
-            else if (dir._path.EndsWith(System.IO.Path.AltDirectorySeparatorChar.ToString()))
-                dir._path += pathToAppend.TrimStart(System.IO.Path.AltDirectorySeparatorChar);
+            string path = directory._path;
+
+            if (path.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
+                path += pathToAppend.TrimStart(System.IO.Path.DirectorySeparatorChar);
+            else if (path.EndsWith(System.IO.Path.AltDirectorySeparatorChar.ToString()))
+                path += pathToAppend.TrimStart(System.IO.Path.AltDirectorySeparatorChar);
             else
-                dir._path += System.IO.Path.DirectorySeparatorChar.ToString() + pathToAppend;
-            return dir;
+                path += System.IO.Path.DirectorySeparatorChar.ToString() + pathToAppend;
+            
+            return new Directory(path);
         }
 
         public void Create()

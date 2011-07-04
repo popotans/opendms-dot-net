@@ -26,6 +26,26 @@ namespace OpenDMS.Storage.Security
         {
         }
 
+        public UsageRight(User entity, Authorization.ResourcePermissionType permissions)
+            : this(entity.Id, new Authorization.Permissions(null, new Authorization.ResourcePermission(permissions)))
+        {
+        }
+
+        public UsageRight(Group entity, Authorization.ResourcePermissionType permissions)
+            : this(entity.Id, new Authorization.Permissions(null, new Authorization.ResourcePermission(permissions)))
+        {
+        }
+
+        public UsageRight(User entity, Authorization.GlobalPermissionType permissions)
+            : this(entity.Id, new Authorization.Permissions(new Authorization.GlobalPermission(permissions), null))
+        {
+        }
+
+        public UsageRight(Group entity, Authorization.GlobalPermissionType permissions)
+            : this(entity.Id, new Authorization.Permissions(new Authorization.GlobalPermission(permissions), null))
+        {
+        }
+
         public bool HasFlags(Authorization.GlobalPermissionType flags)
         {
             return Permissions.HasFlag(flags);

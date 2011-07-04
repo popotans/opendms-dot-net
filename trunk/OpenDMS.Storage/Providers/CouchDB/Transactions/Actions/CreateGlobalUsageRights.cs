@@ -1,9 +1,9 @@
 ﻿
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Actions
 {
-    public class CreateUser : Base
+    public class CreateGlobalUsageRights : Base
     {
-        public CreateUser(IDatabase db, Model.Document doc)
+        public CreateGlobalUsageRights(IDatabase db, Model.Document doc)
             : base(db, doc)
         {
         }
