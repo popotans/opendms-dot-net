@@ -21,6 +21,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             Commands.GetDocument cmd;
             Security.User user;
 
+            if (!GetGlobalPermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.GlobalPermissionType.GetUser))
+                return;
+
             user = new Security.User(_username);
 
             try

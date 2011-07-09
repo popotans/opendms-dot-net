@@ -21,6 +21,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             Commands.GetDocument cmd;
             Security.Group group;
 
+            if (!GetGlobalPermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.GlobalPermissionType.GetGroup))
+                return;
+
             group = new Security.Group(_groupName, null, null, null);
 
             try

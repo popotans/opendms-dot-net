@@ -25,14 +25,16 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                         groups.Add(jarray[i].Value<string>());
                 }
 
-                return new Security.User(document.Id,
+                Security.User user = new Security.User(document.Id,
                     document.Rev,
-                    document["Password"].Value<string>(),
+                    null,
                     document["FirstName"].Value<string>(),
                     document["MiddleName"].Value<string>(),
                     document["LastName"].Value<string>(),
                     groups,
                     document["Superuser"].Value<bool>());
+                user.SetEncryptedPassword(document["Password"].Value<string>());
+                return user;
             }
             catch (Exception e)
             {

@@ -4,10 +4,12 @@ namespace OpenDMS.Networking.Http.Methods
 {
     public class Response : MessageBase
     {
+        public Request Request { get; private set; }
 		#region Constructors (1) 
 
-        public Response()
+        public Response(Request request)
         {
+            Request = request;
         }
 
 		#endregion Constructors 

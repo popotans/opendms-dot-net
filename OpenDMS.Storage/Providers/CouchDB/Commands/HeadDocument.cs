@@ -6,7 +6,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
     public class HeadDocument : Base
     {
         public HeadDocument(Uri uri)
-            : base(new Get(uri))
+            : base(new Head(uri))
         {
         }
 

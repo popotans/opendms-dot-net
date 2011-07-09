@@ -27,8 +27,19 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                     for (int i = 0; i < jarray.Count; i++)
                     {
                         JObject jobj = (JObject)jarray[i];
-                        prop = (JProperty)jarray[i];
-                        usageRight = new Security.UsageRight(prop.Name, (Security.Authorization.ResourcePermissionType)prop.Value<int>());
+                        IEnumerator<JToken> en = jobj.Children().GetEnumerator();
+                        while (en.MoveNext())
+                        {
+                            prop = (JProperty)en.Current;
+
+                            // Json.Net is giving me some weird errors here when I try to call prop.value<int>();
+                            // I cannot figure out why so this code is a temporary work-around, it needs figured out.
+                            string a = prop.ToString();
+                            a = a.Substring(a.LastIndexOf("\"") + 1); // we know the value is an int, so we can look for the last "
+                            a = a.Replace(":", "").Trim();
+
+                            usageRight = new Security.UsageRight(prop.Name, (Security.Authorization.GlobalPermissionType)int.Parse(a));
+                        }
                         usageRights.Add(usageRight);
                     }
 

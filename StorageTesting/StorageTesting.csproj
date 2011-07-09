@@ -2,15 +2,17 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0A46F930-1BA8-4A73-BD2B-879222C4C78E}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{AACCE784-764F-42D1-B9B9-43E65B8FB1A1}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OpenDMS.Networking</RootNamespace>
-    <AssemblyName>OpenDMS.Networking</AssemblyName>
+    <RootNamespace>StorageTesting</RootNamespace>
+    <AssemblyName>StorageTesting</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
@@ -28,7 +30,8 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -37,7 +40,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -46,52 +50,82 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net">
-      <HintPath>libs\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>libs\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Http\AsyncUserToken.cs" />
-    <Compile Include="Http\Client.cs" />
-    <Compile Include="Http\CompleteNotImplementedException.cs" />
-    <Compile Include="Http\Connection.cs" />
-    <Compile Include="Http\ConnectionManager.cs" />
-    <Compile Include="Http\ContentLengthExceededException.cs" />
-    <Compile Include="Http\DirectionType.cs" />
-    <Compile Include="Http\ErrorNotImplementedException.cs" />
-    <Compile Include="Http\HttpNetworkException.cs" />
-    <Compile Include="Http\HttpNetworkStream.cs" />
-    <Compile Include="Http\Methods\Delete.cs" />
-    <Compile Include="Http\Methods\Get.cs" />
-    <Compile Include="Http\Methods\Head.cs" />
-    <Compile Include="Http\Methods\MessageBase.cs" />
-    <Compile Include="Http\Methods\Post.cs" />
-    <Compile Include="Http\Methods\Put.cs" />
-    <Compile Include="Http\Methods\Request.cs" />
-    <Compile Include="Http\Methods\Response.cs" />
-    <Compile Include="Http\NetworkBuffer.cs" />
-    <Compile Include="Http\PrependableNetworkStream.cs" />
-    <Compile Include="Http\StreamAsyncEventArgs.cs" />
-    <Compile Include="Http\Timeout.cs" />
-    <Compile Include="Http\UnsupportedException.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="Authenticate.cs" />
+    <Compile Include="FrmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmMain.Designer.cs">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GetAllGroups.cs" />
+    <Compile Include="Initialize.cs" />
+    <Compile Include="Install.cs" />
+    <Compile Include="FrmLogin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmLogin.Designer.cs">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utilities.cs" />
+    <Compile Include="TestBase.cs" />
+    <EmbeddedResource Include="FrmLogin.resx">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmMain.resx">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+    <ProjectReference Include="..\OpenDMS.IO\OpenDMS.IO.csproj">
+      <Project>{72987F10-B4F8-4594-9D36-D366A4ECC121}</Project>
+      <Name>OpenDMS.IO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenDMS.Networking\OpenDMS.Networking.csproj">
+      <Project>{0A46F930-1BA8-4A73-BD2B-879222C4C78E}</Project>
+      <Name>OpenDMS.Networking</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenDMS.Storage\OpenDMS.Storage.csproj">
+      <Project>{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}</Project>
+      <Name>OpenDMS.Storage</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client">
       <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <ProductName>Microsoft .NET Framework 4 Client Profile %28x86 and x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -109,11 +143,6 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup />
-  <ItemGroup>
-    <Content Include="libs\log4net.dll" />
-    <Content Include="libs\Newtonsoft.Json.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

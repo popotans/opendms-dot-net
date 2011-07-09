@@ -15,6 +15,9 @@ namespace OpenDMS.Storage.Providers
         CreatingGlobalUsageRights,
         GettingGlobalUsageRights,
         CreatingGroup,
+        DeterminingInstallation,
+        AuthenticatingUser,
+        Installing,
         // No need to send a complete action as completion is signaled by Error, Timeout or Completion
         // Complete
     }

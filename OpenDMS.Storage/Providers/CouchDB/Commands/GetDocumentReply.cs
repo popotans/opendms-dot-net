@@ -23,7 +23,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
                 case 200:
                     Logger.Storage.Debug("Received a successful response from CouchDB.");
                     ResponseMessage = _200;
-                    Document = (Model.Document)Newtonsoft.Json.Linq.JObject.Parse(StringifyResponseStream());
+                    Document = new Model.Document(StringifyResponseStream());
                     Ok = true;
                     Logger.Storage.Debug("GetDocumentReply loaded.");
                     break;

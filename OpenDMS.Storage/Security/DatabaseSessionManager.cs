@@ -104,6 +104,8 @@ namespace OpenDMS.Storage.Security
         public void AuthenticateUser(string username, string password)
         {
             Providers.EngineRequest request = new Providers.EngineRequest();
+            request.Engine = _engine;
+            request.Database = _db;
             request.OnComplete += new Providers.EngineBase.CompletionDelegate(AuthenticateUser_OnComplete);
             request.OnError += new Providers.EngineBase.ErrorDelegate(AuthenticateUser_OnError);
             request.OnTimeout += new Providers.EngineBase.TimeoutDelegate(AuthenticateUser_OnTimeout);
