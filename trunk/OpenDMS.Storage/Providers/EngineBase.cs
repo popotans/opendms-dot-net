@@ -6,11 +6,10 @@ namespace OpenDMS.Storage.Providers
 {
     public class EngineBase : OpenDMS.IO.Singleton<EngineBase>, IEngine
     {
-		#region Fields (1) 
+		#region Fields (2) 
 
-        protected Security.SessionManager _sessionMgr;
         protected bool _isInitializing;
-        public bool IsInitializing { get { return _isInitializing; } }
+        protected Security.SessionManager _sessionMgr;
 
 		#endregion Fields 
 
@@ -23,6 +22,12 @@ namespace OpenDMS.Storage.Providers
         }
 
 		#endregion Constructors 
+
+		#region Properties (1) 
+
+        public bool IsInitializing { get { return _isInitializing; } }
+
+		#endregion Properties 
 
 		#region Delegates and Events (10) 
 
@@ -44,9 +49,9 @@ namespace OpenDMS.Storage.Providers
 
 		#endregion Delegates and Events 
 
-		#region Methods (33) 
+		#region Methods (34) 
 
-		// Public Methods (33) 
+		// Public Methods (34) 
 
         public virtual void AuthenticateUser(IDatabase db, string username, string hashedPassword, AuthenticationDelegate onAuthenticated)
         {
@@ -79,6 +84,11 @@ namespace OpenDMS.Storage.Providers
         }
 
         public virtual void DeleteResource(EngineRequest request, Data.ResourceId resource)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void DetermineIfInstalled(EngineRequest request, string logDirectory)
         {
             throw new NotImplementedException();
         }
@@ -149,7 +159,7 @@ namespace OpenDMS.Storage.Providers
             _isInitialized = true;
         }
 
-        public virtual void Install(EngineRequest request)
+        public virtual void Install(EngineRequest request, string logDirectory)
         {
             throw new NotImplementedException();
         }

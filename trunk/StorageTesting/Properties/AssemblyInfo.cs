@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("OpenDMS.Networking")]
-[assembly: AssemblyDescription("Commonly used storage components.")]
+[assembly: AssemblyTitle("StorageTesting")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Alexine Systems, LLC")]
-[assembly: AssemblyProduct("OpenDMS.Networking")]
-[assembly: AssemblyCopyright("Copyright © Alexine Systems, LLC 2011")]
+[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyProduct("StorageTesting")]
+[assembly: AssemblyCopyright("Copyright © Microsoft 2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("a1e73024-3b9d-4f63-af57-142df32cd272")]
+[assembly: Guid("49645190-2bc5-490d-a0de-07688819f35c")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.1.52.0185")]
-[assembly: AssemblyFileVersion("0.1.52.0185")]
+[assembly: AssemblyVersion("1.0.3.0185")]
+[assembly: AssemblyFileVersion("1.0.3.0185")]

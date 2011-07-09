@@ -267,7 +267,7 @@ namespace OpenDMS.Networking.Http
 
             _headersLengthTx = (ulong)headers.LongLength;
 
-            if (!TryCreateUserTokenAndTimeout(new NetworkBuffer(headers), 
+            if (!TryCreateUserTokenAndTimeout(request, new NetworkBuffer(headers), 
                 stream, _sendTimeout, out userToken, new Timeout.TimeoutEvent(SendRequest_Timeout)))
                 return;            
 
@@ -427,6 +427,41 @@ namespace OpenDMS.Networking.Http
                 if (OnProgress != null) OnProgress(this, DirectionType.Download, remainingBytes.Length, 100, -1);
             }
 
+            // Here we want to check to see if remaining bytes has all the data, if so, we do not want
+            // to call the socket.ReceiveAsyc below because it will wait for data until timeout as no data will be sent.
+            
+            // So, how do we know if we have received the last chunk?
+            // CouchDB sends its chunks with a 13,10,48,13,10,13,10 - \r\n0\r\n\r\n
+            // This is also specified in the RFCs as it shows the size of the last chunk is 0
+            if (responseBody.EndsWith("\r\n0\r\n\r\n"))
+            {
+                int chunkLength = 0;
+                int packetSize = 0;
+                int index;
+                string newpacket = responseBody;
+
+                responseBody = "";
+
+                while ((index = newpacket.IndexOf("\r\n")) > 0)
+                {
+                    chunkLength = Utilities.ConvertHexToInt(newpacket.Substring(0, index));
+                    newpacket = newpacket.Substring(index + 2);
+                    if (chunkLength == 0)
+                        break;
+                    packetSize += chunkLength;
+                    responseBody += newpacket.Substring(0, chunkLength);
+                    newpacket = newpacket.Substring(chunkLength + 2);
+                }
+
+                _contentLengthRx += (ulong)packetSize;
+                // Here, all info has been received
+                response.Stream = new HttpNetworkStream(_contentLengthRx,
+                    System.Text.Encoding.UTF8.GetBytes(responseBody),
+                    _socket, System.IO.FileAccess.Read, false);
+                if (OnComplete != null) OnComplete(this, response);
+                return;
+            }
+
             AsyncUserToken userToken;
             NetworkBuffer networkBuffer = new NetworkBuffer(new byte[_receiveBufferSize]);
 
@@ -509,7 +544,7 @@ namespace OpenDMS.Networking.Http
             if (chunkLength > 0)
             {
                 token = new Tuple<string, Methods.Response>(responseBody, response);
-                if (!TryCreateUserTokenAndTimeout(userToken.NetworkBuffer, token, _receiveTimeout, out userToken,
+                if (!TryCreateUserTokenAndTimeout(userToken.Request, userToken.NetworkBuffer, token, _receiveTimeout, out userToken,
                     new Timeout.TimeoutEvent(ReceiveResponse_ChunkedData_Timeout)))
                     return;
 
@@ -532,7 +567,7 @@ namespace OpenDMS.Networking.Http
             CloseSocketAndTimeout();
         }
 
-            private void ReceiveResponse_Completed(object sender, SocketAsyncEventArgs e)
+        private void ReceiveResponse_Completed(object sender, SocketAsyncEventArgs e)
         {
             e.Completed -= ReceiveResponse_Completed;
 
@@ -542,7 +577,12 @@ namespace OpenDMS.Networking.Http
             int index = -1;
             string headers;
             string newpacket;
-            AsyncUserToken userToken = null;
+            Methods.Request request;
+            AsyncUserToken userToken;
+
+            userToken = (AsyncUserToken)e.UserToken;
+            request = userToken.Request;
+            userToken = null;
             
             headers = (string)((AsyncUserToken)e.UserToken).Token;
 
@@ -567,7 +607,7 @@ namespace OpenDMS.Networking.Http
                 headers += newpacket;
                 e.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveResponse_Completed);
 
-                if (!TryCreateUserTokenAndTimeout(headers, _receiveTimeout, out userToken,
+                if (!TryCreateUserTokenAndTimeout(userToken.Request, headers, _receiveTimeout, out userToken,
                     new Timeout.TimeoutEvent(ReceiveResponse_Timeout)))
                     return;
 
@@ -594,7 +634,7 @@ namespace OpenDMS.Networking.Http
                 // bytes that are not header
                 byte[] remainingBytes;
                 // Push the remaining bytes into a stream
-                Methods.Response response = new Methods.Response();
+                Methods.Response response = new Methods.Response(request);
                 System.Text.RegularExpressions.MatchCollection matches;
                 string transferEncoding = null;
                 //ulong contentLength = 0;
@@ -693,7 +733,7 @@ namespace OpenDMS.Networking.Http
             CloseSocketAndTimeout();
         }
 
-        private void ReceiveResponseAsync()
+        private void ReceiveResponseAsync(Methods.Request request)
         {
             if (!IsConnected)
                 throw new HttpNetworkException("Socket is closed or not ready.");
@@ -704,7 +744,7 @@ namespace OpenDMS.Networking.Http
 
             Logger.Network.Debug("Receiving response headers...");
 
-            if (!TryCreateUserTokenAndTimeout(headers, _receiveTimeout, out userToken,
+            if (!TryCreateUserTokenAndTimeout(request, headers, _receiveTimeout, out userToken,
                 new Timeout.TimeoutEvent(ReceiveResponse_Timeout)))
                 return;
 
@@ -797,7 +837,7 @@ namespace OpenDMS.Networking.Http
                         e.SetBuffer(buffer, 0, bytesRead);
                         e.Completed += new EventHandler<SocketAsyncEventArgs>(SendRequest_Completed);
 
-                        if (!TryCreateUserTokenAndTimeout(null, userToken.Token,
+                        if (!TryCreateUserTokenAndTimeout(userToken.Request, null, userToken.Token,
                             _sendTimeout, out userToken, new Timeout.TimeoutEvent(SendRequest_Timeout)))
                             return;
 
@@ -805,7 +845,7 @@ namespace OpenDMS.Networking.Http
                     }
                     else
                     {
-                        ReceiveResponseAsync();
+                        ReceiveResponseAsync(userToken.Request);
                         return;
                     }
                 }
@@ -821,7 +861,7 @@ namespace OpenDMS.Networking.Http
 
                 if (((System.IO.Stream)userToken.Token).Position == ((System.IO.Stream)userToken.Token).Length)
                 {
-                    ReceiveResponseAsync();
+                    ReceiveResponseAsync(userToken.Request);
                     return;
                 }
                 else
@@ -849,7 +889,7 @@ namespace OpenDMS.Networking.Http
             }
             else
             {
-                ReceiveResponseAsync();
+                ReceiveResponseAsync(userToken.Request);
                 return;
             }
 
@@ -900,23 +940,41 @@ namespace OpenDMS.Networking.Http
         private bool TryCreateUserTokenAndTimeout(NetworkBuffer networkBuffer, int milliseconds,
             out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
         {
-            return TryCreateUserTokenAndTimeout(networkBuffer, null, milliseconds, out userToken, onTimeout);
+            return TryCreateUserTokenAndTimeout(null, networkBuffer, null, milliseconds, out userToken, onTimeout);
+        }
+
+        private bool TryCreateUserTokenAndTimeout(Methods.Request request, NetworkBuffer networkBuffer, int milliseconds,
+            out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
+        {
+            return TryCreateUserTokenAndTimeout(request, networkBuffer, null, milliseconds, out userToken, onTimeout);
         }
 
         private bool TryCreateUserTokenAndTimeout(object token2, int milliseconds,
             out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
         {
-            return TryCreateUserTokenAndTimeout(null, token2, milliseconds, out userToken, onTimeout);
+            return TryCreateUserTokenAndTimeout(null, null, token2, milliseconds, out userToken, onTimeout);
+        }
+        
+        private bool TryCreateUserTokenAndTimeout(Methods.Request request, object token2, int milliseconds,
+            out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
+        {
+            return TryCreateUserTokenAndTimeout(request, null, token2, milliseconds, out userToken, onTimeout);
         }
 
         private bool TryCreateUserTokenAndTimeout(NetworkBuffer networkBuffer, object token2, int milliseconds,
+            out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
+        {
+            return TryCreateUserTokenAndTimeout(null, null, token2, milliseconds, out userToken, onTimeout);
+        }
+
+        private bool TryCreateUserTokenAndTimeout(Methods.Request request, NetworkBuffer networkBuffer, object token2, int milliseconds,
             out AsyncUserToken userToken, Timeout.TimeoutEvent onTimeout)
         {
             userToken = null;
 
             try
             {
-                userToken = new AsyncUserToken(networkBuffer, token2).StartTimeout(milliseconds, onTimeout);
+                userToken = new AsyncUserToken(request, networkBuffer, token2).StartTimeout(milliseconds, onTimeout);
             }
             catch (Exception e)
             {

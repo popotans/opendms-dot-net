@@ -31,6 +31,16 @@ namespace OpenDMS.Storage.Providers.CouchDB
 
 		// Public Methods (8) 
 
+        public override void DetermineIfInstalled(EngineRequest request, string logDirectory)
+        {
+            new OpenDMS.IO.Logger(logDirectory);
+            new OpenDMS.Networking.Logger(logDirectory);
+            new OpenDMS.Storage.Logger(logDirectory);
+            Logger.Storage.Debug("Checking if OpenDMS.Storage has been installed on the db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
+            EngineMethods.DetermineIfInstalled act = new EngineMethods.DetermineIfInstalled(request);
+            act.Execute();
+        }
+
         public override void AuthenticateUser(IDatabase db, string username, string hashedPassword, AuthenticationDelegate onAuthenticated)
         {
             CheckInitialization();
@@ -113,9 +123,16 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
-        public override void Install(EngineRequest request)
+        public override void Install(EngineRequest request, string logDirectory)
         {
-            CheckInitialization();
+            // Do not check initialization as it should not be initialized
+            // CheckInitialization();
+            if (_isInitialized) throw new InvalidOperationException("Install cannot be run on an initialized database.");
+
+            new OpenDMS.IO.Logger(logDirectory);
+            new OpenDMS.Networking.Logger(logDirectory);
+            new OpenDMS.Storage.Logger(logDirectory);
+
             Logger.Storage.Debug("Installing to db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
             EngineMethods.Install act = new EngineMethods.Install(request);
             act.Execute();

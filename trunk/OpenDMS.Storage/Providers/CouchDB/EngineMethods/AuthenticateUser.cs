@@ -37,8 +37,18 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
         {
             _sessionMgr.OnError += new Security.SessionManager.ErrorDelegate(AuthenticateUser_OnError);
             _sessionMgr.OnAuthenticationComplete += new Security.SessionManager.AuthenticationDelegate(AuthenticateUser_OnAuthenticationComplete);
-            
+
             _ignoringAuthenticationComplete = false;
+
+            try
+            {
+                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.AuthenticatingUser, false);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
+                throw;
+            }
 
             try
             {

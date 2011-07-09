@@ -32,10 +32,21 @@ namespace OpenDMS.Storage.Security
             get { return _password; }
             private set
             {
+                if (value == null)
+                {
+                    _password = null;
+                    return;
+                }
+
                 System.Security.Cryptography.SHA512Managed sha512 = new System.Security.Cryptography.SHA512Managed();
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(value);
                 _password = System.Convert.ToBase64String(sha512.ComputeHash(bytes));
             }
+        }
+
+        public void SetEncryptedPassword(string encryptedPassword)
+        {
+            _password = encryptedPassword;
         }
 
         public User(string id)

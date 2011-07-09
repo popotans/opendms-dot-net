@@ -8,10 +8,11 @@ namespace OpenDMS.Networking.Http
         private NetworkBuffer _networkBuffer = null;
         private object _object = null;
         private Timeout _timeout = null;
+        private Methods.Request _request = null;
 
 		#endregion Fields 
 
-		#region Constructors (2) 
+        #region Constructors (2)
 
         public AsyncUserToken(NetworkBuffer networkBuffer, object obj)
         {
@@ -24,9 +25,24 @@ namespace OpenDMS.Networking.Http
             _networkBuffer = networkBuffer;
         }
 
+        public AsyncUserToken(Methods.Request request, NetworkBuffer networkBuffer, object obj)
+        {
+            _request = request;
+            _networkBuffer = networkBuffer;
+            _object = obj;
+        }
+
+        public AsyncUserToken(Methods.Request request, NetworkBuffer networkBuffer)
+        {
+            _request = request;
+            _networkBuffer = networkBuffer;
+        }
+
 		#endregion Constructors 
 
 		#region Properties (2) 
+
+        public Methods.Request Request { get { return _request; } }
 
         public NetworkBuffer NetworkBuffer { get { return _networkBuffer; } }
 

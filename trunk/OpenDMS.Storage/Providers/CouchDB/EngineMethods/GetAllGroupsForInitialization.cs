@@ -30,6 +30,16 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 
             try
             {
+                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.GettingGroups, true);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
+                throw;
+            }
+
+            try
+            {
                 cmd.Execute(_request.Database.Server.Timeout, _request.Database.Server.Timeout, _request.Database.Server.BufferSize, _request.Database.Server.BufferSize);
             }
             catch (System.Exception e)

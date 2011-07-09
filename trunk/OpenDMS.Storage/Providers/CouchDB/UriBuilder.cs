@@ -68,5 +68,10 @@ namespace OpenDMS.Storage.Providers.CouchDB
         {
             return new Uri(db.Uri.ToString() + globalUsageRights.Id);
         }
+
+        public static Uri Build(IDatabase db, Model.BulkDocuments bulkDocs)
+        {
+            return new Uri(db.Uri.ToString() + "_bulk_docs");
+        }
     }
 }

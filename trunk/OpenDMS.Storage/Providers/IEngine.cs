@@ -50,6 +50,7 @@ namespace OpenDMS.Storage.Providers
         void GetResourceUsageRightsTemplate(EngineRequest request);
         void ModifyResourceUsageRightsTemplate(EngineRequest request, List<UsageRight> usageRights);
 
-        void Install(EngineRequest request);
+        void Install(EngineRequest request, string logDirectory);
+        void DetermineIfInstalled(EngineRequest request, string logDirectory);
     }
 }
