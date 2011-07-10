@@ -46,7 +46,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
         public Model.Document Transition(Security.User user)
         {
             Model.Document doc = new Model.Document();
-            JArray jarray = new JArray();
+            JArray jarray = null;
 
             try
             {
@@ -60,8 +60,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 doc["LastName"] = user.LastName;
                 doc["Superuser"] = user.IsSuperuser;
 
-                for (int i = 0; i < user.Groups.Count; i++)
-                    jarray.Add(user.Groups[i]);
+                if (user.Groups != null)
+                {
+                    jarray = new JArray();
+                    for (int i = 0; i < user.Groups.Count; i++)
+                        jarray.Add(user.Groups[i]);
+                }
 
                 doc["Groups"] = jarray;
             }

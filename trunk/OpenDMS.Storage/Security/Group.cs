@@ -47,5 +47,10 @@ namespace OpenDMS.Storage.Security
 
             return false;
         }
+
+        public override string ToString()
+        {
+            return GroupName;
+        }
     }
 }

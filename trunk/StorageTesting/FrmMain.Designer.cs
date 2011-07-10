@@ -34,6 +34,9 @@
             this.BtnExit = new System.Windows.Forms.Button();
             this.BtnGetAllGroups = new System.Windows.Forms.Button();
             this.BtnAuthenticate = new System.Windows.Forms.Button();
+            this.BtnGetGroup = new System.Windows.Forms.Button();
+            this.BtnCreateGroup = new System.Windows.Forms.Button();
+            this.BtnModifyGroup = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // TxtOutput
@@ -87,7 +90,7 @@
             // 
             // BtnAuthenticate
             // 
-            this.BtnAuthenticate.Location = new System.Drawing.Point(12, 81);
+            this.BtnAuthenticate.Location = new System.Drawing.Point(12, 64);
             this.BtnAuthenticate.Name = "BtnAuthenticate";
             this.BtnAuthenticate.Size = new System.Drawing.Size(132, 20);
             this.BtnAuthenticate.TabIndex = 5;
@@ -95,11 +98,44 @@
             this.BtnAuthenticate.UseVisualStyleBackColor = true;
             this.BtnAuthenticate.Click += new System.EventHandler(this.BtnAuthenticate_Click);
             // 
+            // BtnGetGroup
+            // 
+            this.BtnGetGroup.Location = new System.Drawing.Point(12, 133);
+            this.BtnGetGroup.Name = "BtnGetGroup";
+            this.BtnGetGroup.Size = new System.Drawing.Size(132, 20);
+            this.BtnGetGroup.TabIndex = 6;
+            this.BtnGetGroup.Text = "GetGroup";
+            this.BtnGetGroup.UseVisualStyleBackColor = true;
+            this.BtnGetGroup.Click += new System.EventHandler(this.BtnGetGroup_Click);
+            // 
+            // BtnCreateGroup
+            // 
+            this.BtnCreateGroup.Location = new System.Drawing.Point(12, 159);
+            this.BtnCreateGroup.Name = "BtnCreateGroup";
+            this.BtnCreateGroup.Size = new System.Drawing.Size(132, 20);
+            this.BtnCreateGroup.TabIndex = 7;
+            this.BtnCreateGroup.Text = "CreateGroup";
+            this.BtnCreateGroup.UseVisualStyleBackColor = true;
+            this.BtnCreateGroup.Click += new System.EventHandler(this.BtnCreateGroup_Click);
+            // 
+            // BtnModifyGroup
+            // 
+            this.BtnModifyGroup.Location = new System.Drawing.Point(12, 185);
+            this.BtnModifyGroup.Name = "BtnModifyGroup";
+            this.BtnModifyGroup.Size = new System.Drawing.Size(132, 20);
+            this.BtnModifyGroup.TabIndex = 8;
+            this.BtnModifyGroup.Text = "ModifyGroup";
+            this.BtnModifyGroup.UseVisualStyleBackColor = true;
+            this.BtnModifyGroup.Click += new System.EventHandler(this.BtnModifyGroup_Click);
+            // 
             // FrmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1188, 604);
+            this.Controls.Add(this.BtnModifyGroup);
+            this.Controls.Add(this.BtnCreateGroup);
+            this.Controls.Add(this.BtnGetGroup);
             this.Controls.Add(this.BtnAuthenticate);
             this.Controls.Add(this.BtnGetAllGroups);
             this.Controls.Add(this.BtnExit);
@@ -122,6 +158,9 @@
         private System.Windows.Forms.Button BtnExit;
         private System.Windows.Forms.Button BtnGetAllGroups;
         private System.Windows.Forms.Button BtnAuthenticate;
+        private System.Windows.Forms.Button BtnGetGroup;
+        private System.Windows.Forms.Button BtnCreateGroup;
+        private System.Windows.Forms.Button BtnModifyGroup;
     }
 }
 

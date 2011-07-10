@@ -6,16 +6,23 @@ using OpenDMS.Storage.Providers.CouchDB;
 
 namespace StorageTesting
 {
-    public class GetAllGroups : TestBase
+    public class ModifyGroup : TestBase
     {
         private DateTime _start;
 
-        public GetAllGroups(FrmMain window, IEngine engine, IDatabase db)
+        public ModifyGroup(FrmMain window, IEngine engine, IDatabase db)
             : base(window, engine, db)
         {
         }
 
         public override void Test()
+        {
+            FrmModifyGroup win = new FrmModifyGroup(_engine, _db, _window.Session);
+            win.OnSaveClick += new FrmModifyGroup.SaveDelegate(win_OnSaveClick);
+            win.ShowDialog();
+        }
+
+        void win_OnSaveClick(OpenDMS.Storage.Security.Group group)
         {
             OpenDMS.Storage.Providers.EngineRequest request = new OpenDMS.Storage.Providers.EngineRequest();
             request.Engine = _engine;
@@ -30,22 +37,22 @@ namespace StorageTesting
 
             Clear();
 
-            WriteLine("Starting GetAllGroups test...");
+            WriteLine("Starting ModifyGroup test...");
             _start = DateTime.Now;
-            _engine.GetAllGroups(request);
+            _engine.ModifyGroup(request, group);
         }
 
         private void EngineAction(EngineRequest request, EngineActionType actionType, bool willSendProgress)
         {
             if (willSendProgress)
-                WriteLine("GetAllGroups.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
+                WriteLine("ModifyGroup.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
             else
-                WriteLine("GetAllGroups.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
+                WriteLine("ModifyGroup.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
         }
 
         private void Progress(EngineRequest request, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
-            WriteLine("GetAllGroups.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
+            WriteLine("ModifyGroup.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
         }
 
         private void Complete(EngineRequest request, ICommandReply reply)
@@ -53,28 +60,22 @@ namespace StorageTesting
             DateTime stop = DateTime.Now;
             TimeSpan duration = stop - _start;
 
-            OpenDMS.Storage.Providers.CouchDB.Commands.GetViewReply r = (OpenDMS.Storage.Providers.CouchDB.Commands.GetViewReply)reply;
-            
-            WriteLine("GetAllGroups.Complete - results received in " + duration.TotalMilliseconds.ToString() + "ms.");
+            OpenDMS.Storage.Providers.CouchDB.Commands.PutDocumentReply r = (OpenDMS.Storage.Providers.CouchDB.Commands.PutDocumentReply)reply;
 
-            OpenDMS.Storage.Providers.CouchDB.Transitions.GroupCollection gc = new OpenDMS.Storage.Providers.CouchDB.Transitions.GroupCollection();
-            List<OpenDMS.Storage.Security.Group> groups = gc.Transition(r.View);
-
-            WriteLine("The following groups were loaded:");
-            for (int i=0; i<groups.Count; i++)
-            {
-                WriteLine("\t" + groups[i].GroupName);
-            }
+            if (r.Ok)
+                WriteLine("ModifyGroup.Complete - success in " + duration.TotalMilliseconds.ToString() + "ms.");
+            else
+                WriteLine("ModifyGroup.Complete - failed in " + duration.TotalMilliseconds.ToString() + "ms.");
         }
 
         private void Timeout(EngineRequest request)
         {
-            WriteLine("GetAllGroups.Timeout - Timeout.");
+            WriteLine("ModifyGroup.Timeout - Timeout.");
         }
 
         private void Error(EngineRequest request, string message, Exception exception)
         {
-            WriteLine("GetAllGroups.Error - Error.  Message: " + message);
+            WriteLine("ModifyGroup.Error - Error.  Message: " + message);
         }
     }
 }
