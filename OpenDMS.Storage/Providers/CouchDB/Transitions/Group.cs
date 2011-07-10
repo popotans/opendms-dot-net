@@ -41,7 +41,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                     usersJray = (JArray)document["Users"];
 
                     for (int i = 0; i < usersJray.Count; i++)
-                        groups.Add(usersJray[i].Value<string>());
+                        users.Add(usersJray[i].Value<string>());
                 }
             }
             catch (Exception e)
@@ -59,8 +59,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
         public Model.Document Transition(Security.Group group)
         {
             Model.Document doc = new Model.Document();
-            JArray groupsJray = new JArray();
-            JArray usersJray = new JArray();
+            JArray groupsJray = null;
+            JArray usersJray = null;
 
             try
             {
@@ -71,12 +71,14 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 
                 if (group.Groups != null)
                 {
+                    groupsJray = new JArray();
                     for (int i = 0; i < group.Groups.Count; i++)
                         groupsJray.Add(group.Groups[i]);
                 }
 
                 if (group.Users != null)
                 {
+                    usersJray = new JArray();
                     for (int i = 0; i < group.Users.Count; i++)
                         usersJray.Add(group.Users[i]);
                 }

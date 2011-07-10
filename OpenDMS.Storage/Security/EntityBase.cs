@@ -22,5 +22,7 @@ namespace OpenDMS.Storage.Security
                     Groups[i] = "group-" + Groups[i];
             }
         }
+
+        public abstract override string ToString();
     }
 }

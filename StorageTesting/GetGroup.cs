@@ -1,21 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
 using OpenDMS.Networking.Http.Methods;
 using OpenDMS.Storage.Providers;
 using OpenDMS.Storage.Providers.CouchDB;
 
 namespace StorageTesting
 {
-    public class GetAllGroups : TestBase
+    public class GetGroup : TestBase
     {
         private DateTime _start;
 
-        public GetAllGroups(FrmMain window, IEngine engine, IDatabase db)
+        public GetGroup(FrmMain window, IEngine engine, IDatabase db)
             : base(window, engine, db)
         {
         }
 
         public override void Test()
+        {
+            FrmGetGroup win = new FrmGetGroup();
+            win.OnGoClick += new FrmGetGroup.GoDelegate(win_OnGoClick);
+            win.ShowDialog();
+        }
+
+        void win_OnGoClick(string groupName)
         {
             OpenDMS.Storage.Providers.EngineRequest request = new OpenDMS.Storage.Providers.EngineRequest();
             request.Engine = _engine;
@@ -30,22 +36,22 @@ namespace StorageTesting
 
             Clear();
 
-            WriteLine("Starting GetAllGroups test...");
+            WriteLine("Starting GetGroup test...");
             _start = DateTime.Now;
-            _engine.GetAllGroups(request);
+            _engine.GetGroup(request, groupName);
         }
 
         private void EngineAction(EngineRequest request, EngineActionType actionType, bool willSendProgress)
         {
             if (willSendProgress)
-                WriteLine("GetAllGroups.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
+                WriteLine("GetGroup.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
             else
-                WriteLine("GetAllGroups.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
+                WriteLine("GetGroup.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
         }
 
         private void Progress(EngineRequest request, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
-            WriteLine("GetAllGroups.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
+            WriteLine("GetGroup.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
         }
 
         private void Complete(EngineRequest request, ICommandReply reply)
@@ -53,28 +59,24 @@ namespace StorageTesting
             DateTime stop = DateTime.Now;
             TimeSpan duration = stop - _start;
 
-            OpenDMS.Storage.Providers.CouchDB.Commands.GetViewReply r = (OpenDMS.Storage.Providers.CouchDB.Commands.GetViewReply)reply;
+            OpenDMS.Storage.Providers.CouchDB.Commands.GetDocumentReply r = (OpenDMS.Storage.Providers.CouchDB.Commands.GetDocumentReply)reply;
+
+            OpenDMS.Storage.Providers.CouchDB.Transitions.Group txGroup = new OpenDMS.Storage.Providers.CouchDB.Transitions.Group();
+            OpenDMS.Storage.Security.Group g = txGroup.Transition(r.Document);
             
-            WriteLine("GetAllGroups.Complete - results received in " + duration.TotalMilliseconds.ToString() + "ms.");
+            WriteLine("GetGroup.Complete - results received in " + duration.TotalMilliseconds.ToString() + "ms.");
 
-            OpenDMS.Storage.Providers.CouchDB.Transitions.GroupCollection gc = new OpenDMS.Storage.Providers.CouchDB.Transitions.GroupCollection();
-            List<OpenDMS.Storage.Security.Group> groups = gc.Transition(r.View);
-
-            WriteLine("The following groups were loaded:");
-            for (int i=0; i<groups.Count; i++)
-            {
-                WriteLine("\t" + groups[i].GroupName);
-            }
+            WriteLine("\tId: " + g.Id + ", Name: " + g.GroupName);
         }
 
         private void Timeout(EngineRequest request)
         {
-            WriteLine("GetAllGroups.Timeout - Timeout.");
+            WriteLine("GetGroup.Timeout - Timeout.");
         }
 
         private void Error(EngineRequest request, string message, Exception exception)
         {
-            WriteLine("GetAllGroups.Error - Error.  Message: " + message);
+            WriteLine("GetGroup.Error - Error.  Message: " + message);
         }
     }
 }

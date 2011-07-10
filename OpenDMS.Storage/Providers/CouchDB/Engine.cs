@@ -29,7 +29,23 @@ namespace OpenDMS.Storage.Providers.CouchDB
 
 		#region Methods (12) 
 
-		// Public Methods (8) 
+        // Public Methods (8) 
+
+        public override void ModifyGroup(EngineRequest request, Security.Group group)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Modifying group: " + group.GroupName + "...");
+            EngineMethods.ModifyGroup act = new EngineMethods.ModifyGroup(request, group);
+            act.Execute();
+        }
+
+        public override void CreateGroup(EngineRequest request, Security.Group group)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Creating group: " + group.GroupName + "...");
+            EngineMethods.CreateGroup act = new EngineMethods.CreateGroup(request, group);
+            act.Execute();
+        }
 
         public override void DetermineIfInstalled(EngineRequest request, string logDirectory)
         {
@@ -45,8 +61,6 @@ namespace OpenDMS.Storage.Providers.CouchDB
         {
             CheckInitialization();
             Logger.Storage.Debug("Authenticating user: " + username);
-            //_sessionMgr.OnError += new Security.SessionManager.ErrorDelegate(AuthenticateUser_OnError);
-            //_sessionMgr.OnAuthenticationComplete += new Security.SessionManager.AuthenticationDelegate(AuthenticateUser_OnAuthenticationComplete);
             RegisterOnAuthenticated(onAuthenticated);
             EngineMethods.AuthenticateUser act = new EngineMethods.AuthenticateUser(this, _sessionMgr, db, username, hashedPassword);
             act.Execute();

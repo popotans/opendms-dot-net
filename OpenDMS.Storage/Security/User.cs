@@ -65,5 +65,10 @@ namespace OpenDMS.Storage.Security
             LastName = lastname;
             IsSuperuser = isSuperuser;
         }
+
+        public override string ToString()
+        {
+            return Username;
+        }
     }
 }

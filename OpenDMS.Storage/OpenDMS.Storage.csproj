@@ -105,6 +105,7 @@
     <Compile Include="Providers\CouchDB\Engine.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\AuthenticateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Base.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\CreateGroup.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\DetermineIfInstalled.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroups.cs" />
@@ -114,10 +115,13 @@
     <Compile Include="Providers\CouchDB\EngineMethods\GetUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Initialize.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Install.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\ModifyGroup.cs" />
     <Compile Include="Providers\CouchDB\GlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Model\BulkDocuments.cs" />
+    <Compile Include="Providers\CouchDB\Model\RevisionException.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Actions\CreateGlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Actions\CreateGroup.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Actions\ModifyGroup.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GlobalUsageRights.cs" />
     <Compile Include="Providers\IGlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Json\JsonParseException.cs" />
@@ -212,7 +216,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
+      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
