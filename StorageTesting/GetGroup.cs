@@ -32,7 +32,7 @@ namespace StorageTesting
             request.OnTimeout += new EngineBase.TimeoutDelegate(Timeout);
             request.OnError += new EngineBase.ErrorDelegate(Error);
             request.AuthToken = _window.Session.AuthToken;
-            request.RequestingPartyType = OpenDMS.Storage.Security.RequestingPartyType.System;
+            request.RequestingPartyType = OpenDMS.Storage.Security.RequestingPartyType.User;
 
             Clear();
 

@@ -31,8 +31,8 @@ namespace OpenDMS.Storage.Security
 
             for (int i = 0; i < Users.Count; i++)
             {
-                if (!Users[i].StartsWith("user-"))
-                    Users[i] = "user-" + Users[i];
+                if (Users[i].StartsWith("user-"))
+                    Users[i] = Users[i].Substring(5);
             }
         }
 

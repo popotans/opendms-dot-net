@@ -2,15 +2,15 @@
 
 namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
-    public class ModifyGroup : Base
+    public class ModifyUser : Base
     {
-        private Security.Group _group = null;
+        private Security.User _user = null;
         private Transactions.Transaction _t;
 
-        public ModifyGroup(EngineRequest request, Security.Group group)
+        public ModifyUser(EngineRequest request, Security.User user)
             : base(request)
         {
-            _group = group;
+            _user = user;
         }
 
         public override void Execute()
@@ -21,13 +21,13 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
         protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
         {
             Transactions.Stage stage;
-            Transitions.Group txGroup;
+            Transitions.User txUser;
             Model.Document doc;
-            Transactions.Actions.ModifyGroup action;
+            Transactions.Actions.ModifyUser action;
             string creatingUsername;
 
             // Check permissions
-            if (!GetGlobalPermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.GlobalPermissionType.ModifyGroup))
+            if (!GetGlobalPermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.GlobalPermissionType.ModifyUser))
                 return;
 
             if (request.RequestingPartyType == Security.RequestingPartyType.System)
@@ -35,15 +35,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             else
                 creatingUsername = request.Session.User.Username;
 
-            _t = Transactions.Manager.Instance.CreateTransaction(creatingUsername, _group.Id);
+            _t = Transactions.Manager.Instance.CreateTransaction(creatingUsername, _user.Id);
             stage = _t.Begin(creatingUsername, new System.TimeSpan(0, 5, 0));
-            txGroup = new Transitions.Group();
-            doc = txGroup.Transition(_group);
-            action = new Transactions.Actions.ModifyGroup(request.Database, doc);
+            txUser = new Transitions.User();
+            doc = txUser.Transition(_user);
+            action = new Transactions.Actions.ModifyUser(request.Database, doc);
 
             try
             {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.ModifyingGroup, true);
+                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.ModifyingUser, true);
             }
             catch (System.Exception e)
             {

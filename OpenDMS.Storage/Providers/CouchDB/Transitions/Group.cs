@@ -24,7 +24,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                     groupsJray = (JArray)document["Groups"];
 
                     for (int i = 0; i < groupsJray.Count; i++)
-                        groups.Add(groupsJray[i].Value<string>());
+                    {
+                        string groupName = groupsJray[i].Value<string>();
+                        if (groupName.StartsWith("group-"))
+                            groupName = groupName.Substring(6);
+                        groups.Add(groupName);
+                    }
                 }
             }
             catch (Exception e)
@@ -41,7 +46,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                     usersJray = (JArray)document["Users"];
 
                     for (int i = 0; i < usersJray.Count; i++)
-                        users.Add(usersJray[i].Value<string>());
+                    {
+                        string username = usersJray[i].Value<string>();
+                        if (username.StartsWith("user-"))
+                            username = username.Substring(5);
+                        users.Add(username);
+                    }
                 }
             }
             catch (Exception e)

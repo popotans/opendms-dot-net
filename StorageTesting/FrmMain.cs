@@ -25,7 +25,7 @@ namespace StorageTesting
             set
             {
                 _isInstalled = true;
-                ActivateTests(false, true, false, false, false, false, false);
+                ActivateTests(false, true, false, false, false, false, false, false, false, false, false);
             }
         }
         public bool IsInitialized
@@ -34,7 +34,7 @@ namespace StorageTesting
             set
             {
                 _isInitialized = true;
-                ActivateTests(false, false, true, false, false, false, false);
+                ActivateTests(false, false, true, false, false, false, false, false, false, false, false);
             }
         }
         public OpenDMS.Storage.Security.Session Session
@@ -43,7 +43,7 @@ namespace StorageTesting
             set
             {
                 _session = value;
-                ActivateTests(false, false, false, true, true, true, true);
+                ActivateTests(false, false, false, true, true, true, true, true, true, true, true);
             }
         }
 
@@ -55,7 +55,7 @@ namespace StorageTesting
 
         private void FrmMain_Load(object sender, EventArgs e)
         {
-            ActivateTests(false, false, false, false, false, false, false);
+            ActivateTests(false, false, false, false, false, false, false, false, false, false, false);
 
             _engine = new OpenDMS.Storage.Providers.CouchDB.Engine();
             _db = new OpenDMS.Storage.Providers.CouchDB.Database(
@@ -161,7 +161,9 @@ namespace StorageTesting
             Application.Exit();
         }
 
-        public void ActivateTests(bool install, bool initialize, bool authenticate, bool getAllGroups, bool getGroup, bool createGroup, bool modifyGroup)
+        public void ActivateTests(bool install, bool initialize, bool authenticate,
+            bool getAllGroups, bool getGroup, bool createGroup, bool modifyGroup,
+            bool getAllUsers, bool getUser, bool createUser, bool modifyUser)
         {
             if (BtnInstall.InvokeRequired)
             {
@@ -174,6 +176,10 @@ namespace StorageTesting
                     BtnGetGroup.Enabled = getGroup;
                     BtnCreateGroup.Enabled = createGroup;
                     BtnModifyGroup.Enabled = modifyGroup;
+                    BtnGetAllUsers.Enabled = getAllUsers;
+                    BtnGetUser.Enabled = getUser;
+                    BtnCreateUser.Enabled = createUser;
+                    BtnModifyUser.Enabled = modifyUser;
                 }));
             }
             else
@@ -185,6 +191,10 @@ namespace StorageTesting
                 BtnGetGroup.Enabled = getGroup;
                 BtnCreateGroup.Enabled = createGroup;
                 BtnModifyGroup.Enabled = modifyGroup;
+                BtnGetAllUsers.Enabled = getAllUsers;
+                BtnGetUser.Enabled = getUser;
+                BtnCreateUser.Enabled = createUser;
+                BtnModifyUser.Enabled = modifyUser;
             }
         }
 
@@ -234,6 +244,30 @@ namespace StorageTesting
         private void BtnModifyGroup_Click(object sender, EventArgs e)
         {
             ModifyGroup act = new ModifyGroup(this, _engine, _db);
+            act.Test();
+        }
+
+        private void BtnGetAllUsers_Click(object sender, EventArgs e)
+        {
+            GetAllUsers act = new GetAllUsers(this, _engine, _db);
+            act.Test();
+        }
+
+        private void BtnGetUser_Click(object sender, EventArgs e)
+        {
+            GetUser act = new GetUser(this, _engine, _db);
+            act.Test();
+        }
+
+        private void BtnCreateUser_Click(object sender, EventArgs e)
+        {
+            CreateUser act = new CreateUser(this, _engine, _db);
+            act.Test();
+        }
+
+        private void BtnModifyUser_Click(object sender, EventArgs e)
+        {
+            ModifyUser act = new ModifyUser(this, _engine, _db);
             act.Test();
         }
     }

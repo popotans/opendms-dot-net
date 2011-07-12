@@ -37,6 +37,10 @@
             this.BtnGetGroup = new System.Windows.Forms.Button();
             this.BtnCreateGroup = new System.Windows.Forms.Button();
             this.BtnModifyGroup = new System.Windows.Forms.Button();
+            this.BtnGetAllUsers = new System.Windows.Forms.Button();
+            this.BtnModifyUser = new System.Windows.Forms.Button();
+            this.BtnCreateUser = new System.Windows.Forms.Button();
+            this.BtnGetUser = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // TxtOutput
@@ -128,11 +132,55 @@
             this.BtnModifyGroup.UseVisualStyleBackColor = true;
             this.BtnModifyGroup.Click += new System.EventHandler(this.BtnModifyGroup_Click);
             // 
+            // BtnGetAllUsers
+            // 
+            this.BtnGetAllUsers.Location = new System.Drawing.Point(12, 231);
+            this.BtnGetAllUsers.Name = "BtnGetAllUsers";
+            this.BtnGetAllUsers.Size = new System.Drawing.Size(132, 20);
+            this.BtnGetAllUsers.TabIndex = 9;
+            this.BtnGetAllUsers.Text = "GetAllUsers";
+            this.BtnGetAllUsers.UseVisualStyleBackColor = true;
+            this.BtnGetAllUsers.Click += new System.EventHandler(this.BtnGetAllUsers_Click);
+            // 
+            // BtnModifyUser
+            // 
+            this.BtnModifyUser.Location = new System.Drawing.Point(12, 309);
+            this.BtnModifyUser.Name = "BtnModifyUser";
+            this.BtnModifyUser.Size = new System.Drawing.Size(132, 20);
+            this.BtnModifyUser.TabIndex = 12;
+            this.BtnModifyUser.Text = "ModifyUser";
+            this.BtnModifyUser.UseVisualStyleBackColor = true;
+            this.BtnModifyUser.Click += new System.EventHandler(this.BtnModifyUser_Click);
+            // 
+            // BtnCreateUser
+            // 
+            this.BtnCreateUser.Location = new System.Drawing.Point(12, 283);
+            this.BtnCreateUser.Name = "BtnCreateUser";
+            this.BtnCreateUser.Size = new System.Drawing.Size(132, 20);
+            this.BtnCreateUser.TabIndex = 11;
+            this.BtnCreateUser.Text = "CreateUser";
+            this.BtnCreateUser.UseVisualStyleBackColor = true;
+            this.BtnCreateUser.Click += new System.EventHandler(this.BtnCreateUser_Click);
+            // 
+            // BtnGetUser
+            // 
+            this.BtnGetUser.Location = new System.Drawing.Point(12, 257);
+            this.BtnGetUser.Name = "BtnGetUser";
+            this.BtnGetUser.Size = new System.Drawing.Size(132, 20);
+            this.BtnGetUser.TabIndex = 10;
+            this.BtnGetUser.Text = "GetUser";
+            this.BtnGetUser.UseVisualStyleBackColor = true;
+            this.BtnGetUser.Click += new System.EventHandler(this.BtnGetUser_Click);
+            // 
             // FrmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1188, 604);
+            this.Controls.Add(this.BtnModifyUser);
+            this.Controls.Add(this.BtnCreateUser);
+            this.Controls.Add(this.BtnGetUser);
+            this.Controls.Add(this.BtnGetAllUsers);
             this.Controls.Add(this.BtnModifyGroup);
             this.Controls.Add(this.BtnCreateGroup);
             this.Controls.Add(this.BtnGetGroup);
@@ -161,6 +209,10 @@
         private System.Windows.Forms.Button BtnGetGroup;
         private System.Windows.Forms.Button BtnCreateGroup;
         private System.Windows.Forms.Button BtnModifyGroup;
+        private System.Windows.Forms.Button BtnGetAllUsers;
+        private System.Windows.Forms.Button BtnModifyUser;
+        private System.Windows.Forms.Button BtnCreateUser;
+        private System.Windows.Forms.Button BtnGetUser;
     }
 }
 
