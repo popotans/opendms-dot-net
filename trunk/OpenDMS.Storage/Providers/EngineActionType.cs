@@ -8,6 +8,7 @@ namespace OpenDMS.Storage.Providers
         GettingGroups,
         GettingGroup,
         GettingUser,
+        GettingUsers,
         Aborting,
         SessionLookup,
         CheckingPermissions,
@@ -18,7 +19,8 @@ namespace OpenDMS.Storage.Providers
         DeterminingInstallation,
         AuthenticatingUser,
         Installing,
-        ModifyingGorup
+        ModifyingGroup,
+        ModifyingUser
         // No need to send a complete action as completion is signaled by Error, Timeout or Completion
         // Complete
     }

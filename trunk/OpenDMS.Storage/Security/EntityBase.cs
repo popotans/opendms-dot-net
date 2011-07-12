@@ -18,8 +18,8 @@ namespace OpenDMS.Storage.Security
 
             for (int i = 0; i < Groups.Count; i++)
             {
-                if (!Groups[i].StartsWith("group-"))
-                    Groups[i] = "group-" + Groups[i];
+                if (Groups[i].StartsWith("group-"))
+                    Groups[i] = Groups[i].Substring(6);
             }
         }
 

@@ -22,7 +22,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                     JArray jarray = (JArray)document["Groups"];
 
                     for (int i = 0; i < jarray.Count; i++)
-                        groups.Add(jarray[i].Value<string>());
+                    {
+                        string groupName = jarray[i].Value<string>();
+                        if (groupName.StartsWith("group-"))
+                            groupName = groupName.Substring(6);
+                        groups.Add(groupName);
+                    }
                 }
 
                 Security.User user = new Security.User(document.Id,

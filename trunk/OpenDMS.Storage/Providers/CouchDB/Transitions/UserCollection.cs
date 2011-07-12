@@ -31,7 +31,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 for (int i = 0; i < rows.Count; i++)
                 {
                     transitionUser = new User();
-                    doc = (Model.Document)rows[i]["key"];
+                    doc = new Model.Document(rows[i]["key"]);
                     users.Add(transitionUser.Transition(doc));
                 }
             }

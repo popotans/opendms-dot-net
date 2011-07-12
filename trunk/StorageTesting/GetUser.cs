@@ -1,28 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
 using OpenDMS.Networking.Http.Methods;
 using OpenDMS.Storage.Providers;
 using OpenDMS.Storage.Providers.CouchDB;
 
 namespace StorageTesting
 {
-    public class CreateGroup : TestBase
+    public class GetUser : TestBase
     {
         private DateTime _start;
 
-        public CreateGroup(FrmMain window, IEngine engine, IDatabase db)
+        public GetUser(FrmMain window, IEngine engine, IDatabase db)
             : base(window, engine, db)
         {
         }
 
         public override void Test()
         {
-            FrmCreateGroup win = new FrmCreateGroup();
-            win.OnCreateClick += new FrmCreateGroup.CreateDelegate(win_OnCreateClick);
+            FrmGetUser win = new FrmGetUser();
+            win.OnGoClick += new FrmGetUser.GoDelegate(win_OnGoClick);
             win.ShowDialog();
         }
 
-        void win_OnCreateClick(OpenDMS.Storage.Security.Group group)
+        void win_OnGoClick(string username)
         {
             OpenDMS.Storage.Providers.EngineRequest request = new OpenDMS.Storage.Providers.EngineRequest();
             request.Engine = _engine;
@@ -37,22 +36,22 @@ namespace StorageTesting
 
             Clear();
 
-            WriteLine("Starting CreateGroup test...");
+            WriteLine("Starting GetUser test...");
             _start = DateTime.Now;
-            _engine.CreateGroup(request, group);
+            _engine.GetUser(request, username);
         }
 
         private void EngineAction(EngineRequest request, EngineActionType actionType, bool willSendProgress)
         {
             if (willSendProgress)
-                WriteLine("CreateGroup.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
+                WriteLine("GetUser.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
             else
-                WriteLine("CreateGroup.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
+                WriteLine("GetUser.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
         }
 
         private void Progress(EngineRequest request, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
-            WriteLine("CreateGroup.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
+            WriteLine("GetUser.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
         }
 
         private void Complete(EngineRequest request, ICommandReply reply)
@@ -60,22 +59,24 @@ namespace StorageTesting
             DateTime stop = DateTime.Now;
             TimeSpan duration = stop - _start;
 
-            OpenDMS.Storage.Providers.CouchDB.Commands.PutDocumentReply r = (OpenDMS.Storage.Providers.CouchDB.Commands.PutDocumentReply)reply;
+            OpenDMS.Storage.Providers.CouchDB.Commands.GetDocumentReply r = (OpenDMS.Storage.Providers.CouchDB.Commands.GetDocumentReply)reply;
 
-            if (r.Ok)
-                WriteLine("CreateGroup.Complete - success in " + duration.TotalMilliseconds.ToString() + "ms.");
-            else
-                WriteLine("CreateGroup.Complete - failed in " + duration.TotalMilliseconds.ToString() + "ms.");
+            OpenDMS.Storage.Providers.CouchDB.Transitions.User txUser = new OpenDMS.Storage.Providers.CouchDB.Transitions.User();
+            OpenDMS.Storage.Security.User user = txUser.Transition(r.Document);
+
+            WriteLine("GetUser.Complete - results received in " + duration.TotalMilliseconds.ToString() + "ms.");
+
+            WriteLine("\tId: " + user.Id + ", Name: " + user.Username);
         }
 
         private void Timeout(EngineRequest request)
         {
-            WriteLine("CreateGroup.Timeout - Timeout.");
+            WriteLine("GetUser.Timeout - Timeout.");
         }
 
         private void Error(EngineRequest request, string message, Exception exception)
         {
-            WriteLine("CreateGroup.Error - Error.  Message: " + message);
+            WriteLine("GetUser.Error - Error.  Message: " + message);
         }
     }
 }

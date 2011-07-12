@@ -43,7 +43,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                         usageRights.Add(usageRight);
                     }
 
-                    document.Remove("UsageRights");
+                    //document.Remove("UsageRights");
                 }
             }
             catch (Exception e)

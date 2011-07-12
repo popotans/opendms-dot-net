@@ -11,6 +11,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
         public CreateUser(EngineRequest request, Security.User user)
             : base(request)
         {
+            _user = user;
         }
 
         public override void Execute()
@@ -33,7 +34,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
                 creatingUsername = "System";
             else
                 creatingUsername = request.Session.User.Username;
-
+            
             _t = Transactions.Manager.Instance.CreateTransaction(creatingUsername, _user.Id);
             stage = _t.Begin(creatingUsername, new System.TimeSpan(0, 5, 0));
             txUser = new Transitions.User();

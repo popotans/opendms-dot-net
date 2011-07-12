@@ -162,6 +162,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             EngineRequest request = new EngineRequest();
             request.Database = _request.Database;
             request.Engine = _request.Engine;
+            request.AuthToken = _request.AuthToken;
             request.OnComplete += new EngineBase.CompletionDelegate(GetGlobalPermissions_OnComplete);
             request.OnError += new EngineBase.ErrorDelegate(GetGlobalPermissions_OnError);
             request.OnTimeout += new EngineBase.TimeoutDelegate(GetGlobalPermissions_OnTimeout);

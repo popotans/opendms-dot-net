@@ -30,6 +30,13 @@ namespace OpenDMS.Storage.Providers.CouchDB
 		#region Methods (12) 
 
         // Public Methods (8) 
+        public override void ModifyUser(EngineRequest request, Security.User user)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Modifying user: " + user.Username + "...");
+            EngineMethods.ModifyUser act = new EngineMethods.ModifyUser(request, user);
+            act.Execute();
+        }
 
         public override void ModifyGroup(EngineRequest request, Security.Group group)
         {
@@ -79,6 +86,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
             CheckInitialization();
             Logger.Storage.Debug("Getting all groups from db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
             EngineMethods.GetAllGroups act = new EngineMethods.GetAllGroups(request);
+            act.Execute();
+        }
+
+        public override void GetAllUsers(EngineRequest request)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting all users from db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
+            EngineMethods.GetAllUsers act = new EngineMethods.GetAllUsers(request);
             act.Execute();
         }
 

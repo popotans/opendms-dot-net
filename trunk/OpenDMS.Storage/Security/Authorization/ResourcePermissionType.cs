@@ -6,13 +6,11 @@ namespace OpenDMS.Storage.Security.Authorization
     {
         None = 0x0,
 
-        // Flags are given slack between bitflags to allow for changes.
-
-        ReadOnly = 0x10,
-        Checkout = 0x100,
-        Modify = 0x1000,
-        VersionControl = 0x10000,
-        Delete = 0x100000,
+        ReadOnly = 0x1,
+        Checkout = 0x2,
+        Modify = 0x4,
+        VersionControl = 0x8,
+        Delete = 0x16,
         All = ReadOnly | Checkout | Modify | VersionControl | Delete
     }
 }

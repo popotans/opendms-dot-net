@@ -6,23 +6,23 @@ using OpenDMS.Storage.Providers.CouchDB;
 
 namespace StorageTesting
 {
-    public class CreateGroup : TestBase
+    public class ModifyUser : TestBase
     {
         private DateTime _start;
 
-        public CreateGroup(FrmMain window, IEngine engine, IDatabase db)
+        public ModifyUser(FrmMain window, IEngine engine, IDatabase db)
             : base(window, engine, db)
         {
         }
 
         public override void Test()
         {
-            FrmCreateGroup win = new FrmCreateGroup();
-            win.OnCreateClick += new FrmCreateGroup.CreateDelegate(win_OnCreateClick);
+            FrmModifyUser win = new FrmModifyUser(_engine, _db, _window.Session);
+            win.OnSaveClick += new FrmModifyUser.SaveDelegate(win_OnSaveClick);
             win.ShowDialog();
         }
 
-        void win_OnCreateClick(OpenDMS.Storage.Security.Group group)
+        void win_OnSaveClick(OpenDMS.Storage.Security.User user)
         {
             OpenDMS.Storage.Providers.EngineRequest request = new OpenDMS.Storage.Providers.EngineRequest();
             request.Engine = _engine;
@@ -37,22 +37,22 @@ namespace StorageTesting
 
             Clear();
 
-            WriteLine("Starting CreateGroup test...");
+            WriteLine("Starting ModifyUser test...");
             _start = DateTime.Now;
-            _engine.CreateGroup(request, group);
+            _engine.ModifyUser(request, user);
         }
 
         private void EngineAction(EngineRequest request, EngineActionType actionType, bool willSendProgress)
         {
             if (willSendProgress)
-                WriteLine("CreateGroup.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
+                WriteLine("ModifyUser.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
             else
-                WriteLine("CreateGroup.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
+                WriteLine("ModifyUser.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
         }
 
         private void Progress(EngineRequest request, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
-            WriteLine("CreateGroup.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
+            WriteLine("ModifyUser.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
         }
 
         private void Complete(EngineRequest request, ICommandReply reply)
@@ -63,19 +63,19 @@ namespace StorageTesting
             OpenDMS.Storage.Providers.CouchDB.Commands.PutDocumentReply r = (OpenDMS.Storage.Providers.CouchDB.Commands.PutDocumentReply)reply;
 
             if (r.Ok)
-                WriteLine("CreateGroup.Complete - success in " + duration.TotalMilliseconds.ToString() + "ms.");
+                WriteLine("ModifyUser.Complete - success in " + duration.TotalMilliseconds.ToString() + "ms.");
             else
-                WriteLine("CreateGroup.Complete - failed in " + duration.TotalMilliseconds.ToString() + "ms.");
+                WriteLine("ModifyUser.Complete - failed in " + duration.TotalMilliseconds.ToString() + "ms.");
         }
 
         private void Timeout(EngineRequest request)
         {
-            WriteLine("CreateGroup.Timeout - Timeout.");
+            WriteLine("ModifyUser.Timeout - Timeout.");
         }
 
         private void Error(EngineRequest request, string message, Exception exception)
         {
-            WriteLine("CreateGroup.Error - Error.  Message: " + message);
+            WriteLine("ModifyUser.Error - Error.  Message: " + message);
         }
     }
 }
