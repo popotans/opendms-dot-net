@@ -2,24 +2,26 @@
 
 namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
-    public class GetAllGroupsForInitialization : Base
+    public class GetResourceUsageRightsTemplate : Base
     {
-        public GetAllGroupsForInitialization(EngineRequest request)
+        public GetResourceUsageRightsTemplate(EngineRequest request)
             : base(request)
         {
         }
 
         public override void Execute()
         {
-            Commands.GetView cmd;
+            // Anyone can get the resourceusagerightstemplate, thus no permission checking
+
+            Commands.GetDocument cmd;
 
             try
             {
-                cmd = new Commands.GetView(UriBuilder.Build(_request.Database, "groups", "GetAll"));
+                cmd = new Commands.GetDocument(UriBuilder.Build(_request.Database, "resourceusagerightstemplate"));
             }
             catch (System.Exception e)
             {
-                Logger.Storage.Error("An exception occurred while creating the GetView command.", e);
+                Logger.Storage.Error("An exception occurred while creating the GetDocument command.", e);
                 throw;
             }
 
@@ -31,7 +33,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 
             try
             {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.GettingGroups, true);
+                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.GettingResourceUsageRightsTemplate, true);
             }
             catch (System.Exception e)
             {

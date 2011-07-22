@@ -56,6 +56,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             ""Groups"": [
                 ""group-administrators""
             ]
+        },
+        {
+            ""_id"": ""resourceusagerightstemplate"",
+            ""Type"": ""resourceusagerightstemplate"",
+            ""UsageRights"": [
+                { 
+                    ""group-administrators"": 31
+                }
+            ]
         }
     ]
 }";
@@ -109,6 +118,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             }
 
             cmd.Execute(_request.Database.Server.Timeout, _request.Database.Server.Timeout, _request.Database.Server.BufferSize, _request.Database.Server.BufferSize);
+        }
+
+        protected override void GetResourcePermissions_OnComplete(EngineRequest request, ICommandReply reply)
+        {
+            // Not called
+            throw new NotImplementedException();
         }
 
         protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)

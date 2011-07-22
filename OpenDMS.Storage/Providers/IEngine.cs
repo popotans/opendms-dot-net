@@ -32,8 +32,9 @@ namespace OpenDMS.Storage.Providers
 
         void GetResource(EngineRequest request, ResourceId resource);
         void GetResourceReadOnly(EngineRequest request, ResourceId resource);
-        void CreateNewResource(EngineRequest request, Metadata metadata);
-        void CreateNewResource(EngineRequest request, Metadata metadata, List<UsageRight> usageRights);
+        //void CreateNewResource(EngineRequest request, Metadata metadata);
+        //void CreateNewResource(EngineRequest request, Metadata metadata, List<UsageRight> usageRights);
+        void CreateNewResource(EngineRequest request, Metadata resourceMetadata, Metadata versionMetadata, Content versionContent);
         void ModifyResource(EngineRequest request, Resource resource);
         void RollbackResource(EngineRequest request, ResourceId resource, int rollbackDepth);
         void DeleteResource(EngineRequest request, ResourceId resource);
@@ -43,9 +44,10 @@ namespace OpenDMS.Storage.Providers
         void CreateNewVersion(EngineRequest request, Data.Version version);
         void ModifyVersion(EngineRequest request, Data.Version version);
 
-        void GetResourcePermissions(EngineRequest request, ResourceId resource);
+        // Accomplished by calling GetResource and checking its permissions
+        //void GetResourcePermissions(EngineRequest request, ResourceId resource);
         void GetGlobalPermissions(EngineRequest request);
-        // UpdateResourcePermissions - Accomplished by UpdateResource
+        void ModifyResourcePermissions(EngineRequest request, ResourceId resource, List<UsageRight> usageRights);
         void ModifyGlobalPermissions(EngineRequest request, List<UsageRight> usageRights);
         void GetResourceUsageRightsTemplate(EngineRequest request);
         void ModifyResourceUsageRightsTemplate(EngineRequest request, List<UsageRight> usageRights);

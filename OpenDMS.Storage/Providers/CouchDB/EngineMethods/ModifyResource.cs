@@ -1,49 +1,51 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
-    public class CreateGroup : Base
+    public class ModifyResource : Base
     {
-        private Security.Group _group = null;
         private Transactions.Transaction _t;
+        private Data.Resource _resource = null;
 
-        public CreateGroup(EngineRequest request, Security.Group group)
+        public ModifyResource(EngineRequest request, Data.Resource resource)
             : base(request)
         {
-            _group = group;
+            _resource = resource;
         }
 
         public override void Execute()
         {
-            GetGlobalPermissions();
+            GetResourcePermissions(_resource.ResourceId);
         }
 
-        protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
+        protected override void GetResourcePermissions_OnComplete(EngineRequest request, ICommandReply reply)
         {
             Transactions.Stage stage;
-            Transitions.Group txGroup;
+            Transitions.Resource txResource;
             Model.Document doc;
-            Transactions.Actions.CreateGroup action;
-            string creatingUsername;
+            string username;
+            List<Exception> errors;
+            Transactions.Actions.ModifyResource action;
 
             // Check permissions
-            if (!GetGlobalPermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.GlobalPermissionType.CreateGroup))
+            if (!GetResourcePermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.ResourcePermissionType.Modify))
                 return;
 
             if (request.RequestingPartyType == Security.RequestingPartyType.System)
-                creatingUsername = "System";
+                username = "System";
             else
-                creatingUsername = request.Session.User.Username;
+                username = request.Session.User.Username;
 
-            _t = Transactions.Manager.Instance.CreateTransaction(creatingUsername, _group.Id);
-            stage = _t.Begin(creatingUsername, new System.TimeSpan(0, 5, 0));
-            txGroup = new Transitions.Group();
-            doc = txGroup.Transition(_group);
-            action = new Transactions.Actions.CreateGroup(request.Database, doc);
+            _t = Transactions.Manager.Instance.CreateTransaction(username, _resource.ResourceId.ToString());
+            stage = _t.Begin(username, new TimeSpan(0, 5, 0));
+            txResource = new Transitions.Resource();
+            doc = txResource.Transition(_resource, out errors);
+            action = new Transactions.Actions.ModifyResource(request.Database, doc);
 
             try
             {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.CreatingGroup, true);
+                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.ModifyingResource, true);
             }
             catch (System.Exception e)
             {
@@ -60,7 +62,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             _t.OnCommitSuccess += new Transactions.Transaction.CommitSuccessDelegate(Commit_OnCommitSuccess);
 
             // Sends to CouchDB
-            _t.Commit(stage, creatingUsername, action);
+            _t.Commit(stage, username, action);
         }
 
         private void Commit_OnCommitError(Transactions.Transaction sender, Transactions.Stage stage, Transactions.Actions.Base action, string message, Exception exception)
@@ -129,9 +131,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             }
         }
 
-        protected override void GetResourcePermissions_OnComplete(EngineRequest request, ICommandReply reply)
+        protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
         {
-            // Not called
             throw new NotImplementedException();
         }
     }

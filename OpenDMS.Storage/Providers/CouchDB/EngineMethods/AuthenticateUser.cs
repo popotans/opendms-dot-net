@@ -105,5 +105,11 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
         }
 
 		#endregion Methods 
+    
+        protected override void GetResourcePermissions_OnComplete(EngineRequest request, ICommandReply reply)
+        {
+            // Not called
+            throw new NotImplementedException();
+        }
     }
 }

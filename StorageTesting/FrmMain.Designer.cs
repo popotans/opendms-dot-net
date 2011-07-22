@@ -41,6 +41,23 @@
             this.BtnModifyUser = new System.Windows.Forms.Button();
             this.BtnCreateUser = new System.Windows.Forms.Button();
             this.BtnGetUser = new System.Windows.Forms.Button();
+            this.BtnGetResource = new System.Windows.Forms.Button();
+            this.BtnGetResourceReadOnly = new System.Windows.Forms.Button();
+            this.BtnCreateNewResource = new System.Windows.Forms.Button();
+            this.BtnCreateNewResource2 = new System.Windows.Forms.Button();
+            this.BtnModifyResource = new System.Windows.Forms.Button();
+            this.BtnRollbackResource = new System.Windows.Forms.Button();
+            this.BtnDeleteResource = new System.Windows.Forms.Button();
+            this.BtnGetVersion = new System.Windows.Forms.Button();
+            this.BtnGetCurrentVersion = new System.Windows.Forms.Button();
+            this.BtnCreateNewVersion = new System.Windows.Forms.Button();
+            this.BtnModifyVersion = new System.Windows.Forms.Button();
+            this.BtnGetResourcePermissions = new System.Windows.Forms.Button();
+            this.BtnGetGlobalPermissions = new System.Windows.Forms.Button();
+            this.BtnModifyGlobalPermissions = new System.Windows.Forms.Button();
+            this.BtnGetResourceUsageRightsTemplate = new System.Windows.Forms.Button();
+            this.BtnModifyResourceUsageRightsTemplate = new System.Windows.Forms.Button();
+            this.BtnModifyResourcePermissions = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // TxtOutput
@@ -49,7 +66,7 @@
             this.TxtOutput.Multiline = true;
             this.TxtOutput.Name = "TxtOutput";
             this.TxtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.TxtOutput.Size = new System.Drawing.Size(1026, 580);
+            this.TxtOutput.Size = new System.Drawing.Size(966, 468);
             this.TxtOutput.TabIndex = 0;
             // 
             // BtnInstall
@@ -74,7 +91,7 @@
             // 
             // BtnExit
             // 
-            this.BtnExit.Location = new System.Drawing.Point(12, 572);
+            this.BtnExit.Location = new System.Drawing.Point(12, 486);
             this.BtnExit.Name = "BtnExit";
             this.BtnExit.Size = new System.Drawing.Size(132, 20);
             this.BtnExit.TabIndex = 3;
@@ -172,11 +189,197 @@
             this.BtnGetUser.UseVisualStyleBackColor = true;
             this.BtnGetUser.Click += new System.EventHandler(this.BtnGetUser_Click);
             // 
+            // BtnGetResource
+            // 
+            this.BtnGetResource.Location = new System.Drawing.Point(1122, 12);
+            this.BtnGetResource.Name = "BtnGetResource";
+            this.BtnGetResource.Size = new System.Drawing.Size(132, 20);
+            this.BtnGetResource.TabIndex = 13;
+            this.BtnGetResource.Text = "GetResource";
+            this.BtnGetResource.UseVisualStyleBackColor = true;
+            this.BtnGetResource.Click += new System.EventHandler(this.BtnGetResource_Click);
+            // 
+            // BtnGetResourceReadOnly
+            // 
+            this.BtnGetResourceReadOnly.Location = new System.Drawing.Point(1122, 38);
+            this.BtnGetResourceReadOnly.Name = "BtnGetResourceReadOnly";
+            this.BtnGetResourceReadOnly.Size = new System.Drawing.Size(132, 20);
+            this.BtnGetResourceReadOnly.TabIndex = 14;
+            this.BtnGetResourceReadOnly.Text = "GetResourceReadOnly";
+            this.BtnGetResourceReadOnly.UseVisualStyleBackColor = true;
+            this.BtnGetResourceReadOnly.Click += new System.EventHandler(this.BtnGetResourceReadOnly_Click);
+            // 
+            // BtnCreateNewResource
+            // 
+            this.BtnCreateNewResource.Location = new System.Drawing.Point(1122, 64);
+            this.BtnCreateNewResource.Name = "BtnCreateNewResource";
+            this.BtnCreateNewResource.Size = new System.Drawing.Size(132, 20);
+            this.BtnCreateNewResource.TabIndex = 15;
+            this.BtnCreateNewResource.Text = "CreateNewResource";
+            this.BtnCreateNewResource.UseVisualStyleBackColor = true;
+            this.BtnCreateNewResource.Click += new System.EventHandler(this.BtnCreateNewResource_Click);
+            // 
+            // BtnCreateNewResource2
+            // 
+            this.BtnCreateNewResource2.Location = new System.Drawing.Point(1122, 90);
+            this.BtnCreateNewResource2.Name = "BtnCreateNewResource2";
+            this.BtnCreateNewResource2.Size = new System.Drawing.Size(132, 20);
+            this.BtnCreateNewResource2.TabIndex = 16;
+            this.BtnCreateNewResource2.Text = "CreateNewResource2";
+            this.BtnCreateNewResource2.UseVisualStyleBackColor = true;
+            this.BtnCreateNewResource2.Click += new System.EventHandler(this.BtnCreateNewResource2_Click);
+            // 
+            // BtnModifyResource
+            // 
+            this.BtnModifyResource.Location = new System.Drawing.Point(1122, 116);
+            this.BtnModifyResource.Name = "BtnModifyResource";
+            this.BtnModifyResource.Size = new System.Drawing.Size(132, 20);
+            this.BtnModifyResource.TabIndex = 17;
+            this.BtnModifyResource.Text = "ModifyResource";
+            this.BtnModifyResource.UseVisualStyleBackColor = true;
+            // 
+            // BtnRollbackResource
+            // 
+            this.BtnRollbackResource.Location = new System.Drawing.Point(1122, 142);
+            this.BtnRollbackResource.Name = "BtnRollbackResource";
+            this.BtnRollbackResource.Size = new System.Drawing.Size(132, 20);
+            this.BtnRollbackResource.TabIndex = 18;
+            this.BtnRollbackResource.Text = "RollbackResource";
+            this.BtnRollbackResource.UseVisualStyleBackColor = true;
+            this.BtnRollbackResource.Click += new System.EventHandler(this.BtnRollbackResource_Click);
+            // 
+            // BtnDeleteResource
+            // 
+            this.BtnDeleteResource.Location = new System.Drawing.Point(1122, 168);
+            this.BtnDeleteResource.Name = "BtnDeleteResource";
+            this.BtnDeleteResource.Size = new System.Drawing.Size(132, 20);
+            this.BtnDeleteResource.TabIndex = 19;
+            this.BtnDeleteResource.Text = "DeleteResource";
+            this.BtnDeleteResource.UseVisualStyleBackColor = true;
+            this.BtnDeleteResource.Click += new System.EventHandler(this.BtnDeleteResource_Click);
+            // 
+            // BtnGetVersion
+            // 
+            this.BtnGetVersion.Location = new System.Drawing.Point(1122, 212);
+            this.BtnGetVersion.Name = "BtnGetVersion";
+            this.BtnGetVersion.Size = new System.Drawing.Size(132, 20);
+            this.BtnGetVersion.TabIndex = 20;
+            this.BtnGetVersion.Text = "GetVersion";
+            this.BtnGetVersion.UseVisualStyleBackColor = true;
+            this.BtnGetVersion.Click += new System.EventHandler(this.BtnGetVersion_Click);
+            // 
+            // BtnGetCurrentVersion
+            // 
+            this.BtnGetCurrentVersion.Location = new System.Drawing.Point(1122, 238);
+            this.BtnGetCurrentVersion.Name = "BtnGetCurrentVersion";
+            this.BtnGetCurrentVersion.Size = new System.Drawing.Size(132, 20);
+            this.BtnGetCurrentVersion.TabIndex = 21;
+            this.BtnGetCurrentVersion.Text = "GetCurrentVersion";
+            this.BtnGetCurrentVersion.UseVisualStyleBackColor = true;
+            this.BtnGetCurrentVersion.Click += new System.EventHandler(this.BtnGetCurrentVersion_Click);
+            // 
+            // BtnCreateNewVersion
+            // 
+            this.BtnCreateNewVersion.Location = new System.Drawing.Point(1122, 264);
+            this.BtnCreateNewVersion.Name = "BtnCreateNewVersion";
+            this.BtnCreateNewVersion.Size = new System.Drawing.Size(132, 20);
+            this.BtnCreateNewVersion.TabIndex = 22;
+            this.BtnCreateNewVersion.Text = "CreateNewVersion";
+            this.BtnCreateNewVersion.UseVisualStyleBackColor = true;
+            this.BtnCreateNewVersion.Click += new System.EventHandler(this.BtnCreateNewVersion_Click);
+            // 
+            // BtnModifyVersion
+            // 
+            this.BtnModifyVersion.Location = new System.Drawing.Point(1122, 290);
+            this.BtnModifyVersion.Name = "BtnModifyVersion";
+            this.BtnModifyVersion.Size = new System.Drawing.Size(132, 20);
+            this.BtnModifyVersion.TabIndex = 23;
+            this.BtnModifyVersion.Text = "ModifyVersion";
+            this.BtnModifyVersion.UseVisualStyleBackColor = true;
+            this.BtnModifyVersion.Click += new System.EventHandler(this.BtnModifyVersion_Click);
+            // 
+            // BtnGetResourcePermissions
+            // 
+            this.BtnGetResourcePermissions.Location = new System.Drawing.Point(211, 486);
+            this.BtnGetResourcePermissions.Name = "BtnGetResourcePermissions";
+            this.BtnGetResourcePermissions.Size = new System.Drawing.Size(139, 20);
+            this.BtnGetResourcePermissions.TabIndex = 24;
+            this.BtnGetResourcePermissions.Text = "GetResourcePermissions";
+            this.BtnGetResourcePermissions.UseVisualStyleBackColor = true;
+            this.BtnGetResourcePermissions.Click += new System.EventHandler(this.BtnGetResourcePermissions_Click);
+            // 
+            // BtnGetGlobalPermissions
+            // 
+            this.BtnGetGlobalPermissions.Location = new System.Drawing.Point(545, 486);
+            this.BtnGetGlobalPermissions.Name = "BtnGetGlobalPermissions";
+            this.BtnGetGlobalPermissions.Size = new System.Drawing.Size(132, 20);
+            this.BtnGetGlobalPermissions.TabIndex = 25;
+            this.BtnGetGlobalPermissions.Text = "GetGlobalPermissions";
+            this.BtnGetGlobalPermissions.UseVisualStyleBackColor = true;
+            this.BtnGetGlobalPermissions.Click += new System.EventHandler(this.BtnGetGlobalPermissions_Click);
+            // 
+            // BtnModifyGlobalPermissions
+            // 
+            this.BtnModifyGlobalPermissions.Location = new System.Drawing.Point(683, 486);
+            this.BtnModifyGlobalPermissions.Name = "BtnModifyGlobalPermissions";
+            this.BtnModifyGlobalPermissions.Size = new System.Drawing.Size(132, 20);
+            this.BtnModifyGlobalPermissions.TabIndex = 26;
+            this.BtnModifyGlobalPermissions.Text = "ModifyGlobalPermissions";
+            this.BtnModifyGlobalPermissions.UseVisualStyleBackColor = true;
+            this.BtnModifyGlobalPermissions.Click += new System.EventHandler(this.BtnModifyGlobalPermissions_Click);
+            // 
+            // BtnGetResourceUsageRightsTemplate
+            // 
+            this.BtnGetResourceUsageRightsTemplate.Location = new System.Drawing.Point(855, 486);
+            this.BtnGetResourceUsageRightsTemplate.Name = "BtnGetResourceUsageRightsTemplate";
+            this.BtnGetResourceUsageRightsTemplate.Size = new System.Drawing.Size(186, 20);
+            this.BtnGetResourceUsageRightsTemplate.TabIndex = 27;
+            this.BtnGetResourceUsageRightsTemplate.Text = "GetResourceUsageRightsTemplate";
+            this.BtnGetResourceUsageRightsTemplate.UseVisualStyleBackColor = true;
+            this.BtnGetResourceUsageRightsTemplate.Click += new System.EventHandler(this.BtnGetResourceUsageRightsTemplate_Click);
+            // 
+            // BtnModifyResourceUsageRightsTemplate
+            // 
+            this.BtnModifyResourceUsageRightsTemplate.Location = new System.Drawing.Point(1047, 486);
+            this.BtnModifyResourceUsageRightsTemplate.Name = "BtnModifyResourceUsageRightsTemplate";
+            this.BtnModifyResourceUsageRightsTemplate.Size = new System.Drawing.Size(207, 20);
+            this.BtnModifyResourceUsageRightsTemplate.TabIndex = 28;
+            this.BtnModifyResourceUsageRightsTemplate.Text = "ModifyResourceUsageRightsTemplate";
+            this.BtnModifyResourceUsageRightsTemplate.UseVisualStyleBackColor = true;
+            this.BtnModifyResourceUsageRightsTemplate.Click += new System.EventHandler(this.BtnModifyResourceUsageRightsTemplate_Click);
+            // 
+            // BtnModifyResourcePermissions
+            // 
+            this.BtnModifyResourcePermissions.Location = new System.Drawing.Point(356, 486);
+            this.BtnModifyResourcePermissions.Name = "BtnModifyResourcePermissions";
+            this.BtnModifyResourcePermissions.Size = new System.Drawing.Size(147, 20);
+            this.BtnModifyResourcePermissions.TabIndex = 29;
+            this.BtnModifyResourcePermissions.Text = "ModifyResourcePermissions";
+            this.BtnModifyResourcePermissions.UseVisualStyleBackColor = true;
+            this.BtnModifyResourcePermissions.Click += new System.EventHandler(this.BtnModifyResourcePermissions_Click);
+            // 
             // FrmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1188, 604);
+            this.ClientSize = new System.Drawing.Size(1261, 512);
+            this.Controls.Add(this.BtnModifyResourcePermissions);
+            this.Controls.Add(this.BtnModifyResourceUsageRightsTemplate);
+            this.Controls.Add(this.BtnGetResourceUsageRightsTemplate);
+            this.Controls.Add(this.BtnModifyGlobalPermissions);
+            this.Controls.Add(this.BtnGetGlobalPermissions);
+            this.Controls.Add(this.BtnGetResourcePermissions);
+            this.Controls.Add(this.BtnModifyVersion);
+            this.Controls.Add(this.BtnCreateNewVersion);
+            this.Controls.Add(this.BtnGetCurrentVersion);
+            this.Controls.Add(this.BtnGetVersion);
+            this.Controls.Add(this.BtnDeleteResource);
+            this.Controls.Add(this.BtnRollbackResource);
+            this.Controls.Add(this.BtnModifyResource);
+            this.Controls.Add(this.BtnCreateNewResource2);
+            this.Controls.Add(this.BtnCreateNewResource);
+            this.Controls.Add(this.BtnGetResourceReadOnly);
+            this.Controls.Add(this.BtnGetResource);
             this.Controls.Add(this.BtnModifyUser);
             this.Controls.Add(this.BtnCreateUser);
             this.Controls.Add(this.BtnGetUser);
@@ -213,6 +416,23 @@
         private System.Windows.Forms.Button BtnModifyUser;
         private System.Windows.Forms.Button BtnCreateUser;
         private System.Windows.Forms.Button BtnGetUser;
+        private System.Windows.Forms.Button BtnGetResource;
+        private System.Windows.Forms.Button BtnGetResourceReadOnly;
+        private System.Windows.Forms.Button BtnCreateNewResource;
+        private System.Windows.Forms.Button BtnCreateNewResource2;
+        private System.Windows.Forms.Button BtnModifyResource;
+        private System.Windows.Forms.Button BtnRollbackResource;
+        private System.Windows.Forms.Button BtnDeleteResource;
+        private System.Windows.Forms.Button BtnGetVersion;
+        private System.Windows.Forms.Button BtnGetCurrentVersion;
+        private System.Windows.Forms.Button BtnCreateNewVersion;
+        private System.Windows.Forms.Button BtnModifyVersion;
+        private System.Windows.Forms.Button BtnGetResourcePermissions;
+        private System.Windows.Forms.Button BtnGetGlobalPermissions;
+        private System.Windows.Forms.Button BtnModifyGlobalPermissions;
+        private System.Windows.Forms.Button BtnGetResourceUsageRightsTemplate;
+        private System.Windows.Forms.Button BtnModifyResourceUsageRightsTemplate;
+        private System.Windows.Forms.Button BtnModifyResourcePermissions;
     }
 }
 

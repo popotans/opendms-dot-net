@@ -8,7 +8,7 @@ namespace OpenDMS.Storage.Providers.CouchDB
 {
     public class Engine : EngineBase
     {
-		#region Fields (3) 
+		#region Fields (1) 
 
         private bool _ignoringAuthenticateComplete;
 
@@ -27,22 +27,24 @@ namespace OpenDMS.Storage.Providers.CouchDB
 
 		#endregion Constructors 
 
-		#region Methods (12) 
+		#region Methods (19) 
 
-        // Public Methods (8) 
-        public override void ModifyUser(EngineRequest request, Security.User user)
+		// Public Methods (17) 
+
+        public override void GetResource(EngineRequest request, ResourceId resource)
         {
             CheckInitialization();
-            Logger.Storage.Debug("Modifying user: " + user.Username + "...");
-            EngineMethods.ModifyUser act = new EngineMethods.ModifyUser(request, user);
+            Logger.Storage.Debug("Getting resource: " + resource.ToString() + "...");
+            EngineMethods.GetResource act = new EngineMethods.GetResource(request, resource);
             act.Execute();
         }
 
-        public override void ModifyGroup(EngineRequest request, Security.Group group)
+        public override void AuthenticateUser(IDatabase db, string username, string hashedPassword, AuthenticationDelegate onAuthenticated)
         {
             CheckInitialization();
-            Logger.Storage.Debug("Modifying group: " + group.GroupName + "...");
-            EngineMethods.ModifyGroup act = new EngineMethods.ModifyGroup(request, group);
+            Logger.Storage.Debug("Authenticating user: " + username);
+            RegisterOnAuthenticated(onAuthenticated);
+            EngineMethods.AuthenticateUser act = new EngineMethods.AuthenticateUser(this, _sessionMgr, db, username, hashedPassword);
             act.Execute();
         }
 
@@ -51,6 +53,22 @@ namespace OpenDMS.Storage.Providers.CouchDB
             CheckInitialization();
             Logger.Storage.Debug("Creating group: " + group.GroupName + "...");
             EngineMethods.CreateGroup act = new EngineMethods.CreateGroup(request, group);
+            act.Execute();
+        }
+
+        public override void CreateNewResource(EngineRequest request, Data.Metadata resourceMetadata, Data.Metadata versionMetadata, Data.Content versionContent)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Creating new resource...");
+            EngineMethods.CreateNewResource act = new EngineMethods.CreateNewResource(request, resourceMetadata, versionMetadata, versionContent);
+            act.Execute();
+        }
+
+        public override void CreateUser(EngineRequest request, Security.User user)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Creating user: " + user.Username + " in db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
+            EngineMethods.CreateUser act = new EngineMethods.CreateUser(request, user);
             act.Execute();
         }
 
@@ -64,36 +82,11 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
-        public override void AuthenticateUser(IDatabase db, string username, string hashedPassword, AuthenticationDelegate onAuthenticated)
-        {
-            CheckInitialization();
-            Logger.Storage.Debug("Authenticating user: " + username);
-            RegisterOnAuthenticated(onAuthenticated);
-            EngineMethods.AuthenticateUser act = new EngineMethods.AuthenticateUser(this, _sessionMgr, db, username, hashedPassword);
-            act.Execute();
-        }
-
-        public override void CreateUser(EngineRequest request, Security.User user)
-        {
-            CheckInitialization();
-            Logger.Storage.Debug("Creating user: " + user.Username + " in db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
-            EngineMethods.CreateUser act = new EngineMethods.CreateUser(request, user);
-            act.Execute();
-        }
-
         public override void GetAllGroups(EngineRequest request)
         {
             CheckInitialization();
             Logger.Storage.Debug("Getting all groups from db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
             EngineMethods.GetAllGroups act = new EngineMethods.GetAllGroups(request);
-            act.Execute();
-        }
-
-        public override void GetAllUsers(EngineRequest request)
-        {
-            CheckInitialization();
-            Logger.Storage.Debug("Getting all users from db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
-            EngineMethods.GetAllUsers act = new EngineMethods.GetAllUsers(request);
             act.Execute();
         }
 
@@ -106,6 +99,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
                 throw new InvalidOperationException("The engine is already initialized.");
 
             EngineMethods.GetAllGroupsForInitialization act = new EngineMethods.GetAllGroupsForInitialization(request);
+            act.Execute();
+        }
+
+        public override void GetAllUsers(EngineRequest request)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting all users from db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
+            EngineMethods.GetAllUsers act = new EngineMethods.GetAllUsers(request);
             act.Execute();
         }
 
@@ -122,6 +123,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
             CheckInitialization();
             Logger.Storage.Debug("Getting group: " + groupName + " from db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
             EngineMethods.GetGroup act = new EngineMethods.GetGroup(request, groupName);
+            act.Execute();
+        }
+
+        public override void GetResourceUsageRightsTemplate(EngineRequest request)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting ResourceUsageRightsTemplate...");
+            EngineMethods.GetResourceUsageRightsTemplate act = new EngineMethods.GetResourceUsageRightsTemplate(request);
             act.Execute();
         }
 
@@ -166,7 +175,31 @@ namespace OpenDMS.Storage.Providers.CouchDB
             EngineMethods.Install act = new EngineMethods.Install(request);
             act.Execute();
         }
-		// Private Methods (4) 
+
+        public override void ModifyGroup(EngineRequest request, Security.Group group)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Modifying group: " + group.GroupName + "...");
+            EngineMethods.ModifyGroup act = new EngineMethods.ModifyGroup(request, group);
+            act.Execute();
+        }
+
+        public override void ModifyResource(EngineRequest request, Resource resource)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Modifying existing resource...");
+            EngineMethods.ModifyResource act = new EngineMethods.ModifyResource(request, resource);
+            act.Execute();
+        }
+
+        public override void ModifyUser(EngineRequest request, Security.User user)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Modifying user: " + user.Username + "...");
+            EngineMethods.ModifyUser act = new EngineMethods.ModifyUser(request, user);
+            act.Execute();
+        }
+		// Private Methods (2) 
 
         private void AuthenticateUser_OnAuthenticationComplete(Security.Session session, string message)
         {

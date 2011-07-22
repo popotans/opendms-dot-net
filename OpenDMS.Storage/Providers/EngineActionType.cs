@@ -20,7 +20,12 @@ namespace OpenDMS.Storage.Providers
         AuthenticatingUser,
         Installing,
         ModifyingGroup,
-        ModifyingUser
+        ModifyingUser,
+        GettingResourceUsageRightsTemplate,
+        CreatingNewResource,
+        CreatingNewVersion,
+        ModifyingResource,
+        GettingResource
         // No need to send a complete action as completion is signaled by Error, Timeout or Completion
         // Complete
     }

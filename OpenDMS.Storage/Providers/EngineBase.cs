@@ -49,9 +49,9 @@ namespace OpenDMS.Storage.Providers
 
 		#endregion Delegates and Events 
 
-		#region Methods (34) 
+		#region Methods (35) 
 
-		// Public Methods (34) 
+		// Public Methods (35) 
 
         public virtual void AuthenticateUser(IDatabase db, string username, string hashedPassword, AuthenticationDelegate onAuthenticated)
         {
@@ -59,16 +59,6 @@ namespace OpenDMS.Storage.Providers
         }
 
         public virtual void CreateGroup(EngineRequest request, Security.Group group)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual void CreateNewResource(EngineRequest request, Data.Metadata metadata)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual void CreateNewResource(EngineRequest request, Data.Metadata metadata, List<Security.UsageRight> usageRights)
         {
             throw new NotImplementedException();
         }
@@ -128,11 +118,6 @@ namespace OpenDMS.Storage.Providers
             throw new NotImplementedException();
         }
 
-        public virtual void GetResourcePermissions(EngineRequest request, Data.ResourceId resource)
-        {
-            throw new NotImplementedException();
-        }
-
         public virtual void GetResourceReadOnly(EngineRequest request, Data.ResourceId resource)
         {
             throw new NotImplementedException();
@@ -175,6 +160,11 @@ namespace OpenDMS.Storage.Providers
         }
 
         public virtual void ModifyResource(EngineRequest request, Data.Resource resource)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ModifyResourcePermissions(EngineRequest request, Data.ResourceId resource, List<Security.UsageRight> usageRights)
         {
             throw new NotImplementedException();
         }
@@ -226,5 +216,11 @@ namespace OpenDMS.Storage.Providers
         }
 
 		#endregion Methods 
+    
+
+        public virtual void CreateNewResource(EngineRequest request, Data.Metadata resourceMetadata, Data.Metadata versionMetadata, Data.Content versionContent)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

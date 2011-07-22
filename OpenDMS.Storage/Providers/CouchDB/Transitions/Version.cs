@@ -36,16 +36,16 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 
         public Model.Document Transition(Data.Version version, out List<Exception> errors)
         {
-            Model.Document doc = null;
+            Model.Document document = new Model.Document();
             Model.Attachment att = null;
 
             try
             {
-                doc.Id = version.VersionId.ToString();
+                document.Id = version.VersionId.ToString();
                 if (!string.IsNullOrEmpty(version.Revision))
-                    doc.Rev = version.Revision;
+                    document.Rev = version.Revision;
 
-                if ((errors = AddMetadata(version, doc)) != null)
+                if ((errors = AddMetadata(version, document)) != null)
                     return null;
 
                 if (version.Content != null)
@@ -53,7 +53,10 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                     att = new Model.Attachment();
                     att.ContentType = version.Content.ContentType.Name;
                     att.AttachmentLength = version.Content.Length;
-                    doc.AddAttachment(System.IO.Path.GetFileName(version.Content.LocalFilepath), att);
+                    if (string.IsNullOrEmpty(version.Content.LocalFilepath))
+                        document.AddAttachment("file", att);
+                    else
+                        document.AddAttachment(System.IO.Path.GetFileName(version.Content.LocalFilepath), att);
                 }
             }
             catch (Exception e)
@@ -62,7 +65,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 throw;
             }
 
-            return doc;
+            return document;
         }
 
         private List<Exception> AddMetadata(Data.Version version, Model.Document doc)

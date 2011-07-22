@@ -288,7 +288,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions
             else
             {
                 Reset(); // We need to reset before the exception.
-                throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Transaction.OnFailure event must be implemented.");
+                throw new NotImplementedException("The OpenDMS.Storage.Providers.CouchDB.Transactions.Transaction.OnCommitSuccess event must be implemented.");
             }
 
             Reset();
