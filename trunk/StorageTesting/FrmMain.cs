@@ -25,7 +25,9 @@ namespace StorageTesting
             set
             {
                 _isInstalled = true;
-                ActivateTests(false, true, false, false, false, false, false, false, false, false, false);
+                ActivateTests(false, true, false, false, false, false, false, false, false, false, 
+                    false, false, false, false, false, false, false, false, false, false, false, 
+                    false, false, false, false, false, false, false);
             }
         }
         public bool IsInitialized
@@ -34,7 +36,9 @@ namespace StorageTesting
             set
             {
                 _isInitialized = true;
-                ActivateTests(false, false, true, false, false, false, false, false, false, false, false);
+                ActivateTests(false, false, true, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false);
             }
         }
         public OpenDMS.Storage.Security.Session Session
@@ -43,7 +47,9 @@ namespace StorageTesting
             set
             {
                 _session = value;
-                ActivateTests(false, false, false, true, true, true, true, true, true, true, true);
+                ActivateTests(false, false, false, true, true, true, true, true, true, true,
+                    true, true, true, true, true, true, true, true, true, true, true,
+                    true, true, true, true, true, true, true);
             }
         }
 
@@ -55,7 +61,9 @@ namespace StorageTesting
 
         private void FrmMain_Load(object sender, EventArgs e)
         {
-            ActivateTests(false, false, false, false, false, false, false, false, false, false, false);
+            ActivateTests(false, false, false, false, false, false, false, false, false, false,
+                false, false, false, false, false, false, false, false, false, false, false,
+                false, false, false, false, false, false, false);
 
             _engine = new OpenDMS.Storage.Providers.CouchDB.Engine();
             _db = new OpenDMS.Storage.Providers.CouchDB.Database(
@@ -163,7 +171,13 @@ namespace StorageTesting
 
         public void ActivateTests(bool install, bool initialize, bool authenticate,
             bool getAllGroups, bool getGroup, bool createGroup, bool modifyGroup,
-            bool getAllUsers, bool getUser, bool createUser, bool modifyUser)
+            bool getAllUsers, bool getUser, bool createUser, bool modifyUser, 
+            bool getResourcePermissions, bool modifyResourcePermissions, bool getGlobalPermissions,
+            bool modifyGlobalPermissions, bool getResourceUsageRightsTemplate, 
+            bool modifyResourceUsageRightsTemplate, bool getResource, bool getResourceReadOnly,
+            bool createNewResource, bool createNewResource2, bool modifyResource, 
+            bool rollbackResource, bool deleteResource, bool getVersion, bool getCurrentVersion,
+            bool createNewVersion, bool modifyVersion)
         {
             if (BtnInstall.InvokeRequired)
             {
@@ -180,6 +194,23 @@ namespace StorageTesting
                     BtnGetUser.Enabled = getUser;
                     BtnCreateUser.Enabled = createUser;
                     BtnModifyUser.Enabled = modifyUser;
+                    BtnGetResourcePermissions.Enabled = getResourcePermissions;
+                    BtnModifyResourcePermissions.Enabled = modifyResourcePermissions;
+                    BtnGetGlobalPermissions.Enabled = getGlobalPermissions;
+                    BtnModifyGlobalPermissions.Enabled = modifyGlobalPermissions;
+                    BtnGetResourceUsageRightsTemplate.Enabled = getResourceUsageRightsTemplate;
+                    BtnModifyResourceUsageRightsTemplate.Enabled = modifyResourceUsageRightsTemplate;
+                    BtnGetResource.Enabled = getResource;
+                    BtnGetResourceReadOnly.Enabled = getResourceReadOnly;
+                    BtnCreateNewResource.Enabled = createNewResource;
+                    BtnCreateNewResource2.Enabled = createNewResource2;
+                    BtnModifyResource.Enabled = modifyResource;
+                    BtnRollbackResource.Enabled = rollbackResource;
+                    BtnDeleteResource.Enabled = deleteResource;
+                    BtnGetVersion.Enabled = getVersion;
+                    BtnGetCurrentVersion.Enabled = getCurrentVersion;
+                    BtnCreateNewVersion.Enabled = createNewVersion;
+                    BtnModifyVersion.Enabled = modifyVersion;
                 }));
             }
             else
@@ -195,6 +226,23 @@ namespace StorageTesting
                 BtnGetUser.Enabled = getUser;
                 BtnCreateUser.Enabled = createUser;
                 BtnModifyUser.Enabled = modifyUser;
+                BtnGetResourcePermissions.Enabled = getResourcePermissions;
+                BtnModifyResourcePermissions.Enabled = modifyResourcePermissions;
+                BtnGetGlobalPermissions.Enabled = getGlobalPermissions;
+                BtnModifyGlobalPermissions.Enabled = modifyGlobalPermissions;
+                BtnGetResourceUsageRightsTemplate.Enabled = getResourceUsageRightsTemplate;
+                BtnModifyResourceUsageRightsTemplate.Enabled = modifyResourceUsageRightsTemplate;
+                BtnGetResource.Enabled = getResource;
+                BtnGetResourceReadOnly.Enabled = getResourceReadOnly;
+                BtnCreateNewResource.Enabled = createNewResource;
+                BtnCreateNewResource2.Enabled = createNewResource2;
+                BtnModifyResource.Enabled = modifyResource;
+                BtnRollbackResource.Enabled = rollbackResource;
+                BtnDeleteResource.Enabled = deleteResource;
+                BtnGetVersion.Enabled = getVersion;
+                BtnGetCurrentVersion.Enabled = getCurrentVersion;
+                BtnCreateNewVersion.Enabled = createNewVersion;
+                BtnModifyVersion.Enabled = modifyVersion;
             }
         }
 
@@ -269,6 +317,89 @@ namespace StorageTesting
         {
             ModifyUser act = new ModifyUser(this, _engine, _db);
             act.Test();
+        }
+
+        private void BtnCreateNewResource_Click(object sender, EventArgs e)
+        {
+            CreateNewResource act = new CreateNewResource(this, _engine, _db);
+            act.Test();
+        }
+
+        private void BtnGetResource_Click(object sender, EventArgs e)
+        {
+            GetResource act = new GetResource(this, _engine, _db);
+            act.Test();
+        }
+
+        private void BtnGetResourceReadOnly_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+
+        }
+
+        private void BtnCreateNewResource2_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnRollbackResource_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnDeleteResource_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnGetVersion_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnGetCurrentVersion_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnCreateNewVersion_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnModifyVersion_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnGetResourcePermissions_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnModifyResourcePermissions_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnGetGlobalPermissions_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnModifyGlobalPermissions_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnGetResourceUsageRightsTemplate_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnModifyResourceUsageRightsTemplate_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Not Implemented... Yet.");
         }
     }
 }

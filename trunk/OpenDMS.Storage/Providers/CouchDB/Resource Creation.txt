@@ -1,0 +1,46 @@
+﻿  CREATION OF A NEW RESOURCE
+
+To create a resource only the resource document must be created.  However, for a resource to be on any
+use, a version document and attachment must also exist.  Thus, it is rather pointless to allow an 
+implementing software to create only the resource.  Instead we should require all data necessary for
+the creation of the resource and the initial version.
+
+SEQUENCE - high level overview
+Caller -> Engine -> Create Transaction for Resource -> Create Resource within Transaction -> Engine
+		  Engine -> Create Transaction for Version -> Create Version within Transaction 2 -> Engine
+		  Engine -> Update the Resource within its Transaction -> Engine
+		  Engine -> Commit Resource Transaction -> Engine
+		  Engine -> Commit Version Transaction -> Engine -> Caller
+
+PROBLEMS
+1) Loss of connectivity after resource commit but before version commit - this would leave the resource
+	expecting to have a corresponding version, but it would not.
+	A) Solution - The resource will have a flag, internal to this library, that will indicate if the
+		version has been properly committed.  This will require a modification to the resource after
+		the version transaction is committed to update the flag.  This flag shall be called 
+		"CreationFailedFlag" and shall be set to true on resource transaction commit.  It should be
+		removed after successful version transaction commit but could also be set to null.  This 
+		flag should never be set to false and should cause an error if it is false as it should be
+		impossible if this rule is followed.
+
+DATA REQUIRED FROM CALLER FOR RESOURCE CREATION
+1) Data.Metadata
+
+DATA REQUIRED FROM CALLER FOR VERSION CREATION
+1) Data.Metadata
+2) Data.Content
+
+DETAILED SEQUENCE
+1) Caller calls Engine.CreateNewResource passing arguments for data above
+2) EngineMethod.CreateResource is instantiated and its Execute method is called.
+3) A transaction is created for the resource supplying the metadata for the resource
+4) A transaction is created for the version supplying the metadata and content of the version
+5) The resource transaction is committed (with CreationFailedFlag=true)
+	A) if there is an error, both transactions are aborted and the caller is notified
+6) The version transaction is committed
+	A) if there is an error
+		i) An attempt is made to delete the resource document
+		ii) both transactions are aborted and the caller is notified
+7) The resource has its CreationFailedFlag removed
+	A) if there is an error, a second attempt is made and then if another error occurs the caller
+		is notified.

@@ -26,6 +26,9 @@ namespace OpenDMS.Storage.Data
 
         public Content(long length, ContentType contentType, System.IO.Stream stream)
         {
+            Length = length;
+            ContentType = contentType;
+            Stream = stream;
         }
     }
 }

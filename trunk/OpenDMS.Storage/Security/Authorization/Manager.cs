@@ -36,7 +36,8 @@ namespace OpenDMS.Storage.Security.Authorization
 
             // So, we need to cumulate permissions, this is easily accomplished with a bitwise or operation
             for (int i = 0; i < applicableGroupRights.Count; i++)
-                cumulativeResourceRights |= applicableGroupRights[i].Permissions.Resource.Permissions;
+                if (applicableGroupRights[i].Permissions.Resource != null)
+                    cumulativeResourceRights |= applicableGroupRights[i].Permissions.Resource.Permissions;
 
             return cumulativeResourceRights.HasFlag(requiredPermissions);
         }

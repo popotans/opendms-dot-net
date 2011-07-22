@@ -20,16 +20,30 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             List<Data.VersionId> versionIds = null;
             List<Security.UsageRight> usageRights = null;
             Security.UsageRight usageRight = null;
+            JObject jobj = null;
             JProperty prop = null;
+            IEnumerator<JToken> en;
+
+            // I ran into a problem here where I was removing the properties from the document and what was left was the remainder.
+            // However, this causes an issue when using the transition to make a resource for permissions checking as the
+            // object returned to implementing software is the document.  Thus, the implementing software only received those properties
+            // not removed... which obviously excludes the most important properties.  To remedy this issue, I created a constructor for
+            // Model.Document(Document).  This constructor will format the argument document to a string and then create a JObject from 
+            // that string.  C# will deep copy the string (not byref) so as to guarantee an independent object.
+            remainder = new Model.Document(document);
 
             try
             {
                 id = new Data.ResourceId(document.Id);
                 rev = document.Rev;
+                
+                remainder.Remove("_id");
+                remainder.Remove("_rev");
+
                 if (document["CurrentVersionId"] != null)
                 {
                     currentVersionId = new Data.VersionId(document["CurrentVersionId"].Value<string>());
-                    document.Remove("CurrentVersionId");
+                    remainder.Remove("CurrentVersionId");
                 }
                 else
                     currentVersionId = null;
@@ -42,7 +56,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                     for (int i = 0; i < jarray.Count; i++)
                         versionIds.Add(new Data.VersionId(jarray[i].Value<string>()));
 
-                    document.Remove("VersionIds");
+                    remainder.Remove("VersionIds");
                 }
 
                 if (document["UsageRights"] != null)
@@ -52,19 +66,25 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 
                     for (int i = 0; i < jarray.Count; i++)
                     {
-                        prop = (JProperty)jarray[i];
-                        usageRight = new Security.UsageRight(prop.Name, (Security.Authorization.ResourcePermissionType)prop.Value<int>());
-                        usageRights.Add(usageRight);
+                        jobj = (JObject)jarray[i];
+                        en = jobj.Children().GetEnumerator();
+                        while (en.MoveNext())
+                        {
+                            prop = (JProperty)en.Current;
+
+                            // Json.Net is giving me some weird errors here when I try to call prop.value<int>();
+                            // I cannot figure out why so this code is a temporary work-around, it needs figured out.
+                            string a = prop.ToString();
+                            a = a.Substring(a.LastIndexOf("\"") + 1); // we know the value is an int, so we can look for the last "
+                            a = a.Replace(":", "").Trim();
+
+                            usageRight = new Security.UsageRight(prop.Name, (Security.Authorization.GlobalPermissionType)int.Parse(a));
+                            usageRights.Add(usageRight);
+                        }
                     }
 
-                    document.Remove("UsageRights");
+                    remainder.Remove("UsageRights");
                 }
-
-                // Strip out the stuff we handle
-                document.Remove("_id");
-                if (document["_rev"] != null)
-                    document.Remove("_rev");
-                document.Remove("Type");
             }
             catch (Exception e)
             {
@@ -72,7 +92,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 throw;
             }
 
-            remainder = document;
             return new Data.Resource(id, rev, versionIds, currentVersionId, null, usageRights);
         }
 
@@ -111,7 +130,11 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                     jarray = new JArray();
 
                     for (int i = 0; i < resource.UsageRights.Count; i++)
-                        jarray.Add(new JProperty(resource.UsageRights[i].Entity, (int)resource.UsageRights[i].Permissions.Resource.Permissions));
+                    {
+                        JObject jobj = new JObject();
+                        jobj.Add(new JProperty(resource.UsageRights[i].Entity, (int)resource.UsageRights[i].Permissions.Resource.Permissions));
+                        jarray.Add(jobj);
+                    }
 
                     document.Add("UsageRights", jarray);
                 }

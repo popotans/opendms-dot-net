@@ -4,13 +4,13 @@ using Newtonsoft.Json.Linq;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 {
-    public class GlobalUsageRights
+    public class ResourceUsageRights
     {
-        public GlobalUsageRights()
+        public ResourceUsageRights()
         {
         }
 
-        public IGlobalUsageRights Transition(Model.Document document)
+        public IResourceUsageRightsTemplate Transition(Model.Document document)
         {
             List<Security.UsageRight> usageRights = null;
             Security.UsageRight usageRight = null;
@@ -38,9 +38,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                             a = a.Substring(a.LastIndexOf("\"") + 1); // we know the value is an int, so we can look for the last "
                             a = a.Replace(":", "").Trim();
 
-                            usageRight = new Security.UsageRight(prop.Name, (Security.Authorization.GlobalPermissionType)int.Parse(a));
-                            usageRights.Add(usageRight);
+                            usageRight = new Security.UsageRight(prop.Name, (Security.Authorization.ResourcePermissionType)int.Parse(a));
                         }
+                        usageRights.Add(usageRight);
                     }
 
                     //document.Remove("UsageRights");
@@ -52,31 +52,31 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 throw;
             }
 
-            return new CouchDB.GlobalUsageRights(document.Rev, usageRights);
+            return new CouchDB.ResourceUsageRightsTemplate(document.Rev, usageRights);
         }
 
-        public Model.Document Transition(IGlobalUsageRights globals)
+        public Model.Document Transition(IResourceUsageRightsTemplate rights)
         {
             Model.Document document = new Model.Document();
             JArray jarray;
 
             try
             {
-                document.Id = globals.Id;
+                document.Id = rights.Id;
 
-                if (!string.IsNullOrEmpty(globals.Revision))
-                    document.Rev = globals.Revision;
+                if (!string.IsNullOrEmpty(rights.Revision))
+                    document.Rev = rights.Revision;
 
-                document["Type"] = "globalusagerights";
+                document["Type"] = "resourceusagerightstemplate";
 
-                if (globals.UsageRights != null && globals.UsageRights.Count > 0)
+                if (rights.UsageRights != null && rights.UsageRights.Count > 0)
                 {
                     jarray = new JArray();
 
-                    for (int i = 0; i < globals.UsageRights.Count; i++)
+                    for (int i = 0; i < rights.UsageRights.Count; i++)
                     {
                         JObject jobj = new JObject();
-                        jobj.Add(new JProperty(globals.UsageRights[i].Entity, (int)globals.UsageRights[i].Permissions.Global.Permissions));
+                        jobj.Add(new JProperty(rights.UsageRights[i].Entity, (int)rights.UsageRights[i].Permissions.Resource.Permissions));
                         jarray.Add(jobj);
                     }
 

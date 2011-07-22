@@ -86,5 +86,10 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
             : base(jobj)
         {
         }
+
+        public Document(Document doc)
+            : base(doc.ToString())
+        {            
+        }
     }
 }

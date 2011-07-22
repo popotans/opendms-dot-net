@@ -106,6 +106,7 @@
     <Compile Include="Providers\CouchDB\EngineMethods\AuthenticateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Base.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateGroup.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\CreateNewResource.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\DetermineIfInstalled.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroups.cs" />
@@ -113,19 +114,27 @@
     <Compile Include="Providers\CouchDB\EngineMethods\GetAllUsers.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetGlobalPermissions.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetGroup.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\GetResource.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\GetResourceUsageRightsTemplate.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Initialize.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Install.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\ModifyGroup.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\ModifyResource.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\ModifyUser.cs" />
     <Compile Include="Providers\CouchDB\GlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Model\BulkDocuments.cs" />
     <Compile Include="Providers\CouchDB\Model\RevisionException.cs" />
+    <Compile Include="Providers\CouchDB\ResourceUsageRightsTemplate.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Actions\CreateGlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Actions\CreateGroup.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Actions\CreateNewResource.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Actions\CreateNewVersion.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Actions\ModifyGroup.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Actions\ModifyResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Actions\ModifyUser.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GlobalUsageRights.cs" />
+    <Compile Include="Providers\CouchDB\Transitions\ResourceUsageRights.cs" />
     <Compile Include="Providers\IGlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Json\JsonParseException.cs" />
     <Compile Include="Providers\CouchDB\Json\ValueParser.cs" />
@@ -146,6 +155,7 @@
     <Compile Include="Providers\EngineRequest.cs" />
     <Compile Include="Providers\ICommandReply.cs" />
     <Compile Include="Providers\IEngine.cs" />
+    <Compile Include="Providers\IResourceUsageRightsTemplate.cs" />
     <Compile Include="Security\Authorization\GlobalPermission.cs" />
     <Compile Include="Security\Authorization\GlobalPermissionType.cs" />
     <Compile Include="Security\Authorization\GlobalRequest.cs" />
@@ -181,6 +191,7 @@
   <ItemGroup>
     <Content Include="libs\log4net.dll" />
     <Content Include="libs\Newtonsoft.Json.dll" />
+    <Content Include="Providers\CouchDB\Resource Creation.txt" />
     <Content Include="Providers\CouchDB\Transactions\Problem.txt" />
     <Content Include="Security\Authorization\Authorization System.txt" />
   </ItemGroup>

@@ -1,4 +1,5 @@
-﻿
+﻿using System;
+
 namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
     public class GetGlobalPermissions : Base
@@ -85,6 +86,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             {
                 Logger.Storage.Error("An exception occurred while executing the command.", e);
             }
+        }
+
+        protected override void GetResourcePermissions_OnComplete(EngineRequest request, ICommandReply reply)
+        {
+            // Not called
+            throw new NotImplementedException();
         }
 
         private void cmd_OnComplete(Commands.Base sender, Networking.Http.Client client, Networking.Http.Connection connection, Commands.ReplyBase reply)

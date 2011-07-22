@@ -103,6 +103,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             }
         }
 
+        protected override void GetResourcePermissions_OnComplete(EngineRequest request, ICommandReply reply)
+        {
+            // Not called
+            throw new NotImplementedException();
+        }
+
         protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
         {
             // Never called

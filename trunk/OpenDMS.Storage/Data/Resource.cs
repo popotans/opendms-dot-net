@@ -25,5 +25,10 @@ namespace OpenDMS.Storage.Data
             Metadata = metadata;
             UsageRights = usageRights;
         }
+
+        public void UpdateRevision(string revision)
+        {
+            Revision = revision;
+        }
     }
 }

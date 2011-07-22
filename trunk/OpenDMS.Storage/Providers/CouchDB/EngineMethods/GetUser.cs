@@ -1,4 +1,5 @@
-﻿
+﻿using System;
+
 namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
     public class GetUser : Base
@@ -14,6 +15,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
         public override void Execute()
         {
             GetGlobalPermissions();
+        }
+
+        protected override void GetResourcePermissions_OnComplete(EngineRequest request, ICommandReply reply)
+        {
+            // Not called
+            throw new NotImplementedException();
         }
 
         protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
