@@ -136,6 +136,8 @@
     <Compile Include="Providers\CouchDB\TransactionsOld\Actions\ModifyResource.cs" />
     <Compile Include="Providers\CouchDB\TransactionsOld\Actions\ModifyUser.cs" />
     <Compile Include="Providers\CouchDB\TransactionsOld\LocalResourceLockManager.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\Base.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\Get.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Transitions\ResourceUsageRights.cs" />
     <Compile Include="Providers\IGlobalUsageRights.cs" />
@@ -231,6 +233,7 @@
       <Name>OpenDMS.Networking</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
