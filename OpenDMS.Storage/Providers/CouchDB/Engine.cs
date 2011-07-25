@@ -31,11 +31,11 @@ namespace OpenDMS.Storage.Providers.CouchDB
 
 		// Public Methods (17) 
 
-        public override void GetResource(EngineRequest request, ResourceId resource)
+        public override void GetResource(EngineRequest request, ResourceId resource, bool readOnly)
         {
             CheckInitialization();
             Logger.Storage.Debug("Getting resource: " + resource.ToString() + "...");
-            EngineMethods.GetResource act = new EngineMethods.GetResource(request, resource);
+            EngineMethods.GetResource act = new EngineMethods.GetResource(request, resource, readOnly);
             act.Execute();
         }
 

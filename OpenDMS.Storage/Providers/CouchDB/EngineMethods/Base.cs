@@ -175,7 +175,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
                 throw;
             }
             
-            request.Engine.GetResource(request, resourceId);
+            request.Engine.GetResource(request, resourceId, true);
         }
 
         protected abstract void GetResourcePermissions_OnComplete(EngineRequest request, ICommandReply reply);

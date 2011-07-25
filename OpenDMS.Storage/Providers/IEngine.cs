@@ -30,8 +30,7 @@ namespace OpenDMS.Storage.Providers
         void CreateUser(EngineRequest request, User user);
         void ModifyUser(EngineRequest request, User user);
 
-        void GetResource(EngineRequest request, ResourceId resource);
-        void GetResourceReadOnly(EngineRequest request, ResourceId resource);
+        void GetResource(EngineRequest request, ResourceId resource, bool readOnly);
         //void CreateNewResource(EngineRequest request, Metadata metadata);
         //void CreateNewResource(EngineRequest request, Metadata metadata, List<UsageRight> usageRights);
         void CreateNewResource(EngineRequest request, Metadata resourceMetadata, Metadata versionMetadata, Content versionContent);
