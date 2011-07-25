@@ -5,16 +5,32 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
     public class GetResource : Base
     {
         private Data.ResourceId _resourceId;
+        private bool _readonly;
 
-        public GetResource(EngineRequest request, Data.ResourceId resourceId)
+        public GetResource(EngineRequest request, Data.ResourceId resourceId, bool readOnly)
             : base(request)
         {
             _resourceId = resourceId;
+            _readonly = readOnly;
         }
 
         public override void Execute()
         {
-            Commands.GetDocument cmd;
+            // Normal
+            //  1) Request a local lock
+            //      A) This is going to require a local locking system that will apply a lock until it is applied to the resource on the database
+            //          i) Will need to return some sort of authorization event indicating the resource is in use
+            //  2) Download resource
+            //  3) Check resource permissions (can this user access it?)
+            //  4) Check resource lock (is it checked out?)
+            //  5) ModifyResource to include a lock
+            //      A) if failure, needs to release local lock then fire OnError
+            //  6) Release local lock
+            //  7) Give implementing software the resource
+            // ReadOnly
+            //  1) Download resource
+            //  2) Check permissions
+            //  3) Give implementing software the resource
 
             try
             {
@@ -25,6 +41,23 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
                 Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
                 throw;
             }
+
+            if (_readonly)
+                DoReadOnly();
+            else
+                DoCheckout();
+        }
+
+        private void DoCheckout()
+        {
+            Transactions.Actions.GetResource t = new Transactions.Actions.GetResource(_request.Database, 
+                _request.Engine, _request.AuthToken, _resourceId, _request.Session.User.Username);
+            t.e
+        }
+
+        private void DoReadOnly()
+        {
+            Commands.GetDocument cmd;
 
             try
             {
@@ -37,14 +70,11 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             }
 
             // Run it straight back to the subscriber
-            //AttachSubscriberEvent(cmd, _onProgress);
+            AttachSubscriberEvent(cmd, _onProgress);
             //AttachSubscriberEvent(cmd, _onComplete);
-            //AttachSubscriberEvent(cmd, _onError);
-            //AttachSubscriberEvent(cmd, _onTimeout);
+            AttachSubscriberEvent(cmd, _onError);
+            AttachSubscriberEvent(cmd, _onTimeout);
             cmd.OnComplete += new Commands.Base.CompletionDelegate(cmd_OnComplete);
-            cmd.OnError += new Commands.Base.ErrorDelegate(cmd_OnError);
-            cmd.OnProgress += new Commands.Base.ProgressDelegate(cmd_OnProgress);
-            cmd.OnTimeout += new Commands.Base.TimeoutDelegate(cmd_OnTimeout);
             
             try
             {
@@ -54,21 +84,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             {
                 Logger.Storage.Error("An exception occurred while executing the command.", e);
             }
-        }
-
-        void cmd_OnTimeout(Commands.Base sender, Networking.Http.Client client, Networking.Http.Connection connection)
-        {
-            _onTimeout(_request);
-        }
-
-        void cmd_OnProgress(Commands.Base sender, Networking.Http.Client client, Networking.Http.Connection connection, Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
-        {
-            _onProgress(_request, direction, packetSize, sendPercentComplete, receivePercentComplete);
-        }
-
-        void cmd_OnError(Commands.Base sender, Networking.Http.Client client, string message, Exception exception)
-        {
-            _onError(_request, message, exception);
         }
 
         private void cmd_OnComplete(Commands.Base sender, Networking.Http.Client client, Networking.Http.Connection connection, Commands.ReplyBase reply)
@@ -119,7 +134,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             }
                         
             // Check permissions
-            if (!GetResourcePermissions_OnComplete_IsAuthorized(_request, reply, Security.Authorization.ResourcePermissionType.Checkout))
+            if (!GetResourcePermissions_OnComplete_IsAuthorized(_request, reply, Security.Authorization.ResourcePermissionType.ReadOnly))
                 return;
 
             try { _onComplete(_request, reply); }

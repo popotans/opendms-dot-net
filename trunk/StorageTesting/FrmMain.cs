@@ -334,7 +334,6 @@ namespace StorageTesting
         private void BtnGetResourceReadOnly_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Not Implemented... Yet.");
-
         }
 
         private void BtnCreateNewResource2_Click(object sender, EventArgs e)

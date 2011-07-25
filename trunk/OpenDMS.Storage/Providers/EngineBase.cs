@@ -113,12 +113,7 @@ namespace OpenDMS.Storage.Providers
             throw new NotImplementedException();
         }
 
-        public virtual void GetResource(EngineRequest request, Data.ResourceId resource)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual void GetResourceReadOnly(EngineRequest request, Data.ResourceId resource)
+        public virtual void GetResource(EngineRequest request, Data.ResourceId resource, bool readOnly)
         {
             throw new NotImplementedException();
         }

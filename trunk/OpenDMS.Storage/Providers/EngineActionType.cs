@@ -3,6 +3,7 @@ namespace OpenDMS.Storage.Providers
 {
     public enum EngineActionType
     {
+        None,
         Preparing,
         Getting,
         GettingGroups,

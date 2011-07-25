@@ -126,13 +126,16 @@
     <Compile Include="Providers\CouchDB\Model\BulkDocuments.cs" />
     <Compile Include="Providers\CouchDB\Model\RevisionException.cs" />
     <Compile Include="Providers\CouchDB\ResourceUsageRightsTemplate.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Actions\CreateGlobalUsageRights.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Actions\CreateGroup.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Actions\CreateNewResource.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Actions\CreateNewVersion.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Actions\ModifyGroup.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Actions\ModifyResource.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Actions\ModifyUser.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\AccessDeniedReasonEnum.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\CreateGlobalUsageRights.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\CreateGroup.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\CreateNewResource.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\CreateNewVersion.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\GetResource.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\ModifyGroup.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\ModifyResource.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\ModifyUser.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\LocalResourceLockManager.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Transitions\ResourceUsageRights.cs" />
     <Compile Include="Providers\IGlobalUsageRights.cs" />
@@ -143,12 +146,12 @@
     <Compile Include="Providers\CouchDB\Model\Database.cs" />
     <Compile Include="Providers\CouchDB\Model\Document.cs" />
     <Compile Include="Providers\CouchDB\Model\View.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Actions\Base.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Actions\CreateUser.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\ActiveTransactionException.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\InvalidStageException.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\InvalidTransactionException.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Lock.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\Base.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\CreateUser.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\ActiveTransactionException.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\InvalidStageException.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\InvalidTransactionException.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Lock.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GroupCollection.cs" />
     <Compile Include="Providers\CouchDB\Transitions\UserCollection.cs" />
     <Compile Include="Providers\EngineBase.cs" />
@@ -172,9 +175,9 @@
     <Compile Include="Security\UnknownDatabaseException.cs" />
     <Compile Include="Security\UsageRight.cs" />
     <Compile Include="Providers\CouchDB\Server.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Manager.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Stage.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Transaction.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Manager.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Stage.cs" />
+    <Compile Include="Providers\CouchDB\TransactionsOld\Transaction.cs" />
     <Compile Include="Providers\CouchDB\Transitions\Group.cs" />
     <Compile Include="Providers\CouchDB\Transitions\Resource.cs" />
     <Compile Include="Providers\CouchDB\Transitions\User.cs" />
@@ -192,7 +195,8 @@
     <Content Include="libs\log4net.dll" />
     <Content Include="libs\Newtonsoft.Json.dll" />
     <Content Include="Providers\CouchDB\Resource Creation.txt" />
-    <Content Include="Providers\CouchDB\Transactions\Problem.txt" />
+    <Content Include="Providers\CouchDB\TransactionsOld\Problem.txt" />
+    <Content Include="Providers\CouchDB\TransactionsOld\Transactions.txt" />
     <Content Include="Security\Authorization\Authorization System.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -230,7 +234,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
