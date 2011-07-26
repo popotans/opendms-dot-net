@@ -18,13 +18,23 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
         public event ProgressDelegate OnProgress;
         public event TimeoutDelegate OnTimeout;
 
+        public abstract void Process();
+
         public Base()
         {
         }
 
         protected void TriggerOnActionChanged(EngineActionType actionType, bool willSendProgress)
         {
-            if (OnActionChanged != null) OnActionChanged(this, actionType, willSendProgress);
+            try
+            {
+                if (OnActionChanged != null) OnActionChanged(this, actionType, willSendProgress);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
+                throw;
+            }
         }
 
         protected void TriggerOnAuthorizationDenied()
@@ -32,7 +42,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             if (OnAuthorizationDenied == null)
                 throw new NotImplementedException("OnAuthorizationDenied must be implemented.");
 
-            OnAuthorizationDenied(this);
+            try
+            {
+                OnAuthorizationDenied(this);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while calling the OnAuthorizationDenied event.", e);
+                throw;
+            }
         }
 
         protected void TriggerOnComplete(ICommandReply reply)
@@ -40,7 +58,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             if (OnComplete == null)
                 throw new NotImplementedException("OnComplete must be implemented.");
 
-            OnComplete(this, reply);
+            try
+            {
+                OnComplete(this, reply);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while calling the OnComplete event.", e);
+                throw;
+            }
         }
 
         protected void TriggerOnError(string message, Exception exception)
@@ -48,17 +74,41 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             if (OnError == null)
                 throw new NotImplementedException("OnError must be implemented.");
 
-            OnError(this, message, exception);
+            try
+            {
+                OnError(this, message, exception);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while calling the OnError event.", e);
+                throw;
+            }
         }
 
         protected void TriggerOnProgress(OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
-            if (OnProgress != null) OnProgress(this, direction, packetSize, sendPercentComplete, receivePercentComplete);
+            try
+            {
+                if (OnProgress != null) OnProgress(this, direction, packetSize, sendPercentComplete, receivePercentComplete);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while calling the OnProgress event.", e);
+                throw;
+            }
         }
 
         protected void TriggerOnTimeout()
         {
-            if (OnTimeout != null) OnTimeout(this);
+            try
+            {
+                if (OnTimeout != null) OnTimeout(this);
+            }
+            catch (System.Exception e)
+            {
+                Logger.Storage.Error("An exception occurred while calling the OnTimeout event.", e);
+                throw;
+            }
         }
     }
 }

@@ -137,12 +137,17 @@
     <Compile Include="Providers\CouchDB\TransactionsOld\Actions\ModifyUser.cs" />
     <Compile Include="Providers\CouchDB\TransactionsOld\LocalResourceLockManager.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Base.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\CheckGlobalPermissions.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\CheckResourcePermissions.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadGlobalPermissions.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadResourceUsageRightsTemplate.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\Base.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\Get.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\Save.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\SaveBulk.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\SaveSingle.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadResource.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Transitions\ResourceUsageRights.cs" />
     <Compile Include="Providers\IGlobalUsageRights.cs" />
@@ -244,7 +249,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
