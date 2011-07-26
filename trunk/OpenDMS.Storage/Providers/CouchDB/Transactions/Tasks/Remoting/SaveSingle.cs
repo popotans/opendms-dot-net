@@ -1,34 +1,32 @@
 ﻿using System;
+using Newtonsoft.Json.Linq;
 using OpenDMS.Networking.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks.Remoting
 {
-    public class Get : Base
+    public class SaveSingle : Save
     {
-        public Model.Document Document { get; protected set; }
-
-        public Get(IDatabase db, string id)
-            : base(db, id)
+        public SaveSingle(IDatabase db, Model.Document input)
+            : base(db, input.Id, input)
         {
         }
 
         public override void Process()
         {
-            Commands.GetDocument cmd;
+            Commands.PutDocument cmd;
 
             try
             {
-                cmd = new Commands.GetDocument(_uri);
+                cmd = new Commands.PutDocument(_db, (Model.Document)_input);
             }
             catch (Exception e)
             {
-                Logger.Storage.Error("An exception occurred while creating the GetDocument command.", e);
+                Logger.Storage.Error("An exception occurred while creating the PutDocument command.", e);
                 throw;
             }
 
             cmd.OnComplete += delegate(Commands.Base sender, Client client, Connection connection, Commands.ReplyBase reply)
             {
-                Document = ((Commands.GetDocumentReply)reply).Document;
                 TriggerOnComplete(reply);
             };
             cmd.OnError += delegate(Commands.Base sender, Client client, string message, Exception exception)
