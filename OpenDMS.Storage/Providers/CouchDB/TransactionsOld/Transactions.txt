@@ -89,15 +89,16 @@ Transactions Namespace
 Tasks.Remoting.Base (abstract)
 - JObject _input
 - JObject _output;
++ abstract Process();
 
 Tasks.Remoting.Get : Base
 + Get(Uri)
 + Get(Model.Document) <- Implementing classes will need to run their respective transition.  Used when the Document has already been downloaded instead of downloading again.
-+ Download();
++ Process();
 
 Tasks.Remoting.Save : Base
 + Save(IDatabase, JObject) <- Implementing classes will need to run their respective transition.
-+ virtual Upload();
++ Process();
 
 Tasks.Remoting.SaveBulk : Save
 + SaveBulk(IDatabase, List<Model.Document>)
@@ -133,3 +134,5 @@ Transaction
 + Commit(Tasks.Remoting.Base)
 
 
+After doing some review, I decided that the name of the Tasks should be interchanged with Processes as a process is a series
+of tasks basically.
