@@ -1,28 +1,31 @@
 ﻿using System;
+using Newtonsoft.Json.Linq;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 {
-    public class DownloadResourceUsageRightsTemplate : Base
+    public class DownloadResource : Base
     {
-        private const string _id = "resourceusagerightstemplate";
         private IDatabase _db;
+        private Data.ResourceId _id;
 
-        public ResourceUsageRightsTemplate Value { get; private set; }
+        public Data.Resource Resource { get; private set; }
+        public JObject Remainder { get; private set; }
 
-        public DownloadResourceUsageRightsTemplate(IDatabase db)
+        public DownloadResource(IDatabase db, Data.ResourceId id)
         {
             _db = db;
+            _id = id;
         }
 
         public override void Process()
         {
             Remoting.Get rem;
 
-            TriggerOnActionChanged(EngineActionType.GettingResourceUsageRightsTemplate, true);
+            TriggerOnActionChanged(EngineActionType.GettingResource, true);
 
             try
             {
-                rem = new Remoting.Get(_db, _id);
+                rem = new Remoting.Get(_db, _id.ToString());
             }
             catch (Exception e)
             {
@@ -32,8 +35,10 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
             rem.OnComplete += delegate(Remoting.Base sender, ICommandReply reply)
             {
-                Transitions.ResourceUsageRights txRur = new Transitions.ResourceUsageRights();
-                Value = (ResourceUsageRightsTemplate)txRur.Transition(((Remoting.Get)sender).Document);
+                JObject jobj;
+                Transitions.Resource txResource = new Transitions.Resource();
+                Resource = txResource.Transition(((Remoting.Get)sender).Document, out jobj);
+                Remainder = jobj;
                 TriggerOnComplete(reply);
             };
             rem.OnError += delegate(Remoting.Base sender, string message, Exception exception)

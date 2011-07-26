@@ -1,28 +1,30 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 {
-    public class DownloadResourceUsageRightsTemplate : Base
+    public class DownloadGlobalPermissions : Base
     {
-        private const string _id = "resourceusagerightstemplate";
         private IDatabase _db;
+        private GlobalUsageRights _gur;
 
-        public ResourceUsageRightsTemplate Value { get; private set; }
+        public List<Security.UsageRight> UsageRights { get { return _gur.UsageRights; } }
 
-        public DownloadResourceUsageRightsTemplate(IDatabase db)
+        public DownloadGlobalPermissions(IDatabase db)
         {
             _db = db;
+            _gur = new GlobalUsageRights(null, null);
         }
 
         public override void Process()
         {
             Remoting.Get rem;
 
-            TriggerOnActionChanged(EngineActionType.GettingResourceUsageRightsTemplate, true);
+            TriggerOnActionChanged(EngineActionType.GettingGlobalUsageRights, true);
 
             try
             {
-                rem = new Remoting.Get(_db, _id);
+                rem = new Remoting.Get(_db, _gur.Id);
             }
             catch (Exception e)
             {
@@ -32,8 +34,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
             rem.OnComplete += delegate(Remoting.Base sender, ICommandReply reply)
             {
-                Transitions.ResourceUsageRights txRur = new Transitions.ResourceUsageRights();
-                Value = (ResourceUsageRightsTemplate)txRur.Transition(((Remoting.Get)sender).Document);
+                Transitions.GlobalUsageRights txGur = new Transitions.GlobalUsageRights();
+                _gur = (GlobalUsageRights)txGur.Transition(((Remoting.Get)sender).Document);
                 TriggerOnComplete(reply);
             };
             rem.OnError += delegate(Remoting.Base sender, string message, Exception exception)
