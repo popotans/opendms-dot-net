@@ -3,37 +3,37 @@ using System.Collections.Generic;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 {
-    public class DownloadGlobalPermissions : Base
+    public class DownloadGroups : Base
     {
         private IDatabase _db;
 
-        public GlobalUsageRights GlobalUsageRights { get; private set; }
+        public List<Security.Group> Groups { get; private set; }
 
-        public DownloadGlobalPermissions(IDatabase db)
+        public DownloadGroups(IDatabase db)
         {
             _db = db;
         }
 
         public override void Process()
         {
-            Remoting.Get rem;
+            Remoting.GetView rem;
 
-            TriggerOnActionChanged(EngineActionType.GettingGlobalUsageRights, true);
+            TriggerOnActionChanged(EngineActionType.GettingGroups, true);
 
             try
             {
-                rem = new Remoting.Get(_db, new GlobalUsageRights(null, null).Id);
+                rem = new Remoting.GetView(_db, "groups", "GetAll");
             }
             catch (Exception e)
             {
-                Logger.Storage.Error("An exception occurred while instantiating the Transactions.Tasks.Remoting.Get object.", e);
+                Logger.Storage.Error("An exception occurred while instantiating the Transactions.Tasks.Remoting.GetView object.", e);
                 throw;
             }
 
             rem.OnComplete += delegate(Remoting.Base sender, ICommandReply reply)
             {
-                Transitions.GlobalUsageRights txGur = new Transitions.GlobalUsageRights();
-                GlobalUsageRights = (GlobalUsageRights)txGur.Transition(((Remoting.Get)sender).Document);
+                Transitions.GroupCollection txGc = new Transitions.GroupCollection();
+                Groups = txGc.Transition(rem.View);
                 TriggerOnComplete(reply);
             };
             rem.OnError += delegate(Remoting.Base sender, string message, Exception exception)

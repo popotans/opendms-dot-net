@@ -29,7 +29,13 @@ namespace StorageTesting
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(password);
             string encPassword = System.Convert.ToBase64String(sha512.ComputeHash(bytes));
 
-            _engine.AuthenticateUser(_db, username, encPassword, OnAuthenticated);
+            EngineRequest request = new EngineRequest();
+            request.Engine = _engine;
+            request.Database = _db;
+            request.OnComplete = new EngineBase.CompletionDelegate(OnAuthenticated);
+            request.RequestingPartyType = OpenDMS.Storage.Security.RequestingPartyType.User;
+
+            _engine.AuthenticateUser(request, username, encPassword);
         }
 
         void win_OnCancelClick()
@@ -37,7 +43,7 @@ namespace StorageTesting
             WriteLine("Authenticate - Login cancelled.");
         }
 
-        private void OnAuthenticated(bool isError, bool isAuthenticated, OpenDMS.Storage.Security.Session session, string message, Exception exception)
+        private void OnAuthenticated(EngineRequest request, ICommandReply reply)
         {
             DateTime stop = DateTime.Now;
             TimeSpan duration = stop - _start;

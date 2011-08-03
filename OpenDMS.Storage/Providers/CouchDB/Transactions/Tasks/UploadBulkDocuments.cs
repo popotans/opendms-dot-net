@@ -3,37 +3,38 @@ using System.Collections.Generic;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 {
-    public class DownloadGlobalPermissions : Base
+    public class UploadBulkDocuments : Base
     {
         private IDatabase _db;
+        private Model.BulkDocuments _bulkDocuments;
 
-        public GlobalUsageRights GlobalUsageRights { get; private set; }
+        public List<Commands.PostBulkDocumentsReply.Entry> Results { get; private set; }
 
-        public DownloadGlobalPermissions(IDatabase db)
+        public UploadBulkDocuments(IDatabase db, Model.BulkDocuments bulkDocs)
         {
             _db = db;
+            _bulkDocuments = bulkDocs;
         }
 
         public override void Process()
         {
-            Remoting.Get rem;
+            Remoting.SaveBulk rem;
 
-            TriggerOnActionChanged(EngineActionType.GettingGlobalUsageRights, true);
+            TriggerOnActionChanged(EngineActionType.UploadingBulk, true);
 
             try
             {
-                rem = new Remoting.Get(_db, new GlobalUsageRights(null, null).Id);
+                rem = new Remoting.SaveBulk(_db, _bulkDocuments);
             }
             catch (Exception e)
             {
-                Logger.Storage.Error("An exception occurred while instantiating the Transactions.Tasks.Remoting.Get object.", e);
+                Logger.Storage.Error("An exception occurred while instantiating the Transactions.Tasks.Remoting.SaveBulk object.", e);
                 throw;
             }
 
             rem.OnComplete += delegate(Remoting.Base sender, ICommandReply reply)
             {
-                Transitions.GlobalUsageRights txGur = new Transitions.GlobalUsageRights();
-                GlobalUsageRights = (GlobalUsageRights)txGur.Transition(((Remoting.Get)sender).Document);
+                Results = ((Commands.PostBulkDocumentsReply)reply).Results;
                 TriggerOnComplete(reply);
             };
             rem.OnError += delegate(Remoting.Base sender, string message, Exception exception)

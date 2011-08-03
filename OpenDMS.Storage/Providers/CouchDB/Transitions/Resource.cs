@@ -15,7 +15,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
         public Data.Resource Transition(Model.Document document, out JObject remainder)
         {
             Data.ResourceId id;
-            string rev;
+            string rev, checkedOutTo = null;
+            DateTime? checkedOutAt = null;
             Data.VersionId currentVersionId;
             List<Data.VersionId> versionIds = null;
             List<Security.UsageRight> usageRights = null;
@@ -36,6 +37,17 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             {
                 id = new Data.ResourceId(document.Id);
                 rev = document.Rev;
+
+                if (document["CheckedOutTo"] != null)
+                {
+                    checkedOutTo = document["CheckedOutTo"].Value<string>();
+                    remainder.Remove("CheckedOutTo");
+                }
+                if (document["CheckedOutAt"] != null)
+                {
+                    checkedOutAt = document["CheckedOutAt"].Value<DateTime?>();
+                    remainder.Remove("CheckedOutAt");
+                }
                 
                 remainder.Remove("_id");
                 remainder.Remove("_rev");
@@ -92,7 +104,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 throw;
             }
 
-            return new Data.Resource(id, rev, versionIds, currentVersionId, null, usageRights);
+            return new Data.Resource(id, rev, checkedOutTo, checkedOutAt, versionIds, currentVersionId, null, usageRights);
         }
 
         public Model.Document Transition(Data.Resource resource, out List<Exception> errors)
@@ -103,6 +115,10 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             try
             {
                 document.Id = resource.ResourceId.ToString();
+                if (!string.IsNullOrEmpty(resource.CheckedOutTo))
+                    document["CheckedOutTo"] = resource.CheckedOutTo;
+                if (resource.CheckedOutAt.HasValue)
+                    document["CheckedOutAt"] = resource.CheckedOutAt.Value;
 
                 if (!string.IsNullOrEmpty(resource.Revision))
                     document.Rev = resource.Revision;

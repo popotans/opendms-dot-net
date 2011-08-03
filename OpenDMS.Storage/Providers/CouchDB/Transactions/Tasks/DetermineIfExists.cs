@@ -1,28 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 {
-    public class DownloadGlobalPermissions : Base
+    public class DetermineIfExists : Base
     {
         private IDatabase _db;
+        private string _id;
 
-        public GlobalUsageRights GlobalUsageRights { get; private set; }
+        public bool Exists { get; private set; }
 
-        public DownloadGlobalPermissions(IDatabase db)
+        public DetermineIfExists(IDatabase db, string id)
         {
             _db = db;
+            _id = id;
         }
 
         public override void Process()
         {
-            Remoting.Get rem;
+            Remoting.Exists rem;
 
-            TriggerOnActionChanged(EngineActionType.GettingGlobalUsageRights, true);
+            TriggerOnActionChanged(EngineActionType.CheckingExistance, true);
 
             try
             {
-                rem = new Remoting.Get(_db, new GlobalUsageRights(null, null).Id);
+                rem = new Remoting.Exists(_db, _id);
             }
             catch (Exception e)
             {
@@ -32,8 +33,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
             rem.OnComplete += delegate(Remoting.Base sender, ICommandReply reply)
             {
-                Transitions.GlobalUsageRights txGur = new Transitions.GlobalUsageRights();
-                GlobalUsageRights = (GlobalUsageRights)txGur.Transition(((Remoting.Get)sender).Document);
+                Exists = rem.IsExisting;
                 TriggerOnComplete(reply);
             };
             rem.OnError += delegate(Remoting.Base sender, string message, Exception exception)

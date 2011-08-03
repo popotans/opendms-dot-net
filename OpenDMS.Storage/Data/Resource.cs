@@ -36,5 +36,11 @@ namespace OpenDMS.Storage.Data
         {
             Revision = revision;
         }
+
+        public void UpdateCheckout(DateTime at, string to)
+        {
+            CheckedOutAt = at;
+            CheckedOutTo = to;
+        }
     }
 }
