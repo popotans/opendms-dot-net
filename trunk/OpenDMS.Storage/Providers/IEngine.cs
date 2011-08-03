@@ -13,7 +13,7 @@ namespace OpenDMS.Storage.Providers
         bool IsInitializing { get; }
 
         // Non-sessioned requests
-        void AuthenticateUser(IDatabase db, string username, string hashedPassword, EngineBase.AuthenticationDelegate onAuthenticated);
+        void AuthenticateUser(EngineRequest request, string username, string hashedPassword);
         void Initialize(string transactionRootDirectory, string logDirectory,
             List<Providers.IDatabase> databases, EngineBase.InitializationDelegate onInitialized);
         void SetState(bool isInitializing, bool isInitialized);

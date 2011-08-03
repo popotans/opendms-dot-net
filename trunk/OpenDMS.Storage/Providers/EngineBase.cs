@@ -34,16 +34,16 @@ namespace OpenDMS.Storage.Providers
 		// Delegates (8) 
 
         public delegate void ActionDelegate(EngineRequest request, EngineActionType actionType, bool willSendProgress);
-        public delegate void AuthenticationDelegate(bool isError, bool isAuthenticated, Security.Session session, string message, Exception exception);
+        //public delegate void AuthenticationDelegate(bool isError, bool isAuthenticated, Security.Session session, string message, Exception exception);
         public delegate void AuthorizationDelegate(EngineRequest request);
-        public delegate void CompletionDelegate(EngineRequest request, ICommandReply reply);
+        public delegate void CompletionDelegate(EngineRequest request, ICommandReply reply, object result);
         public delegate void ErrorDelegate(EngineRequest request, string message, Exception exception);
         public delegate void InitializationDelegate(bool success, string message, Exception exception);
         public delegate void ProgressDelegate(EngineRequest request, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public delegate void TimeoutDelegate(EngineRequest request);
 		// Events (2) 
 
-        public event AuthenticationDelegate OnAuthenticated;
+        //public event AuthenticationDelegate OnAuthenticated;
 
         public event InitializationDelegate OnInitialized;
 
@@ -53,7 +53,7 @@ namespace OpenDMS.Storage.Providers
 
 		// Public Methods (35) 
 
-        public virtual void AuthenticateUser(IDatabase db, string username, string hashedPassword, AuthenticationDelegate onAuthenticated)
+        public virtual void AuthenticateUser(EngineRequest request, string username, string hashedPassword)
         {
             throw new NotImplementedException();
         }
@@ -179,11 +179,6 @@ namespace OpenDMS.Storage.Providers
             throw new NotImplementedException();
         }
 
-        public void RegisterOnAuthenticated(AuthenticationDelegate onAuthenticated)
-        {
-            OnAuthenticated += onAuthenticated;
-        }
-
         public void RegisterOnInitialized(InitializationDelegate onInitialized)
         {
             OnInitialized += onInitialized;
@@ -198,11 +193,6 @@ namespace OpenDMS.Storage.Providers
         {
             _isInitialized = isInitialized;
             _isInitializing = isInitializing;
-        }
-
-        public void TriggerOnAuthenticated(bool isError, bool isAuthenticated, Security.Session session, string message, Exception exception)
-        {
-            if (OnAuthenticated != null) OnAuthenticated(isError, isAuthenticated, session, message, exception);
         }
 
         public void TriggerOnInitialized(bool success, string message, Exception exception)

@@ -51,7 +51,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
             get { return this["docs"] != null; }
         }
 
-        public void AddDocument(string name, Document document)
+        public void AddDocument(Document document)
         {
             _documents.Add(document);
             ResetLength();

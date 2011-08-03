@@ -1,39 +1,50 @@
 ﻿using System;
-using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 {
-    public class DownloadGlobalPermissions : Base
+    public class UploadGroup : Base
     {
         private IDatabase _db;
+        private Security.Group _group;
 
-        public GlobalUsageRights GlobalUsageRights { get; private set; }
+        public Security.Group Group { get; private set; }
 
-        public DownloadGlobalPermissions(IDatabase db)
+        public UploadGroup(IDatabase db, Security.Group group)
         {
             _db = db;
+            _group = group;
         }
 
         public override void Process()
         {
-            Remoting.Get rem;
+            Remoting.SaveSingle rem;
 
-            TriggerOnActionChanged(EngineActionType.GettingGlobalUsageRights, true);
+            if (string.IsNullOrEmpty(_group.Rev))
+                TriggerOnActionChanged(EngineActionType.CreatingGroup, true);
+            else
+                TriggerOnActionChanged(EngineActionType.ModifyingGroup, true);
 
             try
             {
-                rem = new Remoting.Get(_db, new GlobalUsageRights(null, null).Id);
+                Transitions.Group txGroup = new Transitions.Group();
+                rem = new Remoting.SaveSingle(_db, txGroup.Transition(_group));
             }
             catch (Exception e)
             {
-                Logger.Storage.Error("An exception occurred while instantiating the Transactions.Tasks.Remoting.Get object.", e);
+                Logger.Storage.Error("An exception occurred while instantiating the Transactions.Tasks.Remoting.SaveSingle object.", e);
                 throw;
             }
 
             rem.OnComplete += delegate(Remoting.Base sender, ICommandReply reply)
             {
-                Transitions.GlobalUsageRights txGur = new Transitions.GlobalUsageRights();
-                GlobalUsageRights = (GlobalUsageRights)txGur.Transition(((Remoting.Get)sender).Document);
+                if (!((Commands.PutDocumentReply)reply).Ok)
+                    Group = null;
+                else
+                {
+                    Group = new Security.Group(_group.Id, ((Commands.PutDocumentReply)reply).Rev,
+                        _group.Users, _group.Groups);
+                }
                 TriggerOnComplete(reply);
             };
             rem.OnError += delegate(Remoting.Base sender, string message, Exception exception)

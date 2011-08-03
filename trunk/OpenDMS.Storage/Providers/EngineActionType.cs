@@ -26,7 +26,9 @@ namespace OpenDMS.Storage.Providers
         CreatingNewResource,
         CreatingNewVersion,
         ModifyingResource,
-        GettingResource
+        GettingResource,
+        UploadingBulk,
+        CheckingExistance
         // No need to send a complete action as completion is signaled by Error, Timeout or Completion
         // Complete
     }

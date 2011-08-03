@@ -4,11 +4,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
     public class AuthenticateUser : Base
     {
-		#region Fields (6) 
+		#region Fields (4) 
 
         private IDatabase _db = null;
-        private EngineBase _engine;
-        private bool _ignoringAuthenticationComplete;
         private string _password = null;
         private Security.SessionManager _sessionMgr;
         private string _username = null;
@@ -17,99 +15,40 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 
 		#region Constructors (1) 
 
-        public AuthenticateUser(EngineBase engine, Security.SessionManager sessionMgr, IDatabase db, string username, string password)
-            : base(null)
+        public AuthenticateUser(EngineRequest request, Security.SessionManager sessionMgr, string username, string password)
+            : base(request)
         {
-            _engine = engine;
+            _request = request;
             _sessionMgr = sessionMgr;
-            _db = db;
+            _db = request.Database;
             _username = username;
             _password = password;
         }
 
 		#endregion Constructors 
 
-		#region Methods (3) 
+		#region Methods (1) 
 
 		// Public Methods (1) 
 
         public override void Execute()
         {
-            _sessionMgr.OnError += new Security.SessionManager.ErrorDelegate(AuthenticateUser_OnError);
-            _sessionMgr.OnAuthenticationComplete += new Security.SessionManager.AuthenticationDelegate(AuthenticateUser_OnAuthenticationComplete);
+            Transactions.Transaction t;
+            Transactions.Processes.AuthenticateUser process;
 
-            _ignoringAuthenticationComplete = false;
+            process = new Transactions.Processes.AuthenticateUser(_db, _sessionMgr, _username, _password);
+            t = new Transactions.Transaction(process);
 
-            try
-            {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.AuthenticatingUser, false);
-            }
-            catch (System.Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
-                throw;
-            }
+            AttachSubscriber(process, _request.OnActionChanged);
+            AttachSubscriber(process, _request.OnAuthorizationDenied);
+            AttachSubscriber(process, _request.OnComplete);
+            AttachSubscriber(process, _request.OnError);
+            AttachSubscriber(process, _request.OnProgress);
+            AttachSubscriber(process, _request.OnTimeout);
 
-            try
-            {
-                _sessionMgr.AuthenticateUser(_db, _username, _password);
-            }
-            catch (Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling SessionManager.AuthenticateUser.", e);
-                throw;
-            }
-        }
-		// Private Methods (2) 
-
-        private void AuthenticateUser_OnAuthenticationComplete(Security.Session session, string message)
-        {
-            _sessionMgr.OnError -= AuthenticateUser_OnError;
-            _sessionMgr.OnAuthenticationComplete -= AuthenticateUser_OnAuthenticationComplete;
-
-            if (_ignoringAuthenticationComplete) return;
-
-            try
-            {
-                _engine.TriggerOnAuthenticated(false, (session != null), session, message, null);
-            }
-            catch (Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the OnAuthenticated event.", e);
-                throw;
-            }
-        }
-
-        private void AuthenticateUser_OnError(string message, Exception exception)
-        {
-            _ignoringAuthenticationComplete = true;
-
-            _sessionMgr.OnError -= AuthenticateUser_OnError;
-            _sessionMgr.OnAuthenticationComplete -= AuthenticateUser_OnAuthenticationComplete;
-
-            try
-            {
-                _engine.TriggerOnAuthenticated(true, false, null, message, exception);
-            }
-            catch (Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the OnAuthenticated event.", e);
-                throw;
-            }
-        }
-
-        protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
-        {
-            // This will never be called for Authentication - everyone can authenticate
-            throw new NotImplementedException();
+            t.Execute();
         }
 
 		#endregion Methods 
-    
-        protected override void GetResourcePermissions_OnComplete(EngineRequest request, ICommandReply reply)
-        {
-            // Not called
-            throw new NotImplementedException();
-        }
     }
 }

@@ -15,124 +15,20 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 
         public override void Execute()
         {
-            GetGlobalPermissions();
-        }
+            Transactions.Transaction t;
+            Transactions.Processes.CreateGroup process;
 
-        protected override void GetGlobalPermissions_OnComplete(EngineRequest request, ICommandReply reply)
-        {
-            Transactions.Stage stage;
-            Transitions.Group txGroup;
-            Model.Document doc;
-            Transactions.Actions.CreateGroup action;
-            string creatingUsername;
+            process = new Transactions.Processes.CreateGroup(_request.Database, _group, _request.RequestingPartyType, _request.Session);
+            t = new Transactions.Transaction(process);
+            
+            AttachSubscriber(process, _request.OnActionChanged);
+            AttachSubscriber(process, _request.OnAuthorizationDenied);
+            AttachSubscriber(process, _request.OnComplete);
+            AttachSubscriber(process, _request.OnError);
+            AttachSubscriber(process, _request.OnProgress);
+            AttachSubscriber(process, _request.OnTimeout);
 
-            // Check permissions
-            if (!GetGlobalPermissions_OnComplete_IsAuthorized(request, reply, Security.Authorization.GlobalPermissionType.CreateGroup))
-                return;
-
-            if (request.RequestingPartyType == Security.RequestingPartyType.System)
-                creatingUsername = "System";
-            else
-                creatingUsername = request.Session.User.Username;
-
-            _t = Transactions.Manager.Instance.CreateTransaction(creatingUsername, _group.Id);
-            stage = _t.Begin(creatingUsername, new System.TimeSpan(0, 5, 0));
-            txGroup = new Transitions.Group();
-            doc = txGroup.Transition(_group);
-            action = new Transactions.Actions.CreateGroup(request.Database, doc);
-
-            try
-            {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.CreatingGroup, true);
-            }
-            catch (System.Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
-                throw;
-            }
-
-            // Executes and saves locally
-            stage.Execute(action);
-
-            _t.OnCommitError += new Transactions.Transaction.CommitErrorDelegate(Commit_OnCommitError);
-            _t.OnCommitTimeout += new Transactions.Transaction.CommitTimeoutDelegate(Commit_OnCommitTimeout);
-            _t.OnCommitProgress += new Transactions.Transaction.CommitProgressDelegate(Commit_OnCommitProgress);
-            _t.OnCommitSuccess += new Transactions.Transaction.CommitSuccessDelegate(Commit_OnCommitSuccess);
-
-            // Sends to CouchDB
-            _t.Commit(stage, creatingUsername, action);
-        }
-
-        private void Commit_OnCommitError(Transactions.Transaction sender, Transactions.Stage stage, Transactions.Actions.Base action, string message, Exception exception)
-        {
-            // Abort after subscriber has a chance to get any info.
-            try { _onError(_request, message, exception); }
-            catch (Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the method specified in the onError argument.", e);
-                throw;
-            }
-
-            try
-            {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.Aborting, true);
-            }
-            catch (System.Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
-                throw;
-            }
-
-            _t.Abort("System");
-        }
-
-        private void Commit_OnCommitTimeout(Transactions.Transaction sender, Transactions.Stage stage, Transactions.Actions.Base action, string message, Exception exception)
-        {
-            // Abort after subscriber has a chance to get any info.
-            try { _onTimeout(_request); }
-            catch (Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the method specified in the onError argument.", e);
-                throw;
-            }
-
-            try
-            {
-                if (_onActionChanged != null) _onActionChanged(_request, EngineActionType.Aborting, true);
-            }
-            catch (System.Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the OnActionChanged event.", e);
-                throw;
-            }
-
-            _t.Abort("System");
-        }
-
-        private void Commit_OnCommitSuccess(Transactions.Transaction sender, Transactions.Stage stage, Transactions.Actions.Base action, ICommandReply reply)
-        {
-            try { _onComplete(_request, reply); }
-            catch (Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the method specified in the onComplete argument.", e);
-                throw;
-            }
-        }
-
-        private void Commit_OnCommitProgress(Transactions.Transaction sender, Transactions.Stage stage, Transactions.Actions.Base action, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
-        {
-            try { _onProgress(_request, Networking.Http.DirectionType.Upload, packetSize, sendPercentComplete, receivePercentComplete); }
-            catch (Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while calling the method specified in the onProgress argument.", e);
-                throw;
-            }
-        }
-
-        protected override void GetResourcePermissions_OnComplete(EngineRequest request, ICommandReply reply)
-        {
-            // Not called
-            throw new NotImplementedException();
+            t.Execute();
         }
     }
 }

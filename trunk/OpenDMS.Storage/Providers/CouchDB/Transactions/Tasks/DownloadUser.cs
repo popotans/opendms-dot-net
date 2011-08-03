@@ -1,28 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 {
-    public class DownloadGlobalPermissions : Base
+    public class DownloadUser : Base
     {
         private IDatabase _db;
+        private Security.User _user;
 
-        public GlobalUsageRights GlobalUsageRights { get; private set; }
+        public Security.User User { get; private set; }
 
-        public DownloadGlobalPermissions(IDatabase db)
+        public DownloadUser(IDatabase db, string username)
         {
             _db = db;
+            _user = new Security.User(username);
         }
 
         public override void Process()
         {
             Remoting.Get rem;
 
-            TriggerOnActionChanged(EngineActionType.GettingGlobalUsageRights, true);
+            TriggerOnActionChanged(EngineActionType.GettingUser, true);
 
             try
             {
-                rem = new Remoting.Get(_db, new GlobalUsageRights(null, null).Id);
+                rem = new Remoting.Get(_db, _user.Id);
             }
             catch (Exception e)
             {
@@ -32,8 +33,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
             rem.OnComplete += delegate(Remoting.Base sender, ICommandReply reply)
             {
-                Transitions.GlobalUsageRights txGur = new Transitions.GlobalUsageRights();
-                GlobalUsageRights = (GlobalUsageRights)txGur.Transition(((Remoting.Get)sender).Document);
+                Transitions.User txUser = new Transitions.User();
+                User = txUser.Transition(((Remoting.Get)sender).Document);
                 TriggerOnComplete(reply);
             };
             rem.OnError += delegate(Remoting.Base sender, string message, Exception exception)

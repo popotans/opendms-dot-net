@@ -107,47 +107,46 @@
     <Compile Include="Providers\CouchDB\EngineMethods\Base.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateGroup.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateNewResource.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\DetermineIfInstalled.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroups.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroupsForInitialization.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\GetAllUsers.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\GetGlobalPermissions.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\GetGroup.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\GetResource.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\GetResourceUsageRightsTemplate.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\GetUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Initialize.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Install.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\ModifyGroup.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\ModifyResource.cs" />
-    <Compile Include="Providers\CouchDB\EngineMethods\ModifyUser.cs" />
     <Compile Include="Providers\CouchDB\GlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Model\BulkDocuments.cs" />
     <Compile Include="Providers\CouchDB\Model\RevisionException.cs" />
     <Compile Include="Providers\CouchDB\ResourceUsageRightsTemplate.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\AccessDeniedReasonEnum.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\CreateGlobalUsageRights.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\CreateGroup.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\CreateNewResource.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\CreateNewVersion.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\GetResource.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\ModifyGroup.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\ModifyResource.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\ModifyUser.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\LocalResourceLockManager.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\AuthenticateUser.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\Base.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\CheckoutResource.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\CreateGroup.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\CreateNewResource.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\CreateUser.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\DetermineIfInstalled.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\GetAllGroups.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\Install.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\ModifyResource.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Remoting\Exists.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Remoting\GetView.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Base.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\CheckGlobalPermissions.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\CheckResourcePermissions.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\DetermineIfExists.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadGlobalPermissions.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadGroups.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadResourceUsageRightsTemplate.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\Base.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\Get.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\Save.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\SaveBulk.cs" />
-    <Compile Include="Providers\CouchDB\Transactions\Tasks\Remoting\SaveSingle.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadUser.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\MakeBulkDocument.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\MarkResourceForCheckout.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Remoting\Base.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Remoting\Get.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Remoting\Save.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Remoting\SaveBulk.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Remoting\SaveSingle.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadBulkDocuments.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadGroup.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadResource.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadUser.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Transaction.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Transitions\ResourceUsageRights.cs" />
     <Compile Include="Providers\IGlobalUsageRights.cs" />
@@ -158,12 +157,6 @@
     <Compile Include="Providers\CouchDB\Model\Database.cs" />
     <Compile Include="Providers\CouchDB\Model\Document.cs" />
     <Compile Include="Providers\CouchDB\Model\View.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\Base.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Actions\CreateUser.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\ActiveTransactionException.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\InvalidStageException.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\InvalidTransactionException.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Lock.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GroupCollection.cs" />
     <Compile Include="Providers\CouchDB\Transitions\UserCollection.cs" />
     <Compile Include="Providers\EngineBase.cs" />
@@ -187,9 +180,6 @@
     <Compile Include="Security\UnknownDatabaseException.cs" />
     <Compile Include="Security\UsageRight.cs" />
     <Compile Include="Providers\CouchDB\Server.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Manager.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Stage.cs" />
-    <Compile Include="Providers\CouchDB\TransactionsOld\Transaction.cs" />
     <Compile Include="Providers\CouchDB\Transitions\Group.cs" />
     <Compile Include="Providers\CouchDB\Transitions\Resource.cs" />
     <Compile Include="Providers\CouchDB\Transitions\User.cs" />
@@ -207,9 +197,7 @@
     <Content Include="libs\log4net.dll" />
     <Content Include="libs\Newtonsoft.Json.dll" />
     <Content Include="Providers\CouchDB\Resource Creation.txt" />
-    <Content Include="Providers\CouchDB\TransactionsOld\Problem.txt" />
-    <Content Include="Providers\CouchDB\TransactionsOld\Transactions.txt" />
-    <Content Include="Security\Authorization\Authorization System.txt" />
+    <Content Include="Providers\CouchDB\Transactions\Calling Processes.txt" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -243,9 +231,7 @@
       <Name>OpenDMS.Networking</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Providers\CouchDB\Transactions\Processes\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
