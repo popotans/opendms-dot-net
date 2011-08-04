@@ -10,12 +10,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 		#region Fields (2) 
 
         protected bool _isEventSubscriptionSuppressed = false;
-        //protected Engine.ActionDelegate _onActionChanged = null;
-        //protected Engine.AuthorizationDelegate _onAuthorizationDenied = null;
-        //protected Engine.CompletionDelegate _onComplete = null;
-        //protected Engine.ErrorDelegate _onError = null;
-        //protected Engine.ProgressDelegate _onProgress = null;
-        //protected Engine.TimeoutDelegate _onTimeout = null;
         protected EngineRequest _request;
 
 		#endregion Fields 
@@ -27,12 +21,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             if (request == null) return;
 
             _request = request;
-            //_onActionChanged = request.OnActionChanged;
-            //_onProgress = request.OnProgress;
-            //_onComplete = request.OnComplete;
-            //_onTimeout = request.OnTimeout;
-            //_onError = request.OnError;
-            //_onAuthorizationDenied = request.OnAuthorizationDenied;
         }
 
 		#endregion Constructors 

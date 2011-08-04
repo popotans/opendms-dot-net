@@ -39,7 +39,7 @@ namespace StorageTesting
 
             WriteLine("Starting GetResource test...");
             _start = DateTime.Now;
-            _engine.GetResource(request, new OpenDMS.Storage.Data.ResourceId(id));
+            _engine.GetResource(request, new OpenDMS.Storage.Data.ResourceId(id), false);
         }
 
         private void AuthorizationDenied(EngineRequest request)
@@ -60,7 +60,7 @@ namespace StorageTesting
             WriteLine("GetResource.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
         }
 
-        private void Complete(EngineRequest request, ICommandReply reply)
+        private void Complete(EngineRequest request, ICommandReply reply, object result)
         {
             DateTime stop = DateTime.Now;
             TimeSpan duration = stop - _start;

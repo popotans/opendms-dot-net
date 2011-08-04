@@ -10,7 +10,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
         public Data.Resource Resource { get; private set; }
 
-        public UploadResource(IDatabase db, Data.Resource resource)
+        public UploadResource(IDatabase db, Data.Resource resource,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
             _resource = resource;
@@ -42,7 +44,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
             try
             {
-                rem = new Remoting.SaveSingle(_db, doc);
+                rem = new Remoting.SaveSingle(_db, doc, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize);
             }
             catch (Exception e)
             {

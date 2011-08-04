@@ -35,25 +35,32 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
                 Transactions.Transaction t;
                 Transactions.Processes.GetAllGroups process;
 
-                process = new Transactions.Processes.GetAllGroups(_databases[i], 
-                    _request.RequestingPartyType, _request.Session);
+                process = new Transactions.Processes.GetAllGroups(_databases[i],
+                    _request.RequestingPartyType, Security.Session.MakeSecurityOverride(), 15000,
+                    15000, 8194, 8194);
                 t = new Transactions.Transaction(process);
-                t.OnError += delegate(Transactions.Transaction sender, Transactions.Processes.Base process2, Transactions.Tasks.Base task, string message, Exception exception)
+                
+                AttachSubscriber(process, _request.OnActionChanged);
+                AttachSubscriber(process, _request.OnAuthorizationDenied);
+                AttachSubscriber(process, _request.OnComplete);
+                AttachSubscriber(process, _request.OnError);
+                AttachSubscriber(process, _request.OnProgress);
+                AttachSubscriber(process, _request.OnTimeout);
+
+                //process.OnActionChanged += delegate(Transactions.Processes.Base sender, Transactions.Tasks.Base task, EngineActionType actionType, bool willSendProgress)
+                //{
+                //};
+                process.OnAuthorizationDenied += delegate(Transactions.Processes.Base sender, Transactions.Tasks.Base task)
                 {
-                    Logger.Storage.Error("An error occurred while running GetAllGroups on Database '" + _databases[i].Name + "', message: " + message, exception);
-                    ((Providers.EngineBase)_request.Engine).TriggerOnInitialized(false, message, exception);
+                    Logger.Storage.Error("Authorization failed while running GetAllGroups on Database '" + sender.Database.Name + "'.");
+                    ((Providers.EngineBase)_request.Engine).TriggerOnInitialized(false, "Authorization failed.", null);
                 };
-                t.OnTimeout += delegate(Transactions.Transaction sender, Transactions.Processes.Base process2, Transactions.Tasks.Base task)
-                {
-                    Logger.Storage.Error("A timeout occurred while running GetAllGroups on Database '" + _databases[i].Name + "'.");
-                    ((Providers.EngineBase)_request.Engine).TriggerOnInitialized(false, "Timeout", null);                    
-                };
-                t.OnComplete += delegate(Transactions.Transaction sender, Transactions.Processes.Base process2)
+                process.OnComplete += delegate(Transactions.Processes.Base sender, ICommandReply reply, object result)
                 {
                     lock (_dsms)
                     {
-                        _dsms.Add(_request.Database, new Security.DatabaseSessionManager(_request.Engine,
-                            _request.Database, ((Transactions.Processes.GetAllGroups)process2).Groups));
+                        _dsms.Add(sender.Database, new Security.DatabaseSessionManager(_request.Engine,
+                            sender.Database, ((Transactions.Processes.GetAllGroups)sender).Groups));
                         if (_dsms.Count == _databases.Count)
                         {
                             _request.Engine.SetState(false, true);
@@ -62,8 +69,25 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
                             ((Providers.EngineBase)_request.Engine).TriggerOnInitialized(true, "Initialization successful.", null);
                         }
                     }
-                    Logger.Storage.Debug("All groups for the database named " + _databases[i].Name + " have been loaded.");
+                    Logger.Storage.Debug("All groups for the database named " + sender.Database.Name + " have been loaded.");
                 };
+                process.OnError += delegate(Transactions.Processes.Base sender, Transactions.Tasks.Base task, string message, Exception exception)
+                {
+                    Logger.Storage.Error("An error occurred while running GetAllGroups on Database '" + sender.Database.Name + "', message: " + message, exception);
+                    ((Providers.EngineBase)_request.Engine).TriggerOnInitialized(false, message, exception);
+                };
+                //process.OnProgress += delegate(Transactions.Processes.Base sender, Transactions.Tasks.Base task, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+                //{
+                //};
+                //process.OnTaskComplete += delegate(Transactions.Processes.Base sender, Transactions.Tasks.Base task)
+                //{
+                //};
+                process.OnTimeout += delegate(Transactions.Processes.Base sender, Transactions.Tasks.Base task)
+                {
+                    Logger.Storage.Error("A timeout occurred while running GetAllGroups on Database '" + sender.Database.Name + "'.");
+                    ((Providers.EngineBase)_request.Engine).TriggerOnInitialized(false, "Timeout", null);             
+                };
+
                 t.Execute();
             }
         }

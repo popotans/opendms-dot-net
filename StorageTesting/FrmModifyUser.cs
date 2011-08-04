@@ -69,7 +69,7 @@ namespace StorageTesting
             _engine.GetAllUsers(request);
         }
 
-        private void Complete(EngineRequest request, ICommandReply reply)
+        private void Complete(EngineRequest request, ICommandReply reply, object result)
         {
             OpenDMS.Storage.Providers.CouchDB.Commands.GetViewReply r = (OpenDMS.Storage.Providers.CouchDB.Commands.GetViewReply)reply;
 

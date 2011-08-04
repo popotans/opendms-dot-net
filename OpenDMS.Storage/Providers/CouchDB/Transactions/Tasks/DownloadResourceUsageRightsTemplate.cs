@@ -9,7 +9,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
         public ResourceUsageRightsTemplate Value { get; private set; }
 
-        public DownloadResourceUsageRightsTemplate(IDatabase db)
+        public DownloadResourceUsageRightsTemplate(IDatabase db,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
         }
@@ -22,7 +24,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
             try
             {
-                rem = new Remoting.Get(_db, _id);
+                rem = new Remoting.Get(_db, _id, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize);
             }
             catch (Exception e)
             {

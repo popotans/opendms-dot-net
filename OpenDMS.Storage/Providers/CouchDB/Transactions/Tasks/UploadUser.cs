@@ -10,7 +10,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
         public Security.User User { get; private set; }
 
-        public UploadUser(IDatabase db, Security.User user)
+        public UploadUser(IDatabase db, Security.User user,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
             _user = user;
@@ -28,7 +30,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             try
             {
                 Transitions.User txUser = new Transitions.User();
-                rem = new Remoting.SaveSingle(_db, txUser.Transition(_user));
+                rem = new Remoting.SaveSingle(_db, txUser.Transition(_user), _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize);
             }
             catch (Exception e)
             {

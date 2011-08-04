@@ -43,25 +43,21 @@ namespace StorageTesting
             WriteLine("Authenticate - Login cancelled.");
         }
 
-        private void OnAuthenticated(EngineRequest request, ICommandReply reply)
+        private void OnAuthenticated(EngineRequest request, ICommandReply reply, object result)
         {
             DateTime stop = DateTime.Now;
             TimeSpan duration = stop - _start;
 
-            if (isError)
+            Tuple<OpenDMS.Storage.Security.Session, bool> r = (Tuple<OpenDMS.Storage.Security.Session, bool>)result;
+
+            if (!r.Item2)
             {
-                WriteLine("Authenticate - An error occurred while attempting to authenticate the user, this is not determinative of the user's credentials in " + duration.TotalMilliseconds.ToString() + "ms.  The server returned the message: " + message);
+                WriteLine("Authenticate - The user failed authentication in " + duration.TotalMilliseconds.ToString() + "ms.");
                 return;
             }
 
-            if (!isAuthenticated)
-            {
-                WriteLine("Authenticate - The user failed authentication in " + duration.TotalMilliseconds.ToString() + "ms.  The server returned the message: " + message);
-                return;
-            }
-
-            WriteLine("Authenticate - the user passed authentication and has been assigned the authentication token: " + session.AuthToken.ToString());
-            OnAuthenticationSuccess(session);
+            WriteLine("Authenticate - the user passed authentication and has been assigned the authentication token: " + r.Item1.AuthToken.ToString());
+            OnAuthenticationSuccess(r.Item1);
         }
     }
 }

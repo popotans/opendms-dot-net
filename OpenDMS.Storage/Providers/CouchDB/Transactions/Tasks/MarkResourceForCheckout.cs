@@ -9,7 +9,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
         public Data.Resource Resource { get; private set; }
 
-        public MarkResourceForCheckout(Data.Resource resource, string username)
+        public MarkResourceForCheckout(Data.Resource resource, string username,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _resource = resource;
             _username = username;

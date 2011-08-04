@@ -22,8 +22,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             Transactions.Transaction t;
             Transactions.Processes.CreateNewResource process;
 
-            process = new Transactions.Processes.CreateNewResource(_request.Database, _resourceMetadata, 
-                _versionMetadata, _versionContent, _request.RequestingPartyType, _request.Session);
+            process = new Transactions.Processes.CreateNewResource(_request.Database, _resourceMetadata,
+                _versionMetadata, _versionContent, _request.RequestingPartyType, _request.Session, _request.Database.Server.Timeout,
+                _request.Database.Server.Timeout, _request.Database.Server.BufferSize, _request.Database.Server.BufferSize);
             t = new Transactions.Transaction(process);
 
             AttachSubscriber(process, _request.OnActionChanged);

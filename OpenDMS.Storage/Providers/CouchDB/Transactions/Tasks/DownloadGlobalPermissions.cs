@@ -9,7 +9,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
         public GlobalUsageRights GlobalUsageRights { get; private set; }
 
-        public DownloadGlobalPermissions(IDatabase db)
+        public DownloadGlobalPermissions(IDatabase db,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
         }
@@ -22,7 +24,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
             try
             {
-                rem = new Remoting.Get(_db, new GlobalUsageRights(null, null).Id);
+                rem = new Remoting.Get(_db, new GlobalUsageRights(null, null).Id, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize);
             }
             catch (Exception e)
             {
