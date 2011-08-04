@@ -14,7 +14,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
         public bool IsAuthorized { get; private set; }
 
         public CheckGlobalPermissions(IDatabase db, GlobalUsageRights gur, Security.RequestingPartyType requestingPartyType,
-            Security.Session session, Security.Authorization.GlobalPermissionType requiredPermissions)
+            Security.Session session, Security.Authorization.GlobalPermissionType requiredPermissions, 
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
             _gur = gur;

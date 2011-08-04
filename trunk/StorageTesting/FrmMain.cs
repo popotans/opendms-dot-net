@@ -97,14 +97,13 @@ namespace StorageTesting
             WriteLine("Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
         }
 
-        public void IsInstalled_OnComplete(EngineRequest request, ICommandReply reply)
+        public void IsInstalled_OnComplete(EngineRequest request, ICommandReply reply, object result)
         {
             DateTime stop = DateTime.Now;
             TimeSpan duration = stop - _start;
 
-            OpenDMS.Storage.Providers.CouchDB.Commands.HeadDocumentReply r = (OpenDMS.Storage.Providers.CouchDB.Commands.HeadDocumentReply)reply;
 
-            if (r.IsError)
+            if (!(bool)result)
             {
                 BtnInstall.Invoke(new MethodInvoker(delegate { BtnInstall.Enabled = true; }));
                 WriteLine("Result - OpenDMS.Storage has not been successfully installed on the CouchDB server.  Determined in " + duration.TotalMilliseconds.ToString() + "ms.");

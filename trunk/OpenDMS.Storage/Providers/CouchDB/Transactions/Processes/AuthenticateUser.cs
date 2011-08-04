@@ -4,7 +4,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 {
     public class AuthenticateUser : Base
     {
-        private IDatabase _db = null;
         private Security.SessionManager _sessionMgr;
         private string _username = null;
         private string _password = null;
@@ -13,16 +12,19 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         public Security.Session Session { get; private set; }
 
         public AuthenticateUser(IDatabase db, Security.SessionManager sessionMgr,
-            string username, string encryptedPassword)
+            string username, string encryptedPassword, int sendTimeout, 
+            int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(db, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _sessionMgr = sessionMgr;
-            _db = db;
             _username = username;
+            _password = encryptedPassword;
         }
 
         public override void Process()
         {
-            RunTaskProcess(new Tasks.DownloadUser(_db, _username));
+            RunTaskProcess(new Tasks.DownloadUser(_db, _username, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
         }
 
         public override void TaskComplete(Tasks.Base sender, ICommandReply reply)

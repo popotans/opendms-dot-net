@@ -18,10 +18,19 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
         public event ProgressDelegate OnProgress;
         public event TimeoutDelegate OnTimeout;
 
+        protected int _sendTimeout;
+        protected int _receiveTimeout;
+        protected int _sendBufferSize;
+        protected int _receiveBufferSize;
+
         public abstract void Process();
 
-        public Base()
+        public Base(int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
+            _sendTimeout = sendTimeout;
+            _sendBufferSize = sendBufferSize;
+            _receiveTimeout = receiveTimeout;
+            _receiveBufferSize = receiveBufferSize;
         }
 
         protected void TriggerOnActionChanged(EngineActionType actionType, bool willSendProgress)

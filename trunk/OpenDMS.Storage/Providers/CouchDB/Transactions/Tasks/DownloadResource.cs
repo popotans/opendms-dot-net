@@ -11,7 +11,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
         public Data.Resource Resource { get; private set; }
         public JObject Remainder { get; private set; }
 
-        public DownloadResource(IDatabase db, Data.ResourceId id)
+        public DownloadResource(IDatabase db, Data.ResourceId id,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
             _id = id;
@@ -25,7 +27,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
             try
             {
-                rem = new Remoting.Get(_db, _id.ToString());
+                rem = new Remoting.Get(_db, _id.ToString(), _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize);
             }
             catch (Exception e)
             {

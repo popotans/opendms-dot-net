@@ -36,7 +36,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             Transactions.Transaction t;
             Transactions.Processes.AuthenticateUser process;
 
-            process = new Transactions.Processes.AuthenticateUser(_db, _sessionMgr, _username, _password);
+            process = new Transactions.Processes.AuthenticateUser(_db, _sessionMgr, _username, _password, _request.Database.Server.Timeout, 
+                _request.Database.Server.Timeout, _request.Database.Server.BufferSize, _request.Database.Server.BufferSize);
             t = new Transactions.Transaction(process);
 
             AttachSubscriber(process, _request.OnActionChanged);

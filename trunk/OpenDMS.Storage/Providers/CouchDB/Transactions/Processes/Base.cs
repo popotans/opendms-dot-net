@@ -21,9 +21,22 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         public event ProgressDelegate OnProgress;
         public event TimeoutDelegate OnTimeout;
         public event TaskCompletionDelegate OnTaskComplete;
+
+        protected IDatabase _db;
+        protected int _sendTimeout;
+        protected int _receiveTimeout;
+        protected int _sendBufferSize;
+        protected int _receiveBufferSize;
+
+        public IDatabase Database { get { return _db; } private set { _db = value; } }
         
-        public Base()
+        public Base(IDatabase db, int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
         {
+            _db = db;
+            _sendTimeout = sendTimeout;
+            _sendBufferSize = sendBufferSize;
+            _receiveTimeout = receiveTimeout;
+            _receiveBufferSize = receiveBufferSize;
         }
 
         public abstract void Process();

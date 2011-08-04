@@ -9,7 +9,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
         public Model.BulkDocuments BulkDocument { get; private set; }
 
-        public MakeBulkDocument(List<Model.Document> doc)
+        public MakeBulkDocument(List<Model.Document> doc,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _docs = doc;
         }

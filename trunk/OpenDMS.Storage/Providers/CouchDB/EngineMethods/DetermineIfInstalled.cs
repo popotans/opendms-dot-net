@@ -16,7 +16,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             Transactions.Transaction t;
             Transactions.Processes.DetermineIfInstalled process;
 
-            process = new Transactions.Processes.DetermineIfInstalled(_request.Database);
+            process = new Transactions.Processes.DetermineIfInstalled(_request.Database, _request.Database.Server.Timeout,
+                _request.Database.Server.Timeout, _request.Database.Server.BufferSize, _request.Database.Server.BufferSize);
             t = new Transactions.Transaction(process);
 
             AttachSubscriber(process, _request.OnActionChanged);

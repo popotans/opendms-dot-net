@@ -5,7 +5,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 {
     public class CreateNewResource : Base
     {
-        private IDatabase _db;
         private Data.Metadata _resourceMetadata = null;
         private Data.Metadata _versionMetadata = null;
         private Data.Content _versionContent = null;
@@ -18,10 +17,11 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         public Model.BulkDocuments BulkDocuments { get; private set; }
 
         public CreateNewResource(IDatabase db, Data.Metadata resourceMetadata, Data.Metadata versionMetadata, 
-            Data.Content versionContent, Security.RequestingPartyType requestingPartyType, 
-            Security.Session session)
+            Data.Content versionContent, Security.RequestingPartyType requestingPartyType,
+            Security.Session session, int sendTimeout,
+            int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(db, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
-            _db = db;
             _resourceMetadata = resourceMetadata;
             _versionMetadata = versionMetadata;
             _versionContent = versionContent;
@@ -31,7 +31,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 
         public override void Process()
         {
-            RunTaskProcess(new Tasks.DownloadGlobalPermissions(_db));
+            RunTaskProcess(new Tasks.DownloadGlobalPermissions(_db, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
         }
 
         public override void TaskComplete(Tasks.Base sender, ICommandReply reply)
@@ -43,7 +44,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                 Tasks.DownloadGlobalPermissions task = (Tasks.DownloadGlobalPermissions)sender;
                 _gur = task.GlobalUsageRights;
                 RunTaskProcess(new Tasks.CheckGlobalPermissions(_db, _gur, _requestingPartyType,
-                    _session, Security.Authorization.GlobalPermissionType.CreateResource));
+                    _session, Security.Authorization.GlobalPermissionType.CreateResource, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.CheckGlobalPermissions))
             {
@@ -53,7 +55,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     TriggerOnAuthorizationDenied(task);
                     return;
                 }
-                RunTaskProcess(new Tasks.DownloadResourceUsageRightsTemplate(_db));
+                RunTaskProcess(new Tasks.DownloadResourceUsageRightsTemplate(_db, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.DownloadResourceUsageRightsTemplate))
             {
@@ -87,12 +90,14 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     return;
                 }
 
-                RunTaskProcess(new Tasks.MakeBulkDocument(docs));
+                RunTaskProcess(new Tasks.MakeBulkDocument(docs, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.MakeBulkDocument))
             {
                 Tasks.MakeBulkDocument task = (Tasks.MakeBulkDocument)sender;
-                RunTaskProcess(new Tasks.UploadBulkDocuments(_db, task.BulkDocument));
+                RunTaskProcess(new Tasks.UploadBulkDocuments(_db, task.BulkDocument, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.UploadBulkDocuments))
             {

@@ -10,7 +10,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
         public Security.Group Group { get; private set; }
 
-        public UploadGroup(IDatabase db, Security.Group group)
+        public UploadGroup(IDatabase db, Security.Group group,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
             _group = group;
@@ -28,7 +30,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             try
             {
                 Transitions.Group txGroup = new Transitions.Group();
-                rem = new Remoting.SaveSingle(_db, txGroup.Transition(_group));
+                rem = new Remoting.SaveSingle(_db, txGroup.Transition(_group), _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize);
             }
             catch (Exception e)
             {

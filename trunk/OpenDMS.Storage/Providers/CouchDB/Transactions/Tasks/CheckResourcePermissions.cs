@@ -14,7 +14,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
         public bool IsAuthorized { get; private set; }
 
         public CheckResourcePermissions(IDatabase db, Data.Resource resource, Security.RequestingPartyType requestingPartyType,
-            Security.Session session, Security.Authorization.ResourcePermissionType requiredPermissions)
+            Security.Session session, Security.Authorization.ResourcePermissionType requiredPermissions,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
             _resource = resource;

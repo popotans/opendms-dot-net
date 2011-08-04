@@ -4,7 +4,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 {
     public class CreateUser : Base
     {
-        private IDatabase _db;
         private Security.User _user;
         private Security.RequestingPartyType _requestingPartyType;
         private Security.Session _session;
@@ -13,9 +12,10 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         public Security.User User { get; private set; }
 
         public CreateUser(IDatabase db, Security.User user,
-            Security.RequestingPartyType requestingPartyType, Security.Session session)
+            Security.RequestingPartyType requestingPartyType, Security.Session session, int sendTimeout,
+            int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(db, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
-            _db = db;
             _user = user;
             _requestingPartyType = requestingPartyType;
             _session = session;
@@ -23,7 +23,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 
         public override void Process()
         {
-            RunTaskProcess(new Tasks.DownloadGlobalPermissions(_db));
+            RunTaskProcess(new Tasks.DownloadGlobalPermissions(_db, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
         }
 
         public override void TaskComplete(Tasks.Base sender, ICommandReply reply)
@@ -35,7 +36,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                 Tasks.DownloadGlobalPermissions task = (Tasks.DownloadGlobalPermissions)sender;
                 _gur = task.GlobalUsageRights;
                 RunTaskProcess(new Tasks.CheckGlobalPermissions(_db, _gur, _requestingPartyType,
-                    _session, Security.Authorization.GlobalPermissionType.CreateUser));
+                    _session, Security.Authorization.GlobalPermissionType.CreateUser, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.CheckGlobalPermissions))
             {
@@ -45,7 +47,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     TriggerOnAuthorizationDenied(task);
                     return;
                 }
-                RunTaskProcess(new Tasks.UploadUser(_db, _user));
+                RunTaskProcess(new Tasks.UploadUser(_db, _user, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.UploadUser))
             {

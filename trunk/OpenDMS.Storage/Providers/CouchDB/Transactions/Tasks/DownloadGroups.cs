@@ -9,7 +9,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
         public List<Security.Group> Groups { get; private set; }
 
-        public DownloadGroups(IDatabase db)
+        public DownloadGroups(IDatabase db,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
         }
@@ -22,7 +24,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
             try
             {
-                rem = new Remoting.GetView(_db, "groups", "GetAll");
+                rem = new Remoting.GetView(_db, "groups", "GetAll", _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize);
             }
             catch (Exception e)
             {

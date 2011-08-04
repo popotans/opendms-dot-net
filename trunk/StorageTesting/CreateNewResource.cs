@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using OpenDMS.Networking.Http.Methods;
 using OpenDMS.Storage.Providers;
 using OpenDMS.Storage.Providers.CouchDB;
+using OpenDMS.Storage.Data;
 
 namespace StorageTesting
 {
@@ -64,12 +65,13 @@ namespace StorageTesting
             WriteLine("CreateNewResource.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
         }
 
-        private void Complete(EngineRequest request, ICommandReply reply)
+        private void Complete(EngineRequest request, ICommandReply reply, object result)
         {
             DateTime stop = DateTime.Now;
             TimeSpan duration = stop - _start;
-            
-            WriteLine("CreateNewResource.Complete - success in " + duration.TotalMilliseconds.ToString() + "ms.");
+
+            Tuple<Resource, OpenDMS.Storage.Data.Version> r = (Tuple<Resource, OpenDMS.Storage.Data.Version>)result;
+            WriteLine("CreateNewResource.Complete - Resource: " + r.Item1.ResourceId.ToString() + " and Version: " + r.Item2.VersionId.ToString() + " successfully created in " + duration.TotalMilliseconds.ToString() + "ms.");
         }
 
         private void Timeout(EngineRequest request)

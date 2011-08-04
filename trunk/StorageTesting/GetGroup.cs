@@ -54,7 +54,7 @@ namespace StorageTesting
             WriteLine("GetGroup.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
         }
 
-        private void Complete(EngineRequest request, ICommandReply reply)
+        private void Complete(EngineRequest request, ICommandReply reply, object result)
         {
             DateTime stop = DateTime.Now;
             TimeSpan duration = stop - _start;

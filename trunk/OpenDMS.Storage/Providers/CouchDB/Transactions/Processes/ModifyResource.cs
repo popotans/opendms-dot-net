@@ -6,7 +6,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 {
     public class ModifyResource : Base
     {
-        private IDatabase _db;
         private Data.Resource _resource;
         private Security.RequestingPartyType _requestingPartyType;
         private Security.Session _session;
@@ -14,9 +13,10 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         private JObject _storedRemainder;
 
         public ModifyResource(IDatabase db, Data.Resource resource,
-            Security.RequestingPartyType requestingPartyType, Security.Session session)
+            Security.RequestingPartyType requestingPartyType, Security.Session session, int sendTimeout,
+            int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(db, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
-            _db = db;
             _resource = resource;
             _requestingPartyType = requestingPartyType;
             _session = session;
@@ -24,7 +24,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 
         public override void Process()
         {
-            RunTaskProcess(new Tasks.DownloadResource(_db, _resource.ResourceId));
+            RunTaskProcess(new Tasks.DownloadResource(_db, _resource.ResourceId, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
         }
 
         public override void TaskComplete(Tasks.Base sender, ICommandReply reply)
@@ -40,7 +41,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                 _storedResource = task.Resource;
                 _storedRemainder = task.Remainder;
                 RunTaskProcess(new Tasks.CheckResourcePermissions(_db, _storedResource,
-                    _requestingPartyType, _session, Security.Authorization.ResourcePermissionType.Modify));
+                    _requestingPartyType, _session, Security.Authorization.ResourcePermissionType.Modify, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.CheckResourcePermissions))
             {
@@ -50,7 +52,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     TriggerOnAuthorizationDenied(task);
                     return;
                 }
-                RunTaskProcess(new Tasks.UploadResource(_db, _resource));
+                RunTaskProcess(new Tasks.UploadResource(_db, _resource, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.UploadResource))
             {

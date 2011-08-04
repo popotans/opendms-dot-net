@@ -26,6 +26,7 @@ namespace OpenDMS.Storage.Security
         {
             _engine = engine;
             _dbSessionManagers = dsms;
+            _isInitialized = true;
         }
 
         public Session AuthenticateUser(Providers.IDatabase db, User user, string passwordToTest)

@@ -10,7 +10,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
         public List<Commands.PostBulkDocumentsReply.Entry> Results { get; private set; }
 
-        public UploadBulkDocuments(IDatabase db, Model.BulkDocuments bulkDocs)
+        public UploadBulkDocuments(IDatabase db, Model.BulkDocuments bulkDocs,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
             _bulkDocuments = bulkDocs;
@@ -24,7 +26,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 
             try
             {
-                rem = new Remoting.SaveBulk(_db, _bulkDocuments);
+                rem = new Remoting.SaveBulk(_db, _bulkDocuments, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize);
             }
             catch (Exception e)
             {

@@ -5,7 +5,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 {
     public class Install : Base
     {
-        private IDatabase _db = null;
         // Installation package, administrator user password is 'password'.
         private string _package =
 @"{ 
@@ -72,14 +71,16 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 
         public List<Commands.PostBulkDocumentsReply.Entry> Results;
 
-        public Install(IDatabase db)
+        public Install(IDatabase db, int sendTimeout,
+            int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(db, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
-            _db = db;
         }
 
         public override void Process()
         {
-            RunTaskProcess(new Tasks.UploadBulkDocuments(_db, new Model.BulkDocuments(_package)));
+            RunTaskProcess(new Tasks.UploadBulkDocuments(_db, new Model.BulkDocuments(_package), _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
         }
 
         public override void TaskComplete(Tasks.Base sender, ICommandReply reply)
