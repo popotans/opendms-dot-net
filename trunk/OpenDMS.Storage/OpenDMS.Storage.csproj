@@ -105,9 +105,13 @@
     <Compile Include="Providers\CouchDB\Engine.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\AuthenticateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Base.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\CheckoutResource.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateGroup.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateNewResource.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\DetermineIfInstalled.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroups.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\GetGroup.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\GetResourceReadOnly.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Initialize.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Install.cs" />
     <Compile Include="Providers\CouchDB\GlobalUsageRights.cs" />
@@ -122,6 +126,8 @@
     <Compile Include="Providers\CouchDB\Transactions\Processes\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\DetermineIfInstalled.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\GetAllGroups.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\GetGroup.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\GetResourceReadOnly.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\Install.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\ModifyResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\Exists.cs" />
@@ -131,6 +137,7 @@
     <Compile Include="Providers\CouchDB\Transactions\Tasks\CheckResourcePermissions.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DetermineIfExists.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadGlobalPermissions.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadGroup.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadGroups.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadResourceUsageRightsTemplate.cs" />

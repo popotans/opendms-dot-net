@@ -99,6 +99,30 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
+        public override void GetResourceReadOnly(EngineRequest request, ResourceId resource)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting a read-only version of the resource '" + resource.ToString() + "'...");
+            EngineMethods.GetResourceReadOnly act = new EngineMethods.GetResourceReadOnly(request, resource);
+            act.Execute();
+        }
+
+        public override void CheckoutResource(EngineRequest request, ResourceId resource)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Checking out the resource '" + resource.ToString() + "'");
+            EngineMethods.CheckoutResource act = new EngineMethods.CheckoutResource(request, resource);
+            act.Execute();
+        }
+
+        public override void GetAllGroups(EngineRequest request)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting all groups...");
+            EngineMethods.GetAllGroups act = new EngineMethods.GetAllGroups(request);
+            act.Execute();
+        }
+
 		#endregion Methods 
     }
 }

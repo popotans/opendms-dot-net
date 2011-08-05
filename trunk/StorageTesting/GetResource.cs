@@ -39,7 +39,7 @@ namespace StorageTesting
 
             WriteLine("Starting GetResource test...");
             _start = DateTime.Now;
-            _engine.GetResource(request, new OpenDMS.Storage.Data.ResourceId(id), false);
+            _engine.CheckoutResource(request, new OpenDMS.Storage.Data.ResourceId(id));
         }
 
         private void AuthorizationDenied(EngineRequest request)

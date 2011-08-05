@@ -8,14 +8,8 @@ namespace OpenDMS.Storage.Security
 {
     public class SessionManager : Singleton<SessionManager>
     {
-        public delegate void ErrorDelegate(string message, Exception exception);
-        public delegate void InitializationCompletionDelegate();
-        public event ErrorDelegate OnError;
-        public event InitializationCompletionDelegate OnInitializationComplete;
-
         private Providers.IEngine _engine;
         private Dictionary<Providers.IDatabase, DatabaseSessionManager> _dbSessionManagers;
-        private int _dbsLeftToLoadGroups;
 
         public SessionManager()
         {

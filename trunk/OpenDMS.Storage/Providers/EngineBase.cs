@@ -29,36 +29,43 @@ namespace OpenDMS.Storage.Providers
 
 		#endregion Properties 
 
-		#region Delegates and Events (10) 
+		#region Delegates and Events (8) 
 
-		// Delegates (8) 
+		// Delegates (7) 
 
         public delegate void ActionDelegate(EngineRequest request, EngineActionType actionType, bool willSendProgress);
-        //public delegate void AuthenticationDelegate(bool isError, bool isAuthenticated, Security.Session session, string message, Exception exception);
         public delegate void AuthorizationDelegate(EngineRequest request);
         public delegate void CompletionDelegate(EngineRequest request, ICommandReply reply, object result);
         public delegate void ErrorDelegate(EngineRequest request, string message, Exception exception);
         public delegate void InitializationDelegate(bool success, string message, Exception exception);
         public delegate void ProgressDelegate(EngineRequest request, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public delegate void TimeoutDelegate(EngineRequest request);
-		// Events (2) 
-
-        //public event AuthenticationDelegate OnAuthenticated;
+		// Events (1) 
 
         public event InitializationDelegate OnInitialized;
 
 		#endregion Delegates and Events 
 
-		#region Methods (35) 
+		#region Methods (31) 
 
-		// Public Methods (35) 
+		// Public Methods (31) 
 
         public virtual void AuthenticateUser(EngineRequest request, string username, string hashedPassword)
         {
             throw new NotImplementedException();
         }
 
+        public virtual void CheckoutResource(EngineRequest request, Data.ResourceId resource)
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual void CreateGroup(EngineRequest request, Security.Group group)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void CreateNewResource(EngineRequest request, Data.Metadata resourceMetadata, Data.Metadata versionMetadata, Data.Content versionContent)
         {
             throw new NotImplementedException();
         }
@@ -88,11 +95,6 @@ namespace OpenDMS.Storage.Providers
             throw new NotImplementedException();
         }
 
-        public virtual void GetAllGroupsForInitialization(EngineRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
         public virtual void GetAllUsers(EngineRequest request)
         {
             throw new NotImplementedException();
@@ -113,7 +115,7 @@ namespace OpenDMS.Storage.Providers
             throw new NotImplementedException();
         }
 
-        public virtual void GetResource(EngineRequest request, Data.ResourceId resource, bool readOnly)
+        public virtual void GetResourceReadOnly(EngineRequest request, Data.ResourceId resource)
         {
             throw new NotImplementedException();
         }
@@ -201,11 +203,5 @@ namespace OpenDMS.Storage.Providers
         }
 
 		#endregion Methods 
-    
-
-        public virtual void CreateNewResource(EngineRequest request, Data.Metadata resourceMetadata, Data.Metadata versionMetadata, Data.Content versionContent)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
