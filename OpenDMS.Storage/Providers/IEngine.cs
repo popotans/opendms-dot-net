@@ -20,7 +20,6 @@ namespace OpenDMS.Storage.Providers
 
         // Sessioned requests
         void GetAllGroups(EngineRequest request);
-        void GetAllGroupsForInitialization(EngineRequest request);
         void GetGroup(EngineRequest request, string groupName);
         void CreateGroup(EngineRequest request, Group group);
         void ModifyGroup(EngineRequest request, Group group);
@@ -30,9 +29,8 @@ namespace OpenDMS.Storage.Providers
         void CreateUser(EngineRequest request, User user);
         void ModifyUser(EngineRequest request, User user);
 
-        void GetResource(EngineRequest request, ResourceId resource, bool readOnly);
-        //void CreateNewResource(EngineRequest request, Metadata metadata);
-        //void CreateNewResource(EngineRequest request, Metadata metadata, List<UsageRight> usageRights);
+        void CheckoutResource(EngineRequest request, ResourceId resource);
+        void GetResourceReadOnly(EngineRequest request, ResourceId resource);
         void CreateNewResource(EngineRequest request, Metadata resourceMetadata, Metadata versionMetadata, Content versionContent);
         void ModifyResource(EngineRequest request, Resource resource);
         void RollbackResource(EngineRequest request, ResourceId resource, int rollbackDepth);
