@@ -108,12 +108,17 @@
     <Compile Include="Providers\CouchDB\EngineMethods\CheckoutResource.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateGroup.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateNewResource.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\DetermineIfInstalled.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroups.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\GetAllUsers.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetGroup.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetResourceReadOnly.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\GetUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Initialize.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Install.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\ModifyGroup.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\ModifyUser.cs" />
     <Compile Include="Providers\CouchDB\GlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Model\BulkDocuments.cs" />
     <Compile Include="Providers\CouchDB\Model\RevisionException.cs" />
@@ -126,10 +131,14 @@
     <Compile Include="Providers\CouchDB\Transactions\Processes\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\DetermineIfInstalled.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\GetAllGroups.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\GetAllUsers.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\GetGroup.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\GetResourceReadOnly.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\GetUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\Install.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\ModifyGroup.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\ModifyResource.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\ModifyUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\Exists.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\GetView.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Base.cs" />
@@ -142,6 +151,7 @@
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadResourceUsageRightsTemplate.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadUser.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadUsers.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\MakeBulkDocument.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\MarkResourceForCheckout.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\Base.cs" />
@@ -204,7 +214,6 @@
     <Content Include="libs\log4net.dll" />
     <Content Include="libs\Newtonsoft.Json.dll" />
     <Content Include="Providers\CouchDB\Resource Creation.txt" />
-    <Content Include="Providers\CouchDB\Transactions\Calling Processes.txt" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -242,7 +251,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
+      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

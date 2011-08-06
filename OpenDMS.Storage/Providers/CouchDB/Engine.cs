@@ -27,15 +27,23 @@ namespace OpenDMS.Storage.Providers.CouchDB
 
 		#endregion Constructors 
 
-		#region Methods (19) 
+		#region Methods (15) 
 
-		// Public Methods (17) 
+		// Public Methods (15) 
 
         public override void AuthenticateUser(EngineRequest request, string username, string hashedPassword)
         {
             CheckInitialization();
             Logger.Storage.Debug("Authenticating user: " + username);
             EngineMethods.AuthenticateUser act = new EngineMethods.AuthenticateUser(request, _sessionMgr, username, hashedPassword);
+            act.Execute();
+        }
+
+        public override void CheckoutResource(EngineRequest request, ResourceId resource)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Checking out the resource '" + resource.ToString() + "'");
+            EngineMethods.CheckoutResource act = new EngineMethods.CheckoutResource(request, resource);
             act.Execute();
         }
 
@@ -55,6 +63,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
+        public override void CreateUser(EngineRequest request, Security.User user)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Creating user '" + user.Id + "'...");
+            EngineMethods.CreateUser act = new EngineMethods.CreateUser(request, user);
+            act.Execute();
+        }
+
         public override void DetermineIfInstalled(EngineRequest request, string logDirectory)
         {
             new OpenDMS.IO.Logger(logDirectory);
@@ -62,6 +78,46 @@ namespace OpenDMS.Storage.Providers.CouchDB
             new OpenDMS.Storage.Logger(logDirectory);
             Logger.Storage.Debug("Checking if OpenDMS.Storage has been installed on the db: " + request.Database.Name + " on server: " + request.Database.Server.Uri.ToString());
             EngineMethods.DetermineIfInstalled act = new EngineMethods.DetermineIfInstalled(request);
+            act.Execute();
+        }
+
+        public override void GetAllGroups(EngineRequest request)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting all groups...");
+            EngineMethods.GetAllGroups act = new EngineMethods.GetAllGroups(request);
+            act.Execute();
+        }
+
+        public override void GetAllUsers(EngineRequest request)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting all users...");
+            EngineMethods.GetAllUsers act = new EngineMethods.GetAllUsers(request);
+            act.Execute();
+        }
+
+        public override void GetGroup(EngineRequest request, string groupName)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting group '" + groupName + "'...");
+            EngineMethods.GetGroup act = new EngineMethods.GetGroup(request, new Security.Group(groupName));
+            act.Execute();
+        }
+
+        public override void GetResourceReadOnly(EngineRequest request, ResourceId resource)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting a read-only version of the resource '" + resource.ToString() + "'...");
+            EngineMethods.GetResourceReadOnly act = new EngineMethods.GetResourceReadOnly(request, resource);
+            act.Execute();
+        }
+
+        public override void GetUser(EngineRequest request, string username)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting user '" + username + "'...");
+            EngineMethods.GetUser act = new EngineMethods.GetUser(request, new Security.User(username));
             act.Execute();
         }
 
@@ -99,27 +155,19 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
-        public override void GetResourceReadOnly(EngineRequest request, ResourceId resource)
+        public override void ModifyGroup(EngineRequest request, Security.Group group)
         {
             CheckInitialization();
-            Logger.Storage.Debug("Getting a read-only version of the resource '" + resource.ToString() + "'...");
-            EngineMethods.GetResourceReadOnly act = new EngineMethods.GetResourceReadOnly(request, resource);
+            Logger.Storage.Debug("Modifying group '" + group.Id + "'...");
+            EngineMethods.ModifyGroup act = new EngineMethods.ModifyGroup(request, group);
             act.Execute();
         }
 
-        public override void CheckoutResource(EngineRequest request, ResourceId resource)
+        public override void ModifyUser(EngineRequest request, Security.User user)
         {
             CheckInitialization();
-            Logger.Storage.Debug("Checking out the resource '" + resource.ToString() + "'");
-            EngineMethods.CheckoutResource act = new EngineMethods.CheckoutResource(request, resource);
-            act.Execute();
-        }
-
-        public override void GetAllGroups(EngineRequest request)
-        {
-            CheckInitialization();
-            Logger.Storage.Debug("Getting all groups...");
-            EngineMethods.GetAllGroups act = new EngineMethods.GetAllGroups(request);
+            Logger.Storage.Debug("Modifying user '" + user.Username + "'...");
+            EngineMethods.ModifyUser act = new EngineMethods.ModifyUser(request, user);
             act.Execute();
         }
 
