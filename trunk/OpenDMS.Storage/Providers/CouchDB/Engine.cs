@@ -171,6 +171,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
+        public override void RollbackResource(EngineRequest request, ResourceId resource, int rollbackDepth)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Rolling back resource '" + resource.Id.ToString("N") + "' a depth of " + rollbackDepth.ToString() + "...");
+            EngineMethods.RollbackResource act = new EngineMethods.RollbackResource(request, resource, rollbackDepth);
+            act.Execute();
+        }
+
 		#endregion Methods 
     }
 }

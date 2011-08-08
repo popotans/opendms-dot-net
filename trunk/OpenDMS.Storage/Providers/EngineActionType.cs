@@ -28,7 +28,8 @@ namespace OpenDMS.Storage.Providers
         ModifyingResource,
         GettingResource,
         UploadingBulk,
-        CheckingExistance
+        CheckingExistance,
+        DeletingResource
         // No need to send a complete action as completion is signaled by Error, Timeout or Completion
         // Complete
     }

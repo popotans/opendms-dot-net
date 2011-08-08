@@ -119,6 +119,7 @@
     <Compile Include="Providers\CouchDB\EngineMethods\Install.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\ModifyGroup.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\ModifyUser.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\RollbackResource.cs" />
     <Compile Include="Providers\CouchDB\GlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Model\BulkDocuments.cs" />
     <Compile Include="Providers\CouchDB\Model\RevisionException.cs" />
@@ -126,9 +127,11 @@
     <Compile Include="Providers\CouchDB\Transactions\Processes\AuthenticateUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\Base.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\CheckoutResource.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\CheckoutVersion.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\CreateGroup.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\CreateNewResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\CreateUser.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\DeleteResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\DetermineIfInstalled.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\GetAllGroups.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\GetAllUsers.cs" />
@@ -139,6 +142,8 @@
     <Compile Include="Providers\CouchDB\Transactions\Processes\ModifyGroup.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\ModifyResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\ModifyUser.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\RollbackResource.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Remoting\Delete.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\Exists.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\GetView.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Base.cs" />
@@ -152,6 +157,7 @@
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadResourceUsageRightsTemplate.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadUsers.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadVersion.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\MakeBulkDocument.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\MarkResourceForCheckout.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\Base.cs" />
