@@ -42,5 +42,10 @@ namespace OpenDMS.Storage.Data
             CheckedOutAt = at;
             CheckedOutTo = to;
         }
+
+        public void UpdateCurrentVersionBasedOnVersionsList()
+        {
+            CurrentVersionId = VersionIds[VersionIds.Count - 1];
+        }
     }
 }

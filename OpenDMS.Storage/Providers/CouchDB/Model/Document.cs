@@ -91,5 +91,19 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
             : base(doc.ToString())
         {            
         }
+
+        public Document CombineWith(JObject jobj)
+        {
+            IEnumerator<JToken> en = null;
+
+            while ((en = jobj.Children().GetEnumerator()).MoveNext())
+            {
+                if (en.Current.Type != JTokenType.Property)
+                    throw new Json.JsonParseException("Property was expected.");
+                Add(((JProperty)en.Current).Name, en.Current.Value<JToken>());
+            }
+
+            return this;
+        }
     }
 }
