@@ -61,4 +61,5 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                 TriggerOnError(sender, reply.ToString(), null);
             }
         }
+    }
 }

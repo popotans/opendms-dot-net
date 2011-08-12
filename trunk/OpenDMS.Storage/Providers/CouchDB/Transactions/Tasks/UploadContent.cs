@@ -1,47 +1,52 @@
 ﻿using System;
-using Newtonsoft.Json.Linq;
+using OpenDMS.IO;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 {
-    class DownloadVersion : Base
+    public class UploadContent : Base
     {
         private IDatabase _db;
-        private Data.VersionId _id;
+        private Data.Version _version;
 
         public Data.Version Version { get; private set; }
-        public JObject Remainder { get; private set; }
+        public Data.Content Content { get; private set; }
 
-        public DownloadVersion(IDatabase db, Data.VersionId id,
+        public UploadContent(IDatabase db, Data.Version version,
             int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
             : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
             _db = db;
-            _id = id;
+            _version = version;
         }
 
         public override void Process()
         {
-            Remoting.Get rem;
-
-            TriggerOnActionChanged(EngineActionType.GettingVersion, true);
+            Remoting.SaveContent rem;
 
             try
             {
-                rem = new Remoting.Get(_db, _id.ToString(), _sendTimeout, _receiveTimeout,
+                rem = new Remoting.SaveContent(_db, _version, _sendTimeout, _receiveTimeout,
                     _sendBufferSize, _receiveBufferSize);
             }
             catch (Exception e)
             {
-                Logger.Storage.Error("An exception occurred while instantiating the Transactions.Tasks.Remoting.Get object.", e);
+                Logger.Storage.Error("An exception occurred while instantiating the Transactions.Tasks.Remoting.SaveContent object.", e);
                 throw;
             }
 
             rem.OnComplete += delegate(Remoting.Base sender, ICommandReply reply)
             {
-                JObject jobj;
-                Transitions.Version txVersion = new Transitions.Version();
-                txVersion.Transition(((Remoting.Get)sender).Document, out jobj);
-                Remainder = jobj;
+                if (!((Commands.PutAttachmentReply)reply).Ok)
+                {
+                    Version = null;
+                    Content = null;
+                }
+                else
+                {
+                    Version = _version;
+                    Content = _version.Content;
+                    Version.UpdateRevision(((Commands.PutAttachmentReply)reply).Rev);
+                }
                 TriggerOnComplete(reply);
             };
             rem.OnError += delegate(Remoting.Base sender, string message, Exception exception)
