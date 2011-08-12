@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
 {
@@ -7,6 +8,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
     {
         private IDatabase _db;
         private Data.Resource _resource;
+        private JObject _jobj;
 
         public Data.Resource Resource { get; private set; }
 
@@ -18,9 +20,26 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             _resource = resource;
         }
 
+        public UploadResource(IDatabase db, JObject jobj,
+            int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
+            : base(sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
+        {
+            _db = db;
+            _jobj = jobj;
+        }
+
         public override void Process()
         {
-            Remoting.SaveSingle rem;
+            if (_resource != null)
+                ProcessResource();
+            else if (_jobj != null)
+                ProcessJObject();
+            else
+                TriggerOnError("Invalid state.", new InvalidOperationException("Either a Data.Resource or JObject must be provided."));
+        }
+
+        public void ProcessResource()
+        {
             Model.Document doc;
             Transitions.Resource txResource;
             List<Exception> errors;
@@ -41,6 +60,24 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
                 TriggerOnError(errors[0].Message, errors[0]);
                 return;
             }
+
+            ProcessCommon(doc);
+        }
+
+        public void ProcessJObject()
+        {
+            // A new resource will have a null revision
+            if (_jobj["_rev"] == null)
+                TriggerOnActionChanged(EngineActionType.CreatingNewResource, true);
+            else
+                TriggerOnActionChanged(EngineActionType.ModifyingResource, true);
+
+            ProcessCommon(new Model.Document(_jobj));
+        }
+
+        private void ProcessCommon(Model.Document doc)
+        {
+            Remoting.SaveSingle rem;
 
             try
             {

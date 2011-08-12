@@ -105,9 +105,12 @@
     <Compile Include="Providers\CouchDB\Engine.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\AuthenticateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\Base.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\CheckoutCurrentVersion.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CheckoutResource.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\CheckoutVersion.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateGroup.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateNewResource.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\CreateNewVersion.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\DetermineIfInstalled.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\GetAllGroups.cs" />
@@ -126,10 +129,12 @@
     <Compile Include="Providers\CouchDB\ResourceUsageRightsTemplate.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\AuthenticateUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\Base.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\CheckoutCurrentVersion.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\CheckoutResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\CheckoutVersion.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\CreateGroup.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\CreateNewResource.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\CreateNewVersion.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\CreateUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\DeleteResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\DetermineIfInstalled.cs" />
@@ -146,6 +151,7 @@
     <Compile Include="Providers\CouchDB\Transactions\Remoting\Delete.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\Exists.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\GetView.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Remoting\SaveContent.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Base.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\CheckGlobalPermissions.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\CheckResourcePermissions.cs" />
@@ -166,6 +172,7 @@
     <Compile Include="Providers\CouchDB\Transactions\Remoting\SaveBulk.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\SaveSingle.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadBulkDocuments.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadContent.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadGroup.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadUser.cs" />
@@ -257,7 +264,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

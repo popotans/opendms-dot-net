@@ -100,7 +100,7 @@ namespace OpenDMS.Storage.Providers
             throw new NotImplementedException();
         }
 
-        public virtual void GetCurrentVersion(EngineRequest request, Data.ResourceId resource)
+        public virtual void CheckoutCurrentVersion(EngineRequest request, Data.ResourceId resource)
         {
             throw new NotImplementedException();
         }
@@ -130,7 +130,7 @@ namespace OpenDMS.Storage.Providers
             throw new NotImplementedException();
         }
 
-        public virtual void GetVersion(EngineRequest request, Data.VersionId version)
+        public virtual void CheckoutVersion(EngineRequest request, Data.VersionId version)
         {
             throw new NotImplementedException();
         }

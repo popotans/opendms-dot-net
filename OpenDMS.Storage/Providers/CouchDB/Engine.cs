@@ -27,15 +27,23 @@ namespace OpenDMS.Storage.Providers.CouchDB
 
 		#endregion Constructors 
 
-		#region Methods (15) 
+		#region Methods (17) 
 
-		// Public Methods (15) 
+		// Public Methods (17) 
 
         public override void AuthenticateUser(EngineRequest request, string username, string hashedPassword)
         {
             CheckInitialization();
             Logger.Storage.Debug("Authenticating user: " + username);
             EngineMethods.AuthenticateUser act = new EngineMethods.AuthenticateUser(request, _sessionMgr, username, hashedPassword);
+            act.Execute();
+        }
+
+        public override void  CheckoutCurrentVersion(EngineRequest request, ResourceId resource)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Checking out the current version of resource '" + resource.ToString() + "'");
+            EngineMethods.CheckoutCurrentVersion act = new EngineMethods.CheckoutCurrentVersion(request, resource);
             act.Execute();
         }
 
@@ -176,6 +184,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
             CheckInitialization();
             Logger.Storage.Debug("Rolling back resource '" + resource.Id.ToString("N") + "' a depth of " + rollbackDepth.ToString() + "...");
             EngineMethods.RollbackResource act = new EngineMethods.RollbackResource(request, resource, rollbackDepth);
+            act.Execute();
+        }
+
+        public override void CreateNewVersion(EngineRequest request, Data.Version version)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Creating a new version for resource '" + version.VersionId.ResourceId.ToString() + "'...");
+            EngineMethods.CreateNewVersion act = new EngineMethods.CreateNewVersion(request, version);
             act.Execute();
         }
 

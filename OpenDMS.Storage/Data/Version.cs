@@ -319,5 +319,16 @@ namespace OpenDMS.Storage.Data
                 _availableActions |= ActionsType.UpdateWithPropertiesAndContent;
             }
         }
+
+        public void UpdateVersionNumber(long versionNumber)
+        {
+            VersionId = new VersionId(VersionId.ResourceId, versionNumber);
+            CalculateActionsState();
+        }
+
+        public void UpdateRevision(string revision)
+        {
+            Revision = revision;
+        }
     }
 }
