@@ -46,16 +46,26 @@ namespace OpenDMS.Storage.Providers
 
 		#endregion Delegates and Events 
 
-		#region Methods (31) 
+		#region Methods (30) 
 
-		// Public Methods (31) 
+		// Public Methods (30) 
 
         public virtual void AuthenticateUser(EngineRequest request, string username, string hashedPassword)
         {
             throw new NotImplementedException();
         }
 
+        public virtual void CheckoutCurrentVersion(EngineRequest request, Data.ResourceId resource)
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual void CheckoutResource(EngineRequest request, Data.ResourceId resource)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void CheckoutVersion(EngineRequest request, Data.VersionId version)
         {
             throw new NotImplementedException();
         }
@@ -100,11 +110,6 @@ namespace OpenDMS.Storage.Providers
             throw new NotImplementedException();
         }
 
-        public virtual void CheckoutCurrentVersion(EngineRequest request, Data.ResourceId resource)
-        {
-            throw new NotImplementedException();
-        }
-
         public virtual void GetGlobalPermissions(EngineRequest request)
         {
             throw new NotImplementedException();
@@ -126,11 +131,6 @@ namespace OpenDMS.Storage.Providers
         }
 
         public virtual void GetUser(EngineRequest request, string username)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual void CheckoutVersion(EngineRequest request, Data.VersionId version)
         {
             throw new NotImplementedException();
         }
@@ -157,11 +157,6 @@ namespace OpenDMS.Storage.Providers
         }
 
         public virtual void ModifyResource(EngineRequest request, Data.Resource resource)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ModifyResourcePermissions(EngineRequest request, Data.ResourceId resource, List<Security.UsageRight> usageRights)
         {
             throw new NotImplementedException();
         }

@@ -41,9 +41,14 @@ namespace StorageTesting
             versionMetadata.Add("$creator", "lucas");
             versionMetadata.Add("$created", DateTime.Now);
 
-            System.IO.MemoryStream ms = new System.IO.MemoryStream(System.Text.Encoding.ASCII.GetBytes("This is a test content file."));
+            System.IO.FileStream fs = new System.IO.FileStream("testdoc.txt", System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, 8192, System.IO.FileOptions.None);
+            byte[] bytes = System.Text.Encoding.ASCII.GetBytes("This is a test content file.");
+            fs.Write(bytes, 0, bytes.Length);
+            fs.Flush();
+            fs.Close();
+            fs.Dispose();
 
-            versionContent = new OpenDMS.Storage.Data.Content(ms.Length, new OpenDMS.Storage.Data.ContentType("text/plain"), ms);
+            versionContent = new OpenDMS.Storage.Data.Content(bytes.Length, new OpenDMS.Storage.Data.ContentType("text/plain"), "testdoc.txt");
 
 
             WriteLine("Starting CreateNewResource test...");

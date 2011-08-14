@@ -27,9 +27,9 @@ namespace OpenDMS.Storage.Providers.CouchDB
 
 		#endregion Constructors 
 
-		#region Methods (17) 
+		#region Methods (18) 
 
-		// Public Methods (17) 
+		// Public Methods (18) 
 
         public override void AuthenticateUser(EngineRequest request, string username, string hashedPassword)
         {
@@ -55,6 +55,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
+        public override void CheckoutVersion(EngineRequest request, Data.VersionId version)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Checking out the version '" + version.ToString() + "'");
+            EngineMethods.CheckoutVersion act = new EngineMethods.CheckoutVersion(request, version);
+            act.Execute();
+        }
+
         public override void CreateGroup(EngineRequest request, Security.Group group)
         {
             CheckInitialization();
@@ -71,11 +79,27 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
+        public override void CreateNewVersion(EngineRequest request, Data.Version version)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Creating a new version for resource '" + version.VersionId.ResourceId.ToString() + "'...");
+            EngineMethods.CreateNewVersion act = new EngineMethods.CreateNewVersion(request, version);
+            act.Execute();
+        }
+
         public override void CreateUser(EngineRequest request, Security.User user)
         {
             CheckInitialization();
             Logger.Storage.Debug("Creating user '" + user.Id + "'...");
             EngineMethods.CreateUser act = new EngineMethods.CreateUser(request, user);
+            act.Execute();
+        }
+
+        public override void DeleteResource(EngineRequest request, Data.ResourceId resource)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Deleting resource '" + resource.ToString() + "'...");
+            EngineMethods.DeleteResource act = new EngineMethods.DeleteResource(request, resource);
             act.Execute();
         }
 
@@ -105,6 +129,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
+        public override void GetGlobalPermissions(EngineRequest request)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting global permissions...");
+            EngineMethods.GetGlobalPermissions act = new EngineMethods.GetGlobalPermissions(request);
+            act.Execute();
+        }
+
         public override void GetGroup(EngineRequest request, string groupName)
         {
             CheckInitialization();
@@ -118,6 +150,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
             CheckInitialization();
             Logger.Storage.Debug("Getting a read-only version of the resource '" + resource.ToString() + "'...");
             EngineMethods.GetResourceReadOnly act = new EngineMethods.GetResourceReadOnly(request, resource);
+            act.Execute();
+        }
+
+        public override void GetResourceUsageRightsTemplate(EngineRequest request)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Getting resource usage rights template...");
+            EngineMethods.GetResourceUsageRightsTemplate act = new EngineMethods.GetResourceUsageRightsTemplate(request);
             act.Execute();
         }
 
@@ -171,6 +211,22 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
+        public override void ModifyResource(EngineRequest request, Data.Resource resource)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Modifying resource '" + resource.ResourceId.ToString() + "'...");
+            EngineMethods.ModifyResource act = new EngineMethods.ModifyResource(request, resource);
+            act.Execute();
+        }
+
+        public override void ModifyResourceUsageRightsTemplate(EngineRequest request, List<Security.UsageRight> usageRights)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Modifying resource usage rights template...");
+            EngineMethods.ModifyResourceUsageRightsTemplate act = new EngineMethods.ModifyResourceUsageRightsTemplate(request, usageRights);
+            act.Execute();
+        }
+
         public override void ModifyUser(EngineRequest request, Security.User user)
         {
             CheckInitialization();
@@ -179,19 +235,19 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
+        public override void ModifyVersion(EngineRequest request, Data.Version version)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Modifying version '" + version.VersionId.ToString() + "'...");
+            EngineMethods.ModifyVersion act = new EngineMethods.ModifyVersion(request, version);
+            act.Execute();
+        }
+
         public override void RollbackResource(EngineRequest request, ResourceId resource, int rollbackDepth)
         {
             CheckInitialization();
             Logger.Storage.Debug("Rolling back resource '" + resource.Id.ToString("N") + "' a depth of " + rollbackDepth.ToString() + "...");
             EngineMethods.RollbackResource act = new EngineMethods.RollbackResource(request, resource, rollbackDepth);
-            act.Execute();
-        }
-
-        public override void CreateNewVersion(EngineRequest request, Data.Version version)
-        {
-            CheckInitialization();
-            Logger.Storage.Debug("Creating a new version for resource '" + version.VersionId.ResourceId.ToString() + "'...");
-            EngineMethods.CreateNewVersion act = new EngineMethods.CreateNewVersion(request, version);
             act.Execute();
         }
 
