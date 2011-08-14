@@ -26,6 +26,10 @@ namespace OpenDMS.Storage.Security.Authorization
         GetUser                 = 8192,
         AllUsers                = CreateUser | ModifyUser | DeleteUser | ListUsers | GetUser,
 
-        All = CreateResource | Statistics | AllUsers | AllGroups | GetGlobalPermissions | ModifyGlobalPermissions
+        GetResourceUsageRightsTemplate = 16384,
+        ModifyResourceUsageRightsTemplate = 32768,
+
+        All = CreateResource | Statistics | AllUsers | AllGroups | GetGlobalPermissions |
+            ModifyGlobalPermissions | GetResourceUsageRightsTemplate | ModifyResourceUsageRightsTemplate
     }
 }

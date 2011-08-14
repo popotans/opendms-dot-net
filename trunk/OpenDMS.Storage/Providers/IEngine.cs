@@ -44,7 +44,8 @@ namespace OpenDMS.Storage.Providers
         // Accomplished by calling GetResource and checking its permissions
         //void GetResourcePermissions(EngineRequest request, ResourceId resource);
         void GetGlobalPermissions(EngineRequest request);
-        void ModifyResourcePermissions(EngineRequest request, ResourceId resource, List<UsageRight> usageRights);
+        // Accomplished by calling ModifyResource
+        //void ModifyResourcePermissions(EngineRequest request, ResourceId resource, List<UsageRight> usageRights);
         void ModifyGlobalPermissions(EngineRequest request, List<UsageRight> usageRights);
         void GetResourceUsageRightsTemplate(EngineRequest request);
         void ModifyResourceUsageRightsTemplate(EngineRequest request, List<UsageRight> usageRights);
