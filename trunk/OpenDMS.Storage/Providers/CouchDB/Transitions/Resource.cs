@@ -166,6 +166,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
 
         public List<Exception> AddMetadata(Data.Resource resource, Model.Document doc)
         {
+            if (resource.Metadata == null)
+                return null;
+
             List<Exception> errors = null;
             Dictionary<string, object>.Enumerator en = resource.Metadata.GetEnumerator();
 

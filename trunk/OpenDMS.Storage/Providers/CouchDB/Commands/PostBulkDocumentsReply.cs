@@ -46,7 +46,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
                     Logger.Storage.Debug("PostBulkDocumentsReply loaded.");
                     break;
                 default:
-                    Logger.Storage.Error("PostBulkDocumentsReply received an unknown response code: " + _response.ResponseCode.ToString());
+                    Logger.Storage.Error("PostBulkDocumentsReply received an unknown response code: " + _response.ResponseCode.ToString() + "\r\nServer Response: " + StringifyResponseStream());
                     throw new UnsupportedException("The response code " + _response.ResponseCode.ToString() + " is not supported.");
             }
         }
