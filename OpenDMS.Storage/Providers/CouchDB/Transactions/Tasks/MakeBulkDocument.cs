@@ -21,6 +21,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             BulkDocument = new Model.BulkDocuments();
             for (int i = 0; i < _docs.Count; i++)
                 BulkDocument.AddDocument(_docs[i]);
+
+            TriggerOnComplete(null);
         }
     }
 }

@@ -27,7 +27,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
         public List<Document> Documents
         {
             get
-            {
+            { 
                 // If not dirty -> return them
                 if (!_documentsAreDirty) return _documents;
 
@@ -53,7 +53,18 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
 
         public void AddDocument(Document document)
         {
+            JArray jray = new JArray();
             _documents.Add(document);
+
+            if (this["docs"] != null)
+            {
+                ((JArray)this["docs"]).Add(document);
+            }
+            else
+            {
+                jray.Add(document);
+                Add("docs", jray);
+            }
             ResetLength();
         }
 

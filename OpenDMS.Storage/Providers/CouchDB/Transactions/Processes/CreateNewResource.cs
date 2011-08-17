@@ -77,14 +77,14 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                 
                 Transitions.Resource txResource = new Transitions.Resource();
                 docs.Add(txResource.Transition(_resource, out errors));
-                if (errors.Count > 0)
+                if (errors != null)
                 {
                     TriggerOnError(null, errors[0].Message, errors[0]);
                     return;
                 }
                 Transitions.Version txVersion = new Transitions.Version();
                 docs.Add(txVersion.Transition(_version, out errors));
-                if (errors.Count > 0)
+                if (errors != null)
                 {
                     TriggerOnError(null, errors[0].Message, errors[0]);
                     return;

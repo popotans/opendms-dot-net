@@ -39,6 +39,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
 
         protected void ResetLength()
         {
+            _length = 0;
         }
     }
 }
