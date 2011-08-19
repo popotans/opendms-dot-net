@@ -90,7 +90,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                             a = a.Substring(a.LastIndexOf("\"") + 1); // we know the value is an int, so we can look for the last "
                             a = a.Replace(":", "").Trim();
 
-                            usageRight = new Security.UsageRight(prop.Name, (Security.Authorization.GlobalPermissionType)int.Parse(a));
+                            usageRight = new Security.UsageRight(prop.Name, (Security.Authorization.ResourcePermissionType)int.Parse(a));
                             usageRights.Add(usageRight);
                         }
                     }

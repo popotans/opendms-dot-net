@@ -8,6 +8,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         private Data.ResourceId _id;
         private Security.RequestingPartyType _requestingPartyType;
         private Security.Session _session;
+        private ICommandReply _reply;
 
         public Data.Resource Resource { get; private set; }
         public JObject Remainder { get; private set; }
@@ -35,6 +36,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             if (t == typeof(Tasks.DownloadResource))
             {
                 Tasks.DownloadResource task = (Tasks.DownloadResource)sender;
+                _reply = reply;
                 Resource = task.Resource;
                 Remainder = task.Remainder;
                 RunTaskProcess(new Tasks.CheckResourcePermissions(_db, Resource, _requestingPartyType,
@@ -61,7 +63,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             }
             else if (t == typeof(Tasks.UploadResource))
             {
-                TriggerOnComplete(reply, new Tuple<Data.Resource, JObject>(Resource, Remainder));
+                TriggerOnComplete(_reply, new Tuple<Data.Resource, JObject>(Resource, Remainder));
             }
             else
             {
