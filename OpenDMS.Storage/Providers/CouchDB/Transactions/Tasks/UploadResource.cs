@@ -53,7 +53,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             txResource = new Transitions.Resource();
             doc = txResource.Transition(_resource, out errors);
 
-            if (errors.Count > 0)
+            if (errors != null)
             {
                 for (int i = 0; i < errors.Count; i++)
                     Logger.Storage.Error("Error encountered in transitioning from resource to document.", errors[i]);
