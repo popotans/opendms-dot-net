@@ -202,7 +202,7 @@ namespace StorageTesting
                     BtnGetResource.Enabled = getResource;
                     BtnGetResourceReadOnly.Enabled = getResourceReadOnly;
                     BtnCreateNewResource.Enabled = createNewResource;
-                    BtnCreateNewResource2.Enabled = createNewResource2;
+                    //BtnCreateNewResource2.Enabled = createNewResource2;
                     BtnModifyResource.Enabled = modifyResource;
                     BtnRollbackResource.Enabled = rollbackResource;
                     BtnDeleteResource.Enabled = deleteResource;
@@ -234,7 +234,7 @@ namespace StorageTesting
                 BtnGetResource.Enabled = getResource;
                 BtnGetResourceReadOnly.Enabled = getResourceReadOnly;
                 BtnCreateNewResource.Enabled = createNewResource;
-                BtnCreateNewResource2.Enabled = createNewResource2;
+                //BtnCreateNewResource2.Enabled = createNewResource2;
                 BtnModifyResource.Enabled = modifyResource;
                 BtnRollbackResource.Enabled = rollbackResource;
                 BtnDeleteResource.Enabled = deleteResource;
@@ -326,18 +326,14 @@ namespace StorageTesting
 
         private void BtnGetResource_Click(object sender, EventArgs e)
         {
-            GetResource act = new GetResource(this, _engine, _db);
+            CheckoutResource act = new CheckoutResource(this, _engine, _db);
             act.Test();
         }
 
         private void BtnGetResourceReadOnly_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
-        }
-
-        private void BtnCreateNewResource2_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("Not Implemented... Yet.");
+            GetResourceReadOnly act = new GetResourceReadOnly(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnRollbackResource_Click(object sender, EventArgs e)
@@ -347,7 +343,8 @@ namespace StorageTesting
 
         private void BtnDeleteResource_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
+            DeleteResource act = new DeleteResource(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnGetVersion_Click(object sender, EventArgs e)
@@ -398,6 +395,12 @@ namespace StorageTesting
         private void BtnModifyResourceUsageRightsTemplate_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Not Implemented... Yet.");
+        }
+
+        private void BtnModifyResource_Click(object sender, EventArgs e)
+        {
+            ModifyResource act = new ModifyResource(this, _engine, _db);
+            act.Test();
         }
     }
 }

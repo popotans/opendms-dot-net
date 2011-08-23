@@ -7,6 +7,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         private Security.RequestingPartyType _requestingPartyType;
         private Security.Session _session;
         private GlobalUsageRights _gur;
+        private ICommandReply _reply;
 
         public GlobalUsageRights GlobalUsageRights { get; private set; }
 
@@ -33,6 +34,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             {
                 Tasks.DownloadGlobalPermissions task = (Tasks.DownloadGlobalPermissions)sender;
                 _gur = task.GlobalUsageRights;
+                _reply = reply;
                 RunTaskProcess(new Tasks.CheckGlobalPermissions(_db, _gur, _requestingPartyType,
                     _session, Security.Authorization.GlobalPermissionType.GetGlobalPermissions, 
                     _sendTimeout, _receiveTimeout, _sendBufferSize, _receiveBufferSize));
@@ -46,7 +48,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     return;
                 }
                 GlobalUsageRights = _gur;
-                TriggerOnComplete(reply, _gur);
+                TriggerOnComplete(_reply, _gur);
             }
             else
             {

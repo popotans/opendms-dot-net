@@ -70,6 +70,7 @@
     <Compile Include="CreateGroup.cs" />
     <Compile Include="CreateNewResource.cs" />
     <Compile Include="CreateUser.cs" />
+    <Compile Include="DeleteResource.cs" />
     <Compile Include="FrmCreateGroup.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -121,7 +122,8 @@
     <Compile Include="GetAllGroups.cs" />
     <Compile Include="GetAllUsers.cs" />
     <Compile Include="GetGroup.cs" />
-    <Compile Include="GetResource.cs" />
+    <Compile Include="CheckoutResource.cs" />
+    <Compile Include="GetResourceReadOnly.cs" />
     <Compile Include="GetUser.cs" />
     <Compile Include="Initialize.cs" />
     <Compile Include="Install.cs" />
@@ -132,6 +134,7 @@
       <DependentUpon>FrmLogin.cs</DependentUpon>
     </Compile>
     <Compile Include="ModifyGroup.cs" />
+    <Compile Include="ModifyResource.cs" />
     <Compile Include="ModifyUser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

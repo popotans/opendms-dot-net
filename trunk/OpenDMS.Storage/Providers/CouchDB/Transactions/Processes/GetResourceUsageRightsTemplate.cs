@@ -8,6 +8,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         private Security.Session _session;
         private GlobalUsageRights _gur;
         private ResourceUsageRightsTemplate _template;
+        private ICommandReply _reply;
 
         public ResourceUsageRightsTemplate ResourceUsageRightsTemplate { get; private set; }
 
@@ -33,6 +34,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             if (t == typeof(Tasks.DownloadResourceUsageRightsTemplate))
             {
                 Tasks.DownloadResourceUsageRightsTemplate task = (Tasks.DownloadResourceUsageRightsTemplate)sender;
+                _reply = reply;
                 _template = task.Value;
                 RunTaskProcess(new Tasks.DownloadGlobalPermissions(_db, _sendTimeout,
                     _receiveTimeout, _sendBufferSize, _receiveBufferSize));
@@ -54,7 +56,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     return;
                 }
                 ResourceUsageRightsTemplate = _template;
-                TriggerOnComplete(reply, _gur);
+                TriggerOnComplete(_reply, _gur);
             }
             else
             {

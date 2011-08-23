@@ -51,6 +51,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 
                 remainder.Remove("_id");
                 remainder.Remove("_rev");
+                remainder.Remove("Type");
 
                 if (document["CurrentVersionId"] != null)
                 {
@@ -104,7 +105,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 throw;
             }
 
-            return new Data.Resource(id, rev, checkedOutTo, checkedOutAt, versionIds, currentVersionId, null, usageRights);
+            return new Data.Resource(id, rev, checkedOutTo, checkedOutAt, versionIds, currentVersionId, new Data.Metadata(), usageRights);
         }
 
         public Model.Document Transition(Data.Resource resource, out List<Exception> errors)

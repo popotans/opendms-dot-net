@@ -5,11 +5,11 @@ using OpenDMS.Storage.Providers.CouchDB;
 
 namespace StorageTesting
 {
-    public class GetResource : TestBase
+    public class CheckoutResource : TestBase
     {
         private DateTime _start;
 
-        public GetResource(FrmMain window, IEngine engine, IDatabase db)
+        public CheckoutResource(FrmMain window, IEngine engine, IDatabase db)
             : base(window, engine, db)
         {
         }
@@ -37,27 +37,27 @@ namespace StorageTesting
 
             Clear();
 
-            WriteLine("Starting GetResource test...");
+            WriteLine("Starting CheckoutResource test...");
             _start = DateTime.Now;
             _engine.CheckoutResource(request, new OpenDMS.Storage.Data.ResourceId(id));
         }
 
         private void AuthorizationDenied(EngineRequest request)
         {
-            WriteLine("GetResource.AuthorizationDenied - Access to the resource was denied based on usage permissions.");
+            WriteLine("CheckoutResource.AuthorizationDenied - Access to the resource was denied based on usage permissions.");
         }
 
         private void EngineAction(EngineRequest request, EngineActionType actionType, bool willSendProgress)
         {
             if (willSendProgress)
-                WriteLine("GetResource.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
+                WriteLine("CheckoutResource.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
             else
-                WriteLine("GetResource.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
+                WriteLine("CheckoutResource.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
         }
 
         private void Progress(EngineRequest request, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
-            WriteLine("GetResource.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
+            WriteLine("CheckoutResource.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
         }
 
         private void Complete(EngineRequest request, ICommandReply reply, object result)
@@ -71,19 +71,19 @@ namespace StorageTesting
             OpenDMS.Storage.Providers.CouchDB.Transitions.Resource txResource = new OpenDMS.Storage.Providers.CouchDB.Transitions.Resource();
             OpenDMS.Storage.Data.Resource resource = txResource.Transition(r.Document, out remainder);
 
-            WriteLine("GetResource.Complete - results received in " + duration.TotalMilliseconds.ToString() + "ms.");
+            WriteLine("CheckoutResource.Complete - results received in " + duration.TotalMilliseconds.ToString() + "ms.");
 
             WriteLine("\tId: " + resource.ResourceId.ToString());
         }
 
         private void Timeout(EngineRequest request)
         {
-            WriteLine("GetResource.Timeout - Timeout.");
+            WriteLine("CheckoutResource.Timeout - Timeout.");
         }
 
         private void Error(EngineRequest request, string message, Exception exception)
         {
-            WriteLine("GetResource.Error - Error.  Message: " + message);
+            WriteLine("CheckoutResource.Error - Error.  Message: " + message);
         }
     }
 }
