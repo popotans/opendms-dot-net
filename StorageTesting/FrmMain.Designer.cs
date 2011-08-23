@@ -44,7 +44,6 @@
             this.BtnGetResource = new System.Windows.Forms.Button();
             this.BtnGetResourceReadOnly = new System.Windows.Forms.Button();
             this.BtnCreateNewResource = new System.Windows.Forms.Button();
-            this.BtnCreateNewResource2 = new System.Windows.Forms.Button();
             this.BtnModifyResource = new System.Windows.Forms.Button();
             this.BtnRollbackResource = new System.Windows.Forms.Button();
             this.BtnDeleteResource = new System.Windows.Forms.Button();
@@ -219,28 +218,19 @@
             this.BtnCreateNewResource.UseVisualStyleBackColor = true;
             this.BtnCreateNewResource.Click += new System.EventHandler(this.BtnCreateNewResource_Click);
             // 
-            // BtnCreateNewResource2
-            // 
-            this.BtnCreateNewResource2.Location = new System.Drawing.Point(1122, 90);
-            this.BtnCreateNewResource2.Name = "BtnCreateNewResource2";
-            this.BtnCreateNewResource2.Size = new System.Drawing.Size(132, 20);
-            this.BtnCreateNewResource2.TabIndex = 16;
-            this.BtnCreateNewResource2.Text = "CreateNewResource2";
-            this.BtnCreateNewResource2.UseVisualStyleBackColor = true;
-            this.BtnCreateNewResource2.Click += new System.EventHandler(this.BtnCreateNewResource2_Click);
-            // 
             // BtnModifyResource
             // 
-            this.BtnModifyResource.Location = new System.Drawing.Point(1122, 116);
+            this.BtnModifyResource.Location = new System.Drawing.Point(1122, 90);
             this.BtnModifyResource.Name = "BtnModifyResource";
             this.BtnModifyResource.Size = new System.Drawing.Size(132, 20);
             this.BtnModifyResource.TabIndex = 17;
             this.BtnModifyResource.Text = "ModifyResource";
             this.BtnModifyResource.UseVisualStyleBackColor = true;
+            this.BtnModifyResource.Click += new System.EventHandler(this.BtnModifyResource_Click);
             // 
             // BtnRollbackResource
             // 
-            this.BtnRollbackResource.Location = new System.Drawing.Point(1122, 142);
+            this.BtnRollbackResource.Location = new System.Drawing.Point(1122, 116);
             this.BtnRollbackResource.Name = "BtnRollbackResource";
             this.BtnRollbackResource.Size = new System.Drawing.Size(132, 20);
             this.BtnRollbackResource.TabIndex = 18;
@@ -250,7 +240,7 @@
             // 
             // BtnDeleteResource
             // 
-            this.BtnDeleteResource.Location = new System.Drawing.Point(1122, 168);
+            this.BtnDeleteResource.Location = new System.Drawing.Point(1122, 142);
             this.BtnDeleteResource.Name = "BtnDeleteResource";
             this.BtnDeleteResource.Size = new System.Drawing.Size(132, 20);
             this.BtnDeleteResource.TabIndex = 19;
@@ -260,7 +250,7 @@
             // 
             // BtnGetVersion
             // 
-            this.BtnGetVersion.Location = new System.Drawing.Point(1122, 212);
+            this.BtnGetVersion.Location = new System.Drawing.Point(1122, 196);
             this.BtnGetVersion.Name = "BtnGetVersion";
             this.BtnGetVersion.Size = new System.Drawing.Size(132, 20);
             this.BtnGetVersion.TabIndex = 20;
@@ -270,7 +260,7 @@
             // 
             // BtnGetCurrentVersion
             // 
-            this.BtnGetCurrentVersion.Location = new System.Drawing.Point(1122, 238);
+            this.BtnGetCurrentVersion.Location = new System.Drawing.Point(1122, 222);
             this.BtnGetCurrentVersion.Name = "BtnGetCurrentVersion";
             this.BtnGetCurrentVersion.Size = new System.Drawing.Size(132, 20);
             this.BtnGetCurrentVersion.TabIndex = 21;
@@ -280,7 +270,7 @@
             // 
             // BtnCreateNewVersion
             // 
-            this.BtnCreateNewVersion.Location = new System.Drawing.Point(1122, 264);
+            this.BtnCreateNewVersion.Location = new System.Drawing.Point(1122, 248);
             this.BtnCreateNewVersion.Name = "BtnCreateNewVersion";
             this.BtnCreateNewVersion.Size = new System.Drawing.Size(132, 20);
             this.BtnCreateNewVersion.TabIndex = 22;
@@ -290,7 +280,7 @@
             // 
             // BtnModifyVersion
             // 
-            this.BtnModifyVersion.Location = new System.Drawing.Point(1122, 290);
+            this.BtnModifyVersion.Location = new System.Drawing.Point(1122, 274);
             this.BtnModifyVersion.Name = "BtnModifyVersion";
             this.BtnModifyVersion.Size = new System.Drawing.Size(132, 20);
             this.BtnModifyVersion.TabIndex = 23;
@@ -376,7 +366,6 @@
             this.Controls.Add(this.BtnDeleteResource);
             this.Controls.Add(this.BtnRollbackResource);
             this.Controls.Add(this.BtnModifyResource);
-            this.Controls.Add(this.BtnCreateNewResource2);
             this.Controls.Add(this.BtnCreateNewResource);
             this.Controls.Add(this.BtnGetResourceReadOnly);
             this.Controls.Add(this.BtnGetResource);
@@ -419,7 +408,6 @@
         private System.Windows.Forms.Button BtnGetResource;
         private System.Windows.Forms.Button BtnGetResourceReadOnly;
         private System.Windows.Forms.Button BtnCreateNewResource;
-        private System.Windows.Forms.Button BtnCreateNewResource2;
         private System.Windows.Forms.Button BtnModifyResource;
         private System.Windows.Forms.Button BtnRollbackResource;
         private System.Windows.Forms.Button BtnDeleteResource;

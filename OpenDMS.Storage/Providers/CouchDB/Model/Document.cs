@@ -94,13 +94,18 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
 
         public Document CombineWith(JObject jobj)
         {
-            IEnumerator<JToken> en = null;
+            Newtonsoft.Json.JsonWriter jwriter = CreateWriter();
+            IEnumerator<JToken> en = jobj.Children().GetEnumerator();
 
-            while ((en = jobj.Children().GetEnumerator()).MoveNext())
+            while (en.MoveNext())
             {
                 if (en.Current.Type != JTokenType.Property)
                     throw new Json.JsonParseException("Property was expected.");
-                Add(((JProperty)en.Current).Name, en.Current.Value<JToken>());
+                if (this[((JProperty)en.Current).Name] == null)
+                {
+                    Newtonsoft.Json.JsonConverter conv = new Newtonsoft.Json.Converters.KeyValuePairConverter();
+                    en.Current.WriteTo(jwriter, new Newtonsoft.Json.JsonConverter[] { conv });
+                }
             }
 
             return this;

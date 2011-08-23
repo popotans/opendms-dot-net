@@ -152,6 +152,7 @@
     <Compile Include="Providers\CouchDB\Transactions\Processes\GetResourceReadOnly.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\GetResourceUsageRightsTemplate.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\GetUser.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\HeadAllVersionsOfResource.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\Install.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\ModifyGlobalPermissions.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Processes\ModifyGroup.cs" />
@@ -163,6 +164,7 @@
     <Compile Include="Providers\CouchDB\Transactions\Remoting\Delete.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\Exists.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\GetView.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Remoting\Head.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\SaveContent.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\Base.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\CheckGlobalPermissions.cs" />
@@ -176,6 +178,7 @@
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadUsers.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\DownloadVersion.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\HeadVersion.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\MakeBulkDocument.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\MarkResourceForCheckout.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Remoting\Base.cs" />
@@ -278,7 +281,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
+      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

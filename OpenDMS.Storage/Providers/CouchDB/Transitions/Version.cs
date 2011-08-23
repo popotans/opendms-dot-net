@@ -39,14 +39,19 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
             Model.Document document = new Model.Document();
             Model.Attachment att = null;
 
+            errors = null;
+
             try
             {
                 document.Id = version.VersionId.ToString();
                 if (!string.IsNullOrEmpty(version.Revision))
                     document.Rev = version.Revision;
 
-                if ((errors = AddMetadata(version, document)) != null)
-                    return null;
+                if (version.Metadata != null)
+                {
+                    if ((errors = AddMetadata(version, document)) != null)
+                        return null;
+                }
 
                 if (version.Content != null)
                 {
