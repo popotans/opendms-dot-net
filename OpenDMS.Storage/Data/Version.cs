@@ -257,6 +257,7 @@ namespace OpenDMS.Storage.Data
             VersionId = versionId;
             Revision = revision;
             Metadata = metadata;
+            if (Metadata == null) Metadata = new Data.Metadata();
             Content = content;
         }
 

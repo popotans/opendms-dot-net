@@ -68,6 +68,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             }
             else if (t == typeof(Tasks.DownloadVersion))
             {
+                Tasks.DownloadVersion task = (Tasks.DownloadVersion)sender;
+                Version = task.Version;
+                VersionRemainder = task.Remainder;
                 TriggerOnComplete(reply, new Tuple<Data.Resource, JObject, Data.Version, JObject>(Resource, ResourceRemainder, Version, VersionRemainder));
             }
             else

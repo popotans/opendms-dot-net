@@ -90,6 +90,29 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             }
             else if (t == typeof(Tasks.UploadBulkDocuments))
             {
+                Tasks.UploadBulkDocuments task = (Tasks.UploadBulkDocuments)sender;
+
+                Commands.PostBulkDocumentsReply.Entry entry = task.FindEntryById(_version.VersionId.ToString());
+
+                if (entry == null)
+                {
+                    TriggerOnError(task, "Failed to locate " + _version.VersionId.ToString() + " in the " +
+                        "bulk document post results.", null);
+                    return;
+                }
+
+                // This is needed so that couchdb can apply the content to the correct revision.
+                _version.UpdateRevision(entry.Rev);
+
+                // If no content -> return
+                if (_version.Content == null)
+                {
+                    Resource = _resource;
+                    Version = _version;
+                    TriggerOnComplete(reply, new Tuple<Data.Resource, Data.Version>(_resource, _version));
+                    return;
+                }
+
                 // Upload Data.Content from Data.Version
                 RunTaskProcess(new Tasks.UploadContent(_db, _version, _sendTimeout, _receiveTimeout,
                     _sendBufferSize, _receiveBufferSize));

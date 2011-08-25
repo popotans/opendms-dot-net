@@ -40,7 +40,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             {
                 JObject jobj;
                 Transitions.Version txVersion = new Transitions.Version();
-                txVersion.Transition(((Remoting.Get)sender).Document, out jobj);
+                Version = txVersion.Transition(((Remoting.Get)sender).Document, out jobj);
                 Remainder = jobj;
                 TriggerOnComplete(reply);
             };

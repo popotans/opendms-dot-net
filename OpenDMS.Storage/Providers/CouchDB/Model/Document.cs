@@ -32,24 +32,30 @@ namespace OpenDMS.Storage.Providers.CouchDB.Model
             get
             {
                 // If not dirty -> return them
-                if (!_attachmentsAreDirty) return _attachments;
-
-                IEnumerator<JToken> en = null;
-                JToken attachmentsToken = this["_attachments"];
-
-                // if null then return null
-                if (attachmentsToken == null) return(_attachments = null);
-
-                // Otherwise process attachments
-                while ((en = attachmentsToken.Children().GetEnumerator()).MoveNext())
+                if (!_attachmentsAreDirty)
+                    return _attachments;
+                else
                 {
-                    if (en.Current.Type != JTokenType.Property)
-                        throw new Json.JsonParseException("Property was expected.");
-                    
-                    _attachments.Add(((JProperty)en.Current).Name, (Attachment)en.Current);
-                }
+                    IEnumerator<JToken> en = null;
+                    JToken attachmentsToken = this["_attachments"];
 
-                _attachmentsAreDirty = false;
+                    // if no additional attachments in document then return what is
+                    // in _attachments
+                    if (attachmentsToken == null)
+                        return _attachments;
+
+                    en = attachmentsToken.Children().GetEnumerator();
+                    // Otherwise process attachments
+                    while (en.MoveNext())
+                    {
+                        if (en.Current.Type != JTokenType.Property)
+                            throw new Json.JsonParseException("Property was expected.");
+
+                        _attachments.Add(((JProperty)en.Current).Name, (Attachment)en.Current);
+                    }
+
+                    _attachmentsAreDirty = false;
+                }
                 return _attachments;
             }
             set { _attachments = value; ResetLength(); }

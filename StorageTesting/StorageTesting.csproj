@@ -67,10 +67,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Authenticate.cs" />
+    <Compile Include="CheckoutCurrentVersion.cs" />
+    <Compile Include="CheckoutVersion.cs" />
     <Compile Include="CreateGroup.cs" />
     <Compile Include="CreateNewResource.cs" />
+    <Compile Include="CreateNewVersion.cs" />
     <Compile Include="CreateUser.cs" />
     <Compile Include="DeleteResource.cs" />
+    <Compile Include="FrmCheckoutVersion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmCheckoutVersion.Designer.cs">
+      <DependentUpon>FrmCheckoutVersion.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrmCreateGroup.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -136,9 +145,13 @@
     <Compile Include="ModifyGroup.cs" />
     <Compile Include="ModifyResource.cs" />
     <Compile Include="ModifyUser.cs" />
+    <Compile Include="ModifyVersion.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestBase.cs" />
+    <EmbeddedResource Include="FrmCheckoutVersion.resx">
+      <DependentUpon>FrmCheckoutVersion.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FrmCreateGroup.resx">
       <DependentUpon>FrmCreateGroup.cs</DependentUpon>
     </EmbeddedResource>

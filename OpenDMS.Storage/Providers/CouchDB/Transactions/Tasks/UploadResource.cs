@@ -11,6 +11,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
         private JObject _jobj;
 
         public Data.Resource Resource { get; private set; }
+        public Model.Document Document { get; private set; }
 
         public UploadResource(IDatabase db, Data.Resource resource,
             int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
@@ -96,8 +97,16 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
                     Resource = null;
                 else
                 {
-                    Resource = _resource;
-                    Resource.UpdateRevision(((Commands.PutDocumentReply)reply).Rev);
+                    if (_resource != null)
+                    {
+                        Resource = _resource;
+                        Resource.UpdateRevision(((Commands.PutDocumentReply)reply).Rev);
+                    }
+                    if (_jobj != null)
+                    {
+                        doc.Rev = ((Commands.PutDocumentReply)reply).Rev;
+                        Document = doc;
+                    }
                 }
                 TriggerOnComplete(reply);
             };
