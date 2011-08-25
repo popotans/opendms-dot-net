@@ -15,7 +15,7 @@ namespace OpenDMS.Networking.Http.Methods
         public Put(Uri uri, string contentType, ulong contentLength)
             : base(uri)
         {
-            ContentType = ContentType;
+            ContentType = contentType;
             ContentLength = contentLength.ToString();
         }
 

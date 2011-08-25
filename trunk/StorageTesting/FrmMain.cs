@@ -349,22 +349,26 @@ namespace StorageTesting
 
         private void BtnGetVersion_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
+            CheckoutVersion act = new CheckoutVersion(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnGetCurrentVersion_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
+            CheckoutCurrentVersion act = new CheckoutCurrentVersion(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnCreateNewVersion_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
+            CreateNewVersion act = new CreateNewVersion(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnModifyVersion_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
+            ModifyVersion act = new ModifyVersion(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnGetResourcePermissions_Click(object sender, EventArgs e)

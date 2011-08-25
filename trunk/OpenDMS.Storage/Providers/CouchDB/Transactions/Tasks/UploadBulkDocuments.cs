@@ -18,6 +18,20 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             _bulkDocuments = bulkDocs;
         }
 
+        public Commands.PostBulkDocumentsReply.Entry FindEntryById(string id)
+        {
+            if (Results == null)
+                return null;
+
+            for (int i = 0; i < Results.Count; i++)
+            {
+                if (Results[i].Id == id)
+                    return Results[i];
+            }
+
+            return null;
+        }
+
         public override void Process()
         {
             Remoting.SaveBulk rem;

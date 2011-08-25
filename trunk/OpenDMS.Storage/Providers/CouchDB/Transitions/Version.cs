@@ -70,6 +70,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transitions
                 throw;
             }
 
+            int a = document.Attachments.Count;
+
             return document;
         }
 

@@ -254,7 +254,7 @@
             this.BtnGetVersion.Name = "BtnGetVersion";
             this.BtnGetVersion.Size = new System.Drawing.Size(132, 20);
             this.BtnGetVersion.TabIndex = 20;
-            this.BtnGetVersion.Text = "GetVersion";
+            this.BtnGetVersion.Text = "CheckoutVersion";
             this.BtnGetVersion.UseVisualStyleBackColor = true;
             this.BtnGetVersion.Click += new System.EventHandler(this.BtnGetVersion_Click);
             // 
@@ -264,7 +264,7 @@
             this.BtnGetCurrentVersion.Name = "BtnGetCurrentVersion";
             this.BtnGetCurrentVersion.Size = new System.Drawing.Size(132, 20);
             this.BtnGetCurrentVersion.TabIndex = 21;
-            this.BtnGetCurrentVersion.Text = "GetCurrentVersion";
+            this.BtnGetCurrentVersion.Text = "CheckoutCurrentVersion";
             this.BtnGetCurrentVersion.UseVisualStyleBackColor = true;
             this.BtnGetCurrentVersion.Click += new System.EventHandler(this.BtnGetCurrentVersion_Click);
             // 
