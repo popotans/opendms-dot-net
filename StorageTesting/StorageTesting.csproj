@@ -130,6 +130,7 @@
     </Compile>
     <Compile Include="GetAllGroups.cs" />
     <Compile Include="GetAllUsers.cs" />
+    <Compile Include="GetGlobalPermissions.cs" />
     <Compile Include="GetGroup.cs" />
     <Compile Include="CheckoutResource.cs" />
     <Compile Include="GetResourceReadOnly.cs" />
@@ -142,12 +143,14 @@
     <Compile Include="FrmLogin.Designer.cs">
       <DependentUpon>FrmLogin.cs</DependentUpon>
     </Compile>
+    <Compile Include="ModifyGlobalPermissions.cs" />
     <Compile Include="ModifyGroup.cs" />
     <Compile Include="ModifyResource.cs" />
     <Compile Include="ModifyUser.cs" />
     <Compile Include="ModifyVersion.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RollbackResource.cs" />
     <Compile Include="TestBase.cs" />
     <EmbeddedResource Include="FrmCheckoutVersion.resx">
       <DependentUpon>FrmCheckoutVersion.cs</DependentUpon>

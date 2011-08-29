@@ -21,6 +21,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             _usageRights = usageRights;
             _requestingPartyType = requestingPartyType;
             _session = session;
+
+            for (int i = 0; i < _usageRights.Count; i++)
+            {
+                // Throw an exception in the event that a resource usage right is included.
+                if (_usageRights[i].Permissions.Resource != null)
+                {
+                    throw new ArgumentException("Resource usage rights are not proper within the global usage rights.");
+                }
+            }
         }
 
         public override void Process()

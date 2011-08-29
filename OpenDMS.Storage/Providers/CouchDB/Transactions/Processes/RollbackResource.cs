@@ -12,6 +12,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         private Security.Session _session;
         private Data.Resource _resource;
         private JObject _remainder;
+        private Dictionary<Data.VersionId, Data.Version> _versionsToDelete;
+        private int _receivedCount;
 
         public RollbackResource(IDatabase db, Data.ResourceId resourceId, int rollbackDepth,
             Security.RequestingPartyType requestingPartyType, Security.Session session, int sendTimeout,
@@ -22,6 +24,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             _rollbackDepth = rollbackDepth;
             _requestingPartyType = requestingPartyType;
             _session = session;
+            _receivedCount = 0;
         }
 
         public override void Process()
@@ -75,77 +78,122 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     _session, Security.Authorization.ResourcePermissionType.VersionControl, 
                     _sendTimeout, _receiveTimeout, _sendBufferSize, _receiveBufferSize));
             }
-            else if (t == typeof(Tasks.CheckGlobalPermissions))
+            else if (t == typeof(Tasks.CheckResourcePermissions))
             {
                 Data.VersionId oldCurrentVersionId;
+                Tasks.CheckResourcePermissions task = (Tasks.CheckResourcePermissions)sender;
 
-                Tasks.CheckGlobalPermissions task = (Tasks.CheckGlobalPermissions)sender;
                 if (!task.IsAuthorized)
                 {
                     TriggerOnAuthorizationDenied(task);
                     return;
                 }
-                
-                // Modify Resource
+
                 // If version number < rollback -> error
                 // Versions: 0,1,2 / rollback: 2 -> 0th version
                 if (_resource.CurrentVersionId.VersionNumber < _rollbackDepth)
                 {
                     TriggerOnError(null, "Rollback depth out of range.", null);
+                    return;
                 }
                 else if (_rollbackDepth <= 0)
                 {
                     TriggerOnError(null, "Rollback depth must be a positive value.", null);
+                    return;
                 }
 
                 oldCurrentVersionId = _resource.CurrentVersionId;
 
+                _versionsToDelete = new Dictionary<Data.VersionId, Data.Version>();
+
+                long targetVersionNumber = _resource.CurrentVersionId.VersionNumber - _rollbackDepth;
+                for(int i=0; i<_resource.VersionIds.Count; i++)
+                {
+                    if (_resource.VersionIds[i].VersionNumber > targetVersionNumber)
+                    {                        
+                        Data.VersionId vid = new Data.VersionId(_resource.ResourceId, i);
+                        _versionsToDelete.Add(vid, new Data.Version(vid));
+                    }
+                }
+                
                 // Removes the versions more recent than the rollback point
-                _resource.VersionIds.RemoveRange(_resource.VersionIds.Count - _rollbackDepth, 
-                    _resource.VersionIds.Count);
+                _resource.VersionIds.RemoveRange(_resource.VersionIds.Count - _rollbackDepth,
+                    _rollbackDepth);
 
                 _resource.UpdateCurrentVersionBasedOnVersionsList();
 
-                // Now resource is all patched up.
 
-                // So, we need to make the bulk document with the new resource and the deletion 
-                // documents for all the versions after the rollback point.
-                List<Exception> errors;
-                List<Model.Document> docs = new List<Model.Document>();
-                Transitions.Resource txResource = new Transitions.Resource();
-                Model.Document doc = txResource.Transition(_resource, out errors);
-
-                if (errors != null)
+                Dictionary<Data.VersionId, Data.Version>.Enumerator en = _versionsToDelete.GetEnumerator();
+                
+                // Dispatch all our heads to get the revisions
+                // *note* do not combine these loops - we want the full list before starting
+                while (en.MoveNext())
                 {
-                    TriggerOnError(null, errors[0].Message, errors[0]);
+                    RunTaskProcess(new Tasks.HeadVersion(_db, en.Current.Key, _sendTimeout,
+                        _receiveTimeout, _sendBufferSize, _receiveBufferSize));
+                }
+            }
+            else if (t == typeof(Tasks.HeadVersion))
+            {
+                Tasks.HeadVersion task = (Tasks.HeadVersion)sender;
+
+                if (!_versionsToDelete.ContainsKey(task.VersionId))
+                {
+                    TriggerOnError(task, "The id '" + task.VersionId.ToString() + "' could not be found.", new KeyNotFoundException());
                     return;
                 }
 
-                doc.CombineWith(_remainder);
-                docs.Add(doc);
-
-                for (long i = oldCurrentVersionId.VersionNumber; 
-                    i > _resource.CurrentVersionId.VersionNumber; i--)
+                lock (_versionsToDelete)
                 {
-                    Data.Version v = new Data.Version(new Data.VersionId(_resource.ResourceId, i));
-                    v.Metadata.Add("_deleted", true);
-                    Transitions.Version txVersion = new Transitions.Version();
-                    Model.Document doc2 = txVersion.Transition(v, out errors);
-                    if (errors != null)
+                    _receivedCount++;
+                    _versionsToDelete[task.VersionId].UpdateRevision(task.Revision);
+                    if (_versionsToDelete.Count == _receivedCount)
                     {
-                        TriggerOnError(null, errors[0].Message, errors[0]);
-                        return;
-                    }
-                    docs.Add(doc2);
-                }
+                        // Inside here we have a collection "docs" that contains the new resource
+                        // which has the new "current" version and has all the more recent
+                        // versions removed.  We also have inside "docs" deletion markers for all
+                        // the more recent versions.
 
-                RunTaskProcess(new Tasks.MakeBulkDocument(docs, _sendTimeout, _receiveTimeout, 
-                    _sendBufferSize, _receiveBufferSize));
+                        List<Exception> errors;
+                        List<Model.Document> docs = new List<Model.Document>();
+                        Transitions.Resource txResource = new Transitions.Resource();
+                        Model.Document doc = txResource.Transition(_resource, out errors);
+
+                        if (errors != null)
+                        {
+                            TriggerOnError(null, errors[0].Message, errors[0]);
+                            return;
+                        }
+
+                        doc.CombineWith(_remainder);
+                        docs.Add(doc);
+                        
+                        Dictionary<Data.VersionId, Data.Version>.Enumerator en = _versionsToDelete.GetEnumerator();
+                
+                        // Dispatch all our heads to get the revisions
+                        // *note* do not combine these loops - we want the full list before starting
+                        while (en.MoveNext())
+                        {
+                            Transitions.Version txVersion = new Transitions.Version();
+                            Model.Document doc2 = txVersion.Transition(en.Current.Value, out errors);
+                            if (errors != null)
+                            {
+                                TriggerOnError(null, errors[0].Message, errors[0]);
+                                return;
+                            }
+                            doc2.Add("_deleted", true);
+                            docs.Add(doc2);
+                        }
+                        
+                        RunTaskProcess(new Tasks.MakeBulkDocument(docs, _sendTimeout, _receiveTimeout,
+                            _sendBufferSize, _receiveBufferSize));
+                    }
+                }
             }
             else if (t == typeof(Tasks.MakeBulkDocument))
             {
                 Tasks.MakeBulkDocument task = (Tasks.MakeBulkDocument)sender;
-                RunTaskProcess(new Tasks.UploadBulkDocuments(_db, task.BulkDocument, _sendTimeout, 
+                RunTaskProcess(new Tasks.UploadBulkDocuments(_db, task.BulkDocument, _sendTimeout,
                     _receiveTimeout, _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.UploadBulkDocuments))
