@@ -250,6 +250,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
             EngineMethods.RollbackResource act = new EngineMethods.RollbackResource(request, resource, rollbackDepth);
             act.Execute();
         }
+        
+        public override void ModifyGlobalPermissions(EngineRequest request, List<Security.UsageRight> usageRights)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Modifying global permissions...");
+            EngineMethods.ModifyGlobalPermissions act = new EngineMethods.ModifyGlobalPermissions(request, usageRights);
+            act.Execute();
+        }
 
 		#endregion Methods 
     }

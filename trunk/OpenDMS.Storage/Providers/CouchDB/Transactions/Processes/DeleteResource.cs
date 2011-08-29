@@ -72,7 +72,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             else if (t == typeof(Tasks.HeadVersion))
             {
                 Tasks.HeadVersion task = (Tasks.HeadVersion)sender;
-                List<Model.Document> docs = new List<Model.Document>();
 
                 if (!_versions.ContainsKey(task.VersionId))
                 {
@@ -87,6 +86,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     if (_versions.Count == _receivedCount)
                     {
                         List<Exception> errors;
+                        List<Model.Document> docs = new List<Model.Document>();
                         Transitions.Resource txResource = new Transitions.Resource();
                         Model.Document doc = txResource.Transition(_resource, out errors);
 
@@ -115,6 +115,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                             doc2.Add("_deleted", true);
                             docs.Add(doc2);
                         }
+
+                        RunTaskProcess(new Tasks.MakeBulkDocument(docs, _sendTimeout, _receiveTimeout,
+                            _sendBufferSize, _receiveBufferSize));
                     }
                     else
                     {
@@ -122,9 +125,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                             ((decimal)((decimal)_receivedCount / (decimal)_versions.Count)));
                     }
                 }
-
-                RunTaskProcess(new Tasks.MakeBulkDocument(docs, _sendTimeout, _receiveTimeout,
-                    _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.MakeBulkDocument))
             {

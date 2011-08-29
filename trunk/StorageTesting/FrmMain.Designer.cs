@@ -51,12 +51,10 @@
             this.BtnGetCurrentVersion = new System.Windows.Forms.Button();
             this.BtnCreateNewVersion = new System.Windows.Forms.Button();
             this.BtnModifyVersion = new System.Windows.Forms.Button();
-            this.BtnGetResourcePermissions = new System.Windows.Forms.Button();
             this.BtnGetGlobalPermissions = new System.Windows.Forms.Button();
             this.BtnModifyGlobalPermissions = new System.Windows.Forms.Button();
             this.BtnGetResourceUsageRightsTemplate = new System.Windows.Forms.Button();
             this.BtnModifyResourceUsageRightsTemplate = new System.Windows.Forms.Button();
-            this.BtnModifyResourcePermissions = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // TxtOutput
@@ -288,16 +286,6 @@
             this.BtnModifyVersion.UseVisualStyleBackColor = true;
             this.BtnModifyVersion.Click += new System.EventHandler(this.BtnModifyVersion_Click);
             // 
-            // BtnGetResourcePermissions
-            // 
-            this.BtnGetResourcePermissions.Location = new System.Drawing.Point(211, 486);
-            this.BtnGetResourcePermissions.Name = "BtnGetResourcePermissions";
-            this.BtnGetResourcePermissions.Size = new System.Drawing.Size(139, 20);
-            this.BtnGetResourcePermissions.TabIndex = 24;
-            this.BtnGetResourcePermissions.Text = "GetResourcePermissions";
-            this.BtnGetResourcePermissions.UseVisualStyleBackColor = true;
-            this.BtnGetResourcePermissions.Click += new System.EventHandler(this.BtnGetResourcePermissions_Click);
-            // 
             // BtnGetGlobalPermissions
             // 
             this.BtnGetGlobalPermissions.Location = new System.Drawing.Point(545, 486);
@@ -338,27 +326,15 @@
             this.BtnModifyResourceUsageRightsTemplate.UseVisualStyleBackColor = true;
             this.BtnModifyResourceUsageRightsTemplate.Click += new System.EventHandler(this.BtnModifyResourceUsageRightsTemplate_Click);
             // 
-            // BtnModifyResourcePermissions
-            // 
-            this.BtnModifyResourcePermissions.Location = new System.Drawing.Point(356, 486);
-            this.BtnModifyResourcePermissions.Name = "BtnModifyResourcePermissions";
-            this.BtnModifyResourcePermissions.Size = new System.Drawing.Size(147, 20);
-            this.BtnModifyResourcePermissions.TabIndex = 29;
-            this.BtnModifyResourcePermissions.Text = "ModifyResourcePermissions";
-            this.BtnModifyResourcePermissions.UseVisualStyleBackColor = true;
-            this.BtnModifyResourcePermissions.Click += new System.EventHandler(this.BtnModifyResourcePermissions_Click);
-            // 
             // FrmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1261, 512);
-            this.Controls.Add(this.BtnModifyResourcePermissions);
             this.Controls.Add(this.BtnModifyResourceUsageRightsTemplate);
             this.Controls.Add(this.BtnGetResourceUsageRightsTemplate);
             this.Controls.Add(this.BtnModifyGlobalPermissions);
             this.Controls.Add(this.BtnGetGlobalPermissions);
-            this.Controls.Add(this.BtnGetResourcePermissions);
             this.Controls.Add(this.BtnModifyVersion);
             this.Controls.Add(this.BtnCreateNewVersion);
             this.Controls.Add(this.BtnGetCurrentVersion);
@@ -415,12 +391,10 @@
         private System.Windows.Forms.Button BtnGetCurrentVersion;
         private System.Windows.Forms.Button BtnCreateNewVersion;
         private System.Windows.Forms.Button BtnModifyVersion;
-        private System.Windows.Forms.Button BtnGetResourcePermissions;
         private System.Windows.Forms.Button BtnGetGlobalPermissions;
         private System.Windows.Forms.Button BtnModifyGlobalPermissions;
         private System.Windows.Forms.Button BtnGetResourceUsageRightsTemplate;
         private System.Windows.Forms.Button BtnModifyResourceUsageRightsTemplate;
-        private System.Windows.Forms.Button BtnModifyResourcePermissions;
     }
 }
 

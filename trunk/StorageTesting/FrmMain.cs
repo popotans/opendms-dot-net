@@ -193,8 +193,8 @@ namespace StorageTesting
                     BtnGetUser.Enabled = getUser;
                     BtnCreateUser.Enabled = createUser;
                     BtnModifyUser.Enabled = modifyUser;
-                    BtnGetResourcePermissions.Enabled = getResourcePermissions;
-                    BtnModifyResourcePermissions.Enabled = modifyResourcePermissions;
+                    //BtnGetResourcePermissions.Enabled = getResourcePermissions;
+                    //BtnModifyResourcePermissions.Enabled = modifyResourcePermissions;
                     BtnGetGlobalPermissions.Enabled = getGlobalPermissions;
                     BtnModifyGlobalPermissions.Enabled = modifyGlobalPermissions;
                     BtnGetResourceUsageRightsTemplate.Enabled = getResourceUsageRightsTemplate;
@@ -225,8 +225,8 @@ namespace StorageTesting
                 BtnGetUser.Enabled = getUser;
                 BtnCreateUser.Enabled = createUser;
                 BtnModifyUser.Enabled = modifyUser;
-                BtnGetResourcePermissions.Enabled = getResourcePermissions;
-                BtnModifyResourcePermissions.Enabled = modifyResourcePermissions;
+                //BtnGetResourcePermissions.Enabled = getResourcePermissions;
+                //BtnModifyResourcePermissions.Enabled = modifyResourcePermissions;
                 BtnGetGlobalPermissions.Enabled = getGlobalPermissions;
                 BtnModifyGlobalPermissions.Enabled = modifyGlobalPermissions;
                 BtnGetResourceUsageRightsTemplate.Enabled = getResourceUsageRightsTemplate;
@@ -338,7 +338,8 @@ namespace StorageTesting
 
         private void BtnRollbackResource_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
+            RollbackResource act = new RollbackResource(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnDeleteResource_Click(object sender, EventArgs e)
@@ -371,24 +372,16 @@ namespace StorageTesting
             act.Test();
         }
 
-        private void BtnGetResourcePermissions_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("Not Implemented... Yet.");
-        }
-
-        private void BtnModifyResourcePermissions_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("Not Implemented... Yet.");
-        }
-
         private void BtnGetGlobalPermissions_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
+            GetGlobalPermissions act = new GetGlobalPermissions(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnModifyGlobalPermissions_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
+            ModifyGlobalPermissions act = new ModifyGlobalPermissions(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnGetResourceUsageRightsTemplate_Click(object sender, EventArgs e)
