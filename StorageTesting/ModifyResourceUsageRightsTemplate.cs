@@ -5,11 +5,11 @@ using OpenDMS.Storage.Providers.CouchDB;
 
 namespace StorageTesting
 {
-    public class ModifyGlobalPermissions : TestBase
+    public class ModifyResourceUsageRightsTemplate : TestBase
     {
         private DateTime _start;
 
-        public ModifyGlobalPermissions(FrmMain window, IEngine engine, IDatabase db)
+        public ModifyResourceUsageRightsTemplate(FrmMain window, IEngine engine, IDatabase db)
             : base(window, engine, db)
         {
         }
@@ -29,30 +29,32 @@ namespace StorageTesting
 
             Clear();
 
-            WriteLine("Starting ModifyGlobalPermissions test...");
+            WriteLine("Starting ModifyResourceUsageRightsTemplate test...");
 
-            OpenDMS.Storage.Security.UsageRight ur1 = new OpenDMS.Storage.Security.UsageRight(new OpenDMS.Storage.Security.Group("administrators"), OpenDMS.Storage.Security.Authorization.GlobalPermissionType.All);
-            OpenDMS.Storage.Security.UsageRight ur2 = new OpenDMS.Storage.Security.UsageRight(new OpenDMS.Storage.Security.Group("users"), OpenDMS.Storage.Security.Authorization.GlobalPermissionType.All);
+            OpenDMS.Storage.Security.UsageRight ur1 = new OpenDMS.Storage.Security.UsageRight(new OpenDMS.Storage.Security.Group("administrators"), OpenDMS.Storage.Security.Authorization.ResourcePermissionType.All);
+            OpenDMS.Storage.Security.UsageRight ur2 = new OpenDMS.Storage.Security.UsageRight(new OpenDMS.Storage.Security.Group("users"), 
+                OpenDMS.Storage.Security.Authorization.ResourcePermissionType.Checkout | 
+                OpenDMS.Storage.Security.Authorization.ResourcePermissionType.ReadOnly);
             System.Collections.Generic.List<OpenDMS.Storage.Security.UsageRight> list = new System.Collections.Generic.List<OpenDMS.Storage.Security.UsageRight>();
             list.Add(ur1);
             list.Add(ur2);
 
             _start = DateTime.Now;
 
-            _engine.ModifyGlobalPermissions(request, list);
+            _engine.ModifyResourceUsageRightsTemplate(request, list);
         }
 
         private void EngineAction(EngineRequest request, EngineActionType actionType, bool willSendProgress)
         {
             if (willSendProgress)
-                WriteLine("ModifyGlobalPermissions.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
+                WriteLine("ModifyResourceUsageRightsTemplate.EngineAction - Type: " + actionType.ToString() + " Expecting Progress Reports.");
             else
-                WriteLine("ModifyGlobalPermissions.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
+                WriteLine("ModifyResourceUsageRightsTemplate.EngineAction - Type: " + actionType.ToString() + " NOT Expecting Progress Reports.");
         }
 
         private void Progress(EngineRequest request, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
-            WriteLine("ModifyGlobalPermissions.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
+            WriteLine("ModifyResourceUsageRightsTemplate.Progress - Sent: " + sendPercentComplete.ToString() + " Received: " + receivePercentComplete.ToString());
         }
 
         private void Complete(EngineRequest request, ICommandReply reply, object result)
@@ -60,19 +62,19 @@ namespace StorageTesting
             DateTime stop = DateTime.Now;
             TimeSpan duration = stop - _start;
 
-            GlobalUsageRights gur = (GlobalUsageRights)result;
+            ResourceUsageRightsTemplate template = (ResourceUsageRightsTemplate)result;
 
-            WriteLine("ModifyGlobalPermissions.Complete - results received in " + duration.TotalMilliseconds.ToString() + "ms.");
+            WriteLine("ModifyResourceUsageRightsTemplate.Complete - results received in " + duration.TotalMilliseconds.ToString() + "ms.");
         }
 
         private void Timeout(EngineRequest request)
         {
-            WriteLine("ModifyGlobalPermissions.Timeout - Timeout.");
+            WriteLine("ModifyResourceUsageRightsTemplate.Timeout - Timeout.");
         }
 
         private void Error(EngineRequest request, string message, Exception exception)
         {
-            WriteLine("ModifyGlobalPermissions.Error - Error.  Message: " + message);
+            WriteLine("ModifyResourceUsageRightsTemplate.Error - Error.  Message: " + message);
         }
     }
 }

@@ -386,12 +386,15 @@ namespace StorageTesting
 
         private void BtnGetResourceUsageRightsTemplate_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
+            GetResourceUsageRightsTemplate act = new GetResourceUsageRightsTemplate(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnModifyResourceUsageRightsTemplate_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Not Implemented... Yet.");
+            ModifyResourceUsageRightsTemplate act = 
+                new ModifyResourceUsageRightsTemplate(this, _engine, _db);
+            act.Test();
         }
 
         private void BtnModifyResource_Click(object sender, EventArgs e)

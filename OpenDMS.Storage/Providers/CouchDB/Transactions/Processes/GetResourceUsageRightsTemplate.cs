@@ -56,7 +56,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     return;
                 }
                 ResourceUsageRightsTemplate = _template;
-                TriggerOnComplete(_reply, _gur);
+                TriggerOnComplete(_reply, ResourceUsageRightsTemplate);
             }
             else
             {

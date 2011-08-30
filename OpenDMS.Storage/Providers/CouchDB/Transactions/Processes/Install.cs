@@ -32,7 +32,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             ""Type"": ""globalusagerights"",
             ""UsageRights"": [
                 {
-                    ""group-administrators"": 1118481
+                    ""group-administrators"": 65535
                 }
             ]
         },
