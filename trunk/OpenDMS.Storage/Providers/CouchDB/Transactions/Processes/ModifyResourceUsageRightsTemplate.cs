@@ -22,6 +22,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             _usageRights = usageRights;
             _requestingPartyType = requestingPartyType;
             _session = session;
+
+            for (int i = 0; i < _usageRights.Count; i++)
+            {
+                // Throw an exception in the event that a resource usage right is included.
+                if (_usageRights[i].Permissions.Global != null)
+                {
+                    throw new ArgumentException("Global usage rights are not proper within the resource usage rights template.");
+                }
+            }
         }
 
         public override void Process()
@@ -56,8 +65,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             else if (t == typeof(Tasks.DownloadResourceUsageRightsTemplate))
             {
                 Tasks.DownloadResourceUsageRightsTemplate task = (Tasks.DownloadResourceUsageRightsTemplate)sender;
-                _rurt = task.Value;
-                RunTaskProcess(new Tasks.UploadResourceUsageRightsTemplate(_db, ResourceUsageRightsTemplate,
+                _rurt = new CouchDB.ResourceUsageRightsTemplate(task.Value.Revision, _usageRights);
+                RunTaskProcess(new Tasks.UploadResourceUsageRightsTemplate(_db, _rurt,
                     _sendTimeout, _receiveTimeout, _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.UploadResourceUsageRightsTemplate))

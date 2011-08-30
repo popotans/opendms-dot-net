@@ -134,6 +134,7 @@
     <Compile Include="GetGroup.cs" />
     <Compile Include="CheckoutResource.cs" />
     <Compile Include="GetResourceReadOnly.cs" />
+    <Compile Include="GetResourceUsageRightsTemplate.cs" />
     <Compile Include="GetUser.cs" />
     <Compile Include="Initialize.cs" />
     <Compile Include="Install.cs" />
@@ -146,6 +147,7 @@
     <Compile Include="ModifyGlobalPermissions.cs" />
     <Compile Include="ModifyGroup.cs" />
     <Compile Include="ModifyResource.cs" />
+    <Compile Include="ModifyResourceUsageRightsTemplate.cs" />
     <Compile Include="ModifyUser.cs" />
     <Compile Include="ModifyVersion.cs" />
     <Compile Include="Program.cs" />
