@@ -64,6 +64,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\ContentType.cs" />
+    <Compile Include="Data\InvalidResourceFormattingException.cs" />
+    <Compile Include="Data\InvalidVersionFormattingException.cs" />
     <Compile Include="Data\Metadata.cs" />
     <Compile Include="Data\Content.cs" />
     <Compile Include="Data\Resource.cs" />
@@ -101,6 +103,8 @@
     <Compile Include="Providers\CouchDB\Commands\HeadDocument.cs" />
     <Compile Include="Providers\CouchDB\Commands\HeadDocumentReply.cs" />
     <Compile Include="Providers\CouchDB\Commands\ReplyBase.cs" />
+    <Compile Include="Providers\CreateResourceArgs.cs" />
+    <Compile Include="Providers\CreateVersionArgs.cs" />
     <Compile Include="Providers\CouchDB\Database.cs" />
     <Compile Include="Providers\CouchDB\Engine.cs" />
     <Compile Include="Providers\CouchDB\EngineMethods\AuthenticateUser.cs" />
@@ -194,6 +198,7 @@
     <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadResourceUsageRightsTemplate.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Tasks\UploadUser.cs" />
     <Compile Include="Providers\CouchDB\Transactions\Transaction.cs" />
+    <Compile Include="Providers\CouchDB\Transitions\FormattingException.cs" />
     <Compile Include="Providers\CouchDB\Transitions\GlobalUsageRights.cs" />
     <Compile Include="Providers\CouchDB\Transitions\ResourceUsageRights.cs" />
     <Compile Include="Providers\IGlobalUsageRights.cs" />
@@ -281,7 +286,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
+      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

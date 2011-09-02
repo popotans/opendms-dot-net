@@ -5,16 +5,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
     public class CreateNewResource : Base
     {
-        private Data.Metadata _resourceMetadata = null;
-        private Data.Metadata _versionMetadata = null;
-        private Data.Content _versionContent = null;
+        private CreateResourceArgs _args;
 
-        public CreateNewResource(EngineRequest request, Data.Metadata resourceMetadata, Data.Metadata versionMetadata, Data.Content versionContent)
+        public CreateNewResource(EngineRequest request, CreateResourceArgs args)
             : base(request)
         {
-            _resourceMetadata = resourceMetadata;
-            _versionMetadata = versionMetadata;
-            _versionContent = versionContent;
+            _args = args;
         }
 
         public override void Execute()
@@ -22,8 +18,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             Transactions.Transaction t;
             Transactions.Processes.CreateNewResource process;
 
-            process = new Transactions.Processes.CreateNewResource(_request.Database, _resourceMetadata,
-                _versionMetadata, _versionContent, _request.RequestingPartyType, _request.Session, _request.Database.Server.Timeout,
+            process = new Transactions.Processes.CreateNewResource(_request.Database, _args, 
+                _request.RequestingPartyType, _request.Session, _request.Database.Server.Timeout,
                 _request.Database.Server.Timeout, _request.Database.Server.BufferSize, _request.Database.Server.BufferSize);
             t = new Transactions.Transaction(process);
 

@@ -5,9 +5,10 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 {
     public class CreateNewResource : Base
     {
-        private Data.Metadata _resourceMetadata = null;
-        private Data.Metadata _versionMetadata = null;
-        private Data.Content _versionContent = null;
+        //private Data.Metadata _resourceMetadata = null;
+        //private Data.Metadata _versionMetadata = null;
+        //private Data.Content _versionContent = null;
+        private CreateResourceArgs _args;
         private Security.RequestingPartyType _requestingPartyType;
         private Security.Session _session;
         private GlobalUsageRights _gur;
@@ -16,15 +17,13 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 
         public Model.BulkDocuments BulkDocuments { get; private set; }
 
-        public CreateNewResource(IDatabase db, Data.Metadata resourceMetadata, Data.Metadata versionMetadata, 
-            Data.Content versionContent, Security.RequestingPartyType requestingPartyType,
+        public CreateNewResource(IDatabase db, CreateResourceArgs args,
+            Security.RequestingPartyType requestingPartyType,
             Security.Session session, int sendTimeout,
             int receiveTimeout, int sendBufferSize, int receiveBufferSize)
             : base(db, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
-            _resourceMetadata = resourceMetadata;
-            _versionMetadata = versionMetadata;
-            _versionContent = versionContent;
+            _args = args;
             _requestingPartyType = requestingPartyType;
             _session = session;
         }
@@ -60,6 +59,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             }
             else if (t == typeof(Tasks.DownloadResourceUsageRightsTemplate))
             {
+                string username = _session.User.Username;
+                DateTime creation = DateTime.Now;
                 List<Exception> errors;
                 List<Model.Document> docs = new List<Model.Document>();
 
@@ -67,11 +68,35 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                 
                 // Create the Resource and Version objects
                 List<Data.VersionId> versions = new List<Data.VersionId>();
+
                 Data.ResourceId resourceId = Data.ResourceId.Create();
-                _version = new Data.Version(new Data.VersionId(resourceId), _versionMetadata, _versionContent);
+
+                _version = new Data.Version(new Data.VersionId(resourceId), _args.VersionArgs.Metadata, _args.VersionArgs.Content)
+                {
+                    Md5 = _args.VersionArgs.Md5,
+                    Extension = _args.VersionArgs.Extension,
+                    Created = creation,
+                    Creator = username,
+                    Modified = creation,
+                    Modifier = username
+                };
+
                 versions.Add(_version.VersionId);
-                _resource = new Data.Resource(resourceId, null, _session.User.Username, DateTime.Now,
-                    versions, _version.VersionId, _resourceMetadata, task.Value.UsageRights);
+
+                _resource = new Data.Resource(resourceId, null, versions, _version.VersionId,
+                    _args.Metadata, task.Value.UsageRights)
+                {
+                    Tags = _args.Tags,
+                    Created = creation,
+                    Creator = username,
+                    Modified = creation,
+                    Modifier = username,
+                    CheckedOutAt = creation,
+                    CheckedOutTo = username,
+                    LastCommit = creation,
+                    LastCommitter = username,
+                    Title = _args.Title
+                };
                 
                 // Transition to json objects
                 
@@ -100,6 +125,26 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     _sendBufferSize, _receiveBufferSize));
             }
             else if (t == typeof(Tasks.UploadBulkDocuments))
+            {
+                Tasks.UploadBulkDocuments task = (Tasks.UploadBulkDocuments)sender;
+
+                Commands.PostBulkDocumentsReply.Entry entry = task.FindEntryById(_version.VersionId.ToString());
+
+                if (entry == null)
+                {
+                    TriggerOnError(task, "Failed to locate " + _version.VersionId.ToString() + " in the " +
+                        "bulk document post results.", null);
+                    return;
+                }
+
+                // This is needed so that couchdb can apply the content to the correct revision.
+                _version.UpdateRevision(entry.Rev);
+
+                // Upload Data.Content from Data.Version
+                RunTaskProcess(new Tasks.UploadContent(_db, _version, _sendTimeout, _receiveTimeout,
+                    _sendBufferSize, _receiveBufferSize));
+            }
+            else if (t == typeof(Tasks.UploadContent))
             {
                 TriggerOnComplete(reply, new Tuple<Data.Resource, Data.Version>(_resource, _version));
             }

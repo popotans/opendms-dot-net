@@ -75,12 +75,12 @@ namespace OpenDMS.Storage.Providers
             throw new NotImplementedException();
         }
 
-        public virtual void CreateNewResource(EngineRequest request, Data.Metadata resourceMetadata, Data.Metadata versionMetadata, Data.Content versionContent)
+        public virtual void CreateNewResource(EngineRequest request, CreateResourceArgs args)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void CreateNewVersion(EngineRequest request, Data.Version version)
+        public virtual void CreateNewVersion(EngineRequest request, CreateVersionArgs args)
         {
             throw new NotImplementedException();
         }

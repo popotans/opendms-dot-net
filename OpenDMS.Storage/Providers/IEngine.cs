@@ -31,14 +31,14 @@ namespace OpenDMS.Storage.Providers
 
         void CheckoutResource(EngineRequest request, ResourceId resource);
         void GetResourceReadOnly(EngineRequest request, ResourceId resource);
-        void CreateNewResource(EngineRequest request, Metadata resourceMetadata, Metadata versionMetadata, Content versionContent);
+        void CreateNewResource(EngineRequest request,  CreateResourceArgs args);
         void ModifyResource(EngineRequest request, Resource resource);
         void RollbackResource(EngineRequest request, ResourceId resource, int rollbackDepth);
         void DeleteResource(EngineRequest request, ResourceId resource);
 
         void CheckoutVersion(EngineRequest request, VersionId version);
         void CheckoutCurrentVersion(EngineRequest request, ResourceId resource);
-        void CreateNewVersion(EngineRequest request, Data.Version version);
+        void CreateNewVersion(EngineRequest request, CreateVersionArgs args);
         void ModifyVersion(EngineRequest request, Data.Version version);
 
         // Accomplished by calling GetResource and checking its permissions
