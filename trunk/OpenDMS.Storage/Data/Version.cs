@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace OpenDMS.Storage.Data
 {
@@ -97,6 +98,13 @@ namespace OpenDMS.Storage.Data
         public string Revision { get; protected set; }
         public Metadata Metadata { get; protected set; }
         public Content Content { get; protected set; }
+
+        public string Md5 { get; set; }
+        public string Extension { get; set; }
+        public DateTime Created { get; set; }
+        public string Creator { get; set; }
+        public DateTime Modified { get; set; }
+        public string Modifier { get; set; }
 
         public bool CanDelete { get { return _availableActions.HasFlag(ActionsType.Delete); } }
         public bool CanHeadCurrentRevision { get { return _availableActions.HasFlag(ActionsType.HeadCurrentRevision); } }

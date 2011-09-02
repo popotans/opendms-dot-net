@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace OpenDMS.Storage.Data
 {
@@ -13,18 +14,32 @@ namespace OpenDMS.Storage.Data
 
         public void Add(string key, object value)
         {
+            if (key.StartsWith("$"))
+                throw new ArgumentException("The key cannot begin with the '$' character.");
             _properties.Add(key, value);
         }
 
         public void Remove(string key)
         {
+            if (key.StartsWith("$"))
+                throw new ArgumentException("The key cannot begin with the '$' character.");
             _properties.Remove(key);
         }
 
         public object this[string key] 
         {
-            get { return _properties[key]; }
-            set { _properties[key] = value; }
+            get
+            {
+                if (key.StartsWith("$"))
+                    throw new ArgumentException("Properties begining with the '$' character cannot be accessed through the Metadata class.");
+                return _properties[key]; 
+            }
+            set
+            {
+                if (key.StartsWith("$"))
+                    throw new ArgumentException("The key cannot begin with the '$' character.");
+                _properties[key] = value; 
+            }
         }
 
         public Dictionary<string, object>.Enumerator GetEnumerator()

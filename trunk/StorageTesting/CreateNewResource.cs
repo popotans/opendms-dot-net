@@ -31,15 +31,19 @@ namespace StorageTesting
 
             Clear();
 
-            OpenDMS.Storage.Data.Metadata resourceMetadata = new OpenDMS.Storage.Data.Metadata();
-            OpenDMS.Storage.Data.Metadata versionMetadata = new OpenDMS.Storage.Data.Metadata();
-            OpenDMS.Storage.Data.Content versionContent;
+            OpenDMS.Storage.Providers.CreateResourceArgs resourceArgs = new CreateResourceArgs()
+            {
+                VersionArgs = new CreateVersionArgs()
+            };
 
-            resourceMetadata.Add("$creator", "lucas");
-            resourceMetadata.Add("$created", DateTime.Now);
+            resourceArgs.Metadata = new OpenDMS.Storage.Data.Metadata();
+            resourceArgs.Tags = new List<string>();
+            resourceArgs.Tags.Add("Tag1");
+            resourceArgs.Tags.Add("Tag2");
+            resourceArgs.Title = "Test resource";
+            resourceArgs.VersionArgs.Extension = "txt";
+            resourceArgs.VersionArgs.Metadata = new OpenDMS.Storage.Data.Metadata();
 
-            versionMetadata.Add("$creator", "lucas");
-            versionMetadata.Add("$created", DateTime.Now);
 
             System.IO.FileStream fs = new System.IO.FileStream("testdoc.txt", System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, 8192, System.IO.FileOptions.None);
             byte[] bytes = System.Text.Encoding.ASCII.GetBytes("This is a test content file.");
@@ -48,13 +52,27 @@ namespace StorageTesting
             fs.Close();
             fs.Dispose();
 
-            versionContent = new OpenDMS.Storage.Data.Content(bytes.Length, new OpenDMS.Storage.Data.ContentType("text/plain"), "testdoc.txt");
+            fs = new System.IO.FileStream("testdoc.txt", System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.None, 8192, System.IO.FileOptions.None);
+            System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
+            byte[] data = md5.ComputeHash(fs);
+            string output = "";
+            fs.Close();
+            md5.Dispose();
+            fs.Dispose();
+
+            for (int i = 0; i < data.Length; i++)
+                output += data[i].ToString("x2");
+
+
+            resourceArgs.VersionArgs.Md5 = output;
+            resourceArgs.VersionArgs.Content = new OpenDMS.Storage.Data.Content(bytes.Length, new OpenDMS.Storage.Data.ContentType("text/plain"), "testdoc.txt");
+
 
 
             WriteLine("Starting CreateNewResource test...");
             _start = DateTime.Now;
 
-            _engine.CreateNewResource(request, resourceMetadata, versionMetadata, versionContent);
+            _engine.CreateNewResource(request, resourceArgs);
         }
 
         private void EngineAction(EngineRequest request, EngineActionType actionType, bool willSendProgress)

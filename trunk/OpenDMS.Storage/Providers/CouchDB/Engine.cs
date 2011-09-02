@@ -71,19 +71,19 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
-        public override void CreateNewResource(EngineRequest request, Data.Metadata resourceMetadata, Data.Metadata versionMetadata, Data.Content versionContent)
+        public override void CreateNewResource(EngineRequest request, CreateResourceArgs args)
         {
             CheckInitialization();
             Logger.Storage.Debug("Creating new resource...");
-            EngineMethods.CreateNewResource act = new EngineMethods.CreateNewResource(request, resourceMetadata, versionMetadata, versionContent);
+            EngineMethods.CreateNewResource act = new EngineMethods.CreateNewResource(request, args);
             act.Execute();
         }
 
-        public override void CreateNewVersion(EngineRequest request, Data.Version version)
+        public override void CreateNewVersion(EngineRequest request, CreateVersionArgs args)
         {
             CheckInitialization();
-            Logger.Storage.Debug("Creating a new version for resource '" + version.VersionId.ResourceId.ToString() + "'...");
-            EngineMethods.CreateNewVersion act = new EngineMethods.CreateNewVersion(request, version);
+            Logger.Storage.Debug("Creating a new version for resource '" + args.VersionId.ResourceId.ToString() + "'...");
+            EngineMethods.CreateNewVersion act = new EngineMethods.CreateNewVersion(request, args);
             act.Execute();
         }
 

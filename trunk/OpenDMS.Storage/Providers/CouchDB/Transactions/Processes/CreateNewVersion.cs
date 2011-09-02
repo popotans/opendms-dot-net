@@ -6,6 +6,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 {
     public class CreateNewVersion : Base
     {
+        private CreateVersionArgs _args;
         private Data.Version _version;
         private Security.RequestingPartyType _requestingPartyType;
         private Security.Session _session;
@@ -13,19 +14,26 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         private Data.Resource _resource;
         private JObject _resourceRemainder;
 
-        public CreateNewVersion(IDatabase db, Data.Version version,
+        public CreateNewVersion(IDatabase db, CreateVersionArgs args,
             Security.RequestingPartyType requestingPartyType, Security.Session session, int sendTimeout,
             int receiveTimeout, int sendBufferSize, int receiveBufferSize)
             : base(db, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize)
         {
-            _version = version;
+            _args = args;
             _requestingPartyType = requestingPartyType;
             _session = session;
+            _version = new Data.Version(_args.VersionId, _args.Metadata, _args.Content);
+            _version.Md5 = _args.Md5;
+            _version.Extension = _args.Extension;
+            _version.Created = DateTime.Now;
+            _version.Creator = session.User.Username;
+            _version.Modified = _version.Created;
+            _version.Modifier = _version.Creator;
         }
 
         public override void Process()
         {
-            RunTaskProcess(new Tasks.DownloadResource(_db, _version.VersionId.ResourceId, _sendTimeout, 
+            RunTaskProcess(new Tasks.DownloadResource(_db, _args.VersionId.ResourceId, _sendTimeout, 
                 _receiveTimeout, _sendBufferSize, _receiveBufferSize));
         }
 

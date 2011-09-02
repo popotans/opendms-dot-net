@@ -5,12 +5,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {
     public class CreateNewVersion : Base
     {
-        private Data.Version _version;
+        private CreateVersionArgs _args;
 
-        public CreateNewVersion(EngineRequest request, Data.Version version)
+        public CreateNewVersion(EngineRequest request, CreateVersionArgs args)
             : base(request)
         {
-            _version = version;
+            _args = args;
         }
 
         public override void Execute()
@@ -18,7 +18,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
             Transactions.Transaction t;
             Transactions.Processes.CreateNewVersion process;
 
-            process = new Transactions.Processes.CreateNewVersion(_request.Database, _version,
+            process = new Transactions.Processes.CreateNewVersion(_request.Database, _args,
                 _request.RequestingPartyType, _request.Session, _request.Database.Server.Timeout,
                 _request.Database.Server.Timeout, _request.Database.Server.BufferSize, _request.Database.Server.BufferSize);
             t = new Transactions.Transaction(process);
