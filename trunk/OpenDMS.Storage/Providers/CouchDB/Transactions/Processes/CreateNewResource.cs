@@ -5,9 +5,6 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
 {
     public class CreateNewResource : Base
     {
-        //private Data.Metadata _resourceMetadata = null;
-        //private Data.Metadata _versionMetadata = null;
-        //private Data.Content _versionContent = null;
         private CreateResourceArgs _args;
         private Security.RequestingPartyType _requestingPartyType;
         private Security.Session _session;

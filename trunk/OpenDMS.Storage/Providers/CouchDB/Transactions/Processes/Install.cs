@@ -28,6 +28,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             }
         },
         {
+            ""_id"": ""_design/search"",
+            ""language"": ""javascript"",
+            ""fulltext"": {
+                ""main"": {
+                    ""index"": ""function(doc) { if (doc.$type == \""resource\"") { var ret = new Document(); ret.add(doc._id, {\""field\"":\""id\""}); ret.add(doc.$type, {\""field\"":\""type\"", \""store\"":\""yes\""}); ret.add(doc.$created, {\""field\"":\""created\"", \""store\"":\""yes\""}); ret.add(doc.$creator, {\""field\"":\""creator\"", \""store\"":\""yes\""}); ret.add(doc.$modified, {\""field\"":\""modified\"", \""store\"":\""yes\""}); ret.add(doc.$modifier, {\""field\"":\""modifier\"", \""store\"":\""yes\""}); ret.add(doc.$checkedoutat, {\""field\"":\""checkedoutat\"", \""store\"":\""yes\""}); ret.add(doc.$checkedoutto, {\""field\"":\""checkedoutto\"", \""store\"":\""yes\""}); ret.add(doc.$lastcommit, {\""field\"":\""lastcommit\"", \""store\"":\""yes\""}); ret.add(doc.$lastcommitter, {\""field\"":\""lastcommitter\"", \""store\"":\""yes\""}); ret.add(doc.$title, {\""field\"":\""title\"", \""store\"":\""yes\""}); var arr = []; for(var i in doc.$tags) { arr.push(doc.$tags[i]); } ret.add(arr.join(', '), {\""field\"":\""tags\"", \""store\"":\""yes\""}); arr = []; for(var i in doc.$usagerights) { for(var j in doc.$usagerights[i]) { arr.push(j + \"":\"" + doc.$usagerights[i][j]); } } ret.add(arr.join(', '), {\""field\"":\""usagerights\"", \""store\"":\""yes\""});return ret; } else if (doc.$type == \""version\"") { var ret = new Document(); ret.add(doc._id, {\""field\"":\""id\""}); ret.add(doc.$type, {\""field\"":\""type\"", \""store\"":\""yes\""}); ret.add(doc.$md5, {\""field\"":\""md5\"", \""store\"":\""yes\""}); ret.add(doc.$extension, {\""field\"":\""extension\"", \""store\"":\""yes\""}); ret.add(doc.$created, {\""field\"":\""created\"", \""store\"":\""yes\""}); ret.add(doc.$creator, {\""field\"":\""creator\"", \""store\"":\""yes\""}); ret.add(doc.$modified, {\""field\"":\""modified\"", \""store\"":\""yes\""}); ret.add(doc.$modifier, {\""field\"":\""modifier\"", \""store\"":\""yes\""}); for(var i in doc._attachments) { ret.attachment(\""attachment\"", i); } return ret; } }""
+                }
+            }
+        },
+        {
             ""_id"": ""globalusagerights"",
             ""Type"": ""globalusagerights"",
             ""UsageRights"": [

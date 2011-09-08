@@ -186,6 +186,11 @@ namespace OpenDMS.Storage.Providers
             throw new NotImplementedException();
         }
 
+        public virtual void Search(EngineRequest request, SearchArgs args)
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual void SetState(bool isInitializing, bool isInitialized)
         {
             _isInitialized = isInitialized;

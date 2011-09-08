@@ -52,5 +52,7 @@ namespace OpenDMS.Storage.Providers
 
         void Install(EngineRequest request, string logDirectory);
         void DetermineIfInstalled(EngineRequest request, string logDirectory);
+
+        void Search(EngineRequest request, SearchArgs args);
     }
 }

@@ -103,6 +103,10 @@
     <Compile Include="Providers\CouchDB\Commands\HeadDocument.cs" />
     <Compile Include="Providers\CouchDB\Commands\HeadDocumentReply.cs" />
     <Compile Include="Providers\CouchDB\Commands\ReplyBase.cs" />
+    <Compile Include="Providers\CouchDB\EngineMethods\Search.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Processes\Search.cs" />
+    <Compile Include="Providers\CouchDB\Transactions\Tasks\Search.cs" />
+    <Compile Include="Providers\CouchDB\Transitions\SearchReply.cs" />
     <Compile Include="Providers\CreateResourceArgs.cs" />
     <Compile Include="Providers\CreateVersionArgs.cs" />
     <Compile Include="Providers\CouchDB\Database.cs" />
@@ -216,6 +220,42 @@
     <Compile Include="Providers\ICommandReply.cs" />
     <Compile Include="Providers\IEngine.cs" />
     <Compile Include="Providers\IResourceUsageRightsTemplate.cs" />
+    <Compile Include="Providers\SearchArgs.cs" />
+    <Compile Include="SearchProviders\IResourceResult.cs" />
+    <Compile Include="SearchProviders\IVersionResult.cs" />
+    <Compile Include="SearchProviders\CdbLucene\ResourceResult.cs" />
+    <Compile Include="SearchProviders\CdbLucene\SearchResultBase.cs" />
+    <Compile Include="SearchProviders\CdbLucene\VersionResult.cs" />
+    <Compile Include="SearchProviders\IQuery.cs" />
+    <Compile Include="SearchProviders\IToken.cs" />
+    <Compile Include="SearchProviders\IOperator.cs" />
+    <Compile Include="SearchProviders\IModifier.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Modifiers\Interm.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Tokens\Container.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Tokens\Field.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Modifiers\Base.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Modifiers\Boost.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Modifiers\Fuzzy.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Modifiers\MultiWildcard.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Modifiers\Proximity.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Modifiers\SingleWildcard.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Modifiers\Suffix.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Operators\And.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Operators\Base.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Operators\Not.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Operators\Or.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Operators\Required.cs" />
+    <Compile Include="SearchProviders\CdbLucene\QuerySyntaxException.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Query.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Tokens\Group.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Tokens\Range.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Tokens\Token.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Tokens\Phrase.cs" />
+    <Compile Include="SearchProviders\CdbLucene\Tokens\Term.cs" />
+    <Compile Include="SearchProviders\CdbLucene\SearchReply.cs" />
+    <Compile Include="SearchProviders\ResourceResult.cs" />
+    <Compile Include="SearchProviders\SearchResult.cs" />
+    <Compile Include="SearchProviders\VersionResult.cs" />
     <Compile Include="Security\Authorization\GlobalPermission.cs" />
     <Compile Include="Security\Authorization\GlobalPermissionType.cs" />
     <Compile Include="Security\Authorization\GlobalRequest.cs" />
@@ -249,6 +289,7 @@
     <Content Include="libs\log4net.dll" />
     <Content Include="libs\Newtonsoft.Json.dll" />
     <Content Include="Providers\CouchDB\Resource Creation.txt" />
+    <Content Include="SearchProviders\Searching.txt" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -286,7 +327,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_StartDate="2011/2/17" BuildVersion_UseGlobalSettings="True" />
+      <UserProperties BuildVersion_UseGlobalSettings="True" BuildVersion_StartDate="2011/2/17" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseYearDayOfYear" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

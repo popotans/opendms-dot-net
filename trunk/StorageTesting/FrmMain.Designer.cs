@@ -55,6 +55,7 @@
             this.BtnModifyGlobalPermissions = new System.Windows.Forms.Button();
             this.BtnGetResourceUsageRightsTemplate = new System.Windows.Forms.Button();
             this.BtnModifyResourceUsageRightsTemplate = new System.Windows.Forms.Button();
+            this.BtnSearch = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // TxtOutput
@@ -326,11 +327,22 @@
             this.BtnModifyResourceUsageRightsTemplate.UseVisualStyleBackColor = true;
             this.BtnModifyResourceUsageRightsTemplate.Click += new System.EventHandler(this.BtnModifyResourceUsageRightsTemplate_Click);
             // 
+            // BtnSearch
+            // 
+            this.BtnSearch.Location = new System.Drawing.Point(1122, 327);
+            this.BtnSearch.Name = "BtnSearch";
+            this.BtnSearch.Size = new System.Drawing.Size(132, 20);
+            this.BtnSearch.TabIndex = 29;
+            this.BtnSearch.Text = "Search";
+            this.BtnSearch.UseVisualStyleBackColor = true;
+            this.BtnSearch.Click += new System.EventHandler(this.BtnSearch_Click);
+            // 
             // FrmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1261, 512);
+            this.Controls.Add(this.BtnSearch);
             this.Controls.Add(this.BtnModifyResourceUsageRightsTemplate);
             this.Controls.Add(this.BtnGetResourceUsageRightsTemplate);
             this.Controls.Add(this.BtnModifyGlobalPermissions);
@@ -395,6 +407,7 @@
         private System.Windows.Forms.Button BtnModifyGlobalPermissions;
         private System.Windows.Forms.Button BtnGetResourceUsageRightsTemplate;
         private System.Windows.Forms.Button BtnModifyResourceUsageRightsTemplate;
+        private System.Windows.Forms.Button BtnSearch;
     }
 }
 

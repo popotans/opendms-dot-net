@@ -31,7 +31,8 @@ namespace OpenDMS.Storage.Providers
         CheckingExistance,
         DeletingResource,
         GettingVersion,
-        HeaddingVersionsOfResource
+        HeaddingVersionsOfResource,
+        Searching
         // No need to send a complete action as completion is signaled by Error, Timeout or Completion
         // Complete
     }

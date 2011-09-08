@@ -259,6 +259,14 @@ namespace OpenDMS.Storage.Providers.CouchDB
             act.Execute();
         }
 
+        public override void Search(EngineRequest request, SearchArgs args)
+        {
+            CheckInitialization();
+            Logger.Storage.Debug("Performing search...");
+            EngineMethods.Search act = new EngineMethods.Search(request, args);
+            act.Execute();
+        }
+
 		#endregion Methods 
     }
 }
