@@ -72,7 +72,7 @@ namespace StorageTesting
 
             TxtOutput.Text = "Welcome to the OpenDMS.Storage Testing Environment.  This application allows for simple testing of the OpenDMS.Storage library and those libraries used by the OpenDMS.Storage library.\r\n\r\nThis window will display the results of the tests.\r\n\r\nSome tests must be run in certain orders.  Available tests will have enabled buttons, tests that cannot be run will be greyed out.\r\n\r\n";
             TxtOutput.Select(TxtOutput.Text.Length, 0);
-
+            
             DetermineIfInstalled();
         }
 
@@ -400,6 +400,12 @@ namespace StorageTesting
         private void BtnModifyResource_Click(object sender, EventArgs e)
         {
             ModifyResource act = new ModifyResource(this, _engine, _db);
+            act.Test();
+        }
+
+        private void BtnSearch_Click(object sender, EventArgs e)
+        {
+            SearchTest act = new SearchTest(this, _engine, _db);
             act.Test();
         }
     }

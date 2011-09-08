@@ -153,6 +153,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RollbackResource.cs" />
+    <Compile Include="SearchTest.cs" />
     <Compile Include="TestBase.cs" />
     <EmbeddedResource Include="FrmCheckoutVersion.resx">
       <DependentUpon>FrmCheckoutVersion.cs</DependentUpon>

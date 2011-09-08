@@ -1,0 +1,103 @@
+﻿
+Searching
+
+Output: a string representing a lucene query (http://lucene.apache.org/java/3_3_0/queryparsersyntax.html)
+
+Searchable Fields within the Resource Object: $tags, $created, $creator, $modified, $modifier, $checkedoutat, $checkedoutto, $lastcommit, $lastcommitter, $title
+Searchable Fields within the Version Object: _attachments, $created, $creator, $modified, $modifier, $extension, $md5
+
+We will have two methods of searching: (1) API type and (2) Natural.  API type will really be made to support searching by developers.  Natural will allow for searching by end users (think Google).
+
+Natural
+Natural query allows the user to just enter the terms or phrases for which they want matches.  This will be matched with both the title and tags of the resource and the content of the attachment within the version.
+
+1) Break into a collection of terms and phrases
+	Note) Lucene handles dropping of the most common and useless terms (to, from, for, the, etc.) so we do not need to deal with that.
+2) The fields: title, tags and content are grouped and searched.
+
+API
+API query allows the developer to use specific objects to craft a query.  Any of the above specified searchable fields can be searched.
+
+API Layout
+
+Field - contains a group or term or phrase
+Group - contains any number of terms and phrases combined by operators
+Operator - AND, OR or +
+Term - a single word
+Phrase - a collection of terms within "" marks
+Range - [a TO z]
+Modifier - Boost (^), Proximity, Fuzzy, Wildcard - appear in a token
+
+Field
+Group
+Range
+Tokens
+	Term
+	Phrase
+Modifiers (after or in the term or phrase)
+	Boost - ^
+	Proximity - ~x where x > 1
+	Fuzzy - ~x where 0 < x <= 1
+	Wildcard - *|? 
+Operators
+	AND
+	OR
+	NOT
+
+
+
+
+{
+   "_id": "_design/search",
+   "fulltext": {
+       "main": {
+           "index": "
+function(doc) {
+	if (doc.$type == \"resource\") {
+		var ret = new Document(); 
+		ret.add(doc._id, {\"field\":\"id\"}); 
+		ret.add(doc.$type, {\"field\":\"type\", \"store\":\"yes\"}); 
+		ret.add(doc.$created, {\"field\":\"created\", \"store\":\"yes\"}); 
+		ret.add(doc.$creator, {\"field\":\"creator\", \"store\":\"yes\"}); 
+		ret.add(doc.$modified, {\"field\":\"modified\", \"store\":\"yes\"}); 
+		ret.add(doc.$modifier, {\"field\":\"modifier\", \"store\":\"yes\"}); 
+		ret.add(doc.$checkedoutat, {\"field\":\"checkedoutat\", \"store\":\"yes\"}); 
+		ret.add(doc.$checkedoutto, {\"field\":\"checkedoutto\", \"store\":\"yes\"}); 
+		ret.add(doc.$lastcommit, {\"field\":\"lastcommit\", \"store\":\"yes\"}); 
+		ret.add(doc.$lastcommitter, {\"field\":\"lastcommitter\", \"store\":\"yes\"}); 
+		ret.add(doc.$title, {\"field\":\"title\", \"store\":\"yes\"}); 
+		var arr = []; 
+		for(var i in doc.$tags) { arr.push(doc.$tags[i]); } 
+		ret.add(arr.join(', '), {\"field\":\"tags\", \"store\":\"yes\"});
+		arr = [];
+		for(var i in doc.$usagerights) { 
+		  for(var j in doc.$usagerights[i]) { 
+		    arr.push(j + \":\" + doc.$usagerights[i][j]); } }
+		ret.add(arr.join(', '), {\"field\":\"usagerights\", \"store\":\"yes\"});
+		return ret;
+	} else if (doc.$type == \"version\") {
+		var ret = new Document();
+		ret.add(doc._id, {\"field\":\"id\"}); 
+		ret.add(doc.$type, {\"field\":\"type\", \"store\":\"yes\"}); 
+		ret.add(doc.$md5, {\"field\":\"md5\", \"store\":\"yes\"}); 
+		ret.add(doc.$extension, {\"field\":\"extension\", \"store\":\"yes\"}); 
+		ret.add(doc.$created, {\"field\":\"created\", \"store\":\"yes\"}); 
+		ret.add(doc.$creator, {\"field\":\"creator\", \"store\":\"yes\"}); 
+		ret.add(doc.$modified, {\"field\":\"modified\", \"store\":\"yes\"}); 
+		ret.add(doc.$modifier, {\"field\":\"modifier\", \"store\":\"yes\"}); 
+		for(var i in doc._attachments) { ret.attachment(\"attachment\", i); } 
+		return ret;
+	}
+}"
+       }
+   }
+}
+----------------------------------------------------------------------
+{
+   "_id": "_design/search",
+   "fulltext": {
+       "main": {
+           "index": "function(doc) { if (doc.$type == \"resource\") { var ret = new Document(); ret.add(doc._id, {\"field\":\"id\"}); ret.add(doc.$type, {\"field\":\"type\", \"store\":\"yes\"}); ret.add(doc.$created, {\"field\":\"created\", \"store\":\"yes\"}); ret.add(doc.$creator, {\"field\":\"creator\", \"store\":\"yes\"}); ret.add(doc.$modified, {\"field\":\"modified\", \"store\":\"yes\"}); ret.add(doc.$modifier, {\"field\":\"modifier\", \"store\":\"yes\"}); ret.add(doc.$checkedoutat, {\"field\":\"checkedoutat\", \"store\":\"yes\"}); ret.add(doc.$checkedoutto, {\"field\":\"checkedoutto\", \"store\":\"yes\"}); ret.add(doc.$lastcommit, {\"field\":\"lastcommit\", \"store\":\"yes\"}); ret.add(doc.$lastcommitter, {\"field\":\"lastcommitter\", \"store\":\"yes\"}); ret.add(doc.$title, {\"field\":\"title\", \"store\":\"yes\"}); var arr = []; for(var i in doc.$tags) { arr.push(doc.$tags[i]); } ret.add(arr.join(', '), {\"field\":\"tags\", \"store\":\"yes\"}); arr = []; for(var i in doc.$usagerights) { for(var j in doc.$usagerights[i]) { arr.push(j + \":\" + doc.$usagerights[i][j]); } } ret.add(arr.join(', '), {\"field\":\"usagerights\", \"store\":\"yes\"});return ret; } else if (doc.$type == \"version\") { var ret = new Document(); ret.add(doc._id, {\"field\":\"id\"}); ret.add(doc.$type, {\"field\":\"type\", \"store\":\"yes\"}); ret.add(doc.$md5, {\"field\":\"md5\", \"store\":\"yes\"}); ret.add(doc.$extension, {\"field\":\"extension\", \"store\":\"yes\"}); ret.add(doc.$created, {\"field\":\"created\", \"store\":\"yes\"}); ret.add(doc.$creator, {\"field\":\"creator\", \"store\":\"yes\"}); ret.add(doc.$modified, {\"field\":\"modified\", \"store\":\"yes\"}); ret.add(doc.$modifier, {\"field\":\"modifier\", \"store\":\"yes\"}); for(var i in doc._attachments) { ret.attachment(\"attachment\", i); } return ret; } }"
+       }
+   }
+}
