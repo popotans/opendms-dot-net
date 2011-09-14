@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenDMS.IO", "OpenDMS.IO\OpenDMS.IO.csproj", "{72987F10-B4F8-4594-9D36-D366A4ECC121}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSite", "TestSite\TestSite.csproj", "{0A488477-D6B7-4678-9856-09BE1BE65EA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenDMS.Networking", "OpenDMS.Networking\OpenDMS.Networking.csproj", "{0A46F930-1BA8-4A73-BD2B-879222C4C78E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpModule", "HttpModule\HttpModule.csproj", "{67633BAF-C29E-4C46-A83C-41F93AAA936D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenDMS.Storage", "OpenDMS.Storage\OpenDMS.Storage.csproj", "{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenDMS.HttpModule", "OpenDMS.HttpModule\OpenDMS.HttpModule.csproj", "{E797BE0E-14BB-4902-AC24-189DA85A2FCA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,18 +15,22 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6D1507A8-C2F1-42E2-84ED-BE8C04AB8118}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0A488477-D6B7-4678-9856-09BE1BE65EA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0A488477-D6B7-4678-9856-09BE1BE65EA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0A488477-D6B7-4678-9856-09BE1BE65EA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0A488477-D6B7-4678-9856-09BE1BE65EA5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{67633BAF-C29E-4C46-A83C-41F93AAA936D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{67633BAF-C29E-4C46-A83C-41F93AAA936D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{67633BAF-C29E-4C46-A83C-41F93AAA936D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{67633BAF-C29E-4C46-A83C-41F93AAA936D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72987F10-B4F8-4594-9D36-D366A4ECC121}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72987F10-B4F8-4594-9D36-D366A4ECC121}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72987F10-B4F8-4594-9D36-D366A4ECC121}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72987F10-B4F8-4594-9D36-D366A4ECC121}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A46F930-1BA8-4A73-BD2B-879222C4C78E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A46F930-1BA8-4A73-BD2B-879222C4C78E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A46F930-1BA8-4A73-BD2B-879222C4C78E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A46F930-1BA8-4A73-BD2B-879222C4C78E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E797BE0E-14BB-4902-AC24-189DA85A2FCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E797BE0E-14BB-4902-AC24-189DA85A2FCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E797BE0E-14BB-4902-AC24-189DA85A2FCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E797BE0E-14BB-4902-AC24-189DA85A2FCA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

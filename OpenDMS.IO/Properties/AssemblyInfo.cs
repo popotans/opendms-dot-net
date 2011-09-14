@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("OpenDMS.IO")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Commonly used filesystem IO components.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyCompany("Alexine Systems, LLC")]
 [assembly: AssemblyProduct("OpenDMS.IO")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2011")]
+[assembly: AssemblyCopyright("Copyright © Alexine Systems, LLC 2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
