@@ -1,0 +1,30 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="OpenDMS.HttpModule.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="StorageServerAddress" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">192.168.1.111</Value>
+    </Setting>
+    <Setting Name="StorageServerPort" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">5984</Value>
+    </Setting>
+    <Setting Name="NetworkTimeout" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">10000</Value>
+    </Setting>
+    <Setting Name="NetworkBufferSize" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">8192</Value>
+    </Setting>
+    <Setting Name="StorageDatabaseName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Test1</Value>
+    </Setting>
+    <Setting Name="Install" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="LogDirectory" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">C:\OpenDMS\Logs\</Value>
+    </Setting>
+    <Setting Name="StorageTransactionRootDirectory" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">C:\OpenDMS\Transactions\</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
