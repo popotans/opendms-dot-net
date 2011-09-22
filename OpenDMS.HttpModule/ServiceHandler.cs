@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using IO = OpenDMS.IO;
 using Storage = OpenDMS.Storage;
 using Providers = OpenDMS.Storage.Providers;
+using Comm = OpenDMS.Networking.Comm;
 
 namespace OpenDMS.HttpModule
 {
@@ -17,6 +18,7 @@ namespace OpenDMS.HttpModule
         private bool _isCheckingInstall;
         private bool _isInitialized;
         private bool _isInitializing;
+        private bool _isInitializingStorage;
 
         public ServiceHandler()
         {
@@ -27,6 +29,7 @@ namespace OpenDMS.HttpModule
             new OpenDMS.IO.Logger(Properties.Settings.Default.LogDirectory);
             new OpenDMS.Networking.Logger(Properties.Settings.Default.LogDirectory);
             new OpenDMS.Storage.Logger(Properties.Settings.Default.LogDirectory);
+            new Logger(Properties.Settings.Default.LogDirectory);
 
             Logger.Storage.Debug("Instantiating server...");
 
@@ -55,10 +58,12 @@ namespace OpenDMS.HttpModule
             DateTime start = DateTime.Now; // we must set the value here and then reset it below directly before calling, else Visual Studio throws a fit for using an unassigned variable
             Providers.EngineRequest request;
 
-            if (_isCheckingInstall)
-                throw new InvalidOperationException("Checking of installation already processing.");
-            else
-                _isInitializing = true;
+            if (_isInitialized)
+                throw new InvalidOperationException("Already initialized.");
+            else if (_isInitializing)
+                throw new InvalidOperationException("Already initializing.");
+
+            _isInitializing = true;
 
             request = new Providers.EngineRequest();
             request.Engine = _engine;
@@ -88,6 +93,8 @@ namespace OpenDMS.HttpModule
                 TimeSpan duration = DateTime.Now - start;
 
                 _isInstalled = false;
+                _isInitialized = false;
+                _isInitializing = false;
 
                 Logger.Storage.Error("An error occurred while trying to determine if OpenDMS.Net has been installed on the database.  This is not conclusive as to if OpenDMS.Net is properly installed.  " +
                     "We recommend restarting OpenDMS.Net.  Determined in " + duration.TotalMilliseconds.ToString() + "ms.  Error message: " + message, exception);
@@ -101,6 +108,8 @@ namespace OpenDMS.HttpModule
                 TimeSpan duration = DateTime.Now - start;
 
                 _isInstalled = false;
+                _isInitialized = false;
+                _isInitializing = false;
 
                 Logger.Storage.Error("A timeout occurred while trying to determine if OpenDMS.Net has been installed on the database.  This is not conclusive as to if OpenDMS.Net is properly installed.  " +
                     "We recommend restarting OpenDMS.Net.  Determined in " + duration.TotalMilliseconds.ToString() + "ms.");
@@ -114,10 +123,10 @@ namespace OpenDMS.HttpModule
 
         private void InitializeStorage()
         {
-            if (_isInitializing)
-                throw new InvalidOperationException("Initialization already processing.");
+            if (_isInitializingStorage)
+                throw new InvalidOperationException("Initialization of storage already processing.");
             else
-                _isInitializing = true;
+                _isInitializingStorage = true;
 
             List<Storage.Providers.IDatabase> databases = new List<Providers.IDatabase>();
             databases.Add(_db);
@@ -135,18 +144,32 @@ namespace OpenDMS.HttpModule
                 Logger.Storage.Error("Initialization of the storage engine failed with the following message and/or exception:\r\nMessage: " + message, exception);
                 _isInitialized = false;
                 _isInitializing = false;
+                _isInitializingStorage = false;
                 return;
             }
 
             Logger.Storage.Debug("Storage engine initialization complete.");
             _isInitialized = true;
             _isInitializing = false;
+            _isInitializingStorage = false;
+        }
 
-            CheckInstallationStatus();
+        [ServicePoint("/_ping", ServicePointAttribute.VerbType.ALL)]
+        public void Ping(HttpApplication app)
+        {
+            Comm.Messages.Requests.Ping ping = new Comm.Messages.Requests.Ping(app.Request);
+            Comm.Messages.Responses.Pong pong = (Comm.Messages.Responses.Pong)ping.BuildResponseMessage(app.Response);
+            
+
+            
+            app.CompleteRequest();
+            //app.Response.Headers
+            //app.Response.pong.MakeStream()
         }
 
         public void Dispose()
         {
+
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Web;
 
 namespace OpenDMS.HttpModule
 {
-    public class HttpModule : IHttpModule
+    public class ApiModule : IHttpModule
     {
         /// <summary>
         /// A mapping of all service points.

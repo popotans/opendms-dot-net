@@ -61,7 +61,7 @@ namespace OpenDMS.HttpModule.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Test1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("test1")]
         public string StorageDatabaseName {
             get {
                 return ((string)(this["StorageDatabaseName"]));
