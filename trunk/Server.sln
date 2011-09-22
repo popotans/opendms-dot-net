@@ -9,6 +9,29 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenDMS.Storage", "OpenDMS.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenDMS.HttpModule", "OpenDMS.HttpModule\OpenDMS.HttpModule.csproj", "{E797BE0E-14BB-4902-AC24-189DA85A2FCA}"
 EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebTesting", "WebTesting\", "{D20708E3-35FE-4FF2-8DB9-F679BEC2CC5D}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		ProjectReferences = "{E797BE0E-14BB-4902-AC24-189DA85A2FCA}|OpenDMS.HttpModule.dll;{72987F10-B4F8-4594-9D36-D366A4ECC121}|OpenDMS.IO.dll;{0A46F930-1BA8-4A73-BD2B-879222C4C78E}|OpenDMS.Networking.dll;{9DA72FD2-C88D-4ABF-B15E-E087C5725C96}|OpenDMS.Storage.dll;"
+		Debug.AspNetCompiler.VirtualPath = "/WebTesting"
+		Debug.AspNetCompiler.PhysicalPath = "WebTesting\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\WebTesting\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/WebTesting"
+		Release.AspNetCompiler.PhysicalPath = "WebTesting\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\WebTesting\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "63567"
+		VWDVirtualPath = "/"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +54,10 @@ Global
 		{E797BE0E-14BB-4902-AC24-189DA85A2FCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E797BE0E-14BB-4902-AC24-189DA85A2FCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E797BE0E-14BB-4902-AC24-189DA85A2FCA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D20708E3-35FE-4FF2-8DB9-F679BEC2CC5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D20708E3-35FE-4FF2-8DB9-F679BEC2CC5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D20708E3-35FE-4FF2-8DB9-F679BEC2CC5D}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{D20708E3-35FE-4FF2-8DB9-F679BEC2CC5D}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
