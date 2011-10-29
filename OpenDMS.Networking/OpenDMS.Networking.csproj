@@ -62,12 +62,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Comm\Messages\JsonAndDataBase.cs" />
-    <Compile Include="Comm\Messages\JsonOnlyBase.cs" />
-    <Compile Include="Comm\Messages\MessageFormattingException.cs" />
-    <Compile Include="Comm\Messages\Requests\IRequest.cs" />
-    <Compile Include="Comm\Messages\Requests\Ping.cs" />
-    <Compile Include="Comm\Messages\Responses\IResponse.cs" />
+    <Compile Include="Api\CommandParser.cs" />
+    <Compile Include="Api\MessageFormattingException.cs" />
+    <Compile Include="Api\MultisourcedStream.cs" />
+    <Compile Include="Api\Requests\Authentication.cs" />
+    <Compile Include="Api\MessageBase.cs" />
+    <Compile Include="Api\Requests\Ping.cs" />
+    <Compile Include="Api\Requests\Request.cs" />
+    <Compile Include="Api\Requests\RequestBase.cs" />
+    <Compile Include="Api\Responses\Authentication.cs" />
+    <Compile Include="Api\Responses\Pong.cs" />
+    <Compile Include="Api\Responses\Response.cs" />
+    <Compile Include="Api\Responses\ResponseBase.cs" />
     <Compile Include="Http\AsyncUserToken.cs" />
     <Compile Include="Http\Client.cs" />
     <Compile Include="Http\CompleteNotImplementedException.cs" />
@@ -94,9 +100,48 @@
     <Compile Include="Http\Timeout.cs" />
     <Compile Include="Http\UnsupportedException.cs" />
     <Compile Include="Logger.cs" />
-    <Compile Include="Comm\Messages\MessageBase.cs" />
-    <Compile Include="Comm\Messages\Responses\Pong.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocols\Http\Connection.cs" />
+    <Compile Include="Protocols\Http\HttpNetworkStream.cs" />
+    <Compile Include="Protocols\Http\Interceptors\ChunkedEncodingInterceptor.cs" />
+    <Compile Include="Protocols\Http\Interceptors\InterceptorBuffer.cs" />
+    <Compile Include="Protocols\Http\Interceptors\IStreamInterceptor.cs" />
+    <Compile Include="Protocols\Http\Interceptors\HttpNetworkStreamInterceptorBase.cs" />
+    <Compile Include="Protocols\Http\Message\AcceptHeader.cs" />
+    <Compile Include="Protocols\Http\Message\Base.cs" />
+    <Compile Include="Protocols\Http\Message\Body.cs" />
+    <Compile Include="Protocols\Http\Message\ChunkedTransferEncodingHeader.cs" />
+    <Compile Include="Protocols\Http\Message\CloseConnectionHeader.cs" />
+    <Compile Include="Protocols\Http\Message\ContentLengthHeader.cs" />
+    <Compile Include="Protocols\Http\Message\ContentMd5Header.cs" />
+    <Compile Include="Protocols\Http\Message\ContentTypeHeader.cs" />
+    <Compile Include="Protocols\Http\Message\DateHeader.cs" />
+    <Compile Include="Protocols\Http\Message\ETagHeader.cs" />
+    <Compile Include="Protocols\Http\Message\Expect100ContinueHeader.cs" />
+    <Compile Include="Protocols\Http\Message\Header.cs" />
+    <Compile Include="Protocols\Http\Message\HeaderCollection.cs" />
+    <Compile Include="Protocols\Http\Message\HeaderException.cs" />
+    <Compile Include="Protocols\Http\Message\HostHeader.cs" />
+    <Compile Include="Protocols\Http\Message\InvalidTokenException.cs" />
+    <Compile Include="Protocols\Http\Message\Token.cs" />
+    <Compile Include="Protocols\Http\Message\UserAgentHeader.cs" />
+    <Compile Include="Protocols\Http\MethodParseException.cs" />
+    <Compile Include="Protocols\Http\Methods\Base.cs" />
+    <Compile Include="Protocols\Http\Methods\Delete.cs" />
+    <Compile Include="Protocols\Http\Methods\Get.cs" />
+    <Compile Include="Protocols\Http\Methods\Head.cs" />
+    <Compile Include="Protocols\Http\Methods\Post.cs" />
+    <Compile Include="Protocols\Http\Methods\Put.cs" />
+    <Compile Include="Protocols\Http\Request.cs" />
+    <Compile Include="Protocols\Http\RequestLine.cs" />
+    <Compile Include="Protocols\Http\Response.cs" />
+    <Compile Include="Protocols\Http\StatusLine.cs" />
+    <Compile Include="Protocols\Tcp\Connection.cs" />
+    <Compile Include="Protocols\Tcp\ConnectionAsyncEventArgs.cs" />
+    <Compile Include="Protocols\Tcp\Params\Buffer.cs" />
+    <Compile Include="Protocols\Tcp\Params\Connection.cs" />
+    <Compile Include="Protocols\Tcp\TcpConnectionException.cs" />
+    <Compile Include="Protocols\Tcp\Timeout.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -125,7 +170,7 @@
   <ItemGroup>
     <Content Include="libs\log4net.dll" />
     <Content Include="libs\Newtonsoft.Json.dll" />
-    <Content Include="Comm\Design.txt" />
+    <Content Include="New Network Code.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

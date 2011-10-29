@@ -177,6 +177,34 @@ namespace OpenDMS.Networking.Http
             return amount;
         }
 
+        public byte ReadByte()
+        {
+            byte retVal = 0;
+
+            // Synchronous so let any exceptions bubble up for the higher level
+
+            // We should only try if the total bytes received is <= the content length
+            // otherwise we fall into an infinite wait
+            if (_contentLength > 0 &&
+                _bytesReceived <= _contentLength)
+            {
+                retVal = _stream.ReadByte();
+                _bytesReceived++;
+                try
+                {
+                    if (OnProgress != null) OnProgress(this, DirectionType.Download, 1);
+                }
+                catch (Exception e)
+                {
+                    // Ignore it, its the higher level's job to deal with it.
+                    Logger.Network.Error("An unhandled exception was caught by HttpNetworkStream.Read in the OnProgress event.", e);
+                    throw;
+                }
+            }
+
+            return retVal;
+        }
+
         public void ReadAsync(byte[] buffer, int offset, int count)
         {
             StreamAsyncEventArgs args = new StreamAsyncEventArgs();

@@ -103,7 +103,7 @@ namespace OpenDMS.Networking.Http
             int bytesRead = 0;
 
             // is our position within the _buffer?
-            if (_bufferToPrepend != null && 
+            if (_bufferToPrepend != null &&
                 _bufferToPrependPosition < _bufferToPrepend.Length)
             {
                 // Close frame to remaining bytes of _buffer if < count
@@ -128,6 +128,25 @@ namespace OpenDMS.Networking.Http
             // Finish up
             bytesRead += _stream.Read(buffer, bytesRead, count - bytesRead);
             return bytesRead;
+        }
+
+        public byte ReadByte()
+        {
+            byte retVal;
+
+            // is our position within the _buffer?
+            if (_bufferToPrepend != null &&
+                _bufferToPrependPosition < _bufferToPrepend.Length)
+            {
+                retVal = _bufferToPrepend[_bufferToPrependPosition];
+                _bufferToPrependPosition++;
+                return retVal;
+            }
+
+            // If we get to here, _buffer has been read and now _stream needs used
+
+            // Finish up
+            return (byte)_stream.ReadByte();
         }
 
         public void ReadAsync(StreamAsyncEventArgs e)

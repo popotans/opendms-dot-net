@@ -1,0 +1,17 @@
+﻿ClientTesting.Ping attaches its progress reporting event to the OpenDMS.ClientLibrary.Client
+
+OpenDMS.ClientLibrary.Client attaches the progress reporting event from ClientTesting.Ping to the OpenDMS.Networking.Http.Client
+
+OpenDMS.Networking.Http.Client calls OpenDMS.Networking.Http.ConnectionManager
+
+OpenDMS.Networking.Http.ConnectionManager creates a OpenDMS.Networking.Http.Connection
+OpenDMS.Networking.Http.ConnectionManager attaches an OnConnect event handler to the OpenDMS.Networking.Http.Connection
+OpenDMS.Networking.Http.ConnectionManager calls the OpenDMS.Networking.Http.Connection.ConnectAsync method
+
+OpenDMS.Networking.Http.Connection.ConnectAsync fires the OpenDMS.Networking.Http.ConnectionManager.Connection_OnConnect (event handler) method
+
+OpenDMS.Networking.Http.ConnectionManager.Connection_OnConnect (event handler) then fires the OpenDMS.Networking.Http.Client.ConnectionManager_OnConnected (event handler) method
+OpenDMS.Networking.Http.Client.ConnectionManager_OnConnected (event handler) method attaches the its progress event handler
+	(called Connection_OnProgress) to the OpenDMS.Networking.Http.Connection
+
+OpenDMS.Networking.Http.Client then sends the request.
