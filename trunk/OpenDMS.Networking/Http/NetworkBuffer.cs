@@ -35,6 +35,12 @@ namespace OpenDMS.Networking.Http
             set { _buffer[index] = value; }
         }
 
+        public byte this[long index]
+        {
+            get { return _buffer[index]; }
+            set { _buffer[index] = value; }
+        }
+
 		#endregion Properties 
 
 		#region Methods (2) 

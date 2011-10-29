@@ -41,6 +41,8 @@ namespace OpenDMS.HttpModule
                 _handler.Init();
             }
 
+            // Need to look into using Async so more requests can be handled at once
+            //app.AddOnBeginRequestAsync(new BeginEventHandler(BeginRequest), new EndEventHandler(EndBeginRequest));
             app.BeginRequest += new EventHandler(OnBeginRequest);
         }
 
