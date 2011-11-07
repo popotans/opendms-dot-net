@@ -2,11 +2,11 @@
 
 namespace OpenDMS.Networking.Protocols.Tcp
 {
-    public class ConnectionAsyncEventArgs
+    public class TcpConnectionAsyncEventArgs
     {
         private Timeout _timeout = null;
 
-        public ConnectionAsyncEventArgs(Timeout timeout)
+        public TcpConnectionAsyncEventArgs(Timeout timeout)
         {
             _timeout = timeout;
         }

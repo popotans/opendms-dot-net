@@ -3,7 +3,7 @@ using System.IO;
 
 namespace OpenDMS.Networking.Protocols.Http.Interceptors
 {
-    public abstract class HttpNetworkStreamInterceptorBase 
+    public abstract class InterceptorBase 
         : IStreamInterceptor
     {
         protected HttpNetworkStream _inputStream;
@@ -11,11 +11,6 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
         public virtual bool CanRead
         {
             get { return _inputStream.CanRead; }
-        }
-
-        public virtual bool CanSeek
-        {
-            get { return _inputStream.CanSeek; }
         }
 
         public virtual bool CanWrite
@@ -26,36 +21,32 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
         public abstract long Position
         {
             get { throw new NotImplementedException(); }
+            protected set { throw new NotImplementedException(); }
         }
 
-        public HttpNetworkStreamInterceptorBase(HttpNetworkStream inputStream)
+        public InterceptorBase(HttpNetworkStream inputStream)
         {
             _inputStream = inputStream;
         }
 
-        public abstract int Read(byte[] buffer, int length)
+        public virtual int Read(byte[] buffer, int offset, int length)
         {
             throw new NotImplementedException();
         }
 
-        public abstract void Write(byte[] buffer, int length)
+        public virtual void Write(byte[] buffer, int offset, int length)
         {
             throw new NotImplementedException();
         }
 
-        public abstract void Flush()
+        public virtual void Flush()
         {
             throw new NotImplementedException();
         }
 
-        public abstract void Close()
+        public virtual void Dispose()
         {
-            throw new NotImplementedException();
-        }
-
-        public abstract void Dispose()
-        {
-            throw new NotImplementedException();
+            // Notice that we neither close nor dispose our _inputStream
         }
     }
 }
