@@ -1,32 +1,29 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
 
 namespace OpenDMS.Networking.Protocols.Http
 {
     public class HttpNetworkStream : Stream
     {
-        public enum Direction
+        public enum DirectionType
         {
             None = 0,
             Upload = 1,
             Download = 2
         }
 
-        private List<Interceptors.IStreamInterceptor> _interceptors;
-        private Direction _direction;
+        public DirectionType Direction { get; private set; }
 
-        public HttpNetworkStream(Direction direction)
+        public HttpNetworkStream(DirectionType direction)
         {
-            _interceptors = new List<Interceptors.IStreamInterceptor>();
-            _direction = direction;
+            Direction = direction;
         }
 
         public override bool CanRead
         {
             get 
             {
-                if (_direction == Direction.Upload) return true;
+                if (Direction == DirectionType.Upload) return true;
                 else return false;
             }
         }
@@ -35,7 +32,7 @@ namespace OpenDMS.Networking.Protocols.Http
         {
             get
             {
-                if (_direction == Direction.Upload) return true;
+                if (Direction == DirectionType.Upload) return true;
                 else return false;
             }
         }
@@ -44,7 +41,7 @@ namespace OpenDMS.Networking.Protocols.Http
         {
             get
             {
-                if (_direction == Direction.Download) return true;
+                if (Direction == DirectionType.Download) return true;
                 else return false;
             }
         }
@@ -73,15 +70,7 @@ namespace OpenDMS.Networking.Protocols.Http
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (offset != 0)
-                throw new ArgumentException("Offset must be 0");
 
-            for (int i = 0; i < _interceptors.Count; i++)
-            {
-                // Need to watch for overflow and underflow
-                // Probably should make an InterceptorChain class to handle this.
-                _interceptors[i].Read(buffer, count);
-            }
         }
 
         public override long Seek(long offset, SeekOrigin origin)

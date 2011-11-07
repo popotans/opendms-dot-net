@@ -4,11 +4,11 @@ using System.Net.Sockets;
 
 namespace OpenDMS.Networking.Protocols.Tcp
 {
-    public class Connection
+    public class TcpConnection
     {
-        public delegate void ConnectionDelegate(Connection sender);
-        public delegate void ReceiveDelegate(Connection sender, byte[] buffer, int offset, int length);
-        public delegate void ErrorDelegate(Connection sender, string message, Exception exception);
+        public delegate void ConnectionDelegate(TcpConnection sender);
+        public delegate void ReceiveDelegate(TcpConnection sender, byte[] buffer, int offset, int length);
+        public delegate void ErrorDelegate(TcpConnection sender, string message, Exception exception);
 
         public event ConnectionDelegate OnConnect;
         public event ConnectionDelegate OnDisconnect;
@@ -25,7 +25,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
         public Params.Buffer SendBuffer { get; set; }
         public bool IsConnected { get { return (_socket != null && _socket.Connected); } }
 
-        public Connection(Params.Connection param)
+        public TcpConnection(Params.Connection param)
         {
             EndPoint = param.EndPoint;
             ReceiveBuffer = param.ReceiveBuffer;
@@ -76,7 +76,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
                     RemoteEndPoint = EndPoint
                 };
                 socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(Connect_Completed);
-                socketArgs.UserToken = new ConnectionAsyncEventArgs(new Timeout(SendBuffer.Timeout, Connect_Timeout));
+                socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBuffer.Timeout, Connect_Timeout));
 
                 Logger.Network.Debug("Connecting to " + EndPoint.Address.ToString() + " on " + EndPoint.Port.ToString() + "...");
 
@@ -134,7 +134,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
         private void Connect_Completed(object sender, SocketAsyncEventArgs e)
         {
-            ConnectionAsyncEventArgs args = (ConnectionAsyncEventArgs)e.UserToken;
+            TcpConnectionAsyncEventArgs args = (TcpConnectionAsyncEventArgs)e.UserToken;
 
             if (!TryStopTimeout(e.UserToken))
                 return;
@@ -153,13 +153,13 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
         private bool TryStopTimeout(object obj)
         {
-            if (obj.GetType() != typeof(ConnectionAsyncEventArgs))
+            if (obj.GetType() != typeof(TcpConnectionAsyncEventArgs))
                 throw new ArgumentException("Argument must be of type ConnectionAsyncEventArgs");
 
-            return TryStopTimeout((ConnectionAsyncEventArgs)obj);
+            return TryStopTimeout((TcpConnectionAsyncEventArgs)obj);
         }
 
-        private bool TryStopTimeout(ConnectionAsyncEventArgs userToken)
+        private bool TryStopTimeout(TcpConnectionAsyncEventArgs userToken)
         {
             try
             {
@@ -188,7 +188,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
                 socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(Close_Completed);
                 lock (_socket)
                 {
-                    socketArgs.UserToken = new ConnectionAsyncEventArgs(new Timeout(SendBuffer.Timeout, Close_Timeout));
+                    socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBuffer.Timeout, Close_Timeout));
 
                     Logger.Network.Debug("Disconnecting the socket and closing...");
 
@@ -261,7 +261,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
             socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(SendAsync_Completed);
             socketArgs.SetBuffer(buffer, offset, length);
-            socketArgs.UserToken = new ConnectionAsyncEventArgs(new Timeout(SendBuffer.Timeout, SendAsync_Timeout));
+            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBuffer.Timeout, SendAsync_Timeout));
             
             lock (_socket)
             {
@@ -284,7 +284,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
         private void SendAsync_Completed(object sender, SocketAsyncEventArgs e)
         {
-            ConnectionAsyncEventArgs userToken = (ConnectionAsyncEventArgs)e.UserToken;
+            TcpConnectionAsyncEventArgs userToken = (TcpConnectionAsyncEventArgs)e.UserToken;
 
             if (!TryStopTimeout(userToken))
                 return;
@@ -303,7 +303,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
             SocketAsyncEventArgs socketArgs = new SocketAsyncEventArgs();
             socketArgs.SetBuffer(new byte[ReceiveBuffer.Size], 0, ReceiveBuffer.Size);
             socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveAsync_Completed);
-            socketArgs.UserToken = new ConnectionAsyncEventArgs(new Timeout(ReceiveBuffer.Timeout, ReceiveAsync_Timeout));
+            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(ReceiveBuffer.Timeout, ReceiveAsync_Timeout));
             
             try
             {
@@ -329,7 +329,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
         private void ReceiveAsync_Completed(object sender, SocketAsyncEventArgs e)
         {
-            ConnectionAsyncEventArgs userToken = (ConnectionAsyncEventArgs)e.UserToken;
+            TcpConnectionAsyncEventArgs userToken = (TcpConnectionAsyncEventArgs)e.UserToken;
 
             if (!TryStopTimeout(userToken))
                 return;
