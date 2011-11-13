@@ -53,5 +53,10 @@ namespace OpenDMS.Networking.Protocols.Http
 
             return rl;
         }
+
+        public override string ToString()
+        {
+            return Method.MethodName + " " + RequestUri.AbsolutePath + " " + HttpVersion;
+        }
     }
 }

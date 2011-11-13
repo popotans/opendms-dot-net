@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
@@ -7,29 +8,30 @@ namespace OpenDMS.Networking.Protocols.Tcp
     public class TcpConnection
     {
         public delegate void ConnectionDelegate(TcpConnection sender);
-        public delegate void ReceiveDelegate(TcpConnection sender, byte[] buffer, int offset, int length);
         public delegate void ErrorDelegate(TcpConnection sender, string message, Exception exception);
+        public delegate void ProgressDelegate(TcpConnection sender, DirectionType direction, int packetSize);
 
         public event ConnectionDelegate OnConnect;
         public event ConnectionDelegate OnDisconnect;
-        public event ConnectionDelegate OnSendComplete;
-        public event ReceiveDelegate OnReceiveComplete;
         public event ErrorDelegate OnError;
         public event ConnectionDelegate OnTimeout;
+        public event ProgressDelegate OnProgress;
 
         private Socket _socket;
-        private System.IO.Stream _streamToSend;
+        private Stream _streamToSend;
+        private ulong _bytesReceivedTotal = 0;
+        private ulong _bytesSentTotal = 0;
 
         public IPEndPoint EndPoint { get; set; }
-        public Params.Buffer ReceiveBuffer { get; set; }
-        public Params.Buffer SendBuffer { get; set; }
+        public Params.Buffer ReceiveBufferSettings { get; set; }
+        public Params.Buffer SendBufferSettings { get; set; }
         public bool IsConnected { get { return (_socket != null && _socket.Connected); } }
 
         public TcpConnection(Params.Connection param)
         {
             EndPoint = param.EndPoint;
-            ReceiveBuffer = param.ReceiveBuffer;
-            SendBuffer = param.SendBuffer;
+            ReceiveBufferSettings = param.ReceiveBuffer;
+            SendBufferSettings = param.SendBuffer;
         }
 
         public void ConnectAsync()
@@ -53,10 +55,10 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
             try
             {
-                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, SendBuffer.Timeout);
-                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, ReceiveBuffer.Timeout);
-                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, SendBuffer.Size);
-                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, ReceiveBuffer.Size);
+                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, SendBufferSettings.Timeout);
+                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, ReceiveBufferSettings.Timeout);
+                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, SendBufferSettings.Size);
+                _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, ReceiveBufferSettings.Size);
             }
             catch (Exception e)
             {
@@ -76,7 +78,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
                     RemoteEndPoint = EndPoint
                 };
                 socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(Connect_Completed);
-                socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBuffer.Timeout, Connect_Timeout));
+                socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, Connect_Timeout));
 
                 Logger.Network.Debug("Connecting to " + EndPoint.Address.ToString() + " on " + EndPoint.Port.ToString() + "...");
 
@@ -188,7 +190,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
                 socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(Close_Completed);
                 lock (_socket)
                 {
-                    socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBuffer.Timeout, Close_Timeout));
+                    socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, Close_Timeout));
 
                     Logger.Network.Debug("Disconnecting the socket and closing...");
 
@@ -250,18 +252,96 @@ namespace OpenDMS.Networking.Protocols.Tcp
             CloseSocketAndTimeout();
         }
 
+        public void SendAsync(System.IO.Stream stream)
+        {
+            if (!IsConnected)
+                throw new TcpConnectionException("Socket is closed or not ready");
+
+            byte[] buffer;
+            int bytesRead = 0;
+            SocketAsyncEventArgs socketArgs;
+
+            socketArgs = new SocketAsyncEventArgs();
+            socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(SendAsyncStream_Completed);
+
+            bytesRead = GetBytesFromStream(stream, out buffer, SendBufferSettings.Size);
+            socketArgs.SetBuffer(buffer, 0, bytesRead);
+            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, SendAsync_Timeout), stream);
+
+            lock (_socket)
+            {
+                try
+                {
+                    if (!_socket.SendAsync(socketArgs))
+                    {
+                        Logger.Network.Debug("SendAsync completed synchronously.");
+                        SendAsync_Completed(null, socketArgs);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Network.Error("An exception occurred while sending on socket.", ex);
+                    if (OnError != null) OnError(this, "Exception sending on socket.", ex);
+                    else throw;
+                }
+            }
+        }
+
+        private int GetBytesFromStream(System.IO.Stream stream, out byte[] buffer, int length)
+        {
+            buffer = new byte[length];
+            return stream.Read(buffer, 0, length);
+        }
+
+        private void SendAsyncStream_Completed(object sender, SocketAsyncEventArgs e)
+        {
+            e.Completed -= SendAsyncStream_Completed;
+
+            byte[] buffer;
+            int bytesRead = 0;
+            TcpConnectionAsyncEventArgs userToken = (TcpConnectionAsyncEventArgs)e.UserToken;
+
+            if (!TryStopTimeout(userToken))
+                return;
+
+            _bytesSentTotal += (ulong)e.BytesTransferred;
+            if (OnProgress != null) OnProgress(this, DirectionType.Upload, e.BytesTransferred);
+
+            bytesRead = GetBytesFromStream(userToken.Stream, out buffer, SendBufferSettings.Size);
+            e.SetBuffer(buffer, 0, bytesRead);
+            e.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, SendAsync_Timeout), userToken.Stream);
+
+            lock (_socket)
+            {
+                try
+                {
+                    if (!_socket.SendAsync(e))
+                    {
+                        Logger.Network.Debug("SendAsyncStream_Completed completed synchronously.");
+                        SendAsync_Completed(null, e);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Network.Error("An exception occurred while sending on socket.", ex);
+                    if (OnError != null) OnError(this, "Exception sending on socket.", ex);
+                    else throw;
+                }
+            }
+        }
+
         public void SendAsync(byte[] buffer, int offset, int length)
         {
             if (!IsConnected)
                 throw new TcpConnectionException("Socket is closed or not ready");
-            if (length > SendBuffer.Size)
+            if (length > SendBufferSettings.Size)
                 throw new TcpConnectionException("Length must be less than or equal to the size of the send buffer.");
 
             SocketAsyncEventArgs socketArgs = new SocketAsyncEventArgs();
 
             socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(SendAsync_Completed);
             socketArgs.SetBuffer(buffer, offset, length);
-            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBuffer.Timeout, SendAsync_Timeout));
+            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, SendAsync_Timeout));
             
             lock (_socket)
             {
@@ -284,12 +364,14 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
         private void SendAsync_Completed(object sender, SocketAsyncEventArgs e)
         {
+            e.Completed -= SendAsyncStream_Completed;
             TcpConnectionAsyncEventArgs userToken = (TcpConnectionAsyncEventArgs)e.UserToken;
 
             if (!TryStopTimeout(userToken))
                 return;
 
-            if (OnSendComplete != null) OnSendComplete(this);
+            _bytesSentTotal += (ulong)e.BytesTransferred;
+            if (OnProgress != null) OnProgress(this, DirectionType.Upload, e.BytesTransferred);
         }
 
         private void SendAsync_Timeout()
@@ -301,9 +383,9 @@ namespace OpenDMS.Networking.Protocols.Tcp
         public void ReceiveAsync()
         {
             SocketAsyncEventArgs socketArgs = new SocketAsyncEventArgs();
-            socketArgs.SetBuffer(new byte[ReceiveBuffer.Size], 0, ReceiveBuffer.Size);
+            socketArgs.SetBuffer(new byte[ReceiveBufferSettings.Size], 0, ReceiveBufferSettings.Size);
             socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveAsync_Completed);
-            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(ReceiveBuffer.Timeout, ReceiveAsync_Timeout));
+            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(ReceiveBufferSettings.Timeout, ReceiveAsync_Timeout));
             
             try
             {
@@ -334,7 +416,8 @@ namespace OpenDMS.Networking.Protocols.Tcp
             if (!TryStopTimeout(userToken))
                 return;
 
-            if (OnReceiveComplete != null) OnReceiveComplete(this, e.Buffer, e.Offset, e.Count);
+            _bytesReceivedTotal += (ulong)e.BytesTransferred;
+            if (OnProgress != null) OnProgress(this, DirectionType.Download, e.BytesTransferred);
         }
     }
 }
