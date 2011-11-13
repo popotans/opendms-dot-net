@@ -50,5 +50,21 @@ namespace OpenDMS.Networking.Protocols.Http.Message
                 else Add(new Token(key), value);
             }
         }
+
+        public override string ToString()
+        {
+            Dictionary<Token, string>.Enumerator en;
+            string output = "";
+
+            en = GetEnumerator();
+
+            while (en.MoveNext())
+            {
+                output += en.Current.Key.Value + ": " + en.Current.Value + "\r\n";
+            }
+
+            // trim off the last \r\n
+            return output.Substring(0, output.Length - 2);
+        }
     }
 }

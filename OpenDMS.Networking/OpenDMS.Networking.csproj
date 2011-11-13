@@ -103,6 +103,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocols\Http\Client.cs" />
     <Compile Include="Protocols\Http\HttpConnection.cs" />
+    <Compile Include="Protocols\Http\HttpConnectionException.cs" />
     <Compile Include="Protocols\Http\HttpConnectionFactory.cs" />
     <Compile Include="Protocols\Http\HttpNetworkStream.cs" />
     <Compile Include="Protocols\Http\HttpNetworkStreamException.cs" />
@@ -140,6 +141,7 @@
     <Compile Include="Protocols\Http\RequestLine.cs" />
     <Compile Include="Protocols\Http\Response.cs" />
     <Compile Include="Protocols\Http\StatusLine.cs" />
+    <Compile Include="Protocols\Tcp\DirectionType.cs" />
     <Compile Include="Protocols\Tcp\TcpConnection.cs" />
     <Compile Include="Protocols\Tcp\TcpConnectionAsyncEventArgs.cs" />
     <Compile Include="Protocols\Tcp\Params\Buffer.cs" />

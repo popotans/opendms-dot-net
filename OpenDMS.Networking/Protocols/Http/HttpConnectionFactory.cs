@@ -30,7 +30,21 @@ namespace OpenDMS.Networking.Protocols.Http
                 }
                 else
                 {
-                    conn = new HttpConnection(
+                    conn = new HttpConnection(uri, sendTimeout, receiveTimeout, sendBufferSize, receiveBufferSize);
+                    _httpConnections.Add(uri, conn);
+                }
+            }
+
+            return conn;
+        }
+
+        public void ReleaseConnection(HttpConnection connection)
+        {
+            lock (_httpConnections)
+            {
+                if (_httpConnections.ContainsKey(connection.Uri))
+                {
+                    _httpConnections.Remove(connection.Uri);
                 }
             }
         }
