@@ -18,7 +18,7 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
             get { return _inputStream.CanWrite; }
         }
 
-        public abstract long Position
+        public virtual long Position
         {
             get { throw new NotImplementedException(); }
             protected set { throw new NotImplementedException(); }

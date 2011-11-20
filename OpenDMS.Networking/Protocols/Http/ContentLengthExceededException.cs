@@ -1,10 +1,10 @@
-using System;
+ï»¿using System;
 
-namespace OpenDMS.Networking.Http
+namespace OpenDMS.Networking.Protocols.Http
 {
     public class ContentLengthExceededException : Exception
     {
-		#region Constructors (2) 
+		#regionÂ ConstructorsÂ (3)Â 
 
         public ContentLengthExceededException(string message, Exception innerException)
             : base(message, innerException)
@@ -16,6 +16,11 @@ namespace OpenDMS.Networking.Http
         {
         }
 
-		#endregion Constructors 
+        public ContentLengthExceededException()
+            : base()
+        {
+        }
+
+		#endregionÂ ConstructorsÂ 
     }
 }

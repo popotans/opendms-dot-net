@@ -10,7 +10,7 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
         public override long Position
         {
             get;
-            private set;
+            protected set;
         }
 
         public ChunkedEncodingInterceptor(HttpNetworkStream inputStream)
@@ -19,7 +19,7 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
             Position = 0;
         }
 
-        private int Read(byte[] buffer, int offset, int length)
+        public override int Read(byte[] buffer, int offset, int length)
         {
             bool atEoS;
             int bytesRead = 0;

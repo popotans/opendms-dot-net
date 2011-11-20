@@ -1,18 +1,18 @@
-using System.Timers;
+ï»¿using System.Timers;
 
-namespace OpenDMS.Networking.Http
+namespace OpenDMS.Networking.Protocols
 {
     public class Timeout
     {
-		#region Fields (3) 
+        #regionÂ FieldsÂ (3)
 
         private int _milliseconds;
         private TimeoutEvent _onTimeout;
         private Timer _timer;
 
-		#endregion Fields 
+        #endregionÂ Fields
 
-		#region Constructors (2) 
+        #regionÂ ConstructorsÂ (2)
 
         public Timeout(int milliseconds, TimeoutEvent onTimeout)
             : this(milliseconds)
@@ -27,22 +27,22 @@ namespace OpenDMS.Networking.Http
             _timer.Elapsed += new ElapsedEventHandler(Timer_Elapsed);
         }
 
-		#endregion Constructors 
+        #endregionÂ Constructors
 
-		#region Delegates and Events (2) 
+        #regionÂ DelegatesÂ andÂ EventsÂ (2)
 
-		// Delegates (1) 
+        //Â DelegatesÂ (1)Â 
 
         public delegate void TimeoutEvent();
-		// Events (1) 
+        //Â EventsÂ (1)Â 
 
         public event TimeoutEvent OnTimeout;
 
-		#endregion Delegates and Events 
+        #endregionÂ DelegatesÂ andÂ Events
 
-		#region Methods (4) 
+        #regionÂ MethodsÂ (4)
 
-		// Public Methods (3) 
+        //Â PublicÂ MethodsÂ (3)Â 
 
         public void Renew()
         {
@@ -60,7 +60,7 @@ namespace OpenDMS.Networking.Http
         {
             _timer.Stop();
         }
-		// Private Methods (1) 
+        //Â PrivateÂ MethodsÂ (1)Â 
 
         void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
@@ -70,6 +70,6 @@ namespace OpenDMS.Networking.Http
             if (OnTimeout != null) OnTimeout();
         }
 
-		#endregion Methods 
+        #endregionÂ Methods
     }
 }

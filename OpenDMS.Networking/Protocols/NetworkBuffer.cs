@@ -1,16 +1,16 @@
-using System;
+ï»¿using System;
 
-namespace OpenDMS.Networking.Http
+namespace OpenDMS.Networking.Protocols
 {
     public class NetworkBuffer
     {
-		#region Fields (1) 
+        #regionÂ FieldsÂ (1)
 
         private byte[] _buffer = null;
 
-		#endregion Fields 
+        #endregionÂ Fields
 
-		#region Constructors (2) 
+        #regionÂ ConstructorsÂ (2)
 
         public NetworkBuffer(byte[] bytes)
         {
@@ -21,9 +21,9 @@ namespace OpenDMS.Networking.Http
         {
         }
 
-		#endregion Constructors 
+        #endregionÂ Constructors
 
-		#region Properties (3) 
+        #regionÂ PropertiesÂ (3)
 
         public byte[] Buffer { get { return _buffer; } }
 
@@ -41,11 +41,11 @@ namespace OpenDMS.Networking.Http
             set { _buffer[index] = value; }
         }
 
-		#endregion Properties 
+        #endregionÂ Properties
 
-		#region Methods (2) 
+        #regionÂ MethodsÂ (2)
 
-		// Public Methods (2) 
+        //Â PublicÂ MethodsÂ (2)Â 
 
         public void CopyTo(byte[] buffer, int offset, int length)
         {
@@ -70,6 +70,6 @@ namespace OpenDMS.Networking.Http
             return new NetworkBuffer(newBuffer);
         }
 
-		#endregion Methods 
+        #endregionÂ MethodsÂ 
     }
 }

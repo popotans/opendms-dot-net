@@ -4,7 +4,7 @@ namespace OpenDMS.Networking.Protocols.Http.Message
 {
     public class ContentMd5Header : Header
     {
-        public static override string NAME { get { return "Content-MD5"; } }
+        public static new string NAME { get { return "Content-MD5"; } }
 
         /// <summary>
         /// 

@@ -4,7 +4,7 @@ namespace OpenDMS.Networking.Protocols.Http.Message
 {
     public class Header
     {
-        public abstract static string NAME { get; }
+        public static string NAME { get { return "NULL"; } }
 
         public Token Name { get; set; }
         public string Value { get; set; }

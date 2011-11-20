@@ -74,34 +74,10 @@
     <Compile Include="Api\Responses\Pong.cs" />
     <Compile Include="Api\Responses\Response.cs" />
     <Compile Include="Api\Responses\ResponseBase.cs" />
-    <Compile Include="Http\AsyncUserToken.cs" />
-    <Compile Include="Http\Client.cs" />
-    <Compile Include="Http\CompleteNotImplementedException.cs" />
-    <Compile Include="Http\Connection.cs" />
-    <Compile Include="Http\ConnectionManager.cs" />
-    <Compile Include="Http\ContentLengthExceededException.cs" />
-    <Compile Include="Http\DirectionType.cs" />
-    <Compile Include="Http\ErrorNotImplementedException.cs" />
-    <Compile Include="Http\Header.cs" />
-    <Compile Include="Http\HeadersManager.cs" />
-    <Compile Include="Http\HttpNetworkException.cs" />
-    <Compile Include="Http\HttpNetworkStream.cs" />
-    <Compile Include="Http\Methods\Delete.cs" />
-    <Compile Include="Http\Methods\Get.cs" />
-    <Compile Include="Http\Methods\Head.cs" />
-    <Compile Include="Http\Methods\MessageBase.cs" />
-    <Compile Include="Http\Methods\Post.cs" />
-    <Compile Include="Http\Methods\Put.cs" />
-    <Compile Include="Http\Methods\Request.cs" />
-    <Compile Include="Http\Methods\Response.cs" />
-    <Compile Include="Http\NetworkBuffer.cs" />
-    <Compile Include="Http\PrependableNetworkStream.cs" />
-    <Compile Include="Http\StreamAsyncEventArgs.cs" />
-    <Compile Include="Http\Timeout.cs" />
-    <Compile Include="Http\UnsupportedException.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocols\Http\Client.cs" />
+    <Compile Include="Protocols\Http\ContentLengthExceededException.cs" />
     <Compile Include="Protocols\Http\HttpConnection.cs" />
     <Compile Include="Protocols\Http\HttpConnectionException.cs" />
     <Compile Include="Protocols\Http\HttpConnectionFactory.cs" />
@@ -140,7 +116,11 @@
     <Compile Include="Protocols\Http\Request.cs" />
     <Compile Include="Protocols\Http\RequestLine.cs" />
     <Compile Include="Protocols\Http\Response.cs" />
+    <Compile Include="Protocols\Http\ResponseBuilder.cs" />
     <Compile Include="Protocols\Http\StatusLine.cs" />
+    <Compile Include="Protocols\NetworkBuffer.cs" />
+    <Compile Include="Protocols\PrependableNetworkStream.cs" />
+    <Compile Include="Protocols\StreamAsyncEventArgs.cs" />
     <Compile Include="Protocols\Tcp\DirectionType.cs" />
     <Compile Include="Protocols\Tcp\TcpConnection.cs" />
     <Compile Include="Protocols\Tcp\TcpConnectionAsyncEventArgs.cs" />
@@ -148,6 +128,7 @@
     <Compile Include="Protocols\Tcp\Params\Connection.cs" />
     <Compile Include="Protocols\Tcp\TcpConnectionException.cs" />
     <Compile Include="Protocols\Tcp\Timeout.cs" />
+    <Compile Include="Protocols\Timeout.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -176,7 +157,6 @@
   <ItemGroup>
     <Content Include="libs\log4net.dll" />
     <Content Include="libs\Newtonsoft.Json.dll" />
-    <Content Include="New Network Code.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
