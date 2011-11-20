@@ -4,7 +4,7 @@ namespace OpenDMS.Networking.Protocols.Http.Message
 {
     public class ContentLengthHeader : Header
     {
-        public static override string NAME { get { return "Content-Length"; } }
+        public static new string NAME { get { return "Content-Length"; } }
 
         public ContentLengthHeader(int value)
             : base(new Token(NAME), value.ToString())

@@ -10,6 +10,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
         public delegate void ConnectionDelegate(TcpConnection sender);
         public delegate void ErrorDelegate(TcpConnection sender, string message, Exception exception);
         public delegate void ProgressDelegate(TcpConnection sender, DirectionType direction, int packetSize);
+        public delegate void AsyncCallback(TcpConnection sender, TcpConnectionAsyncEventArgs e);
 
         public event ConnectionDelegate OnConnect;
         public event ConnectionDelegate OnDisconnect;
@@ -26,6 +27,8 @@ namespace OpenDMS.Networking.Protocols.Tcp
         public Params.Buffer ReceiveBufferSettings { get; set; }
         public Params.Buffer SendBufferSettings { get; set; }
         public bool IsConnected { get { return (_socket != null && _socket.Connected); } }
+        public int BytesAvailable { get { return _socket.Available; } }
+        public Socket Socket { get { return _socket; } }
 
         public TcpConnection(Params.Connection param)
         {
@@ -252,7 +255,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
             CloseSocketAndTimeout();
         }
 
-        public void SendAsync(System.IO.Stream stream)
+        public void SendAsync(System.IO.Stream stream, AsyncCallback callback)
         {
             if (!IsConnected)
                 throw new TcpConnectionException("Socket is closed or not ready");
@@ -266,7 +269,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
             bytesRead = GetBytesFromStream(stream, out buffer, SendBufferSettings.Size);
             socketArgs.SetBuffer(buffer, 0, bytesRead);
-            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, SendAsync_Timeout), stream);
+            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, SendAsync_Timeout), stream, callback);
 
             lock (_socket)
             {
@@ -275,7 +278,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
                     if (!_socket.SendAsync(socketArgs))
                     {
                         Logger.Network.Debug("SendAsync completed synchronously.");
-                        SendAsync_Completed(null, socketArgs);
+                        SendAsyncStream_Completed(null, socketArgs);
                     }
                 }
                 catch (Exception ex)
@@ -308,6 +311,17 @@ namespace OpenDMS.Networking.Protocols.Tcp
             if (OnProgress != null) OnProgress(this, DirectionType.Upload, e.BytesTransferred);
 
             bytesRead = GetBytesFromStream(userToken.Stream, out buffer, SendBufferSettings.Size);
+
+            if (bytesRead <= 0)
+            {
+                if (userToken.AsyncCallback != null)
+                {
+                    userToken.BytesTransferred = e.BytesTransferred;
+                    userToken.AsyncCallback(this, userToken);
+                }
+                return;
+            }
+
             e.SetBuffer(buffer, 0, bytesRead);
             e.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, SendAsync_Timeout), userToken.Stream);
 
@@ -318,7 +332,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
                     if (!_socket.SendAsync(e))
                     {
                         Logger.Network.Debug("SendAsyncStream_Completed completed synchronously.");
-                        SendAsync_Completed(null, e);
+                        SendAsyncStream_Completed(null, e);
                     }
                 }
                 catch (Exception ex)
@@ -330,7 +344,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
             }
         }
 
-        public void SendAsync(byte[] buffer, int offset, int length)
+        public void SendAsync(byte[] buffer, int offset, int length, AsyncCallback callback)
         {
             if (!IsConnected)
                 throw new TcpConnectionException("Socket is closed or not ready");
@@ -341,7 +355,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
             socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(SendAsync_Completed);
             socketArgs.SetBuffer(buffer, offset, length);
-            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, SendAsync_Timeout));
+            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, SendAsync_Timeout), callback);
             
             lock (_socket)
             {
@@ -372,6 +386,12 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
             _bytesSentTotal += (ulong)e.BytesTransferred;
             if (OnProgress != null) OnProgress(this, DirectionType.Upload, e.BytesTransferred);
+
+            if (userToken.AsyncCallback != null)
+            {
+                userToken.BytesTransferred = e.BytesTransferred;
+                userToken.AsyncCallback(this, userToken);
+            }
         }
 
         private void SendAsync_Timeout()
@@ -380,13 +400,16 @@ namespace OpenDMS.Networking.Protocols.Tcp
             CloseSocketAndTimeout();
         }
 
-        public void ReceiveAsync()
+        public void ReceiveAsync(AsyncCallback callback, object state)
         {
             SocketAsyncEventArgs socketArgs = new SocketAsyncEventArgs();
             socketArgs.SetBuffer(new byte[ReceiveBufferSettings.Size], 0, ReceiveBufferSettings.Size);
             socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(ReceiveAsync_Completed);
-            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(ReceiveBufferSettings.Timeout, ReceiveAsync_Timeout));
-            
+            socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(ReceiveBufferSettings.Timeout, ReceiveAsync_Timeout), callback) 
+            { 
+                UserToken = state 
+            };
+
             try
             {
                 if (!_socket.ReceiveAsync(socketArgs))
@@ -401,6 +424,11 @@ namespace OpenDMS.Networking.Protocols.Tcp
                 if (OnError != null) OnError(this, "Exception receiving from socket.", e);
                 else throw;
             }
+        }
+
+        public void ReceiveAsync(AsyncCallback callback)
+        {
+            ReceiveAsync(callback, null);
         }
 
         private void ReceiveAsync_Timeout()
@@ -418,6 +446,14 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
             _bytesReceivedTotal += (ulong)e.BytesTransferred;
             if (OnProgress != null) OnProgress(this, DirectionType.Download, e.BytesTransferred);
+
+            if (userToken.AsyncCallback != null)
+            {
+                userToken.BytesTransferred = e.BytesTransferred;
+                userToken.Buffer = e.Buffer;
+                userToken.Length = e.Count;
+                userToken.AsyncCallback(this, userToken);
+            }
         }
     }
 }

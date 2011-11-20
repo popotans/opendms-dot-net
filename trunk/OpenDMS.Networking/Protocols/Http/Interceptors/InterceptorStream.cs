@@ -4,6 +4,7 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
 {
     public class InterceptorStream : Stream
     {
+        private long _length;
         private InterceptorBase _interceptor;
 
         public override bool CanRead
@@ -23,14 +24,13 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
 
         public override long Length
         {
-            get;
-            private set;
+            get { return _length; }
         }
 
         public override long Position
         {
             get;
-            private set;
+            set;
         }
 
         public InterceptorStream(InterceptorBase interceptor)
@@ -58,7 +58,7 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
 
         public override void SetLength(long value)
         {
-            throw new NotImplementedException();
+            _length = value;
         }
 
         public override void Write(byte[] buffer, int offset, int count)

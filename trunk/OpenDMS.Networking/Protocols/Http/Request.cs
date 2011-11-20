@@ -8,6 +8,11 @@ namespace OpenDMS.Networking.Protocols.Http
     {
         public RequestLine RequestLine { get; set; }
 
+        public Request(Methods.Base method, Uri uri)
+        {
+            RequestLine = new RequestLine() { HttpVersion = "HTTP/1.1", Method = method, RequestUri = uri };
+        }
+
         public MemoryStream MakeRequestLineAndHeadersStream()
         {
             Message.HostHeader hostHeader;

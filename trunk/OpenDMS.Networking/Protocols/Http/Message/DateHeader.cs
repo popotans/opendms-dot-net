@@ -4,7 +4,7 @@ namespace OpenDMS.Networking.Protocols.Http.Message
 {
     public class DateHeader : Header
     {
-        public static override string NAME { get { return "Date"; } }
+        public static new string NAME { get { return "Date"; } }
 
         public DateHeader(DateTime value)
             : base(new Token(NAME), value.ToString("r"))

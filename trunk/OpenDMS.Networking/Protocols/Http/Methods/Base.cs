@@ -4,7 +4,7 @@ namespace OpenDMS.Networking.Protocols.Http.Methods
 {
     public abstract class Base
     {
-        public abstract static string METHOD { get; }
+        public static string METHOD { get { return "NULL"; } }
         public virtual string MethodName { get { return Base.METHOD; } }
     }
 }

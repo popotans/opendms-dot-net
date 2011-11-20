@@ -6,5 +6,11 @@ namespace OpenDMS.Networking.Protocols.Http
         : Message.Base
     {
         public StatusLine StatusLine { get; set; }
+
+        public Response()
+            : base()
+        {
+            StatusLine = new StatusLine();
+        }
     }
 }

@@ -1,18 +1,18 @@
-using System;
+ï»¿using System;
 
-namespace OpenDMS.Networking.Http
+namespace OpenDMS.Networking.Protocols
 {
     public class StreamAsyncEventArgs : EventArgs, IDisposable
     {
-		#region Constructors (1) 
+        #regionÂ ConstructorsÂ (1)
 
         public StreamAsyncEventArgs()
         {
         }
 
-		#endregion Constructors 
+        #endregionÂ Constructors
 
-		#region Properties (5) 
+        #regionÂ PropertiesÂ (5)
 
         public byte[] Buffer { get; private set; }
 
@@ -24,19 +24,19 @@ namespace OpenDMS.Networking.Http
 
         public object UserToken { get; set; }
 
-		#endregion Properties 
+        #endregionÂ Properties
 
-		#region Delegates and Events (1) 
+        #regionÂ DelegatesÂ andÂ EventsÂ (1)
 
-		// Delegates (1) 
+        //Â DelegatesÂ (1)Â 
 
         public delegate void EventDelegate(StreamAsyncEventArgs e);
 
-		#endregion Delegates and Events 
+        #endregionÂ DelegatesÂ andÂ Events
 
-		#region Methods (2) 
+        #regionÂ MethodsÂ (2)
 
-		// Public Methods (2) 
+        //Â PublicÂ MethodsÂ (2)Â 
 
         public void Dispose()
         {
@@ -50,6 +50,6 @@ namespace OpenDMS.Networking.Http
             Count = count;
         }
 
-		#endregion Methods 
+        #endregionÂ MethodsÂ 
     }
 }

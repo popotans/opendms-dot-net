@@ -5,6 +5,6 @@ namespace OpenDMS.Networking.Protocols.Http.Methods
     public class Put 
         : Base
     {
-        public static override string METHOD { get { return "PUT"; } }
+        public static new string METHOD { get { return "PUT"; } }
     }
 }

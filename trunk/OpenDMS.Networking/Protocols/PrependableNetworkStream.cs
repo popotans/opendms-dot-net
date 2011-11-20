@@ -1,11 +1,11 @@
-using System;
+ï»¿using System;
 using System.Net.Sockets;
 
-namespace OpenDMS.Networking.Http
+namespace OpenDMS.Networking.Protocols
 {
     public class PrependableNetworkStream : IDisposable
     {
-		#region Fields (4) 
+        #regionÂ FieldsÂ (4)
 
         private NetworkBuffer _bufferToPrepend = null;
         private long _bufferToPrependPosition = 0;
@@ -15,9 +15,9 @@ namespace OpenDMS.Networking.Http
         // thereby, flooding memory for large streams.
         private NetworkStream _stream = null;
 
-		#endregion Fields 
+        #endregionÂ Fields
 
-		#region Constructors (2) 
+        #regionÂ ConstructorsÂ (2)
 
         public PrependableNetworkStream(Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket, byte[] bytesToPrepend)
             : this(socket, fileAccess, ownsSocket)
@@ -30,9 +30,9 @@ namespace OpenDMS.Networking.Http
             _stream = new NetworkStream(socket, fileAccess, ownsSocket);
         }
 
-		#endregion Constructors 
+        #endregionÂ Constructors
 
-		#region Properties (10) 
+        #regionÂ PropertiesÂ (10)
 
         public bool CanRead { get { return _stream.CanRead; } }
 
@@ -81,11 +81,11 @@ namespace OpenDMS.Networking.Http
 
         public int WriteTimeout { get { return _stream.WriteTimeout; } set { _stream.WriteTimeout = value; } }
 
-		#endregion Properties 
+        #endregionÂ Properties
 
-		#region Methods (8) 
+        #regionÂ MethodsÂ (8)
 
-		// Public Methods (7) 
+        //Â PublicÂ MethodsÂ (7)Â 
 
         public void Close()
         {
@@ -154,12 +154,12 @@ namespace OpenDMS.Networking.Http
             byte[] buffer = e.Buffer;
             int howManyBufferBytesToUse = 0;
             int howManyStreamBytesToUse = e.Count;
-            
-            if (_bufferToPrepend != null && 
+
+            if (_bufferToPrepend != null &&
                 _bufferToPrependPosition < _bufferToPrepend.Length)
             {
                 // If we get here, we need to do some reading from _buffer, but how much?
-                
+
                 // This gives the remaining length of _buffer (the available frame)
                 howManyBufferBytesToUse = (int)((long)_bufferToPrepend.Length - _bufferToPrependPosition);
                 // Trim the frame if it is larger than we wanted
@@ -201,10 +201,10 @@ namespace OpenDMS.Networking.Http
             StreamAsyncEventArgs e = (StreamAsyncEventArgs)result.AsyncState;
 
             _stream.EndWrite(result);
-            
+
             e.Complete(e);
         }
-		// Private Methods (1) 
+        //Â PrivateÂ MethodsÂ (1)Â 
 
         private void ReadAsync_Callback(IAsyncResult result)
         {
@@ -217,6 +217,6 @@ namespace OpenDMS.Networking.Http
             e.Complete(e);
         }
 
-		#endregion Methods 
+        #endregionÂ MethodsÂ 
     }
 }
