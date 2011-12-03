@@ -15,11 +15,14 @@ namespace OpenDMS.Networking.Protocols.Http
         public string RawStatusAndHeaders { get { return _statusAndHeaders; } }
         public byte[] RawRemainingBuffer { get { return _remainingBuffer; } }
         public bool AllHeadersReceived { get; private set; }
+        public long BytesReceived { get; private set; }
+        public long ResponseSize { get; private set; }
         
 
         public ResponseBuilder()
         {
             AllHeadersReceived = false;
+            ResponseSize = -1;
         }
 
         public void AppendAndParse(byte[] buffer, int offset, int length)
@@ -164,6 +167,9 @@ namespace OpenDMS.Networking.Protocols.Http
                 // that HttpNetworkStream... cake
 
                 byte[] newBuffer = new byte[_remainingBufferAppendPosition];
+
+                BytesReceived += e.Length - newBuffer.Length;
+                ResponseSize = BytesReceived + Response.ContentLength.Value;
                 Buffer.BlockCopy(_remainingBuffer, 0, newBuffer, 0, newBuffer.Length);
 
                 HttpNetworkStream ns = new HttpNetworkStream(HttpNetworkStream.DirectionType.Download,
@@ -172,12 +178,13 @@ namespace OpenDMS.Networking.Protocols.Http
                 if (Response.Headers.ContainsKey(new Message.ChunkedTransferEncodingHeader()))
                     Response.Body.IsChunked = true;
 
-                Response.Body.Stream = ns;
+                Response.Body.ReceiveStream = ns;
 
                 callback(this, Response);
             }
             else
             {
+                BytesReceived += e.Length;
                 sender.ReceiveAsync(ParseAndAttachToResponseBody_Callback, callback);
             }
         }

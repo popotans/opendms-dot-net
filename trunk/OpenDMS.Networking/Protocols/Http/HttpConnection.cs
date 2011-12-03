@@ -9,7 +9,7 @@ namespace OpenDMS.Networking.Protocols.Http
         private delegate void ResolverDelegate(HttpConnection sender, IPHostEntry host);
         public delegate void ConnectionDelegate(HttpConnection sender);
         public delegate void ErrorDelegate(HttpConnection sender, string message, Exception exception);
-        public delegate void ProgressDelegate(HttpConnection sender, Tcp.DirectionType direction, int packetSize);
+        public delegate void ProgressDelegate(HttpConnection sender, Tcp.DirectionType direction, int packetSize, decimal requestPercentSent, decimal responsePercentReceived);
         public delegate void CompletionDelegate(HttpConnection sender, Response response);
         
         private event ResolverDelegate OnHostResolved;
@@ -158,14 +158,27 @@ namespace OpenDMS.Networking.Protocols.Http
         {
             if (!IsConnected)
                 throw new HttpConnectionException("A network connection is not established.");
-            
+
+            Tcp.TcpConnection.ProgressDelegate onProgress;
             Tcp.TcpConnection.AsyncCallback callback;
             Stream stream;
+            long requestSize = 0;
+            long bytesSent = 0;
 
             // Make the RequestLine and Headers into a stream
             stream = request.MakeRequestLineAndHeadersStream();
+            requestSize += stream.Length;
 
-            _tcpConnection.OnProgress += new Tcp.TcpConnection.ProgressDelegate(SendRequest_OnProgress);
+            if (request.Body.SendStream != null)
+                requestSize += request.Body.SendStream.Length;
+            
+            onProgress = delegate(Tcp.TcpConnection sender, Tcp.DirectionType direction, int packetSize)
+            {
+                bytesSent += packetSize;
+                if (OnProgress != null) OnProgress(this, direction, packetSize, ((decimal)bytesSent / (decimal)requestSize), 0);
+            };
+
+            _tcpConnection.OnProgress += onProgress;
             _tcpConnection.OnError += new Tcp.TcpConnection.ErrorDelegate(SendRequest_OnError);
             _tcpConnection.OnTimeout += new Tcp.TcpConnection.ConnectionDelegate(SendRequest_OnTimeout);
 
@@ -186,7 +199,7 @@ namespace OpenDMS.Networking.Protocols.Http
 
                     _tcpConnection.OnError -= SendRequest_OnError;
                     _tcpConnection.OnTimeout -= SendRequest_OnTimeout;
-                    _tcpConnection.OnProgress -= SendRequest_OnProgress;
+                    _tcpConnection.OnProgress -= onProgress;
 
                     ReceiveResponseAsync();
                 };
@@ -200,16 +213,16 @@ namespace OpenDMS.Networking.Protocols.Http
                     if (_responseBuilder.Response == null)
                         throw new HttpNetworkStreamException("Status 100 Continue not received.");
 
-                    if (request.Body.Stream != null)
-                        _tcpConnection.SendAsync(request.Body.Stream, contentSendCallback);
+                    if (request.Body.ReceiveStream != null)
+                        _tcpConnection.SendAsync(request.Body.ReceiveStream, contentSendCallback);
                 };
 
                 if (request.Headers.ContainsKey(new Message.Expect100ContinueHeader()))
                     Check100Continue(c100Callback);
                 else
                 {
-                    if (request.Body.Stream != null)
-                        _tcpConnection.SendAsync(request.Body.Stream, contentSendCallback);
+                    if (request.Body.ReceiveStream != null)
+                        _tcpConnection.SendAsync(request.Body.ReceiveStream, contentSendCallback);
                 }
             };
 
@@ -231,12 +244,7 @@ namespace OpenDMS.Networking.Protocols.Http
 
             if (OnError != null) OnError(this, message, exception);
         }
-
-        private void SendRequest_OnProgress(Tcp.TcpConnection sender, Tcp.DirectionType direction, int packetSize)
-        {
-            if (OnProgress != null) OnProgress(this, direction, packetSize);
-        }
-
+        
         private void Check100Continue(Tcp.TcpConnection.AsyncCallback callback)
         {
             if (!IsConnected)
@@ -261,12 +269,21 @@ namespace OpenDMS.Networking.Protocols.Http
             if (!IsConnected)
                 throw new HttpConnectionException("A network connection is not established.");
 
+            long bytesReceived = 0;
+            Tcp.TcpConnection.ProgressDelegate onProgress;
             ResponseBuilder.AsyncCallback callback;
 
             if (_responseBuilder == null)
                 _responseBuilder = new ResponseBuilder();
 
-            _tcpConnection.OnProgress += new Tcp.TcpConnection.ProgressDelegate(ReceiveResponseAsync_OnProgress);
+
+            onProgress = delegate(Tcp.TcpConnection sender, Tcp.DirectionType direction, int packetSize)
+            {
+                bytesReceived += packetSize;
+                if (OnProgress != null) OnProgress(this, direction, packetSize, 100, ((decimal)bytesReceived / (decimal)_responseBuilder.ResponseSize));
+            };
+
+            _tcpConnection.OnProgress += onProgress;
             _tcpConnection.OnError += new Tcp.TcpConnection.ErrorDelegate(ReceiveResponseAsync_OnError);
             _tcpConnection.OnTimeout += new Tcp.TcpConnection.ConnectionDelegate(ReceiveResponseAsync_OnTimeout);
 
@@ -292,11 +309,6 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnTimeout -= ReceiveResponseAsync_OnTimeout;
 
             if (OnError != null) OnError(this, message, exception);
-        }
-
-        private void ReceiveResponseAsync_OnProgress(Tcp.TcpConnection sender, Tcp.DirectionType direction, int packetSize)
-        {
-            if (OnProgress != null) OnProgress(this, direction, packetSize);
         }
     }
 }

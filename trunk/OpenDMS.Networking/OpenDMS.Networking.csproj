@@ -62,17 +62,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Api\CommandParser.cs" />
     <Compile Include="Api\MessageFormattingException.cs" />
     <Compile Include="Api\MultisourcedStream.cs" />
     <Compile Include="Api\Requests\Authentication.cs" />
     <Compile Include="Api\MessageBase.cs" />
     <Compile Include="Api\Requests\Ping.cs" />
-    <Compile Include="Api\Requests\Request.cs" />
     <Compile Include="Api\Requests\RequestBase.cs" />
     <Compile Include="Api\Responses\Authentication.cs" />
     <Compile Include="Api\Responses\Pong.cs" />
-    <Compile Include="Api\Responses\Response.cs" />
     <Compile Include="Api\Responses\ResponseBase.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

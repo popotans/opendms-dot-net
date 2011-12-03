@@ -22,13 +22,13 @@ namespace OpenDMS.Networking.Protocols.Http
         {
         }
 
-        public void Execute(Request request,
-            Tcp.Params.Buffer receiveBufferSettings, Tcp.Params.Buffer sendBufferSettings)
-        {
-            Execute(request, receiveBufferSettings, sendBufferSettings);
-        }
+        //public void Execute(Request request,
+        //    Tcp.Params.Buffer receiveBufferSettings, Tcp.Params.Buffer sendBufferSettings)
+        //{
+        //    Execute(request, receiveBufferSettings, sendBufferSettings);
+        //}
 
-        public void Execute(Request request, System.IO.Stream stream, 
+        public void Execute(Request request, 
             Tcp.Params.Buffer receiveBufferSettings, Tcp.Params.Buffer sendBufferSettings,
             HttpConnection.ConnectionDelegate onConnectCallback,
             HttpConnection.ConnectionDelegate onDisconnectCallback,
