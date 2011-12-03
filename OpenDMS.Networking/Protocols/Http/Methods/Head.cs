@@ -5,6 +5,11 @@ namespace OpenDMS.Networking.Protocols.Http.Methods
     public class Head
         : Base
     {
-        public static new string METHOD { get { return "HEAD"; } }
+        private const string METHOD = "HEAD";
+
+        public Head()
+            : base(METHOD)
+        {
+        }
     }
 }

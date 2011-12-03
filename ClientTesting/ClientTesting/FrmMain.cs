@@ -18,12 +18,14 @@ namespace ClientTesting
         public static int ReceiveTimeout = 5000;
         public static int SendBufferSize = 8192;
         public static int ReceiveBufferSize = 8192;
+        private OpenDMS.ClientLibrary.Client _client;
 
         public FrmMain()
         {
             InitializeComponent();
             new OpenDMS.Networking.Logger(LOG_DIRECTORY);
             new OpenDMS.IO.Logger(LOG_DIRECTORY);
+            _client = new OpenDMS.ClientLibrary.Client();
         }
 
         private void BtnExit_Click(object sender, EventArgs e)
@@ -33,7 +35,7 @@ namespace ClientTesting
 
         private void BtnPing_Click(object sender, EventArgs e)
         {
-            Ping ping = new Ping(this);
+            Ping ping = new Ping(this, _client);
             ping.Test();
         }
 
@@ -63,7 +65,7 @@ namespace ClientTesting
 
         private void btnAuthenticate_Click(object sender, EventArgs e)
         {
-            Authenticate auth = new Authenticate(this);
+            Authenticate auth = new Authenticate(this, _client);
             auth.Test();
         }
     }

@@ -5,6 +5,11 @@ namespace OpenDMS.Networking.Protocols.Http.Methods
     public class Post
         : Base
     {
-        public static new string METHOD { get { return "POST"; } }
+        private const string METHOD = "POST";
+
+        public Post()
+            : base(METHOD)
+        {
+        }
     }
 }

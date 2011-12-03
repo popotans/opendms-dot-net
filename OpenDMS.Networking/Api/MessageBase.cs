@@ -96,7 +96,7 @@ namespace OpenDMS.Networking.Api
             }
         }
         public System.IO.Stream Stream { get; set; }
-        public Http.HttpNetworkStream NetworkStream { get; set; }
+        //public Http.HttpNetworkStream NetworkStream { get; set; }
 
         public MessageBase()
         {

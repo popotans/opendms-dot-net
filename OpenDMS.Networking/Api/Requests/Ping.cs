@@ -15,9 +15,18 @@ namespace OpenDMS.Networking.Api.Requests
             FullContent = fullContent;
         }
 
-        public override Http.Methods.Request CreateRequest(Uri uri, string contentType, long contentLength)
+        public override Protocols.Http.Methods.Base GetMethod()
         {
-            return new Http.Methods.Get(uri);
+            return new Protocols.Http.Methods.Get();
+        }
+
+        public override Protocols.Http.Request CreateRequest(Uri uri, string contentType)
+        {
+            Protocols.Http.Methods.Get method;
+
+            method = (Protocols.Http.Methods.Get)GetMethod();
+
+            return CreateRequest(method, uri, contentType);
         }
     }
 }

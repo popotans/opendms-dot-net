@@ -1,14 +1,18 @@
 ﻿using System;
+using Api = OpenDMS.Networking.Api;
+using ClientLib = OpenDMS.ClientLibrary;
 
 namespace ClientTesting
 {
     public abstract class TestBase
     {
         protected FrmMain _window;
+        protected ClientLib.Client _client;
 
-        public TestBase(FrmMain window)
+        public TestBase(FrmMain window, ClientLib.Client client)
         {
             _window = window;
+            _client = client;
         }
 
         public abstract void Test();

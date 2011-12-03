@@ -1,5 +1,6 @@
 ﻿using System;
-using Http = OpenDMS.Networking.Http;
+using Api = OpenDMS.Networking.Api;
+using Http = OpenDMS.Networking.Protocols.Http;
 
 namespace OpenDMS.ClientLibrary
 {
@@ -14,10 +15,11 @@ namespace OpenDMS.ClientLibrary
         public int SendBufferSize { get; set; }
         public int ReceiveBufferSize { get; set; }
 
-        public Http.Client.CloseDelegate OnClose { get; set; }
-        public Http.Client.CompletionDelegate OnComplete { get; set; }
-        public Http.Client.ErrorDelegate OnError { get; set; }
-        public Http.Client.ProgressDelegate OnProgress { get; set; }
-        public Http.Client.TimeoutDelegate OnTimeout { get; set; }
+        public Client.ConnectionDelegate OnConnect { get; set; }
+        public Client.ConnectionDelegate OnDisconnect { get; set; }
+        public Client.CompletionDelegate OnComplete { get; set; }
+        public Client.ErrorDelegate OnError { get; set; }
+        public Client.ProgressDelegate OnProgress { get; set; }
+        public Client.ConnectionDelegate OnTimeout { get; set; }
     }
 }
