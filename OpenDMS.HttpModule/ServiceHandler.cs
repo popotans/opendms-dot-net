@@ -164,7 +164,8 @@ namespace OpenDMS.HttpModule
             long contentLength = 0;
             Logger.General.Debug("Responding to ping...");
 
-            Requests.Ping ping = Requests.Request<Requests.Ping>.Parse(app.Request);
+
+            Requests.Ping ping = (Requests.Ping)Requests.Ping.BuildFrom(app);
             Responses.Pong pong = (Responses.Pong)Responses.Pong.BuildFrom(ping);
             stream = pong.MakeStream(out contentLength);
             stream.CopyTo(app.Response.OutputStream);
@@ -173,61 +174,61 @@ namespace OpenDMS.HttpModule
             Logger.General.Debug("Response pong sent.");
         }
 
-        [ServicePoint("/_auth", ServicePointAttribute.VerbType.POST)]
-        public void AuthenticateUser(HttpApplication app)
-        {
-            Providers.EngineRequest engineRequest;
-            System.IO.Stream stream;
-            long contentLength = 0;
-            Requests.Authentication authReq;
-            Responses.Authentication authResp = null;
-            bool spinThread = true;
+        //[ServicePoint("/_auth", ServicePointAttribute.VerbType.POST)]
+        //public void AuthenticateUser(HttpApplication app)
+        //{
+        //    Providers.EngineRequest engineRequest;
+        //    System.IO.Stream stream;
+        //    long contentLength = 0;
+        //    Requests.Authentication authReq;
+        //    Responses.Authentication authResp = null;
+        //    bool spinThread = true;
 
-            Logger.General.Debug("Starting handling of authentication request...");
+        //    Logger.General.Debug("Starting handling of authentication request...");
 
-            authReq = Requests.Request<Requests.Authentication>.Parse(app.Request);
+        //    authReq = Requests.Request<Requests.Authentication>.Parse(app.Request);
                         
-            engineRequest = new Providers.EngineRequest()
-            {
-                Engine = _engine,
-                Database = _db,
-                RequestingPartyType = Storage.Security.RequestingPartyType.User,
-                UserToken = app.Response
-            };
+        //    engineRequest = new Providers.EngineRequest()
+        //    {
+        //        Engine = _engine,
+        //        Database = _db,
+        //        RequestingPartyType = Storage.Security.RequestingPartyType.User,
+        //        UserToken = app.Response
+        //    };
             
-            engineRequest.OnComplete += delegate(Providers.EngineRequest engineRequest2,
-                Providers.ICommandReply reply, object result)
-            {
-                Tuple<Storage.Security.Session, bool> r = (Tuple<Storage.Security.Session, bool>)result;
+        //    engineRequest.OnComplete += delegate(Providers.EngineRequest engineRequest2,
+        //        Providers.ICommandReply reply, object result)
+        //    {
+        //        Tuple<Storage.Security.Session, bool> r = (Tuple<Storage.Security.Session, bool>)result;
 
-                try
-                {
-                    if (r.Item1 == null)
-                        authResp = (Responses.Authentication)Responses.Authentication.BuildFrom(authReq, r.Item2);
-                    else
-                        authResp = (Responses.Authentication)Responses.Authentication.BuildFrom(authReq, r.Item2, r.Item1.AuthToken, r.Item1.Expiry);
-                }
-                catch (Exception e)
-                {
-                    Logger.General.Error("Exception occurred while attempting to create the response object.", e);
-                }
+        //        try
+        //        {
+        //            if (r.Item1 == null)
+        //                authResp = (Responses.Authentication)Responses.Authentication.BuildFrom(authReq, r.Item2);
+        //            else
+        //                authResp = (Responses.Authentication)Responses.Authentication.BuildFrom(authReq, r.Item2, r.Item1.AuthToken, r.Item1.Expiry);
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            Logger.General.Error("Exception occurred while attempting to create the response object.", e);
+        //        }
 
-                spinThread = false;
-            };
+        //        spinThread = false;
+        //    };
 
-            _engine.AuthenticateUser(engineRequest, authReq.Username, authReq.HashedPassword);
+        //    _engine.AuthenticateUser(engineRequest, authReq.Username, authReq.HashedPassword);
 
-            while (spinThread)
-            {
-                Thread.Sleep(50);
-            }
+        //    while (spinThread)
+        //    {
+        //        Thread.Sleep(50);
+        //    }
 
-            stream = authResp.MakeStream(out contentLength);
-            stream.CopyTo(app.Response.OutputStream);
+        //    stream = authResp.MakeStream(out contentLength);
+        //    stream.CopyTo(app.Response.OutputStream);
 
-            app.CompleteRequest();
-            Logger.General.Debug("Authentication response sent.");
-        }
+        //    app.CompleteRequest();
+        //    Logger.General.Debug("Authentication response sent.");
+        //}
 
         //[ServicePoint("/_groups", ServicePointAttribute.VerbType.GET)]
         //public void GetAllGroups(HttpApplication app)

@@ -1,17 +1,17 @@
 ﻿using System;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public class PutAttachment : Base
     {
         public PutAttachment(IDatabase db, Model.Document document, string attachmentName, Model.Attachment attachment, System.IO.Stream stream)
-            : base(new Put(UriBuilder.Build(db, document, attachmentName), attachment.ContentType, (ulong)attachment.AttachmentLength))
+            : base(UriBuilder.Build(db, document, attachmentName), new Http.Methods.Delete())
         {
             _stream = stream;
         }
 
-        public override ReplyBase MakeReply(Response response)
+        public override ReplyBase MakeReply(Http.Response response)
         {
             try
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenDMS.Networking.Http;
+using Http = OpenDMS.Networking.Protocols.Http;
+using Tcp = OpenDMS.Networking.Protocols.Tcp;
 
 namespace OpenDMS.Storage.Providers
 {
@@ -38,7 +39,7 @@ namespace OpenDMS.Storage.Providers
         public delegate void CompletionDelegate(EngineRequest request, ICommandReply reply, object result);
         public delegate void ErrorDelegate(EngineRequest request, string message, Exception exception);
         public delegate void InitializationDelegate(bool success, string message, Exception exception);
-        public delegate void ProgressDelegate(EngineRequest request, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
+        public delegate void ProgressDelegate(EngineRequest request, Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public delegate void TimeoutDelegate(EngineRequest request);
 		// Events (1) 
 

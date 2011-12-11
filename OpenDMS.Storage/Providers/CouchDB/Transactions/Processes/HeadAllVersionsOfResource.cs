@@ -76,7 +76,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
                     }
                     else
                     {
-                        TriggerOnProgress(task, Networking.Http.DirectionType.Download, -1, -1,
+                        TriggerOnProgress(task, Networking.Protocols.Tcp.DirectionType.Download, -1, -1,
                             ((decimal)((decimal)_receivedCount / (decimal)_revisions.Count)));
                     }
                 }

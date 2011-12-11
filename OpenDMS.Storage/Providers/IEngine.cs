@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenDMS.IO;
-using OpenDMS.Networking.Http;
-using OpenDMS.Networking.Http.Methods;
 using OpenDMS.Storage.Data;
 using OpenDMS.Storage.Security;
 

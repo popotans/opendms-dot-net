@@ -1,33 +1,39 @@
 ﻿using System;
-using OpenDMS.Networking.Http;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
+using Tcp = OpenDMS.Networking.Protocols.Tcp;
 
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public abstract class Base
     {
-        public delegate void TimeoutDelegate(Base sender, Client client, Connection connection);
+        public delegate void TimeoutDelegate(Base sender, Http.Client client, Http.HttpConnection connection);
         public event TimeoutDelegate OnTimeout;
-        public delegate void ProgressDelegate(Base sender, Client client, Connection connection, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
+        public delegate void ProgressDelegate(Base sender, Http.Client client, Http.HttpConnection connection, Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public event ProgressDelegate OnProgress;
-        public delegate void ErrorDelegate(Base sender, Client client, string message, Exception exception);
+        public delegate void ErrorDelegate(Base sender, Http.Client client, string message, Exception exception);
         public event ErrorDelegate OnError;
-        public delegate void CompletionDelegate(Base sender, Client client, Connection connection, ReplyBase reply);
+        public delegate void CompletionDelegate(Base sender, Http.Client client, Http.HttpConnection connection, ReplyBase reply);
         public event CompletionDelegate OnComplete;
-        public delegate void CloseDelegate(Base sender, Client client, Connection connection);
+        public delegate void CloseDelegate(Base sender, Http.Client client, Http.HttpConnection connection);
         public event CloseDelegate OnClose;
 
-        protected Request _httpRequest;
+        protected Http.Request _httpRequest;
         protected System.IO.Stream _stream;
-        protected Client _client;
+        protected Http.Client _client;
 
-        public Uri Uri { get { return _httpRequest.Uri; } }
-        public virtual Request HttpRequest { get { return _httpRequest; } }
+        public Uri Uri { get; private set; }
+        public virtual Http.Request HttpRequest { get { return _httpRequest; } }
 
-        public Base(Request httpRequest)
+        public Base(Uri uri, Http.Request httpRequest)
         {
             _httpRequest = httpRequest;
+            Uri = uri;
+        }
+
+        public Base(Uri uri, Http.Methods.Base method)
+            : this(uri, new Http.Request(method, uri))
+        {
         }
 
         public virtual void Execute(int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)
@@ -35,98 +41,82 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
             if (_httpRequest == null)
                 throw new InvalidOperationException("The HttpRequest has not been set.");
 
-            _client = new Client();
-            _client.OnComplete += new Client.CompletionDelegate(Client_OnComplete);
-            _client.OnError += new Client.ErrorDelegate(Client_OnError);
-            _client.OnProgress += new Client.ProgressDelegate(Client_OnProgress);
-            _client.OnTimeout += new Client.TimeoutDelegate(Client_OnTimeout);
-            _client.OnClose += new Client.CloseDelegate(Client_OnClose);
+            Http.HttpConnection.ConnectionDelegate onDisconnect = null, onTimeout = null, onConnect = null;
+            Http.HttpConnection.CompletionDelegate onComplete = null;
+            Http.HttpConnection.ErrorDelegate onError = null;
+            Http.HttpConnection.ProgressDelegate onProgress = null;
+
+            _client = new Http.Client();
+
+            onConnect += delegate(Http.HttpConnection sender)
+            {
+                Logger.Storage.Debug("Client connected.");
+            };
+            onDisconnect += delegate(Http.HttpConnection sender)
+            {
+                Logger.Storage.Debug("Client closed.");
+                if (OnClose != null) OnClose(this, _client, sender);
+            };
+            onTimeout += delegate(Http.HttpConnection sender)
+            {
+                Logger.Storage.Error("The command timed out.");
+                if (OnTimeout != null) OnTimeout(this, _client, sender);
+                else throw new UnsupportedException("OnTimeout is not supported");
+            };
+            onComplete += delegate(Http.HttpConnection sender, Http.Response response)
+            {
+                Logger.Storage.Debug("The command completed.");
+                ReplyBase reply = null;
+
+                try
+                {
+                    reply = MakeReply(response);
+                }
+                catch (Exception e)
+                {
+                    Logger.Storage.Error("An exception occurred while attempting to create the reply object.", e);
+                    OnError(this, _client, "An exception occurred while attempting to create the reply object.", e);
+                }
+
+                if (reply != null)
+                {
+                    if (OnComplete != null) OnComplete(this, _client, sender, reply);
+                    else throw new UnsupportedException("OnComplete is not supported");
+                }
+            };
+            onError += delegate(Http.HttpConnection sender, string message, Exception exception)
+            {
+                Logger.Storage.Error("An error occurred while processing the command.  Message: " + message, exception);
+                if (OnError != null) OnError(this, _client, message, exception);
+                else throw new UnsupportedException("OnError is not supported");
+            };
+            onProgress += delegate(Http.HttpConnection sender, Tcp.DirectionType direction, int packetSize, decimal requestPercentSent, decimal responsePercentReceived)
+            {
+                Logger.Storage.Debug("Progress made on command (send at " + requestPercentSent.ToString() + "%, receive at " + responsePercentReceived.ToString() + "%)");
+                if (OnProgress != null) OnProgress(this, _client, sender, direction, packetSize, requestPercentSent, responsePercentReceived);
+            };
+
+
 
             Logger.Storage.Debug("Begining command execution for " + GetType().FullName + "...");
 
-            try
-            {
-                if (_stream == null)
-                    _client.Execute(HttpRequest,
-                        sendTimeout,
-                        receiveTimeout,
-                        sendBufferSize,
-                        receiveBufferSize);
-                else
-                    _client.Execute(HttpRequest,
-                        _stream,
-                        sendTimeout,
-                        receiveTimeout,
-                        sendBufferSize,
-                        receiveBufferSize);
-            }
-            catch (Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while executing the command.", e);
-                throw;
-            }
+            _client.Execute(_httpRequest, new Tcp.Params.Buffer() { Size = receiveBufferSize, Timeout = receiveTimeout },
+                new Tcp.Params.Buffer() { Size = sendBufferSize, Timeout = sendTimeout },
+                onConnect, onDisconnect, onError, onProgress, onTimeout, onComplete);
         }
 
         public virtual void Close()
         {
             Logger.Storage.Debug("Closing client...");
 
-            try { _client.Close(); }
-            catch (Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while closing the client.", e);
-                throw;
-            }
+            //try { _client.Close(); }
+            //catch (Exception e)
+            //{
+            //    Logger.Storage.Error("An exception occurred while closing the client.", e);
+            //    throw;
+            //}
         }
 
-        protected virtual void Client_OnClose(Client sender, Connection connection)
-        {
-            Logger.Storage.Debug("Client closed.");
-            if (OnClose != null) OnClose(this, sender, connection);
-        }
-
-        protected virtual void Client_OnTimeout(Client sender, Connection connection)
-        {
-            Logger.Storage.Error("The command timed out.");
-            if (OnTimeout != null) OnTimeout(this, sender, connection);
-            else throw new UnsupportedException("OnTimeout is not supported");
-        }
-
-        protected virtual void Client_OnProgress(Client sender, Connection connection, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
-        {
-            Logger.Storage.Debug("Progress made on command (send at " + sendPercentComplete.ToString() + "%, receive at " + receivePercentComplete.ToString() + "%)");
-            if (OnProgress != null) OnProgress(this, sender, connection, direction, packetSize, sendPercentComplete, receivePercentComplete);
-        }
-
-        protected virtual void Client_OnError(Client sender, string message, Exception exception)
-        {
-            Logger.Storage.Error("An error occurred while processing the command.  Message: " + message, exception);
-            if (OnError != null) OnError(this, sender, message, exception);
-            else throw new UnsupportedException("OnError is not supported");
-        }
-
-        protected virtual void Client_OnComplete(Client sender, Connection connection, Response response)
-        {
-            Logger.Storage.Debug("The command completed.");
-            ReplyBase reply = null;
-
-            try
-            {
-                reply = MakeReply(response);
-            }
-            catch (Exception e)
-            {
-                Logger.Storage.Error("An exception occurred while attempting to create the reply object.", e);
-                OnError(this, sender, "An exception occurred while attempting to create the reply object.", e);
-            }
-
-            if (reply != null)
-            {
-                if (OnComplete != null) OnComplete(this, sender, connection, reply);
-                else throw new UnsupportedException("OnComplete is not supported");
-            }
-        }
-
-        public abstract ReplyBase MakeReply(Response response);
+        public abstract ReplyBase MakeReply(Http.Response response);
     }
 }

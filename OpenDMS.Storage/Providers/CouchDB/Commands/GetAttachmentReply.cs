@@ -1,4 +1,4 @@
-﻿using OpenDMS.Networking.Http.Methods;
+﻿using Http = OpenDMS.Networking.Protocols.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
@@ -10,23 +10,28 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
         public bool Ok { get; private set; }
         public string ContentType { get; private set; }
         public ulong Length { get; private set; }
-        public Networking.Http.HttpNetworkStream Stream { get; private set; }
+        public Http.HttpNetworkStream Stream { get; private set; }
 
-        public GetAttachmentReply(Response response)
+        public GetAttachmentReply(Http.Response response)
             : base(response)
         {
         }
 
         protected override void ParseResponse()
         {
-            switch (_response.ResponseCode)
+            switch (_response.StatusLine.StatusCode)
             {
                 case 200:
+                    if (_response.Body.ReceiveStream.GetType() != typeof(Networking.Protocols.Http.HttpNetworkStream))
+                        throw new OpenDMS.Networking.Protocols.Http.HttpNetworkStreamException("Invalid stream type.");
+
                     Logger.Storage.Debug("Received a successful response from CouchDB.");
                     ResponseMessage = _200;
-                    ContentType = OpenDMS.Networking.Utilities.GetContentType(_response.Headers);
-                    Length = OpenDMS.Networking.Utilities.GetContentLength(_response.Headers);
-                    Stream = _response.Stream;
+                    ContentType = _response.ContentType;
+                    if (!_response.ContentLength.HasValue)
+                        throw new Http.Message.HeaderException("Content-Length header does not exist.");
+                    Length = (ulong)_response.ContentLength.Value;
+                    Stream = (Networking.Protocols.Http.HttpNetworkStream)_response.Body.ReceiveStream;
                     Ok = true;
                     Logger.Storage.Debug("GetAttachmentReply loaded.");
                     break;
@@ -37,9 +42,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
                     Logger.Storage.Debug("GetAttachmentReply loaded.");
                     break;
                 default:
-                    Logger.Storage.Error("GetAttachmentReply received an unknown response code: " + _response.ResponseCode.ToString());
+                    Logger.Storage.Error("GetAttachmentReply received an unknown response code: " + _response.StatusLine.StatusCode.ToString());
                     Ok = false;
-                    throw new UnsupportedException("The response code " + _response.ResponseCode.ToString() + " is not supported.");
+                    throw new UnsupportedException("The response code " + _response.StatusLine.StatusCode.ToString() + " is not supported.");
             }
         }
     }

@@ -1,19 +1,19 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public class PostBulkDocuments : Base
     {
         public PostBulkDocuments(IDatabase db, Model.BulkDocuments documents)
-            : base(new Post(UriBuilder.Build(db, documents), "application/json", documents.Length))
+            : base(UriBuilder.Build(db, documents), new Http.Methods.Post())
         {
             _stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(documents.ToString()));
         }
 
-        public override ReplyBase MakeReply(Response response)
+        public override ReplyBase MakeReply(Http.Response response)
         {
             try
             {

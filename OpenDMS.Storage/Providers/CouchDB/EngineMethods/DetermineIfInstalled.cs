@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenDMS.Networking.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 {

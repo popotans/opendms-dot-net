@@ -7,7 +7,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Remoting
     {
         public delegate void CompletionDelegate(Base sender, ICommandReply reply);
         public delegate void ErrorDelegate(Base sender, string message, Exception exception);
-        public delegate void ProgressDelegate(Base sender, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
+        public delegate void ProgressDelegate(Base sender, OpenDMS.Networking.Protocols.Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public delegate void TimeoutDelegate(Base sender);
 
         public event CompletionDelegate OnComplete;
@@ -56,7 +56,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Remoting
             OnError(this, message, exception);
         }
 
-        protected void TriggerOnProgress(OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+        protected void TriggerOnProgress(OpenDMS.Networking.Protocols.Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
             if (OnProgress != null) OnProgress(this, direction, packetSize, sendPercentComplete, receivePercentComplete);
         }

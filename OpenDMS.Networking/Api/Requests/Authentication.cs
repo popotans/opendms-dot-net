@@ -72,5 +72,10 @@ namespace OpenDMS.Networking.Api.Requests
 
             return CreateRequest(method, uri, contentType);
         }
+
+        public static RequestBase BuildFrom(HttpApplication app)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

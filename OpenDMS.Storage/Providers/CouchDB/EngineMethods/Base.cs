@@ -106,7 +106,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.EngineMethods
 
         protected void AttachSubscriber(Transactions.Processes.Base process, Engine.ProgressDelegate onProgress)
         {
-            process.OnProgress += delegate(Transactions.Processes.Base sender, Transactions.Tasks.Base task, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+            process.OnProgress += delegate(Transactions.Processes.Base sender, Transactions.Tasks.Base task, OpenDMS.Networking.Protocols.Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
             {
                 try
                 {

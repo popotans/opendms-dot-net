@@ -3,15 +3,8 @@ using System.Collections.Generic;
 
 namespace OpenDMS.Networking.Protocols.Http
 {
-    public class ResponseBuilder : MessageBuilder
+    public class RequestBuilder : MessageBuilder
     {
-        public ResponseBuilder(Http.Request request)
-        {
-            Request = request;
-            AllHeadersReceived = false;
-            MessageSize = -1;
-        }
-
         public override void Parse()
         {
             // A status line will always be first, its possible another status line will follow 
@@ -35,11 +28,13 @@ namespace OpenDMS.Networking.Protocols.Http
 
 
                 if (!string.IsNullOrEmpty(_firstLineAndHeaders) &&
-                    newpacket.StartsWith("HTTP") &&
-                    newpacket.Contains("\r\n"))
+                    (newpacket.StartsWith("GET") || newpacket.StartsWith("DELETE") ||
+                    newpacket.StartsWith("HEAD") || newpacket.StartsWith("POST") ||
+                    newpacket.StartsWith("PUT")))
                 {
-                    string temp = newpacket.Substring(0, newpacket.IndexOf("\r\n"));
-                    Response.StatusLine = StatusLine.Parse(temp);
+                    string temp = newpacket.Substring(0, newpacket.IndexOf("\r\n")).Trim();
+                    RequestLine rl = RequestLine.Parse(temp);
+                    Request = new Request(rl.Method, rl.RequestUri);
                 }
             }
             else
@@ -64,38 +59,15 @@ namespace OpenDMS.Networking.Protocols.Http
 
                 lines = GetLines(_firstLineAndHeaders);
 
-                // We cycle thru the lines to get the most recent status line
-                while (lines[loop].StartsWith("HTTP"))
+                if (Request == null || Request.RequestLine == null)
                 {
-                    loop++;
+                    // We have no status line yet, need to parse one
+                    string temp = newpacket.Substring(0, newpacket.IndexOf("\r\n")).Trim();
+                    RequestLine rl = RequestLine.Parse(temp);
+                    Request = new Request(rl.Method, rl.RequestUri);
                 }
-
-                if (Response != null &&
-                    Response.StatusLine != null &&
-                    !string.IsNullOrEmpty(Response.StatusLine.HttpVersion))
-                {
-                    // If we are here, we have received a 100-continue status earlier
-                    if (Response.StatusLine.StatusCode != 100)
-                        throw new HttpNetworkStreamException("Unexpected status code.");
-                }
-                else
-                {
-                    // If we are here, we have no status line yet, need to parse one
-
-                    if (loop <= 0)
-                        throw new HttpNetworkStreamException("Status line not found.");
-
-                    // Now loop holds the index of the NEXT line after the last HTTP line, so decrement 1
-                    // to get back to the index
-                    loop--;
-
-                    Response = new Response(Request);
-                    Response.StatusLine = StatusLine.Parse(lines[loop]);
-                }
-
-                // No matter if we received the 100 or not, we can now parse headers
-
-                Response.Headers.Clear();
+                
+                Request.Headers.Clear();
                 for (int i = loop; i < lines.Count; i++)
                 {
                     parts = new string[2];
@@ -116,10 +88,10 @@ namespace OpenDMS.Networking.Protocols.Http
             AppendAndParse(e.Buffer, 0, e.Length);
             if (AllHeadersReceived)
             {
-                if (!Response.ContentLength.HasValue)
+                if (!Request.ContentLength.HasValue)
                     throw new HttpNetworkStreamException("A Content-Length header was not found.");
 
-                ulong temp = (ulong)Response.ContentLength.Value;
+                ulong temp = (ulong)Request.ContentLength.Value;
 
                 // We need to take the left over buffer from _responseBuilder and prepend that
                 // to an HttpNetworkStream wrapping the _tcpConnection and then give the user
@@ -128,14 +100,14 @@ namespace OpenDMS.Networking.Protocols.Http
                 byte[] newBuffer = new byte[_remainingBufferAppendPosition];
 
                 BytesReceived += e.Length - newBuffer.Length;
-                MessageSize = BytesReceived + Response.ContentLength.Value;
+                MessageSize = BytesReceived + Request.ContentLength.Value;
                 Buffer.BlockCopy(_remainingBuffer, 0, newBuffer, 0, newBuffer.Length);
 
-                HttpNetworkStream ns = new HttpNetworkStream(HttpNetworkStream.DirectionType.Download,
-                    temp, newBuffer, sender.Socket, System.IO.FileAccess.Read, false);
+                HttpNetworkStream ns = new HttpNetworkStream(HttpNetworkStream.DirectionType.Upload,
+                    temp, newBuffer, sender.Socket, System.IO.FileAccess.Write, false);
 
-                if (Response.Headers.ContainsKey(new Message.ChunkedTransferEncodingHeader()))
-                    Response.Body.IsChunked = true;
+                if (Request.Headers.ContainsKey(new Message.ChunkedTransferEncodingHeader()))
+                    Request.Body.IsChunked = true;
 
                 Response.Body.ReceiveStream = ns;
 
@@ -147,5 +119,6 @@ namespace OpenDMS.Networking.Protocols.Http
                 sender.ReceiveAsync(ParseAndAttachToBody_Callback, callback);
             }
         }
+
     }
 }

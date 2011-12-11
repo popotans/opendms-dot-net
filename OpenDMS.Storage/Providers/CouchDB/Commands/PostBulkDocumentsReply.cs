@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
 using Newtonsoft.Json.Linq;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
@@ -19,14 +19,14 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
         public bool AllOrNothing { get; set; }
         public List<Entry> Results { get; set; }
 
-        public PostBulkDocumentsReply(Response response)
+        public PostBulkDocumentsReply(Http.Response response)
             : base(response)
         {
         }
 
         protected override void ParseResponse()
         {
-            switch (_response.ResponseCode)
+            switch (_response.StatusLine.StatusCode)
             {
                 case 201:
                     Results = new List<Entry>();
@@ -46,8 +46,8 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
                     Logger.Storage.Debug("PostBulkDocumentsReply loaded.");
                     break;
                 default:
-                    Logger.Storage.Error("PostBulkDocumentsReply received an unknown response code: " + _response.ResponseCode.ToString() + "\r\nServer Response: " + StringifyResponseStream());
-                    throw new UnsupportedException("The response code " + _response.ResponseCode.ToString() + " is not supported.");
+                    Logger.Storage.Error("PostBulkDocumentsReply received an unknown response code: " + _response.StatusLine.StatusCode.ToString() + "\r\nServer Response: " + StringifyResponseStream());
+                    throw new UnsupportedException("The response code " + _response.StatusLine.StatusCode.ToString() + " is not supported.");
             }
         }
     }

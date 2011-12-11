@@ -6,6 +6,28 @@ namespace OpenDMS.Networking.Protocols.Http.Message
     public class HeaderCollection 
         : Dictionary<Token, string>
     {
+        public HeaderCollection()
+            : base()
+        {
+        }
+
+        public HeaderCollection(System.Net.WebHeaderCollection headers)
+            : base()
+        {
+            for (int i = 0; i < headers.Count; i++)
+            {
+                Add(new Header(new Token(headers.Keys[i]), headers[i]));
+            }
+        }
+
+        public HeaderCollection(System.Collections.Specialized.NameValueCollection headers)
+        {
+            for (int i = 0; i < headers.Count; i++)
+            {
+                Add(new Header(new Token(headers.Keys[i]), headers[i]));
+            }
+        }
+
         public void Add(Header header)
         {
             Add(header.Name, header.Value);

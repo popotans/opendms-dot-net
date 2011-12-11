@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
@@ -11,14 +11,14 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
         public bool Ok { get; private set; }
         public Model.View View { get; private set; }
 
-        public GetViewReply(Response response)
+        public GetViewReply(Http.Response response)
             : base(response)
         {
         }
 
         protected override void ParseResponse()
         {
-            switch (_response.ResponseCode)
+            switch (_response.StatusLine.StatusCode)
             {
                 case 200:
                     Logger.Storage.Debug("Received a successful response from CouchDB.");
@@ -43,9 +43,9 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
                     Logger.Storage.Debug("GetViewReply loaded.");
                     break;
                 default:
-                    Logger.Storage.Error("GetViewReply received an unknown response code: " + _response.ResponseCode.ToString());
+                    Logger.Storage.Error("GetViewReply received an unknown response code: " + _response.StatusLine.StatusCode.ToString());
                     Ok = false;
-                    throw new UnsupportedException("The response code " + _response.ResponseCode.ToString() + " is not supported.");
+                    throw new UnsupportedException("The response code " + _response.StatusLine.StatusCode.ToString() + " is not supported.");
             }
         }
     }
