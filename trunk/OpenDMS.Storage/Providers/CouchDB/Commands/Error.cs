@@ -1,6 +1,5 @@
 ﻿using System.Net;
-using OpenDMS.Networking.Http;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -11,15 +10,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
         //public delegate void CreatedDelegate(Error sender);
         //public event CreatedDelegate OnErrorCreated;
 
-        protected Response _response = null;
+        protected Http.Response _response = null;
 
-        public virtual WebHeaderCollection Headers { get { return _response.Headers; } }
+        public virtual Http.Message.HeaderCollection Headers { get { return _response.Headers; } }
 
         public string ErrorType { get; private set; }
         public string Id { get; private set; }
         public string Reason { get; private set; }
 
-        public Error(Response response)
+        public Error(Http.Response response)
         {
             //response.Stream.OnTimeout += new HttpNetworkStream.TimeoutDelegate(Stream_OnTimeout);
             //response.Stream.OnError += new HttpNetworkStream.ErrorDelegate(Stream_OnError);
@@ -33,9 +32,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
             {
                 // Head method receives a content length but does not receive content, so we would wait a timeout to get a response
                 // causing all kinds of problems.
-                if (response.Request.GetType() != typeof(OpenDMS.Networking.Http.Methods.Head))
+                if (response.Request.RequestLine.Method.GetType() != typeof(Http.Methods.Head))
                 {
-                    string str = response.Stream.ReadToEnd();
+                    if (response.Body.ReceiveStream.GetType() != typeof(Networking.Protocols.Http.HttpNetworkStream))
+                        throw new OpenDMS.Networking.Protocols.Http.HttpNetworkStreamException("Invalid stream type.");
+
+                    string str = ((Networking.Protocols.Http.HttpNetworkStream)response.Body.ReceiveStream).ReadToEnd();
                     if (str != null && str != "")
                     {
                         JObject jobj = JObject.Parse(str);

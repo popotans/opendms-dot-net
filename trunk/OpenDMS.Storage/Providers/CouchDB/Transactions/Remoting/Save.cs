@@ -1,6 +1,5 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
-using OpenDMS.Networking.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Remoting
 {

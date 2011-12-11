@@ -1,21 +1,16 @@
 ﻿using System;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public class HeadAttachment : Base
     {
         public HeadAttachment(Uri uri)
-            : base(new Get(uri))
+            : base(uri, new Http.Methods.Get())
         {
         }
 
-        public HeadAttachment(Head head)
-            : base(head)
-        {
-        }
-
-        public override ReplyBase MakeReply(Response response)
+        public override ReplyBase MakeReply(Http.Response response)
         {
             try
             {

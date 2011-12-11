@@ -1,5 +1,6 @@
 ﻿using System;
-using OpenDMS.Networking.Http;
+using Http = OpenDMS.Networking.Protocols.Http;
+using Tcp = OpenDMS.Networking.Protocols.Tcp;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Remoting
 {
@@ -26,7 +27,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Remoting
                 throw;
             }
 
-            cmd.OnComplete += delegate(Commands.Base sender, Client client, Connection connection, Commands.ReplyBase reply)
+            cmd.OnComplete += delegate(Commands.Base sender, Http.Client client, Http.HttpConnection connection, Commands.ReplyBase reply)
             {
                 if (((Commands.HeadDocumentReply)reply).Ok)
                     IsExisting = true;
@@ -35,15 +36,15 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Remoting
                 
                 TriggerOnComplete(reply);
             };
-            cmd.OnError += delegate(Commands.Base sender, Client client, string message, Exception exception)
+            cmd.OnError += delegate(Commands.Base sender, Http.Client client, string message, Exception exception)
             {
                 TriggerOnError(message, exception);
             };
-            cmd.OnProgress += delegate(Commands.Base sender, Client client, Connection connection, DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+            cmd.OnProgress += delegate(Commands.Base sender, Http.Client client, Http.HttpConnection connection, Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
             {
                 TriggerOnProgress(direction, packetSize, sendPercentComplete, receivePercentComplete);
             };
-            cmd.OnTimeout += delegate(Commands.Base sender, Client client, Connection connection)
+            cmd.OnTimeout += delegate(Commands.Base sender, Http.Client client, Http.HttpConnection connection)
             {
                 TriggerOnTimeout();
             };

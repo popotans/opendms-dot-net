@@ -58,7 +58,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             {
                 TriggerOnError(message, exception);
             };
-            rem.OnProgress += delegate(Remoting.Base sender, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+            rem.OnProgress += delegate(Remoting.Base sender, OpenDMS.Networking.Protocols.Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
             {
                 TriggerOnProgress(direction, packetSize, sendPercentComplete, receivePercentComplete);
             };

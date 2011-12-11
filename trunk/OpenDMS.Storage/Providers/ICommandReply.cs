@@ -1,11 +1,11 @@
 ﻿using System.Net;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
 
 namespace OpenDMS.Storage.Providers
 {
     public interface ICommandReply
     {
-        WebHeaderCollection Headers { get; }
+        Http.Message.HeaderCollection Headers { get; }
         bool IsError { get; }
         string ErrorMessage { get; }
         string ResponseMessage { get; }

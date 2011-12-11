@@ -1,21 +1,16 @@
 ﻿using System;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public class GetView : Base
     {
         public GetView(Uri uri)
-            : base(new Get(uri))
+            : base(uri, new Http.Methods.Get())
         {
         }
 
-        public GetView(Get get)
-            : base(get)
-        {
-        }
-
-        public override ReplyBase MakeReply(Response response)
+        public override ReplyBase MakeReply(Http.Response response)
         {
             try
             {

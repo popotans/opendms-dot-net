@@ -1,21 +1,16 @@
 ﻿using System;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public class DeleteAttachment : Base
     {
         public DeleteAttachment(Uri uri)
-            : base(new Delete(uri))
+            : base(uri, new Http.Methods.Delete())
         {
         }
 
-        public DeleteAttachment(Delete delete)
-            : base(delete)
-        {
-        }
-
-        public override ReplyBase MakeReply(Response response)
+        public override ReplyBase MakeReply(Http.Response response)
         {
             try
             {

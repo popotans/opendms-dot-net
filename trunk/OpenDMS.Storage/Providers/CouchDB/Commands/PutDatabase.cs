@@ -1,17 +1,17 @@
 ﻿using System;
-using OpenDMS.Networking.Http.Methods;
+using Http = OpenDMS.Networking.Protocols.Http;
 
 namespace OpenDMS.Storage.Providers.CouchDB.Commands
 {
     public class PutDatabase : Base
     {
         public PutDatabase(IDatabase db)
-            : base(new Put(UriBuilder.Build(db), "application/json", 0))
+            : base(UriBuilder.Build(db), new Http.Methods.Put())
         {
             _stream = null;
         }
 
-        public override ReplyBase MakeReply(Response response)
+        public override ReplyBase MakeReply(Http.Response response)
         {
             try
             {

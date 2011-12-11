@@ -13,6 +13,22 @@ namespace OpenDMS.Networking.Protocols.Http
             RequestLine = new RequestLine() { HttpVersion = "HTTP/1.1", Method = method, RequestUri = uri };
         }
 
+        public Request(System.Web.HttpRequest request)
+        {
+            Headers = new Message.HeaderCollection(request.Headers);
+            RequestLine = new RequestLine()
+            {
+                HttpVersion = "HTTP/1.1",
+                Method = Methods.Base.Parse(request.HttpMethod),
+                RequestUri = request.Url
+            };
+            Body = new Message.Body() 
+            { 
+                IsChunked = false, 
+                ReceiveStream = request.InputStream 
+            };
+        }
+
         public MemoryStream MakeRequestLineAndHeadersStream()
         {
             Message.HostHeader hostHeader;

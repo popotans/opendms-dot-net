@@ -201,12 +201,12 @@ namespace OpenDMS.Networking.Protocols.Http
                     _tcpConnection.OnTimeout -= SendRequest_OnTimeout;
                     _tcpConnection.OnProgress -= onProgress;
 
-                    ReceiveResponseAsync();
+                    ReceiveResponseAsync(request);
                 };
 
                 c100Callback = delegate(Tcp.TcpConnection sender2, Tcp.TcpConnectionAsyncEventArgs e2)
                 {
-                    _responseBuilder = new ResponseBuilder();
+                    _responseBuilder = new ResponseBuilder(request);
 
                     _responseBuilder.AppendAndParse(e2.Buffer, 0, e2.Length);
 
@@ -264,7 +264,7 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.ReceiveAsync(callback);
         }
         
-        public void ReceiveResponseAsync()
+        public void ReceiveResponseAsync(Http.Request request)
         {
             if (!IsConnected)
                 throw new HttpConnectionException("A network connection is not established.");
@@ -274,25 +274,25 @@ namespace OpenDMS.Networking.Protocols.Http
             ResponseBuilder.AsyncCallback callback;
 
             if (_responseBuilder == null)
-                _responseBuilder = new ResponseBuilder();
+                _responseBuilder = new ResponseBuilder(request);
 
 
             onProgress = delegate(Tcp.TcpConnection sender, Tcp.DirectionType direction, int packetSize)
             {
                 bytesReceived += packetSize;
-                if (OnProgress != null) OnProgress(this, direction, packetSize, 100, ((decimal)bytesReceived / (decimal)_responseBuilder.ResponseSize));
+                if (OnProgress != null) OnProgress(this, direction, packetSize, 100, ((decimal)bytesReceived / (decimal)_responseBuilder.MessageSize));
             };
 
             _tcpConnection.OnProgress += onProgress;
             _tcpConnection.OnError += new Tcp.TcpConnection.ErrorDelegate(ReceiveResponseAsync_OnError);
             _tcpConnection.OnTimeout += new Tcp.TcpConnection.ConnectionDelegate(ReceiveResponseAsync_OnTimeout);
 
-            callback = delegate(ResponseBuilder sender, Response response)
+            callback = delegate(MessageBuilder sender, Message.Base message)
             {
-                if (OnComplete != null) OnComplete(this, response);
+                if (OnComplete != null) OnComplete(this, (Response)message);
             };
 
-            _responseBuilder.ParseAndAttachToResponseBody(_tcpConnection, callback);
+            _responseBuilder.ParseAndAttachToBody(_tcpConnection, callback);
         }
 
         private void ReceiveResponseAsync_OnTimeout(Tcp.TcpConnection sender)

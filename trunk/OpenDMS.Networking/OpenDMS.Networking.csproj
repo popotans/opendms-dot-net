@@ -85,6 +85,7 @@
     <Compile Include="Protocols\Http\Interceptors\InterceptorStream.cs" />
     <Compile Include="Protocols\Http\Interceptors\IStreamInterceptor.cs" />
     <Compile Include="Protocols\Http\Interceptors\InterceptorBase.cs" />
+    <Compile Include="Protocols\Http\MessageBuilder.cs" />
     <Compile Include="Protocols\Http\Message\AcceptHeader.cs" />
     <Compile Include="Protocols\Http\Message\Base.cs" />
     <Compile Include="Protocols\Http\Message\Body.cs" />
@@ -111,6 +112,7 @@
     <Compile Include="Protocols\Http\Methods\Post.cs" />
     <Compile Include="Protocols\Http\Methods\Put.cs" />
     <Compile Include="Protocols\Http\Request.cs" />
+    <Compile Include="Protocols\Http\RequestBuilder.cs" />
     <Compile Include="Protocols\Http\RequestLine.cs" />
     <Compile Include="Protocols\Http\Response.cs" />
     <Compile Include="Protocols\Http\ResponseBuilder.cs" />

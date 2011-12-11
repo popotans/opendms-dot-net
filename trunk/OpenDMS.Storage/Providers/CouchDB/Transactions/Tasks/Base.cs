@@ -8,7 +8,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
         public delegate void AuthorizationDelegate(Base sender);
         public delegate void CompletionDelegate(Base sender, ICommandReply reply);
         public delegate void ErrorDelegate(Base sender, string message, Exception exception);
-        public delegate void ProgressDelegate(Base sender, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
+        public delegate void ProgressDelegate(Base sender, OpenDMS.Networking.Protocols.Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public delegate void TimeoutDelegate(Base sender);
 
         public event ActionDelegate OnActionChanged;
@@ -94,7 +94,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Tasks
             }
         }
 
-        protected void TriggerOnProgress(OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+        protected void TriggerOnProgress(OpenDMS.Networking.Protocols.Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
             try
             {

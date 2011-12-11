@@ -10,7 +10,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
         public delegate void AuthorizationDelegate(Base sender, Tasks.Base task);
         public delegate void CompletionDelegate(Base sender, ICommandReply reply, object result);
         public delegate void ErrorDelegate(Base sender, Tasks.Base task, string message, Exception exception);
-        public delegate void ProgressDelegate(Base sender, Tasks.Base task, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
+        public delegate void ProgressDelegate(Base sender, Tasks.Base task, OpenDMS.Networking.Protocols.Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete);
         public delegate void TimeoutDelegate(Base sender, Tasks.Base task);
         public delegate void TaskCompletionDelegate(Base sender, Tasks.Base task);
 
@@ -58,7 +58,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             {
                 TriggerOnError(sender, message, exception);
             };
-            task.OnProgress += delegate(Tasks.Base sender, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+            task.OnProgress += delegate(Tasks.Base sender, OpenDMS.Networking.Protocols.Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
             {
                 TriggerOnProgress(sender, direction, packetSize, sendPercentComplete, receivePercentComplete);
             };
@@ -131,11 +131,12 @@ namespace OpenDMS.Storage.Providers.CouchDB.Transactions.Processes
             }
         }
 
-        protected void TriggerOnProgress(Tasks.Base task, OpenDMS.Networking.Http.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
+        protected void TriggerOnProgress(Tasks.Base task, OpenDMS.Networking.Protocols.Tcp.DirectionType direction, int packetSize, decimal sendPercentComplete, decimal receivePercentComplete)
         {
             try
             {
-                if (OnProgress != null) OnProgress(this, task, direction, packetSize, sendPercentComplete, receivePercentComplete);
+                if (OnProgress != null)
+                    OnProgress(this, task, direction, packetSize, sendPercentComplete, receivePercentComplete);
             }
             catch (System.Exception e)
             {

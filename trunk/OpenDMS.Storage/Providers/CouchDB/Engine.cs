@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenDMS.Networking.Http;
-using OpenDMS.Networking.Http.Methods;
 using OpenDMS.Storage.Data;
 
 namespace OpenDMS.Storage.Providers.CouchDB
