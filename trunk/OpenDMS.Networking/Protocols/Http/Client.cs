@@ -41,14 +41,20 @@ namespace OpenDMS.Networking.Protocols.Http
 
             conn = new HttpConnection(request.RequestLine.RequestUri, receiveBufferSettings, sendBufferSettings);
 
-            if (onConnectCallback != null) conn.OnConnect += onConnectCallback;
             if (onDisconnectCallback != null) conn.OnDisconnect += onDisconnectCallback;
             if (onErrorCallback != null) conn.OnError += onErrorCallback;
             if (onProgressCallback != null) conn.OnProgress += onProgressCallback;
             if (onTimeoutCallback != null) conn.OnTimeout += onTimeoutCallback;
             if (onCompleteCallback != null) conn.OnComplete += onCompleteCallback;
 
-            conn.SendRequestAsync(request);
+            conn.OnConnect += delegate(HttpConnection sender)
+            {
+                if (onConnectCallback != null) onConnectCallback(sender);
+                conn.SendRequestAsync(request);
+            };
+
+            conn.ConnectAsync();
+
         }
     }
 }

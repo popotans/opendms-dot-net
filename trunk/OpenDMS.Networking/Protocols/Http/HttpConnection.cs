@@ -34,7 +34,7 @@ namespace OpenDMS.Networking.Protocols.Http
         private Tcp.Params.Buffer _sendBufferSettings;
 
         public Uri Uri { get; private set; }
-        public bool IsConnected { get { return _tcpConnection.IsConnected; } }
+        public bool IsConnected { get { if (_tcpConnection == null) return false; else return _tcpConnection.IsConnected; } }
 
         public HttpConnection(Uri uri, Tcp.Params.Buffer receiveBufferSettings, 
             Tcp.Params.Buffer sendBufferSettings)
@@ -54,7 +54,17 @@ namespace OpenDMS.Networking.Protocols.Http
 
         private void ResolveHostAsync()
         {
-            Dns.BeginGetHostEntry(Uri.Host, ResolveHostAsync_Callback, null);
+            IPAddress ip;
+
+            if (IPAddress.TryParse(Uri.DnsSafeHost, out ip))
+            {
+                _remoteHostEntry = new IPHostEntry();
+                _remoteHostEntry.AddressList = new IPAddress[1];
+                _remoteHostEntry.AddressList[0] = ip;
+                if (OnHostResolved != null) OnHostResolved(this, _remoteHostEntry);
+            }
+            else
+                Dns.BeginGetHostEntry(Uri.DnsSafeHost, ResolveHostAsync_Callback, null);
         }
 
         private void ResolveHostAsync_Callback(IAsyncResult ar)
@@ -138,7 +148,7 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.DisconnectAsync();
         }
 
-        public void DisconnectAsync_OnDisconnect(Tcp.TcpConnection sender2)
+        private void DisconnectAsync_OnDisconnect(Tcp.TcpConnection sender2)
         {
             _tcpConnection.OnDisconnect -= DisconnectAsync_OnDisconnect;
             _tcpConnection.OnError -= DisconnectAsync_OnError;
@@ -146,7 +156,7 @@ namespace OpenDMS.Networking.Protocols.Http
             if (OnDisconnect != null) OnDisconnect(this);
         }
 
-        public void DisconnectAsync_OnError(Tcp.TcpConnection sender2, string message, Exception exception)
+        private void DisconnectAsync_OnError(Tcp.TcpConnection sender2, string message, Exception exception)
         {
             _tcpConnection.OnDisconnect -= DisconnectAsync_OnDisconnect;
             _tcpConnection.OnError -= DisconnectAsync_OnError;
@@ -166,7 +176,11 @@ namespace OpenDMS.Networking.Protocols.Http
             long bytesSent = 0;
 
             // Make the RequestLine and Headers into a stream
-            stream = request.MakeRequestLineAndHeadersStream();
+            if (request.Body.SendStream != null)
+                stream = request.MakeRequestLineAndHeadersStream();
+            else
+                stream = request.MakeRequestLineAndHeadersStream("\r\n");
+
             requestSize += stream.Length;
 
             if (request.Body.SendStream != null)
@@ -221,8 +235,16 @@ namespace OpenDMS.Networking.Protocols.Http
                     Check100Continue(c100Callback);
                 else
                 {
-                    if (request.Body.ReceiveStream != null)
-                        _tcpConnection.SendAsync(request.Body.ReceiveStream, contentSendCallback);
+                    if (request.Body.SendStream != null)
+                        _tcpConnection.SendAsync(request.Body.SendStream, contentSendCallback);
+                    else
+                    {
+                        _tcpConnection.OnError -= SendRequest_OnError;
+                        _tcpConnection.OnTimeout -= SendRequest_OnTimeout;
+                        _tcpConnection.OnProgress -= onProgress;
+
+                        ReceiveResponseAsync(request);
+                    }
                 }
             };
 

@@ -33,7 +33,7 @@ namespace OpenDMS.Networking.Api.Requests
 
         public override Protocols.Http.Methods.Base GetMethod()
         {
-            return new Protocols.Http.Methods.Get();
+            return new Protocols.Http.Methods.Post();
         }
 
         public static Ping BuildFrom(HttpApplication app)
@@ -43,11 +43,19 @@ namespace OpenDMS.Networking.Api.Requests
 
         public override Protocols.Http.Request CreateRequest(Uri uri, string contentType)
         {
-            Protocols.Http.Methods.Get method;
+            Protocols.Http.Methods.Post method;
 
-            method = (Protocols.Http.Methods.Get)GetMethod();
+            method = (Protocols.Http.Methods.Post)GetMethod();
 
             return CreateRequest(method, uri, contentType);
+        }
+
+        public override MultisourcedStream MakeStream(out long contentLength)
+        {
+            Timestamp = DateTime.Now;
+            Duration = Timestamp - _start;
+            contentLength = 0;
+            return null;
         }
     }
 }

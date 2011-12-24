@@ -113,7 +113,7 @@ namespace OpenDMS.Networking.Protocols.Http
         {
             AsyncCallback callback = (AsyncCallback)e.UserToken;
 
-            AppendAndParse(e.Buffer, 0, e.Length);
+            AppendAndParse(e.Buffer, 0, e.BytesTransferred);
             if (AllHeadersReceived)
             {
                 if (!Response.ContentLength.HasValue)
@@ -143,7 +143,7 @@ namespace OpenDMS.Networking.Protocols.Http
             }
             else
             {
-                BytesReceived += e.Length;
+                BytesReceived += e.BytesTransferred;
                 sender.ReceiveAsync(ParseAndAttachToBody_Callback, callback);
             }
         }
