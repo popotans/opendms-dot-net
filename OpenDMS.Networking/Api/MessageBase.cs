@@ -124,7 +124,7 @@ namespace OpenDMS.Networking.Api
             return JsonLength = System.Text.Encoding.UTF8.GetBytes(FullContent.ToString()).Length;
         }
 
-        public MultisourcedStream MakeStream(out long contentLength)
+        public virtual MultisourcedStream MakeStream(out long contentLength)
         {
             MultisourcedStream stream;
             Timestamp = DateTime.Now;

@@ -34,6 +34,7 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
         public Base(Uri uri, Http.Methods.Base method)
             : this(uri, new Http.Request(method, uri))
         {
+            _httpRequest.ContentLength = 0;
         }
 
         public virtual void Execute(int sendTimeout, int receiveTimeout, int sendBufferSize, int receiveBufferSize)

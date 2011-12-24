@@ -12,7 +12,7 @@ namespace ClientTesting
     public partial class FrmMain : Form
     {
         public static string HOST = "127.0.0.1";
-        public static int PORT = 62362;
+        public static int PORT = 64328;
         public static string LOG_DIRECTORY = @"C:\OpenDMS_Client\Logs\";
         public static int SendTimeout = 5000;
         public static int ReceiveTimeout = 5000;

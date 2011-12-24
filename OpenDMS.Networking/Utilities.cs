@@ -57,6 +57,7 @@ namespace OpenDMS.Networking
         /// <returns>A UTF-8 formatted string.</returns>
         public static string StreamToUtf8String(System.IO.Stream stream)
         {
+            long startPos;
             int bytesRead = 0;
             byte[] buffer = new byte[40960];
             string str = "";
@@ -64,8 +65,15 @@ namespace OpenDMS.Networking
             if (!stream.CanRead)
                 throw new System.IO.IOException("Cannot read from stream.");
 
+            if (!stream.CanSeek)
+                throw new System.IO.IOException("Cannot reposition stream.");
+
+            startPos = stream.Position;
+
             while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 str += System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead);
+
+            stream.Seek(startPos, System.IO.SeekOrigin.Begin);
 
             return str;
         }

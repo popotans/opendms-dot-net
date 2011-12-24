@@ -35,6 +35,8 @@ namespace OpenDMS.Networking.Protocols.Tcp
             EndPoint = param.EndPoint;
             ReceiveBufferSettings = param.ReceiveBuffer;
             SendBufferSettings = param.SendBuffer;
+
+            Logger.Network.Debug("New TCP connection created to host " + EndPoint.Address.ToString() + " on port " + EndPoint.Port.ToString());
         }
 
         public void ConnectAsync()
@@ -143,6 +145,8 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
             if (!TryStopTimeout(e.UserToken))
                 return;
+
+            Logger.Network.Error("Timeout during connection.");
 
             try
             {
@@ -275,6 +279,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
             {
                 try
                 {
+                    Logger.Network.Debug("Sending Packet:\r\n" + System.Text.Encoding.UTF8.GetString(buffer,0, bytesRead));
                     if (!_socket.SendAsync(socketArgs))
                     {
                         Logger.Network.Debug("SendAsync completed synchronously.");
@@ -329,6 +334,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
             {
                 try
                 {
+                    Logger.Network.Debug("Sending Packet:\r\n" + System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead));
                     if (!_socket.SendAsync(e))
                     {
                         Logger.Network.Debug("SendAsyncStream_Completed completed synchronously.");
@@ -361,6 +367,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
             {
                 try
                 {
+                    Logger.Network.Debug("Sending Packet:\r\n" + System.Text.Encoding.UTF8.GetString(buffer, 0, length-offset));
                     if (!_socket.SendAsync(socketArgs))
                     {
                         Logger.Network.Debug("SendAsync completed synchronously.");
@@ -445,6 +452,9 @@ namespace OpenDMS.Networking.Protocols.Tcp
                 return;
 
             _bytesReceivedTotal += (ulong)e.BytesTransferred;
+
+            Logger.Network.Debug("Receiving Packet:\r\n" + System.Text.Encoding.UTF8.GetString(e.Buffer, e.Offset, e.BytesTransferred));
+
             if (OnProgress != null) OnProgress(this, DirectionType.Download, e.BytesTransferred);
 
             if (userToken.AsyncCallback != null)

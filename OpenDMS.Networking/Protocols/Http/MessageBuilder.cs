@@ -36,11 +36,11 @@ namespace OpenDMS.Networking.Protocols.Http
         {
             if (_remainingBuffer != null && _remainingBuffer.Length > 0)
             {
-                ResizeBuffer(_remainingBuffer, length + _remainingBuffer.Length);
+                _remainingBuffer = ResizeBuffer(_remainingBuffer, length + _remainingBuffer.Length);
             }
             else
             {
-                ResizeBuffer(_remainingBuffer, length);
+                _remainingBuffer = ResizeBuffer(_remainingBuffer, length);
             }
             Buffer.BlockCopy(buffer, offset, _remainingBuffer, _remainingBufferAppendPosition, length);
             _remainingBufferAppendPosition += length;
@@ -102,7 +102,8 @@ namespace OpenDMS.Networking.Protocols.Http
                     Buffer.BlockCopy(buffer, 0, newBuffer, 0, length);
             }
 
-            return newBuffer;
+            buffer = newBuffer;
+            return buffer;
         }
 
         protected string BytesToString(byte[] buffer, int offset, int length)

@@ -33,14 +33,58 @@ namespace OpenDMS.Networking.Protocols.Http
         {
             Message.HostHeader hostHeader;
 
-            // Currently not supporting sending of chunked content
-            if (ContentLength == null)
-                throw new Message.HeaderException("Content-Length header is null");
+            hostHeader = new Message.HostHeader(this.RequestLine.RequestUri.Host);
+            Headers[hostHeader.Name] = hostHeader.Value;
+
+            if (RequestLine.Method.GetType() == typeof(Http.Methods.Get))
+            {
+
+            }
+            else if (RequestLine.Method.GetType() == typeof(Http.Methods.Delete))
+            {
+
+            }
+            else if (RequestLine.Method.GetType() == typeof(Http.Methods.Head))
+            {
+
+            }
+            else
+            {
+                // Currently not supporting sending of chunked content
+                if (ContentLength == null)
+                    throw new Message.HeaderException("Content-Length header is null");
+            }
+
+            return new MemoryStream(System.Text.Encoding.ASCII.GetBytes(RequestLine.ToString() + "\r\n" + Headers.ToString()));
+        }
+
+        public MemoryStream MakeRequestLineAndHeadersStream(string postpend)
+        {
+            Message.HostHeader hostHeader;
 
             hostHeader = new Message.HostHeader(this.RequestLine.RequestUri.Host);
             Headers[hostHeader.Name] = hostHeader.Value;
 
-            return new MemoryStream(System.Text.Encoding.ASCII.GetBytes(Headers.ToString()));
+            if (RequestLine.Method.GetType() == typeof(Http.Methods.Get))
+            {
+
+            }
+            else if (RequestLine.Method.GetType() == typeof(Http.Methods.Delete))
+            {
+
+            }
+            else if (RequestLine.Method.GetType() == typeof(Http.Methods.Head))
+            {
+
+            }
+            else
+            {
+                // Currently not supporting sending of chunked content
+                if (ContentLength == null)
+                    throw new Message.HeaderException("Content-Length header is null");
+            }
+
+            return new MemoryStream(System.Text.Encoding.ASCII.GetBytes(RequestLine.ToString() + "\r\n" + Headers.ToString() + postpend));
         }
     }
 }
