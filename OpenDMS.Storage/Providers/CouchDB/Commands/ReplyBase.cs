@@ -23,9 +23,18 @@ namespace OpenDMS.Storage.Providers.CouchDB.Commands
         protected abstract void ParseResponse();
         protected string StringifyResponseStream()
         {
-            if (_response.Body.ReceiveStream.GetType() != typeof(Networking.Protocols.Http.HttpNetworkStream))
-                throw new OpenDMS.Networking.Protocols.Http.HttpNetworkStreamException("Invalid stream type.");
+            if (_response.Body.ReceiveStream == null)
+                return null;
 
+            // Chunked uses InterceptorStream 
+
+            if (_response.Body.ReceiveStream.GetType() != typeof(Networking.Protocols.Http.HttpNetworkStream))
+            {
+                Logger.Storage.Error("Need to implement interceptors for chunked encoding.");
+                throw new OpenDMS.Networking.Protocols.Http.HttpNetworkStreamException("Invalid stream type.");
+            }
+
+            // Chunked cannot read to end in current state
             return ((Networking.Protocols.Http.HttpNetworkStream)_response.Body.ReceiveStream).ReadToEnd();
         }
 

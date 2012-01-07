@@ -51,6 +51,11 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
             return bytesRead;
         }
 
+        public void ReadToEndAsync()
+        {
+            _interceptor.ReadToEndAsync();
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotImplementedException();
@@ -65,5 +70,6 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
         {
             throw new NotImplementedException();
         }
+
     }
 }

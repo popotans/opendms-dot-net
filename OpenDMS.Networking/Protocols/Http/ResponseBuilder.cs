@@ -58,9 +58,9 @@ namespace OpenDMS.Networking.Protocols.Http
                 // Append the headers from newpacket to the other status and headers
                 _firstLineAndHeaders += newpacket.Substring(0, index);
                 // Reduce the buffer by the removed bytes
-                _remainingBuffer = TrimStartBuffer(_remainingBuffer, index);
+                _remainingBuffer = TrimStartBuffer(_remainingBuffer, index+4); // +4 because we want to remove the trailing \r\n\r\n also
                 // Reduce the append position by the number of removed bytes
-                _remainingBufferAppendPosition -= index;
+                _remainingBufferAppendPosition -= index+4; // +4 for same reason
 
                 lines = GetLines(_firstLineAndHeaders);
 
@@ -96,7 +96,9 @@ namespace OpenDMS.Networking.Protocols.Http
                 // No matter if we received the 100 or not, we can now parse headers
 
                 Response.Headers.Clear();
-                for (int i = loop; i < lines.Count; i++)
+
+                // We go loop+1 because we want to skip the status line
+                for (int i = loop+1; i < lines.Count; i++)
                 {
                     parts = new string[2];
                     parts[0] = lines[i].Substring(0, lines[i].IndexOf(':')).Trim();
@@ -111,33 +113,63 @@ namespace OpenDMS.Networking.Protocols.Http
 
         protected override void ParseAndAttachToBody_Callback(Tcp.TcpConnection sender, Tcp.TcpConnectionAsyncEventArgs e)
         {
+            HttpNetworkStream ns;
+            byte[] newBuffer = null;
+
             AsyncCallback callback = (AsyncCallback)e.UserToken;
 
             AppendAndParse(e.Buffer, 0, e.BytesTransferred);
             if (AllHeadersReceived)
             {
+                // Sets up the buffer to prepend
+                if (_remainingBufferAppendPosition > 0)
+                {
+                    // We need to take the left over buffer from _responseBuilder and prepend that
+                    // to an HttpNetworkStream wrapping the _tcpConnection and then give the user
+                    // that HttpNetworkStream... cake
+
+                    newBuffer = new byte[_remainingBufferAppendPosition];
+                    BytesReceived += e.BytesTransferred - newBuffer.Length;
+                    Buffer.BlockCopy(_remainingBuffer, 0, newBuffer, 0, newBuffer.Length);
+                }
+                else
+                {
+                    newBuffer = null;
+                }
+
+
+                
                 if (!Response.ContentLength.HasValue)
-                    throw new HttpNetworkStreamException("A Content-Length header was not found.");
+                { // If content length is not set
+                    if (!Response.Headers.ContainsKey(new Message.ChunkedTransferEncodingHeader()))
+                    {
+                        throw new HttpNetworkStreamException("A Content-Length header was not found.");
+                    }
 
-                ulong temp = (ulong)Response.ContentLength.Value;
+                    MessageSize = 0;
 
-                // We need to take the left over buffer from _responseBuilder and prepend that
-                // to an HttpNetworkStream wrapping the _tcpConnection and then give the user
-                // that HttpNetworkStream... cake
+                    // NetworkStream needs modified to handle undetermined length
+                    ns = new HttpNetworkStream(HttpNetworkStream.DirectionType.Download, newBuffer, 
+                        sender.Socket, System.IO.FileAccess.Read, false);
 
-                byte[] newBuffer = new byte[_remainingBufferAppendPosition];
-
-                BytesReceived += e.Length - newBuffer.Length;
-                MessageSize = BytesReceived + Response.ContentLength.Value;
-                Buffer.BlockCopy(_remainingBuffer, 0, newBuffer, 0, newBuffer.Length);
-
-                HttpNetworkStream ns = new HttpNetworkStream(HttpNetworkStream.DirectionType.Download,
-                    temp, newBuffer, sender.Socket, System.IO.FileAccess.Read, false);
-
-                if (Response.Headers.ContainsKey(new Message.ChunkedTransferEncodingHeader()))
                     Response.Body.IsChunked = true;
+                    Response.Body.ReceiveStream = new Interceptors.InterceptorStream(new Interceptors.ChunkedEncodingInterceptor(ns));        
+                }
+                else
+                { // Content length is set
+                    if (Response.Headers.ContainsKey(new Message.ChunkedTransferEncodingHeader()))
+                    {
+                        throw new HttpNetworkStreamException("A Content-Length header was found in a chunked transfer.");
+                    }
 
-                Response.Body.ReceiveStream = ns;
+                    ulong temp = (ulong)Response.ContentLength.Value;
+                    MessageSize = BytesReceived + Response.ContentLength.Value;
+
+                    ns = new HttpNetworkStream(HttpNetworkStream.DirectionType.Download,
+                        temp, newBuffer, sender.Socket, System.IO.FileAccess.Read, false);
+                    Response.Body.ReceiveStream = ns;
+                }
+
 
                 callback(this, Response);
             }

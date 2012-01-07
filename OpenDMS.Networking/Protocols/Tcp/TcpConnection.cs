@@ -36,7 +36,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
             ReceiveBufferSettings = param.ReceiveBuffer;
             SendBufferSettings = param.SendBuffer;
 
-            Logger.Network.Debug("New TCP connection created to host " + EndPoint.Address.ToString() + " on port " + EndPoint.Port.ToString());
+            Logger.Network.Debug("New TCP connection created for host " + EndPoint.Address.ToString() + " on port " + EndPoint.Port.ToString());
         }
 
         public void ConnectAsync()
@@ -46,10 +46,11 @@ namespace OpenDMS.Networking.Protocols.Tcp
             try
             {
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nSocket created.");
             }
             catch (Exception e)
             {
-                Logger.Network.Error("An exception occurred while instantiating the socket.", e);
+                Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while instantiating the socket.", e);
                 if (OnError != null)
                 {
                     OnError(this, "Exception instantiating socket.", e);
@@ -67,7 +68,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
             }
             catch (Exception e)
             {
-                Logger.Network.Error("An exception occurred while settings socket options.", e);
+                Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while settings socket options.", e);
                 if (OnError != null)
                 {
                     OnError(this, "Exception settings socket options.", e);
@@ -85,19 +86,19 @@ namespace OpenDMS.Networking.Protocols.Tcp
                 socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(Connect_Completed);
                 socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, Connect_Timeout));
 
-                Logger.Network.Debug("Connecting to " + EndPoint.Address.ToString() + " on " + EndPoint.Port.ToString() + "...");
+                Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nConnecting to " + EndPoint.Address.ToString() + " on " + EndPoint.Port.ToString() + "...");
 
                 try
                 {
                     if (!_socket.ConnectAsync(socketArgs))
                     {
-                        Logger.Network.Debug("ConnectAsync completed synchronously.");
+                        Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nConnectAsync completed synchronously.");
                         Connect_Completed(null, socketArgs);
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.Network.Error("An exception occurred while connecting the socket.", e);
+                    Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while connecting the socket.", e);
                     if (OnError != null) OnError(this, "Exception connecting socket.", e);
                     else throw;
                 }
@@ -108,14 +109,14 @@ namespace OpenDMS.Networking.Protocols.Tcp
         {
             lock (_socket)
             {
-                Logger.Network.Debug("Closing socket.");
+                Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nClosing socket.");
                 try
                 {
                     _socket.Close();
                 }
                 catch (Exception e)
                 {
-                    Logger.Network.Error("An exception occurred while calling _socket.Close.", e);
+                    Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while calling _socket.Close.", e);
                     if (OnError != null) OnError(this, "Exception calling _socket.Close.", e);
                     else throw;
                 }
@@ -127,7 +128,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
                 catch (Exception ex)
                 {
                     // Ignore it, its the higher level's job to deal with it.
-                    Logger.Network.Error("An unhandled exception was caught by Connection.CloseSocketAndTimeout in the OnTimeout event.", ex);
+                    Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn unhandled exception was caught by Connection.CloseSocketAndTimeout in the OnTimeout event.", ex);
                     throw;
                 }
             }
@@ -135,7 +136,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
         private void Connect_Timeout()
         {
-            Logger.Network.Error("Timeout during connection.");
+            Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nTimeout during connection.");
             CloseSocketAndTimeout();
         }
 
@@ -146,7 +147,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
             if (!TryStopTimeout(e.UserToken))
                 return;
 
-            Logger.Network.Error("Timeout during connection.");
+            Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nSocket connected.");
 
             try
             {
@@ -176,7 +177,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
             }
             catch (Exception ex)
             {
-                Logger.Network.Error("An exception occurred while stopping the timeout.", ex);
+                Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while stopping the timeout.", ex);
                 if (OnError != null)
                 {
                     OnError(this, "Exception while stopping timeout.", ex);
@@ -199,19 +200,19 @@ namespace OpenDMS.Networking.Protocols.Tcp
                 {
                     socketArgs.UserToken = new TcpConnectionAsyncEventArgs(new Timeout(SendBufferSettings.Timeout, Close_Timeout));
 
-                    Logger.Network.Debug("Disconnecting the socket and closing...");
+                    Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nDisconnecting the socket and closing...");
 
                     try
                     {
                         if (!_socket.DisconnectAsync(socketArgs))
                         {
-                            Logger.Network.Debug("DisconnectAsync completed synchronously.");
+                            Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nDisconnectAsync completed synchronously.");
                             Close_Completed(null, socketArgs);
                         }
                     }
                     catch (Exception e)
                     {
-                        Logger.Network.Error("An exception occurred while disconnecting the socket.", e);
+                        Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while disconnecting the socket.", e);
                         if (OnError != null) OnError(this, "Exception disconnecting socket.", e);
                         else throw;
                     }
@@ -231,13 +232,13 @@ namespace OpenDMS.Networking.Protocols.Tcp
             catch (Exception ex)
             {
                 // Ignore it, its the higher level's job to deal with it.
-                Logger.Network.Error("An unhandled exception was caught by Connection.Close_Completed in the OnDisconnect event.", ex);
+                Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn unhandled exception was caught by Connection.Close_Completed in the OnDisconnect event.", ex);
                 throw;
             }
 
             lock (_socket)
             {
-                Logger.Network.Debug("Disconnected and closing.");
+                Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nDisconnected and closing.");
 
                 try
                 {
@@ -246,7 +247,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
                 }
                 catch (Exception ex)
                 {
-                    Logger.Network.Error("An exception occurred while calling _socket.Close.", ex);
+                    Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while calling _socket.Close.", ex);
                     if (OnError != null) OnError(this, "Exception calling _socket.Close.", ex);
                     else throw;
                 }
@@ -255,7 +256,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
         private void Close_Timeout()
         {
-            Logger.Network.Error("Timeout during closing.");
+            Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nTimeout during closing.");
             CloseSocketAndTimeout();
         }
 
@@ -279,16 +280,16 @@ namespace OpenDMS.Networking.Protocols.Tcp
             {
                 try
                 {
-                    Logger.Network.Debug("Sending Packet:\r\n" + System.Text.Encoding.UTF8.GetString(buffer,0, bytesRead));
+                    Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nSending Packet:\r\n" + System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead));
                     if (!_socket.SendAsync(socketArgs))
                     {
-                        Logger.Network.Debug("SendAsync completed synchronously.");
+                        Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nSendAsync completed synchronously.");
                         SendAsyncStream_Completed(null, socketArgs);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Network.Error("An exception occurred while sending on socket.", ex);
+                    Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while sending on socket.", ex);
                     if (OnError != null) OnError(this, "Exception sending on socket.", ex);
                     else throw;
                 }
@@ -334,16 +335,16 @@ namespace OpenDMS.Networking.Protocols.Tcp
             {
                 try
                 {
-                    Logger.Network.Debug("Sending Packet:\r\n" + System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead));
+                    Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nSending Packet:\r\n" + System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead));
                     if (!_socket.SendAsync(e))
                     {
-                        Logger.Network.Debug("SendAsyncStream_Completed completed synchronously.");
+                        Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nSendAsyncStream_Completed completed synchronously.");
                         SendAsyncStream_Completed(null, e);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Network.Error("An exception occurred while sending on socket.", ex);
+                    Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while sending on socket.", ex);
                     if (OnError != null) OnError(this, "Exception sending on socket.", ex);
                     else throw;
                 }
@@ -367,16 +368,16 @@ namespace OpenDMS.Networking.Protocols.Tcp
             {
                 try
                 {
-                    Logger.Network.Debug("Sending Packet:\r\n" + System.Text.Encoding.UTF8.GetString(buffer, 0, length-offset));
+                    Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nSending Packet:\r\n" + System.Text.Encoding.UTF8.GetString(buffer, 0, length - offset));
                     if (!_socket.SendAsync(socketArgs))
                     {
-                        Logger.Network.Debug("SendAsync completed synchronously.");
+                        Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nSendAsync completed synchronously.");
                         SendAsync_Completed(null, socketArgs);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Network.Error("An exception occurred while sending on socket.", ex);
+                    Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while sending on socket.", ex);
                     if (OnError != null) OnError(this, "Exception sending on socket.", ex);
                     else throw;
                 }
@@ -403,7 +404,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
         private void SendAsync_Timeout()
         {
-            Logger.Network.Error("Timeout during sending request.");
+            Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nTimeout during sending request.");
             CloseSocketAndTimeout();
         }
 
@@ -421,13 +422,13 @@ namespace OpenDMS.Networking.Protocols.Tcp
             {
                 if (!_socket.ReceiveAsync(socketArgs))
                 {
-                    Logger.Network.Debug("ReceiveAsync completed synchronously.");
+                    Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nReceiveAsync completed synchronously.");
                     ReceiveAsync_Completed(null, socketArgs);
                 }
             }
             catch (Exception e)
             {
-                Logger.Network.Error("An exception occurred while receiving from the socket.", e);
+                Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nAn exception occurred while receiving from the socket.", e);
                 if (OnError != null) OnError(this, "Exception receiving from socket.", e);
                 else throw;
             }
@@ -440,7 +441,7 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
         private void ReceiveAsync_Timeout()
         {
-            Logger.Network.Error("Timeout during receiving from socket.");
+            Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nTimeout during receiving from socket.");
             CloseSocketAndTimeout();
         }
 
@@ -453,16 +454,30 @@ namespace OpenDMS.Networking.Protocols.Tcp
 
             _bytesReceivedTotal += (ulong)e.BytesTransferred;
 
-            Logger.Network.Debug("Receiving Packet:\r\n" + System.Text.Encoding.UTF8.GetString(e.Buffer, e.Offset, e.BytesTransferred));
+            Logger.Network.Debug("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nReceiving Packet of length " + e.BytesTransferred.ToString() + ":\r\n" + System.Text.Encoding.UTF8.GetString(e.Buffer, e.Offset, e.BytesTransferred));
 
-            if (OnProgress != null) OnProgress(this, DirectionType.Download, e.BytesTransferred);
+            try
+            {
+                if (OnProgress != null) OnProgress(this, DirectionType.Download, e.BytesTransferred);
+            }
+            catch (Exception ex)
+            {
+                Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nTcpConnection ID: " + this.GetHashCode().ToString() + "\r\nAn error occurred while reporting progress to higher level code.\r\nMessage: " + ex.Message, ex);
+            }
 
             if (userToken.AsyncCallback != null)
             {
                 userToken.BytesTransferred = e.BytesTransferred;
                 userToken.Buffer = e.Buffer;
                 userToken.Length = e.Count;
-                userToken.AsyncCallback(this, userToken);
+                try
+                {
+                    userToken.AsyncCallback(this, userToken);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Network.Error("Socket ID: " + _socket.GetHashCode().ToString() + "\r\nTcpConnection ID: " + this.GetHashCode().ToString() + "\r\nAn error occurred while reporting progress to higher level code.\r\nMessage: " + ex.Message, ex);
+                }
             }
         }
     }

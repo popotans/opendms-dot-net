@@ -22,7 +22,10 @@ namespace OpenDMS.Networking.Protocols
         public PrependableNetworkStream(Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket, byte[] bytesToPrepend)
             : this(socket, fileAccess, ownsSocket)
         {
-            _bufferToPrepend = new NetworkBuffer(bytesToPrepend);
+            if (bytesToPrepend == null)
+                _bufferToPrepend = new NetworkBuffer(new byte[0]);
+            else
+                _bufferToPrepend = new NetworkBuffer(bytesToPrepend);
         }
 
         public PrependableNetworkStream(Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket)
