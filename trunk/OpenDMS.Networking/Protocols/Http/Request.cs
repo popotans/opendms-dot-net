@@ -55,7 +55,7 @@ namespace OpenDMS.Networking.Protocols.Http
                     throw new Message.HeaderException("Content-Length header is null");
             }
 
-            return new MemoryStream(System.Text.Encoding.ASCII.GetBytes(RequestLine.ToString() + "\r\n" + Headers.ToString()));
+            return new MemoryStream(System.Text.Encoding.ASCII.GetBytes(RequestLine.ToString() + "\r\n" + Headers.ToString() + "\r\n"));
         }
 
         public MemoryStream MakeRequestLineAndHeadersStream(string postpend)
@@ -84,7 +84,7 @@ namespace OpenDMS.Networking.Protocols.Http
                     throw new Message.HeaderException("Content-Length header is null");
             }
 
-            return new MemoryStream(System.Text.Encoding.ASCII.GetBytes(RequestLine.ToString() + "\r\n" + Headers.ToString() + postpend));
+            return new MemoryStream(System.Text.Encoding.ASCII.GetBytes(RequestLine.ToString() + "\r\n" + Headers.ToString() + "\r\n" + postpend));
         }
     }
 }

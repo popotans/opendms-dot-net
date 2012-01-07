@@ -41,6 +41,8 @@ namespace OpenDMS.HttpModule
                 _handler.Init();
             }
 
+            Logger.General.Debug("ApiModule initialized.");
+
             // Need to look into using Async so more requests can be handled at once
             //app.AddOnBeginRequestAsync(new BeginEventHandler(BeginRequest), new EndEventHandler(EndBeginRequest));
             app.BeginRequest += new EventHandler(OnBeginRequest);
@@ -56,9 +58,16 @@ namespace OpenDMS.HttpModule
             HttpApplication app = (HttpApplication)s;
             ServicePointMapElement ele = _map.GetBestMatch(app.Request.Url.PathAndQuery, app.Request.HttpMethod);
 
+            Logger.General.Debug("Request received for: " + app.Request.Url.ToString());
+
             if (ele != null)
             {
+                Logger.General.Debug("Handler method found: " + ele.MethodInfo.Name);
                 ele.MethodInfo.Invoke(_handler, new object[] { app });
+            }
+            else
+            {
+                Logger.General.Debug("No handler method was found for " + app.Request.Url.ToString());
             }
         }
     }

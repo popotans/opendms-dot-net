@@ -70,9 +70,15 @@ namespace OpenDMS.Networking.Protocols.Http.Message
             byte[] bytes = new byte[1] { (byte)asciiCharacterCode };
             return str.Contains(System.Text.Encoding.ASCII.GetString(bytes));
         }
+
         private bool StringContainsCharacter(string str, char asciiCharacterCode)
         {
             return StringContainsCharacter(str, (byte)asciiCharacterCode);
+        }
+
+        public override string ToString()
+        {
+            return Value;
         }
     }
 }

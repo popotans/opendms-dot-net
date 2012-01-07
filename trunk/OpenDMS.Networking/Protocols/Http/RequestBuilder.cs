@@ -41,7 +41,6 @@ namespace OpenDMS.Networking.Protocols.Http
             {
                 string[] parts;
                 List<string> lines;
-                int loop = 0;
 
                 // index + 4 = how many bytes to skip in _remainingBuffer then tie the stream to the
                 // Response.Body
@@ -53,22 +52,21 @@ namespace OpenDMS.Networking.Protocols.Http
                 // Append the headers from newpacket to the other status and headers
                 _firstLineAndHeaders += newpacket.Substring(0, index);
                 // Reduce the buffer by the removed bytes
-                _remainingBuffer = TrimStartBuffer(_remainingBuffer, index);
+                _remainingBuffer = TrimStartBuffer(_remainingBuffer, index+4);
                 // Reduce the append position by the number of removed bytes
-                _remainingBufferAppendPosition -= index;
+                _remainingBufferAppendPosition -= index+4;
 
                 lines = GetLines(_firstLineAndHeaders);
 
                 if (Request == null || Request.RequestLine == null)
                 {
-                    // We have no status line yet, need to parse one
-                    string temp = newpacket.Substring(0, newpacket.IndexOf("\r\n")).Trim();
-                    RequestLine rl = RequestLine.Parse(temp);
+                    // We have no request line yet, need to parse one
+                    RequestLine rl = RequestLine.Parse(lines[0]);
                     Request = new Request(rl.Method, rl.RequestUri);
                 }
                 
                 Request.Headers.Clear();
-                for (int i = loop; i < lines.Count; i++)
+                for (int i = 1; i < lines.Count; i++)
                 {
                     parts = new string[2];
                     parts[0] = lines[i].Substring(0, lines[i].IndexOf(':')).Trim();
@@ -83,6 +81,8 @@ namespace OpenDMS.Networking.Protocols.Http
 
         protected override void ParseAndAttachToBody_Callback(Tcp.TcpConnection sender, Tcp.TcpConnectionAsyncEventArgs e)
         {
+            HttpNetworkStream ns;
+
             AsyncCallback callback = (AsyncCallback)e.UserToken;
 
             AppendAndParse(e.Buffer, 0, e.Length);
@@ -93,18 +93,29 @@ namespace OpenDMS.Networking.Protocols.Http
 
                 ulong temp = (ulong)Request.ContentLength.Value;
 
-                // We need to take the left over buffer from _responseBuilder and prepend that
-                // to an HttpNetworkStream wrapping the _tcpConnection and then give the user
-                // that HttpNetworkStream... cake
+                if (_remainingBufferAppendPosition > 0)
+                {
+                    // We need to take the left over buffer from _responseBuilder and prepend that
+                    // to an HttpNetworkStream wrapping the _tcpConnection and then give the user
+                    // that HttpNetworkStream... cake
 
-                byte[] newBuffer = new byte[_remainingBufferAppendPosition];
+                    byte[] newBuffer = new byte[_remainingBufferAppendPosition];
 
-                BytesReceived += e.Length - newBuffer.Length;
-                MessageSize = BytesReceived + Request.ContentLength.Value;
-                Buffer.BlockCopy(_remainingBuffer, 0, newBuffer, 0, newBuffer.Length);
+                    BytesReceived += e.BytesTransferred - newBuffer.Length;
+                    MessageSize = BytesReceived + Request.ContentLength.Value;
+                    Buffer.BlockCopy(_remainingBuffer, 0, newBuffer, 0, newBuffer.Length);
 
-                HttpNetworkStream ns = new HttpNetworkStream(HttpNetworkStream.DirectionType.Upload,
-                    temp, newBuffer, sender.Socket, System.IO.FileAccess.Write, false);
+                    ns = new HttpNetworkStream(HttpNetworkStream.DirectionType.Upload,
+                        temp, newBuffer, sender.Socket, System.IO.FileAccess.Write, false);
+                }
+                else
+                {
+                    BytesReceived += e.BytesTransferred;
+                    MessageSize = BytesReceived + Response.ContentLength.Value;
+
+                    ns = new HttpNetworkStream(HttpNetworkStream.DirectionType.Upload,
+                        temp, sender.Socket, System.IO.FileAccess.Write, false);
+                }
 
                 if (Request.Headers.ContainsKey(new Message.ChunkedTransferEncodingHeader()))
                     Request.Body.IsChunked = true;

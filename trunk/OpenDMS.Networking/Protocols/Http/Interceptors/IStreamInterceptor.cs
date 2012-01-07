@@ -9,6 +9,8 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
         bool CanWrite { get; }
         long Position { get; }
         int Read(byte[] buffer, int offset, int length);
+        void ReadAsync(byte[] buffer, int offset, int length);
+        void ReadToEndAsync();
         void Write(byte[] buffer, int offset, int length);
         void Flush();
         void Dispose();

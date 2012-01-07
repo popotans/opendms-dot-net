@@ -16,6 +16,7 @@ namespace OpenDMS.Networking.Protocols.Http
         private ulong _bytesReceived = 0;
         private ulong _bytesSent = 0;
         private ulong _contentLength = 0;
+        private bool _unknownContentLength = false;
         private Socket _socket = null;
         private PrependableNetworkStream _stream = null;
 
@@ -26,12 +27,14 @@ namespace OpenDMS.Networking.Protocols.Http
             Direction = direction;
         }
 
-        public HttpNetworkStream(DirectionType direction, ulong contentLength, byte[] prependToStream, Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket)
+        public HttpNetworkStream(DirectionType direction, ulong contentLength, byte[] prependToStream, 
+            Socket socket, System.IO.FileAccess fileAccess, bool ownsSocket)
         {
             Direction = direction;
             _contentLength = contentLength;
             _socket = socket;
             _stream = new PrependableNetworkStream(socket, fileAccess, ownsSocket, prependToStream);
+            _unknownContentLength = false;
         }
 
         public HttpNetworkStream(DirectionType direction, ulong contentLength, Socket socket,
@@ -41,6 +44,25 @@ namespace OpenDMS.Networking.Protocols.Http
             _contentLength = contentLength;
             _socket = socket;
             _stream = new PrependableNetworkStream(socket, fileAccess, ownsSocket);
+            _unknownContentLength = false;
+        }
+
+        public HttpNetworkStream(DirectionType direction, byte[] prependToStream, Socket socket, 
+            System.IO.FileAccess fileAccess, bool ownsSocket)
+        {
+            Direction = direction;
+            _socket = socket;
+            _stream = new PrependableNetworkStream(socket, fileAccess, ownsSocket, prependToStream);
+            _unknownContentLength = true;
+        }
+
+        public HttpNetworkStream(DirectionType direction, Socket socket,
+            System.IO.FileAccess fileAccess, bool ownsSocket)
+        {
+            Direction = direction;
+            _socket = socket;
+            _stream = new PrependableNetworkStream(socket, fileAccess, ownsSocket);
+            _unknownContentLength = true;
         }
 
 
@@ -172,6 +194,14 @@ namespace OpenDMS.Networking.Protocols.Http
 
         public override int Read(byte[] buffer, int offset, int length)
         {
+            if (_unknownContentLength)
+                return Read_UnknownContentLength(buffer, offset, length);
+            else
+                return Read_KnownContentLength(buffer, offset, length);
+        }
+
+        private int Read_KnownContentLength(byte[] buffer, int offset, int length)
+        {
             int amount = 0;
 
             // Synchronous so let any exceptions bubble up for the higher level
@@ -202,7 +232,37 @@ namespace OpenDMS.Networking.Protocols.Http
             return amount;
         }
 
+        private int Read_UnknownContentLength(byte[] buffer, int offset, int length)
+        {
+            int amount = 0;
+
+            // Synchronous so let any exceptions bubble up for the higher level
+
+            amount = _stream.Read(buffer, offset, length);
+            _bytesReceived += (ulong)amount;
+            try
+            {
+                if (OnProgress != null) OnProgress(this, DirectionType.Download, amount);
+            }
+            catch (Exception e)
+            {
+                // Ignore it, its the higher level's job to deal with it.
+                Logger.Network.Error("An unhandled exception was caught by HttpNetworkStream.Read in the OnProgress event.", e);
+                throw;
+            }
+
+            return amount;
+        }
+
         public byte ReadByte()
+        {
+            if (_unknownContentLength)
+                return ReadByte_UnknownContentLength();
+            else
+                return ReadByte_KnownContentLength();
+        }
+
+        private byte ReadByte_KnownContentLength()
         {
             byte retVal = 0;
 
@@ -230,7 +290,37 @@ namespace OpenDMS.Networking.Protocols.Http
             return retVal;
         }
 
+        private byte ReadByte_UnknownContentLength()
+        {
+            byte retVal = 0;
+
+            // Synchronous so let any exceptions bubble up for the higher level
+
+            retVal = _stream.ReadByte();
+            _bytesReceived++;
+            try
+            {
+                if (OnProgress != null) OnProgress(this, DirectionType.Download, 1);
+            }
+            catch (Exception e)
+            {
+                // Ignore it, its the higher level's job to deal with it.
+                Logger.Network.Error("An unhandled exception was caught by HttpNetworkStream.Read in the OnProgress event.", e);
+                throw;
+            }
+
+            return retVal;
+        }
+
         public void ReadAsync(byte[] buffer, int offset, int count)
+        {
+            if (_unknownContentLength)
+                ReadAsync_UnknownContentLength(buffer, offset, count);
+            else
+                ReadAsync_KnownContentLength(buffer, offset, count);
+        }
+
+        private void ReadAsync_KnownContentLength(byte[] buffer, int offset, int count)
         {
             StreamAsyncEventArgs args = new StreamAsyncEventArgs();
             Timeout timeout = null;
@@ -270,8 +360,38 @@ namespace OpenDMS.Networking.Protocols.Http
                 throw new ContentLengthExceededException("The read was requested starting outside the content length.");
         }
 
+        private void ReadAsync_UnknownContentLength(byte[] buffer, int offset, int count)
+        {
+            StreamAsyncEventArgs args = new StreamAsyncEventArgs();
+            Timeout timeout = null;
+            int lengthMinusPrepend = count;
+
+            if (!TryStartTimeout(_socket.ReceiveTimeout, out timeout,
+                new Timeout.TimeoutEvent(ReadAsync_OnTimeout)))
+                return;
+
+            args.Complete = ReadAsync_Callback;
+            args.UserToken = timeout;
+
+            args.SetBuffer(buffer, offset, count);
+
+            try
+            {
+                _stream.ReadAsync(args);
+            }
+            catch (Exception e)
+            {
+                Logger.Network.Error("An exception occurred while calling _stream.BeginRead.", e);
+                if (OnError != null) OnError(this, "Exception calling _stream.BeginRead", e);
+                else throw;
+            }
+        }
+
         public string ReadToEnd()
         {
+            if (_unknownContentLength)
+                throw new HttpNetworkStreamException("Content length must be set to call WriteAsync.");
+
             // Synchronous so let any exceptions bubble up for the higher level
 
             byte[] buffer = new byte[_socket.ReceiveBufferSize];
@@ -295,6 +415,9 @@ namespace OpenDMS.Networking.Protocols.Http
 
         public void ReadToEndAsync()
         {
+            if (_unknownContentLength)
+                throw new HttpNetworkStreamException("Content length must be set to call WriteAsync.");
+
             Timeout timeout = null;
             StreamAsyncEventArgs args = new StreamAsyncEventArgs();
 
@@ -338,11 +461,17 @@ namespace OpenDMS.Networking.Protocols.Http
 
         public void WriteAsync(StreamAsyncEventArgs e)
         {
+            if (_unknownContentLength)
+                throw new HttpNetworkStreamException("Content length must be set to call WriteAsync.");
+
             Timeout timeout = null;
 
             if (!TryStartTimeout(_socket.SendTimeout, out timeout,
                 new Timeout.TimeoutEvent(WriteAsync_OnTimeout)))
                 return;
+
+            if (_unknownContentLength)
+                throw new HttpNetworkStreamException("Content length must be set to call WriteAsync.");
 
             if (_bytesSent >= _contentLength)
                 throw new ContentLengthExceededException("The read was requested starting outside the content length.");
@@ -365,6 +494,9 @@ namespace OpenDMS.Networking.Protocols.Http
 
         private void CopyToAsync_Callback(StreamAsyncEventArgs e)
         {
+            if (_unknownContentLength)
+                throw new HttpNetworkStreamException("Content length must be set to call WriteAsync.");
+
             Timeout timeout = null;
             Tuple<Timeout, System.IO.Stream> userToken = (Tuple<Timeout, System.IO.Stream>)e.UserToken;
 

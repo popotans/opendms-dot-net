@@ -5,7 +5,10 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
     public class ChunkedEncodingInterceptor 
         : InterceptorBase
     {
+        private delegate void FilledInternalBufferDelegate(InterceptorBuffer buffer, bool atEndOfStream);
+
         private int _readChunkBytesRemaining = 0;
+        private bool _atEoS = false;
 
         public override long Position
         {
@@ -21,7 +24,6 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
 
         public override int Read(byte[] buffer, int offset, int length)
         {
-            bool atEoS;
             int bytesRead = 0;
             int chunkLength = 0;
             int chunkLengthEnd = 0;
@@ -30,7 +32,7 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
             InterceptorBuffer bufferFromStream = new InterceptorBuffer(length);
 
             // Filling the bufferFromStream
-            FillInternalBuffer(bufferFromStream, out atEoS);
+            FillInternalBuffer(bufferFromStream, out _atEoS);
 
             // bufferFromStream is now full or if its position < maximum size then it holds the end of the stream
 
@@ -59,7 +61,7 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
             if ((bufferFromStream.Position < chunkLength) &&
                 (bufferFromStream.Position < length))
             { // our internal buffer does not have enough data... why not?  Lets figure it out
-                if (atEoS)
+                if (_atEoS)
                 { // We are at the end of the stream
                     _readChunkBytesRemaining = 0;
                     bufferFromStream.BlockCopy(buffer, offset, bufferFromStream.Position);
@@ -70,7 +72,7 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
                 { // For some reason we did not get enough from the network, lets ask for more
                     int oldSize = bufferFromStream.Position;
 
-                    FillInternalBuffer(bufferFromStream, out atEoS);
+                    FillInternalBuffer(bufferFromStream, out _atEoS);
                     
                     // Now lets see if we got more?
                     if (oldSize >= bufferFromStream.Position)
@@ -96,6 +98,25 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
 
             Position += bytesRead;
             return bytesRead;
+        }
+        
+        public override int ReadAsync(byte[] buffer, int offset, int length)
+        {
+        }
+
+        public void ReadToEndAsync()
+        {
+            byte[] buffer = new byte[8192];
+            int bytesRead = 0;
+            string str = "";
+
+            while (!_atEoS)
+            {
+                bytesRead = Read(buffer, 0, buffer.Length);
+                str += System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            }
+
+            return str;
         }
 
         private void TrimStartEoL(InterceptorBuffer buffer)
@@ -139,6 +160,62 @@ namespace OpenDMS.Networking.Protocols.Http.Interceptors
                 else if (tempPos == tempBuffer.Length)
                     break;
             }
+
+            if (bytesRead == 0)
+                atEndOfStream = true;
+
+            buffer.AppendBlock(tempBuffer, 0, tempPos);
+        }
+
+        private void FillInternalBufferAsync(InterceptorBuffer buffer, FilledInternalBufferDelegate callback)
+        {
+            // Quick check to make sure we even need to hit the stream
+            if (buffer.Position == buffer.MaximumSize)
+                return;
+
+            int tempPos = 0;
+            int bytesRead = 0;
+
+
+            _inputStream.OnProgress += delegate(Http.HttpNetworkStream sender, Http.HttpNetworkStream.DirectionType direction, int packetSize)
+            {
+                TriggerOnProgress((Tcp.DirectionType)direction, packetSize);
+            };
+            
+            _inputStream.OnTimeout += delegate(Http.HttpNetworkStream sender)
+            {
+                TriggerOnTimeout();
+            };
+
+            _inputStream.OnError += delegate(Http.HttpNetworkStream sender, string message, Exception exception)
+            {
+                TriggerOnError(message, exception);
+            };
+
+            _inputStream.OnBufferOperationComplete += delegate(Http.HttpNetworkStream sender, 
+                Http.HttpNetworkStream.DirectionType direction, byte[] buffer2, int offset, int length)
+            {
+                bytesRead = length - offset;
+                tempPos += bytesRead;
+
+                // Here is where I stopped, trying to work out how to async fill the internal buffer.
+
+                while(tempPos < tempBuffer.Length)
+                {
+                    buffer.AppendBlock(buffer2, offset, length);
+                    FillInternalBufferAsync(buffer,
+                }
+
+                if (tempPos > tempBuffer.Length)
+                    throw new IndexOutOfRangeException();
+
+                if (callback != null) callback(
+            };
+            
+
+
+            _inputStream.ReadAsync(tempBuffer, 0, tempBuffer.Length);
+
 
             if (bytesRead == 0)
                 atEndOfStream = true;

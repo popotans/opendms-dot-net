@@ -42,6 +42,7 @@ namespace OpenDMS.Networking.Protocols.Http
             Uri = uri;
             _receiveBufferSettings = receiveBufferSettings;
             _sendBufferSettings = sendBufferSettings;
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nHttpConnection created.");
         }
 
         public HttpConnection(Uri uri, int sendTimeout, int receiveTimeout,
@@ -50,6 +51,7 @@ namespace OpenDMS.Networking.Protocols.Http
             Uri = uri;
             _receiveBufferSettings = new Tcp.Params.Buffer() { Size = receiveBufferSize, Timeout = receiveTimeout };
             _sendBufferSettings = new Tcp.Params.Buffer() { Size = sendBufferSize, Timeout = sendTimeout };
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nHttpConnection created.");
         }
 
         private void ResolveHostAsync()
@@ -58,18 +60,30 @@ namespace OpenDMS.Networking.Protocols.Http
 
             if (IPAddress.TryParse(Uri.DnsSafeHost, out ip))
             {
+                Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nUri received contained the host IP, thus no host resolution was required, continuing with the IP received.");
+
                 _remoteHostEntry = new IPHostEntry();
                 _remoteHostEntry.AddressList = new IPAddress[1];
                 _remoteHostEntry.AddressList[0] = ip;
                 if (OnHostResolved != null) OnHostResolved(this, _remoteHostEntry);
             }
             else
+            {
+                Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nAttempting to resolve host " + Uri.DnsSafeHost);
+
                 Dns.BeginGetHostEntry(Uri.DnsSafeHost, ResolveHostAsync_Callback, null);
+            }
         }
 
         private void ResolveHostAsync_Callback(IAsyncResult ar)
         {
             _remoteHostEntry = Dns.EndGetHostEntry(ar);
+
+            if (_remoteHostEntry.AddressList.Length > 0)
+                Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nRemote host resolved to " + _remoteHostEntry.AddressList[0].ToString());
+            else
+                Logger.Network.Warn("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nResolved remote host without any results.");
+
             if (OnHostResolved != null) OnHostResolved(this, _remoteHostEntry);
         }
 
@@ -98,6 +112,8 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnError += new Tcp.TcpConnection.ErrorDelegate(ConnectAsync_OnHostResolved_OnError);
             _tcpConnection.OnTimeout += new Tcp.TcpConnection.ConnectionDelegate(ConnectAsync_OnHostResolved_OnTimeout);
 
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection establishing connection to remote host using TcpConnection.");
+
             _tcpConnection.ConnectAsync();
         }
 
@@ -106,6 +122,8 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnConnect -= ConnectAsync_OnHostResolved_OnConnect;
             _tcpConnection.OnError -= ConnectAsync_OnHostResolved_OnError;
             _tcpConnection.OnTimeout -= ConnectAsync_OnHostResolved_OnTimeout;
+
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection connected to remote host.");
 
             if (OnConnect != null) OnConnect(this);
         }
@@ -117,6 +135,8 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnError -= ConnectAsync_OnHostResolved_OnError;
             _tcpConnection.OnTimeout -= ConnectAsync_OnHostResolved_OnTimeout;
 
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection disconnected from remote host.");
+
             if (OnDisconnect != null) OnDisconnect(this);
         }
 
@@ -126,6 +146,8 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnConnect -= ConnectAsync_OnHostResolved_OnConnect;
             _tcpConnection.OnError -= ConnectAsync_OnHostResolved_OnError;
             _tcpConnection.OnTimeout -= ConnectAsync_OnHostResolved_OnTimeout;
+
+            Logger.Network.Error("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection encountered an error.\r\nMessage: " + message, exception);
 
             if (OnError != null) OnError(this, message, exception);
         }
@@ -137,6 +159,8 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnError -= ConnectAsync_OnHostResolved_OnError;
             _tcpConnection.OnTimeout -= ConnectAsync_OnHostResolved_OnTimeout;
 
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection connected to remote host.");
+
             if (OnTimeout != null) OnTimeout(this);
         }
 
@@ -144,6 +168,8 @@ namespace OpenDMS.Networking.Protocols.Http
         {
             _tcpConnection.OnDisconnect += new Tcp.TcpConnection.ConnectionDelegate(DisconnectAsync_OnDisconnect);
             _tcpConnection.OnError += new Tcp.TcpConnection.ErrorDelegate(DisconnectAsync_OnError);
+
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection disconnecting from remote host.");
 
             _tcpConnection.DisconnectAsync();
         }
@@ -153,6 +179,8 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnDisconnect -= DisconnectAsync_OnDisconnect;
             _tcpConnection.OnError -= DisconnectAsync_OnError;
 
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection disconnected from remote host.");
+
             if (OnDisconnect != null) OnDisconnect(this);
         }
 
@@ -160,6 +188,8 @@ namespace OpenDMS.Networking.Protocols.Http
         {
             _tcpConnection.OnDisconnect -= DisconnectAsync_OnDisconnect;
             _tcpConnection.OnError -= DisconnectAsync_OnError;
+
+            Logger.Network.Error("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection encountered an error while disconnecting from remote host\r\nMessage: " + message, exception);
 
             if (OnError != null) OnError(this, message, exception);
         }
@@ -183,19 +213,24 @@ namespace OpenDMS.Networking.Protocols.Http
 
             requestSize += stream.Length;
 
-            if (request.Body.SendStream != null)
-                requestSize += request.Body.SendStream.Length;
+            if (stream != null)
+                requestSize += stream.Length;
             
             onProgress = delegate(Tcp.TcpConnection sender, Tcp.DirectionType direction, int packetSize)
             {
                 bytesSent += packetSize;
-                if (OnProgress != null) OnProgress(this, direction, packetSize, ((decimal)bytesSent / (decimal)requestSize), 0);
+                Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + 
+                    "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() +
+                    "\r\nBytes Sent: " + bytesSent.ToString() + 
+                    "\r\nRequest Size: " + requestSize.ToString() + 
+                    "\r\nPacket Size: " + packetSize.ToString() +
+                    "\r\nHttpConnection reporting progress sending to remote host.");
+                if (OnProgress != null) OnProgress(this, direction, packetSize, ((decimal)((decimal)bytesSent / (decimal)requestSize)), 0);
             };
 
             _tcpConnection.OnProgress += onProgress;
             _tcpConnection.OnError += new Tcp.TcpConnection.ErrorDelegate(SendRequest_OnError);
             _tcpConnection.OnTimeout += new Tcp.TcpConnection.ConnectionDelegate(SendRequest_OnTimeout);
-
 
             callback = delegate(Tcp.TcpConnection sender, Tcp.TcpConnectionAsyncEventArgs e)
             {
@@ -205,6 +240,8 @@ namespace OpenDMS.Networking.Protocols.Http
                 //_tcpConnection.OnTimeout -= onTimeout;
 
                 Tcp.TcpConnection.AsyncCallback c100Callback, contentSendCallback;
+
+                Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection sent the stream.");
 
                 contentSendCallback = delegate(Tcp.TcpConnection sender3, Tcp.TcpConnectionAsyncEventArgs e3)
                 { // Called when all the content is sent, need to receive
@@ -222,21 +259,36 @@ namespace OpenDMS.Networking.Protocols.Http
                 {
                     _responseBuilder = new ResponseBuilder(request);
 
-                    _responseBuilder.AppendAndParse(e2.Buffer, 0, e2.Length);
+                    _responseBuilder.AppendAndParse(e2.Buffer, 0, e2.BytesTransferred);
 
                     if (_responseBuilder.Response == null)
+                    {
+                        Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection did not receive the expected 100-Continue response.");
                         throw new HttpNetworkStreamException("Status 100 Continue not received.");
+                    }
 
-                    if (request.Body.ReceiveStream != null)
-                        _tcpConnection.SendAsync(request.Body.ReceiveStream, contentSendCallback);
+                    Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection received the expected 100-Continue response.");
+
+                    if (request.Body.SendStream != null)
+                    {
+                        Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection requesting TcpConnection to send the body content.");
+                        _tcpConnection.SendAsync(request.Body.SendStream, contentSendCallback);
+                    }
                 };
 
                 if (request.Headers.ContainsKey(new Message.Expect100ContinueHeader()))
+                {
+                    Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nThe request was sent with a Expect: 100-Continue header, now checking for the 100-Continue response.");
+
                     Check100Continue(c100Callback);
+                }
                 else
                 {
                     if (request.Body.SendStream != null)
+                    {
+                        Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection requesting TcpConnection to send the body content.");
                         _tcpConnection.SendAsync(request.Body.SendStream, contentSendCallback);
+                    }
                     else
                     {
                         _tcpConnection.OnError -= SendRequest_OnError;
@@ -248,6 +300,7 @@ namespace OpenDMS.Networking.Protocols.Http
                 }
             };
 
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection requesting TcpConnection to send a stream.");
             _tcpConnection.SendAsync(stream, callback);
         }
 
@@ -256,6 +309,7 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnError -= SendRequest_OnError;
             _tcpConnection.OnTimeout -= SendRequest_OnTimeout;
 
+            Logger.Network.Error("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection send timed-out.");
             if (OnTimeout != null) OnTimeout(this);
         }
 
@@ -264,6 +318,7 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnError -= SendRequest_OnError;
             _tcpConnection.OnTimeout -= SendRequest_OnTimeout;
 
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection encountered an error while sending data\r\nMessage: " + message, exception);
             if (OnError != null) OnError(this, message, exception);
         }
         
@@ -278,7 +333,10 @@ namespace OpenDMS.Networking.Protocols.Http
             while (_tcpConnection.BytesAvailable <= 0)
             {
                 if ((_receiveBufferSettings.Timeout / 250) <= loop)
+                {
+                    Logger.Network.Error("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection timed-out while waiting for the 100-Continue response from the remote server.");
                     throw new TimeoutException("Timeout waiting for 100 continue status.");
+                }
 
                 System.Threading.Thread.Sleep(250);
             }
@@ -302,6 +360,12 @@ namespace OpenDMS.Networking.Protocols.Http
             onProgress = delegate(Tcp.TcpConnection sender, Tcp.DirectionType direction, int packetSize)
             {
                 bytesReceived += packetSize;
+                Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() +
+                    "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() +
+                    "\r\nBytes Received: " + bytesReceived.ToString() +
+                    "\r\nResponse Size: " + _responseBuilder.MessageSize.ToString() +
+                    "\r\nPacket Size: " + packetSize.ToString() +
+                    "\r\nHttpConnection reporting progress receiving from remote host.");
                 if (OnProgress != null) OnProgress(this, direction, packetSize, 100, ((decimal)bytesReceived / (decimal)_responseBuilder.MessageSize));
             };
 
@@ -311,9 +375,11 @@ namespace OpenDMS.Networking.Protocols.Http
 
             callback = delegate(MessageBuilder sender, Message.Base message)
             {
+                Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection receiving data from remote host completed.");
                 if (OnComplete != null) OnComplete(this, (Response)message);
             };
 
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection beginning receiving of data from remote host.");
             _responseBuilder.ParseAndAttachToBody(_tcpConnection, callback);
         }
 
@@ -322,6 +388,7 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnError -= ReceiveResponseAsync_OnError;
             _tcpConnection.OnTimeout -= ReceiveResponseAsync_OnTimeout;
 
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection receiving of data timed-out.");
             if (OnTimeout != null) OnTimeout(this);
         }
 
@@ -330,6 +397,7 @@ namespace OpenDMS.Networking.Protocols.Http
             _tcpConnection.OnError -= ReceiveResponseAsync_OnError;
             _tcpConnection.OnTimeout -= ReceiveResponseAsync_OnTimeout;
 
+            Logger.Network.Debug("HttpConnection ID: " + this.GetHashCode().ToString() + "\r\nTcpConnection ID: " + _tcpConnection.GetHashCode().ToString() + "\r\nHttpConnection encountered an error receiving data\r\nMessage: " + message, exception);
             if (OnError != null) OnError(this, message, exception);
         }
     }

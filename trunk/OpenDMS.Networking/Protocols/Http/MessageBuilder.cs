@@ -57,7 +57,7 @@ namespace OpenDMS.Networking.Protocols.Http
 
         public abstract void Parse();
         protected abstract void ParseAndAttachToBody_Callback(Tcp.TcpConnection sender, Tcp.TcpConnectionAsyncEventArgs e);
-
+        
         protected List<string> GetLines(string statusAndHeaders)
         {
             List<string> ret = new List<string>();
@@ -83,7 +83,7 @@ namespace OpenDMS.Networking.Protocols.Http
                 throw new IndexOutOfRangeException();
 
             byte[] newBuffer = new byte[buffer.Length - offset];
-            Buffer.BlockCopy(buffer, 0, newBuffer, 0, newBuffer.Length);
+            Buffer.BlockCopy(buffer, offset, newBuffer, 0, newBuffer.Length);
 
             return newBuffer;
         }

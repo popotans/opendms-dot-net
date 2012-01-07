@@ -35,7 +35,7 @@ namespace OpenDMS.Networking.Protocols.Http.Message
 
         public bool ContainsKey(Header header)
         {
-            return base.ContainsKey(header.Name);
+            return GetEntry(header.Name.Value) != null;
         }
 
         public bool ContainsKey(string key)
